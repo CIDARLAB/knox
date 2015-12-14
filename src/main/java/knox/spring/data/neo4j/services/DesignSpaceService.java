@@ -19,19 +19,21 @@ public class DesignSpaceService {
         int i = 0;
         while (result.hasNext()) {
             Map<String, Object> row = result.next();
-            Map<String, Object> tail = map("displayID", row.get("tailID"), "label", "regular");
+            Map<String, Object> tail = map("displayID", row.get("tailID"), "nodeType", row.get("tailType"));
             int source = nodes.indexOf(tail);
             if (source == -1) {
             	nodes.add(tail);
             	source = i++;
             }
-            Map<String, Object> head = map("displayID", row.get("headID"), "label", "regular");
+            Map<String, Object> head = map("displayID", row.get("headID"), "nodeType", row.get("headType"));
             int target = nodes.indexOf(head);
             if (target == -1) {
             	nodes.add(head);
             	target = i++;
             }
-            links.add(map("source", source, "target", target));
+            Map<String, Object> link = map("source", source, "target", target);
+            link.put("componentRole", row.get("componentRole"));
+            links.add(link);
         }
         return map("nodes", nodes, "links", links);
     }

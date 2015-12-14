@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author mh
- * @since 24.07.12
+ * @author nicholas roehner
+ * @since 12.14.15
  */
 @RepositoryRestResource(collectionResourceRel = "knox", path = "knox")
 public interface DesignSpaceRepository extends GraphRepository<Node> {
@@ -22,7 +22,7 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 //	@Query("MATCH (m:Movie) WHERE m.title =~ ('(?i).*'+{title}+'.*') RETURN m")
 //    Collection<Node> findByTitleContaining(@Param("title") String title);
 
-    @Query("MATCH (m:Node)-[:PRECEDES]->(n:Node) RETURN m.displayID as tailID, n.displayID as headID")
+    @Query("MATCH (m:Node)-[e:PRECEDES]->(n:Node) RETURN m.displayID as tailID, m.nodeType as tailType, e.componentRole as componentRole, n.displayID as headID, n.nodeType as headType")
     List<Map<String,Object>> graph(@Param("limit") int limit);
     
 }

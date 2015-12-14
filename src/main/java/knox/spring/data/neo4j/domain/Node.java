@@ -19,7 +19,7 @@ public class Node {
     @Relationship(type="PRECEDES") 
     Collection<Node> successors;
     
-    boolean accept;
+    String nodeType;
 
     public Node() {
     	
@@ -33,8 +33,8 @@ public class Node {
         return successors;
     }
     
-    boolean getAccept() {
-    	return accept;
+    String getNodeType() {
+    	return nodeType;
     }
     
 }

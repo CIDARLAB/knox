@@ -2,7 +2,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="http://neo4j-contrib.github.io/developer-resources/language-guides/assets/css/main.css">
-    <title>Neo4j Movies</title>
+    <title>Knox</title>
 </head>
 
 <body>
@@ -72,8 +72,9 @@
 </div> -->
 <style type="text/css">
     .node { stroke: #222; stroke-width: 1.5px; }
-    .node.regular { fill: #FFFFFF; }
+    .node.inner { fill: #FFFFFF; }
     .node.start { fill: #00B200; }
+    .node.accept { fill: #B30000; }
     .link { stroke: #999;  stroke-width: 1px; marker-end: url(#endArrow); }
 </style>
 
@@ -121,7 +122,7 @@
     var width = 800, height = 800;
 
     var force = d3.layout.force()
-            .charge(-200).linkDistance(30).size([width, height]);
+            .charge(-250).linkDistance(60).size([width, height]);
 
     var svg = d3.select("#graph").append("svg")
             .attr("width", "100%").attr("height", "100%")
@@ -147,21 +148,34 @@
                 .data(graph.links).enter()
                 .append("path").attr("class", "link");
 
+
+        var icon = svg.append("g").selectAll("g")
+                .data(force.links()).enter().append("g");
+
+        icon.append("image").attr("xlink:href", function (d) {
+                    return "images/" + ((d.componentRole) ? d.componentRole:"blank") + ".png";
+                })
+                .attr("x", -15)
+                .attr("y", -15)
+                .attr("width", 30).attr("height", 30)
+                .attr("class", "type-icon");
+
         var node = svg.selectAll(".node")
                 .data(graph.nodes).enter()
                 .append("circle")
                 .attr("class", function (d) {
-                    return "node " + d.label
+                    return "node " + ((d.nodeType) ? d.nodeType:"inner");
                 })
                 .attr("r", 10)
                 .call(force.drag);
 
         // html title attribute
-        node.append("displayID")
+        node.append("title")
                 .text(function (d) { return d.displayID; })
 
         // force feed algo ticks
         force.on("tick", function() {
+
             link.attr('d', function(d) {
                 var deltaX = d.target.x - d.source.x,
                     deltaY = d.target.y - d.source.y,
@@ -177,8 +191,13 @@
                 return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
             });
 
+            icon.attr("transform", function(d) {
+                return "translate(" + (d.target.x + d.source.x)/2 + "," + (d.target.y + d.source.y)/2 + ")";
+            });
+
             node.attr("cx", function(d) { return d.x; })
                     .attr("cy", function(d) { return d.y; });
+
         });
     });
 </script>

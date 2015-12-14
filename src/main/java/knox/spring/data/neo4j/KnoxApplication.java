@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * @author mh
- * @since 06.10.14
+ * @author nicholas roehner
+ * @since 12.14.15
  */
 @Configuration
 @Import(MyNeo4jConfiguration.class)
