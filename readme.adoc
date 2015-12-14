@@ -5,7 +5,7 @@
 . http://neo4j.com/download[Download, install and start Neo4j Server].
 . open the neo4j web interface at http://localhost:7474
 . configure "*movies*" as password
-. run `:play movies` command, and click and run the Cypher statement to insert the dataset
+. upload Cypher statement from knox\src\main\examples\cypher.txt and run it to insert a test dataset
 . clone this project from GitHub
 . run the project with `mvn spring-boot:run`.
 . open Knox web interface at http://localhost:8080
