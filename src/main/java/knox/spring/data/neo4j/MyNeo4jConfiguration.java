@@ -26,7 +26,7 @@ public class MyNeo4jConfiguration extends Neo4jConfiguration {
 
     @Override
     public Neo4jServer neo4jServer() {
-        return new RemoteServer(URL,"neo4j","movies");
+        return new RemoteServer(URL,"neo4j","kn0x");
     }
 
     @Override
