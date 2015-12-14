@@ -1,0 +1,11 @@
+= Knox - A Genetic Design Space Repository
+
+== Quickstart
+
+. http://neo4j.com/download[Download, install and start Neo4j Server].
+. open the neo4j web interface at http://localhost:7474
+. configure "*movies*" as password
+. run `:play movies` command, and click and run the Cypher statement to insert the dataset
+. clone this project from GitHub
+. run the project with `mvn spring-boot:run`.
+. open Knox web interface at http://localhost:8080
