@@ -31,7 +31,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     DesignSpaceService designSpaceService;
 
     @RequestMapping("/graph")
-    public Map<String, Object> graph(@RequestParam(value = "limit",required = false) Integer limit) {
+    public Map<String, Object> graph(@RequestParam(value = "limit", required = false) Integer limit) {
         return designSpaceService.graph(limit == null ? 100 : limit);
     }
 

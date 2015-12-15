@@ -7,7 +7,9 @@ CREATE (n6:Node {displayID:"n6"})
 CREATE (n7:Node {displayID:"n7"})
 CREATE (n8:Node {displayID:"n8"})
 CREATE (n9:Node {displayID:"n9"})
-CREATE (n10:Node {displayID:"n10", nodeType:"accept"})
+CREATE (n10:Node {displayID:"n10"})
+CREATE (n11:Node {displayID:"n11", nodeType:"accept"})
+
 
 CREATE (n1)-[:PRECEDES {componentID:"pro1", componentRole:"promoter"}]->(n2)
 CREATE (n2)-[:PRECEDES]->(n3)
@@ -19,5 +21,20 @@ CREATE (n7)-[:PRECEDES {componentID:"rbs1", componentRole:"ribosome_entry_site"}
 CREATE (n8)-[:PRECEDES]->(n9)
 CREATE (n9)-[:PRECEDES {componentID:"cds1", componentRole:"coding_sequence"}]->(n10)
 CREATE (n10)-[:PRECEDES]->(n7)
+CREATE (n10)-[:PRECEDES {componentID:"term1", componentRole:"terminator"}]->(n11)
+
+CREATE (d1:DesignSpace {displayID:"test"})
+
+CREATE (d1)-[:CONTAINS]->(n1)
+CREATE (d1)-[:CONTAINS]->(n2)
+CREATE (d1)-[:CONTAINS]->(n3)
+CREATE (d1)-[:CONTAINS]->(n4)
+CREATE (d1)-[:CONTAINS]->(n5)
+CREATE (d1)-[:CONTAINS]->(n6)
+CREATE (d1)-[:CONTAINS]->(n7)
+CREATE (d1)-[:CONTAINS]->(n8)
+CREATE (d1)-[:CONTAINS]->(n9)
+CREATE (d1)-[:CONTAINS]->(n10)
+CREATE (d1)-[:CONTAINS]->(n11)
 
 ;

@@ -81,24 +81,9 @@
 <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="http://d3js.org/d3.v3.min.js" type="text/javascript"></script>
 <!--<script type="text/javascript">
-    $(function () {
-        function showMovie(title) {
-            $.get("/movies/search/findByTitle?title=" + encodeURIComponent(title), // todo fix paramter in SDN
-                    function (data) {
-                        if (!data ) return; //  || !data["_embedded"].movies) return;
-                        var movie = data; // ["_embedded"].movies[0];
-                        $("#title").text(movie.title);
-                        $("#poster").attr("src","http://neo4j-contrib.github.io/developer-resources/language-guides/assets/posters/"+encodeURIComponent(movie.title)+".jpg");
-                        var $list = $("#crew").empty();
-                        movie.roles.forEach(function (cast) {
-                            var job = cast.job || "acted";
-                            $list.append($("<li>" + cast.person.name + " " +job + (job == "acted"?" as " + cast.roles.join(", ") : "") + "</li>"));
-                        });
-                    }, "json");
-            return false;
-        }
+    // $(function () {
         function search() {
-            var query=$("#search").find("input[name=search]").val();
+            var query = $("#search").find("input[name=search]").val();
             $.get("/movies/search/findByTitleContaining?title=" + encodeURIComponent(query),
                     function (data) {
                         var t = $("table#results tbody").empty();
@@ -113,9 +98,9 @@
             return false;
         }
 
-        $("#search").submit(search);
-        search();
-    })
+    //     $("#search").submit(search);
+    //     search();
+    // })
 </script>-->
 
 <script type="text/javascript">

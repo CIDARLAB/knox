@@ -22,7 +22,7 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 //	@Query("MATCH (m:Movie) WHERE m.title =~ ('(?i).*'+{title}+'.*') RETURN m")
 //    Collection<Node> findByTitleContaining(@Param("title") String title);
 
-    @Query("MATCH (m:Node)-[e:PRECEDES]->(n:Node) RETURN m.displayID as tailID, m.nodeType as tailType, e.componentRole as componentRole, n.displayID as headID, n.nodeType as headType")
+    @Query("MATCH (d:DesignSpace)-[c1:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[c2:CONTAINS]-(d:DesignSpace) RETURN m.displayID as tailID, m.nodeType as tailType, e.componentRole as componentRole, n.displayID as headID, n.nodeType as headType")
     List<Map<String,Object>> graph(@Param("limit") int limit);
     
 }
