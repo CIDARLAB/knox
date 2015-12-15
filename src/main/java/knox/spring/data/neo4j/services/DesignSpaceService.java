@@ -32,21 +32,23 @@ public class DesignSpaceService {
             	target = i++;
             }
             Map<String, Object> link = map("source", source, "target", target);
-            link.put("componentRole", row.get("componentRole"));
+            if (row.get("componentRole") != null) {
+            	link.put("componentRole", row.get("componentRole"));
+            }
             links.add(link);
         }
         return map("nodes", nodes, "links", links);
     }
 
     private Map<String, Object> map(String key1, Object value1, String key2, Object value2) {
-        Map<String, Object> result = new HashMap<String, Object>(2);
+        Map<String, Object> result = new HashMap<String, Object>();
         result.put(key1, value1);
         result.put(key2, value2);
         return result;
     }
 
-    public Map<String, Object> graph(int limit) {
-        Iterator<Map<String, Object>> result = designSpaceRepository.graph(limit).iterator();
+    public Map<String, Object> findDesignSpace(String displayID) {
+        Iterator<Map<String, Object>> result = designSpaceRepository.findDesignSpace(displayID).iterator();
         return toD3Format(result);
     }
 }

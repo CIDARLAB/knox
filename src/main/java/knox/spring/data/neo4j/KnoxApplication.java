@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,9 +31,9 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @Autowired
     DesignSpaceService designSpaceService;
 
-    @RequestMapping("/graph")
-    public Map<String, Object> graph(@RequestParam(value = "limit", required = false) Integer limit) {
-        return designSpaceService.graph(limit == null ? 100 : limit);
+    @RequestMapping("/findDesignSpace")
+    public Map<String, Object> findDesignSpace(@RequestParam(value = "displayID", required = false) String displayID) {
+        return designSpaceService.findDesignSpace(displayID == null ? "test" : displayID);
     }
 
 }
