@@ -19,88 +19,89 @@ function knoxCtrl($scope) {
             .attr('d', 'M0,-5L10,0L0,5')
             .attr('fill', '#000');
 
-    d3.json("/findDesignSpace", function(error, graph) {
-        if (error) return;
+	$scope.designSpaceID = "test1";
 
-        force.nodes(graph.nodes).links(graph.links).start();
+	$scope.findDesignSpace = function(designSpaceID) {
 
-        var link = svg.selectAll(".link")
-                .data(graph.links).enter()
-                .append("path").attr("class", "link");
+		var query = "";
+		if (designSpaceID) {
+			query = "?designSpaceID=" + encodeURIComponent(designSpaceID);
+		}
 
-       	var componentLinks = [];
-        var i;
-        for (i = 0; i < graph.links.length; i++) {
-        	if (graph.links[i].componentRole) {
-        		componentLinks.push(graph.links[i]);
-        	}
-        }
+		// $.get("knox/search/findDesignSpace?designSpaceID=" + encodeURIComponent(query),
+  //           function (graph) {
+  //               if (!graph) return;
+  //               graph = graph["_embedded"].knox;
+		d3.json("/findDesignSpace" + query, function(error, graph) {
+	        if (error) return;
+   
+	        force.nodes(graph.nodes).links(graph.links).start();
 
-        var icon = svg.append("g").selectAll("g")
-                .data(componentLinks).enter().append("g");
+	        var link = svg.selectAll(".link")
+	                .data(graph.links).enter()
+	                .append("path").attr("class", "link");
 
-        icon.append("image").attr("xlink:href", function (d) {
-                    return "image/" + d.componentRole + ".png";
-                })
-                .attr("x", -15)
-                .attr("y", -15)
-                .attr("width", 30).attr("height", 30)
-                .attr("class", "type-icon");
+	       	var componentLinks = [];
+	        var i;
+	        for (i = 0; i < graph.links.length; i++) {
+	        	if (graph.links[i].componentRole) {
+	        		componentLinks.push(graph.links[i]);
+	        	}
+	        }
 
-        var node = svg.selectAll(".node")
-                .data(graph.nodes).enter()
-                .append("circle")
-                .attr("class", function (d) {
-                    return "node " + ((d.nodeType) ? d.nodeType:"inner");
-                })
-                .attr("r", 10)
-                .call(force.drag);
+	        var icon = svg.append("g").selectAll("g")
+	                .data(componentLinks).enter().append("g");
 
-        // html title attribute
-        node.append("title")
-                .text(function (d) { return d.displayID; })
+	        icon.append("image").attr("xlink:href", function (d) {
+	                    return "image/" + d.componentRole + ".png";
+	                })
+	                .attr("x", -15)
+	                .attr("y", -15)
+	                .attr("width", 30).attr("height", 30)
+	                .attr("class", "type-icon");
 
-        // force feed algo ticks
-        force.on("tick", function() {
+	        var node = svg.selectAll(".node")
+	                .data(graph.nodes).enter()
+	                .append("circle")
+	                .attr("class", function (d) {
+	                    return "node " + ((d.nodeType) ? d.nodeType:"inner");
+	                })
+	                .attr("r", 10)
+	                .call(force.drag);
 
-            link.attr('d', function(d) {
-                var deltaX = d.target.x - d.source.x,
-                    deltaY = d.target.y - d.source.y,
-                    dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-                    normX = deltaX / dist,
-                    normY = deltaY / dist,
-                    sourcePadding = d.left ? 17 : 12,
-                    targetPadding = d.right ? 17 : 12,
-                    sourceX = d.source.x + (sourcePadding * normX),
-                    sourceY = d.source.y + (sourcePadding * normY),
-                    targetX = d.target.x - (targetPadding * normX),
-                    targetY = d.target.y - (targetPadding * normY);
-                return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
-            });
+	        // html title attribute
+	        node.append("title")
+	                .text(function (d) { return d.displayID; })
 
-            icon.attr("transform", function(d) {
-                return "translate(" + (d.target.x + d.source.x)/2 + "," + (d.target.y + d.source.y)/2 + ")";
-            });
+	        // force feed algo ticks
+	        force.on("tick", function() {
 
-            node.attr("cx", function(d) { return d.x; })
-                    .attr("cy", function(d) { return d.y; });
+	            link.attr('d', function(d) {
+	                var deltaX = d.target.x - d.source.x,
+	                    deltaY = d.target.y - d.source.y,
+	                    dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+	                    normX = deltaX / dist,
+	                    normY = deltaY / dist,
+	                    sourcePadding = d.left ? 17 : 12,
+	                    targetPadding = d.right ? 17 : 12,
+	                    sourceX = d.source.x + (sourcePadding * normX),
+	                    sourceY = d.source.y + (sourcePadding * normY),
+	                    targetX = d.target.x - (targetPadding * normX),
+	                    targetY = d.target.y - (targetPadding * normY);
+	                return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+	            });
 
-        });
-    });
+	            icon.attr("transform", function(d) {
+	                return "translate(" + (d.target.x + d.source.x)/2 + "," + (d.target.y + d.source.y)/2 + ")";
+	            });
 
-	// $scope.designSpaceID = "test";
+	            node.attr("cx", function(d) { return d.x; })
+	                    .attr("cy", function(d) { return d.y; });
 
-	// $scope.findDesignSpace = function() {
- //        $.get("/graph?title=" + encodeURIComponent($scope.designSpaceID),
- //            function (data) {
- //                if (!data) return;
- //                data = data["_embedded"].movies;
- //                data.forEach(function (movie) {
- //                    $("<tr><td class='movie'>" + movie.title + "</td><td>" + movie.released + "</td><td>" + movie.tagline + "</td></tr>").appendTo(t)
- //                            .click(function() { showMovie($(this).find("td.movie").text());})
- //                });
- //                showMovie(data[0].title);
- //            }, "json");
- //        return false;
-	// };
+	        });
+		});
+		// }, "json");
+	};
+
+	// $scope.findDesignSpace();
 }

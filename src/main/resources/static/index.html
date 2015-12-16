@@ -6,9 +6,29 @@
     </head>
 
     <body ng-controller="knoxCtrl">
+        <!-- <div>
+            <button class="btn btn-default" ng-click="findDesignSpace">Search</button>
+            <input type="text" placeholder="Search for Design Space" ng-model="designSpaceID">
+        </div> -->
 
-        <!--<button class="btn btn-default" ng-click="searchDesignSpaces">Search</button>
-        <input type="text" placeholder="Search for Design Space" ng-model="designSpaceID">-->
+        <div role="navigation" class="navbar navbar-default navbar-static-top">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-6 col-md-6">
+                        <ul class="nav navbar-nav">
+                            <li>
+                                <form role="search" class="navbar-form" id="search">
+                                    <div class="form-group">
+                                        <input type="text" placeholder="Search for Movie Title" class="form-control" name="search" ng-model="designSpaceID">
+                                    </div>
+                                    <button class="btn btn-default" type="submit" ng-click="findDesignSpace(designSpaceID)">Search</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div id="graph">
         </div>
@@ -50,11 +70,6 @@
             // })
         </script>-->
 
-        <script type="text/javascript">
-            
-
-            
-        </script>
     </body>
 </html>
  <!-- <div role="navigation" class="navbar navbar-default navbar-static-top">

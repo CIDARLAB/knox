@@ -22,8 +22,8 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 //	@Query("MATCH (m:Movie) WHERE m.title =~ ('(?i).*'+{title}+'.*') RETURN m")
 //    Collection<Node> findByTitleContaining(@Param("title") String title);
 
-    @Query("MATCH (d:DesignSpace)-[c1:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[c2:CONTAINS]-(d:DesignSpace) WHERE d.displayID =~ ('(?i).*'+{displayID}+'.*') RETURN m.displayID as tailID, m.nodeType as tailType, e.componentRole as componentRole, n.displayID as headID, n.nodeType as headType")
-    List<Map<String,Object>> findDesignSpace(@Param("displayID") String displayID);
+    @Query("MATCH (d:DesignSpace)-[c1:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[c2:CONTAINS]-(d:DesignSpace) WHERE d.displayID =~ ('(?i).*'+{designSpaceID}+'.*') RETURN m.displayID as tailID, m.nodeType as tailType, e.componentRole as componentRole, n.displayID as headID, n.nodeType as headType")
+    List<Map<String,Object>> findDesignSpace(@Param("designSpaceID") String designSpaceID);
     
 }
 
