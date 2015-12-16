@@ -1,17 +1,18 @@
 function knoxCtrl($scope) {
 
-	$scope.graph1 = {id: "graph1"};
-	$scope.graph2 = {id: "graph2"};
+	$scope.removeGraph = function(index) {
+		d3.select("#graph" + index).select("svg").remove();
+	};
 
-	var initializeGraph = function(graph, width, height) {
-	    graph.force = d3.layout.force()
+	$scope.populateGraph = function(graph, index, width, height) {
+		var force = d3.layout.force()
 	            .charge(-250).linkDistance(60).size([width, height]);
 
-	    graph.svg = d3.select("#" + graph.id).append("svg")
-	            .attr("width", "100%").attr("height", "100%")
+	    var svg = d3.select("#graph" + index).append("svg")
+	            .attr("width", "100%").attr("height", "50%")
 	            .attr("pointer-events", "all");
 
-	    graph.svg.append('defs').append('marker')
+	    svg.append('defs').append('marker')
 	            .attr('id', 'endArrow')
 	            .attr('viewBox', '0 -5 10 10')
 	            .attr('refX', 6)
@@ -22,99 +23,106 @@ function knoxCtrl($scope) {
 	            .attr('d', 'M0,-5L10,0L0,5')
 	            .attr('fill', '#000');
 
-	    graph.width = width;
-	    graph.height = height;
+		var i;
+        for (i = 0; i < graph.nodes.length; i++) {
+        	if (graph.nodes[i].nodeType === "start" && !graph.nodes[i].fixed) {
+        		graph.nodes[i].x = width/2;
+		        graph.nodes[i].y = height/2;
+		        graph.nodes[i].fixed = true;
+        	}
+        }
+
+        force.nodes(graph.nodes).links(graph.links).start();
+
+        var link = svg.selectAll(".link")
+                .data(graph.links).enter()
+                .append("path").attr("class", "link");
+
+       	var componentLinks = [];
+        for (i = 0; i < graph.links.length; i++) {
+        	if (graph.links[i].componentRole) {
+        		componentLinks.push(graph.links[i]);
+        	}
+        }
+
+        var icon = svg.append("g").selectAll("g")
+                .data(componentLinks).enter().append("g");
+
+        icon.append("image").attr("xlink:href", function (d) {
+                    return "image/" + d.componentRole + ".png";
+                })
+                .attr("x", -15)
+                .attr("y", -15)
+                .attr("width", 30).attr("height", 30)
+                .attr("class", "type-icon");
+
+        var node = svg.selectAll(".node")
+                .data(graph.nodes).enter()
+                .append("circle")
+                .attr("class", function (d) {
+                    return "node " + ((d.nodeType) ? d.nodeType:"inner");
+                })
+                .attr("r", 10)
+                .call(force.drag);
+
+        // html title attribute
+        node.append("title")
+                .text(function (d) { return d.displayID; })
+
+        // force feed algo ticks
+        force.on("tick", function() {
+
+            link.attr('d', function(d) {
+                var deltaX = d.target.x - d.source.x,
+                    deltaY = d.target.y - d.source.y,
+                    dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+                    normX = deltaX / dist,
+                    normY = deltaY / dist,
+                    sourcePadding = d.left ? 17 : 12,
+                    targetPadding = d.right ? 17 : 12,
+                    sourceX = d.source.x + (sourcePadding * normX),
+                    sourceY = d.source.y + (sourcePadding * normY),
+                    targetX = d.target.x - (targetPadding * normX),
+                    targetY = d.target.y - (targetPadding * normY);
+                return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+            });
+
+            icon.attr("transform", function(d) {
+                return "translate(" + (d.target.x + d.source.x)/2 + "," + (d.target.y + d.source.y)/2 + ")";
+            });
+
+            node.attr("cx", function(d) { return d.x; })
+                    .attr("cy", function(d) { return d.y; });
+
+        });
 	};
 
-	initializeGraph($scope.graph1, 540, 540);
-	initializeGraph($scope.graph2, 540, 540);
+	$scope.graphs = [];
 
-	$scope.designSpaceID1 = "test1";
-	$scope.designSpaceID2 = "test2";
+	$scope.designSpaceID = "test1";
 
-	$scope.findDesignSpace = function(id, graph) {
+	$scope.findDesignSpace = function(id) {
 
 		var query = "";
 		if (id) {
 			query = "?id=" + encodeURIComponent(id);
 		}
 
-		d3.json("/findDesignSpace" + query, function(error, result) {
+		d3.json("/findDesignSpace" + query, function(error, graph) {
 	        if (error) return;
 
 	        var i;
-	        for (i = 0; i < result.nodes.length; i++) {
-	        	if (result.nodes[i].nodeType === "start") {
-	        		result.nodes[i].x = graph.width/2;
-			        result.nodes[i].y = graph.height/2;
-			        result.nodes[i].fixed = true;
-	        	}
-	        }
-   
-	        graph.force.nodes(result.nodes).links(result.links).start();
-
-	        var link = graph.svg.selectAll(".link")
-	                .data(result.links).enter()
-	                .append("path").attr("class", "link");
-
-	       	var componentLinks = [];
-	        var i;
-	        for (i = 0; i < result.links.length; i++) {
-	        	if (result.links[i].componentRole) {
-	        		componentLinks.push(result.links[i]);
-	        	}
+	        for (i = 0; i < $scope.graphs.length; i++) {
+	        	$scope.removeGraph(i);
 	        }
 
-	        var icon = graph.svg.append("g").selectAll("g")
-	                .data(componentLinks).enter().append("g");
+	        $scope.graphs.unshift(graph);
+	        $scope.graphs = $scope.graphs.slice(0,2);
 
-	        icon.append("image").attr("xlink:href", function (d) {
-	                    return "image/" + d.componentRole + ".png";
-	                })
-	                .attr("x", -15)
-	                .attr("y", -15)
-	                .attr("width", 30).attr("height", 30)
-	                .attr("class", "type-icon");
-
-	        var node = graph.svg.selectAll(".node")
-	                .data(result.nodes).enter()
-	                .append("circle")
-	                .attr("class", function (d) {
-	                    return "node " + ((d.nodeType) ? d.nodeType:"inner");
-	                })
-	                .attr("r", 10)
-	                .call(graph.force.drag);
-
-	        // html title attribute
-	        node.append("title")
-	                .text(function (d) { return d.displayID; })
-
-	        // force feed algo ticks
-	        graph.force.on("tick", function() {
-
-	            link.attr('d', function(d) {
-	                var deltaX = d.target.x - d.source.x,
-	                    deltaY = d.target.y - d.source.y,
-	                    dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-	                    normX = deltaX / dist,
-	                    normY = deltaY / dist,
-	                    sourcePadding = d.left ? 17 : 12,
-	                    targetPadding = d.right ? 17 : 12,
-	                    sourceX = d.source.x + (sourcePadding * normX),
-	                    sourceY = d.source.y + (sourcePadding * normY),
-	                    targetX = d.target.x - (targetPadding * normX),
-	                    targetY = d.target.y - (targetPadding * normY);
-	                return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
-	            });
-
-	            icon.attr("transform", function(d) {
-	                return "translate(" + (d.target.x + d.source.x)/2 + "," + (d.target.y + d.source.y)/2 + ")";
-	            });
-
-	            node.attr("cx", function(d) { return d.x; })
-	                    .attr("cy", function(d) { return d.y; });
-
-	        });
+	        for (i = 0; i < $scope.graphs.length; i++) {
+		        $scope.populateGraph($scope.graphs[i], i, 1110, 300);
+		    }
+	        
 		});
 	};
 
