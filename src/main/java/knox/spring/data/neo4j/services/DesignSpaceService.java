@@ -47,8 +47,8 @@ public class DesignSpaceService {
         return result;
     }
 
-    public Map<String, Object> findDesignSpace(String designSpaceID) {
-        Iterator<Map<String, Object>> result = designSpaceRepository.findDesignSpace(designSpaceID).iterator();
+    public Map<String, Object> findDesignSpace(String id) {
+        Iterator<Map<String, Object>> result = designSpaceRepository.findDesignSpace(id).iterator();
         return toD3Format(result);
     }
 }

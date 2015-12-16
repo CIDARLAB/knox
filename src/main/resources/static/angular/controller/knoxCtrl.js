@@ -1,55 +1,71 @@
 function knoxCtrl($scope) {
-	var width = 800, height = 800;
 
-    var force = d3.layout.force()
-            .charge(-250).linkDistance(60).size([width, height]);
+	$scope.graph1 = {id: "graph1"};
+	$scope.graph2 = {id: "graph2"};
 
-    var svg = d3.select("#graph").append("svg")
-            .attr("width", "100%").attr("height", "100%")
-            .attr("pointer-events", "all");
+	var initializeGraph = function(graph, width, height) {
+	    graph.force = d3.layout.force()
+	            .charge(-250).linkDistance(60).size([width, height]);
 
-    svg.append('defs').append('marker')
-            .attr('id', 'endArrow')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', 6)
-            .attr('markerWidth', 6)
-            .attr('markerHeight', 6)
-            .attr('orient', 'auto')
-        .append('path')
-            .attr('d', 'M0,-5L10,0L0,5')
-            .attr('fill', '#000');
+	    graph.svg = d3.select("#" + graph.id).append("svg")
+	            .attr("width", "100%").attr("height", "100%")
+	            .attr("pointer-events", "all");
 
-	$scope.designSpaceID = "test1";
+	    graph.svg.append('defs').append('marker')
+	            .attr('id', 'endArrow')
+	            .attr('viewBox', '0 -5 10 10')
+	            .attr('refX', 6)
+	            .attr('markerWidth', 6)
+	            .attr('markerHeight', 6)
+	            .attr('orient', 'auto')
+	        .append('path')
+	            .attr('d', 'M0,-5L10,0L0,5')
+	            .attr('fill', '#000');
 
-	$scope.findDesignSpace = function(designSpaceID) {
+	    graph.width = width;
+	    graph.height = height;
+	};
+
+	initializeGraph($scope.graph1, 540, 540);
+	initializeGraph($scope.graph2, 540, 540);
+
+	$scope.designSpaceID1 = "test1";
+	$scope.designSpaceID2 = "test2";
+
+	$scope.findDesignSpace = function(id, graph) {
 
 		var query = "";
-		if (designSpaceID) {
-			query = "?designSpaceID=" + encodeURIComponent(designSpaceID);
+		if (id) {
+			query = "?id=" + encodeURIComponent(id);
 		}
 
-		// $.get("knox/search/findDesignSpace?designSpaceID=" + encodeURIComponent(query),
-  //           function (graph) {
-  //               if (!graph) return;
-  //               graph = graph["_embedded"].knox;
-		d3.json("/findDesignSpace" + query, function(error, graph) {
+		d3.json("/findDesignSpace" + query, function(error, result) {
 	        if (error) return;
-   
-	        force.nodes(graph.nodes).links(graph.links).start();
 
-	        var link = svg.selectAll(".link")
-	                .data(graph.links).enter()
+	        var i;
+	        for (i = 0; i < result.nodes.length; i++) {
+	        	if (result.nodes[i].nodeType === "start") {
+	        		result.nodes[i].x = graph.width/2;
+			        result.nodes[i].y = graph.height/2;
+			        result.nodes[i].fixed = true;
+	        	}
+	        }
+   
+	        graph.force.nodes(result.nodes).links(result.links).start();
+
+	        var link = graph.svg.selectAll(".link")
+	                .data(result.links).enter()
 	                .append("path").attr("class", "link");
 
 	       	var componentLinks = [];
 	        var i;
-	        for (i = 0; i < graph.links.length; i++) {
-	        	if (graph.links[i].componentRole) {
-	        		componentLinks.push(graph.links[i]);
+	        for (i = 0; i < result.links.length; i++) {
+	        	if (result.links[i].componentRole) {
+	        		componentLinks.push(result.links[i]);
 	        	}
 	        }
 
-	        var icon = svg.append("g").selectAll("g")
+	        var icon = graph.svg.append("g").selectAll("g")
 	                .data(componentLinks).enter().append("g");
 
 	        icon.append("image").attr("xlink:href", function (d) {
@@ -60,21 +76,21 @@ function knoxCtrl($scope) {
 	                .attr("width", 30).attr("height", 30)
 	                .attr("class", "type-icon");
 
-	        var node = svg.selectAll(".node")
-	                .data(graph.nodes).enter()
+	        var node = graph.svg.selectAll(".node")
+	                .data(result.nodes).enter()
 	                .append("circle")
 	                .attr("class", function (d) {
 	                    return "node " + ((d.nodeType) ? d.nodeType:"inner");
 	                })
 	                .attr("r", 10)
-	                .call(force.drag);
+	                .call(graph.force.drag);
 
 	        // html title attribute
 	        node.append("title")
 	                .text(function (d) { return d.displayID; })
 
 	        // force feed algo ticks
-	        force.on("tick", function() {
+	        graph.force.on("tick", function() {
 
 	            link.attr('d', function(d) {
 	                var deltaX = d.target.x - d.source.x,
@@ -100,8 +116,6 @@ function knoxCtrl($scope) {
 
 	        });
 		});
-		// }, "json");
 	};
 
-	// $scope.findDesignSpace();
 }
