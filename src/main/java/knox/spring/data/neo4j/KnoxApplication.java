@@ -34,5 +34,11 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public Map<String, Object> findDesignSpace(@RequestParam(value = "id", required = false) String id) {
         return designSpaceService.findDesignSpace(id == null ? "test1" : id);
     }
+    
+    @RequestMapping("/joinDesignSpaces")
+    public Map<String, Object> joinDesignSpaces(@RequestParam(value = "id1", required = false) String id1, @RequestParam(value = "id2", required = false) String id2,
+    		@RequestParam(value = "id3", required = false) String id3) {
+        return designSpaceService.joinDesignSpaces(id1 == null ? "test1" : id1, id2 == null ? "test2" : id2, id3 == null ? "test3" : id3);
+    }
 
 }

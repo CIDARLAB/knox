@@ -26,7 +26,7 @@ function knoxCtrl($scope) {
 		var i;
         for (i = 0; i < graph.nodes.length; i++) {
         	if (graph.nodes[i].nodeType === "start" && !graph.nodes[i].fixed) {
-        		graph.nodes[i].x = width/2;
+        		graph.nodes[i].x = width/3;
 		        graph.nodes[i].y = height/2;
 		        graph.nodes[i].fixed = true;
         	}
@@ -122,8 +122,19 @@ function knoxCtrl($scope) {
 	        for (i = 0; i < $scope.graphs.length; i++) {
 		        $scope.populateGraph($scope.graphs[i], i, 1110, 300);
 		    }
-	        
 		});
 	};
+
+    $scope.joinDesignSpaces = function(id1, id2, id3) {
+        if (id1 && id2 && id3) {
+            var query = "?id1=" + encodeURIComponent(id1) + "&id2=" + encodeURIComponent(id2) + "&id3=" + encodeURIComponent(id3);
+
+            d3.json("/joinDesignSpaces" + query, function(error, graph) {
+                if (error) return;
+
+                $scope.findDesignSpace(graph.displayID);
+            });
+        }
+    };
 
 }
