@@ -126,7 +126,7 @@ function knoxCtrl($scope) {
 	};
 
     $scope.joinDesignSpaces = function(id1, id2, id3) {
-        if (id1 && id2 && id3) {
+        if (id1 && id2 && id3 && id1 !== id2) {
             var query = "?id1=" + encodeURIComponent(id1) + "&id2=" + encodeURIComponent(id2) + "&id3=" + encodeURIComponent(id3);
 
             d3.json("/joinDesignSpaces" + query, function(error, graph) {
