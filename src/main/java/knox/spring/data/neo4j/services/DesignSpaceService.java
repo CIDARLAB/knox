@@ -21,15 +21,15 @@ public class DesignSpaceService {
         while (result.hasNext()) {
             Map<String, Object> row = result.next();
             if (graph.isEmpty()) {
-            	graph.put("displayID", row.get("graphID"));
+            	graph.put("spaceID", row.get("spaceID"));
             }
-            Map<String, Object> tail = map("displayID", row.get("tailID"), "nodeType", row.get("tailType"));
+            Map<String, Object> tail = map("nodeID", row.get("tailID"), "nodeType", row.get("tailType"));
             int source = nodes.indexOf(tail);
             if (source == -1) {
             	nodes.add(tail);
             	source = i++;
             }
-            Map<String, Object> head = map("displayID", row.get("headID"), "nodeType", row.get("headType"));
+            Map<String, Object> head = map("nodeID", row.get("headID"), "nodeType", row.get("headType"));
             int target = nodes.indexOf(head);
             if (target == -1) {
             	nodes.add(head);
@@ -52,13 +52,13 @@ public class DesignSpaceService {
         return result;
     }
 
-    public Map<String, Object> findDesignSpace(String id) {
-        Iterator<Map<String, Object>> result = designSpaceRepository.findDesignSpace(id).iterator();
+    public Map<String, Object> findDesignSpace(String targetID) {
+        Iterator<Map<String, Object>> result = designSpaceRepository.findDesignSpace(targetID).iterator();
         return toD3Format(result);
     }
     
-    public Map<String, Object> joinDesignSpaces(String id1, String id2, String id3) {
-    	Iterator<Map<String, Object>> result = designSpaceRepository.joinDesignSpaces(id1, id2, id3).iterator();
+    public Map<String, Object> joinDesignSpaces(String inputID1, String inputID2, String targetID) {
+    	Iterator<Map<String, Object>> result = designSpaceRepository.joinDesignSpaces(inputID1, inputID2, targetID).iterator();
     	if (result.hasNext()) {
     		return result.next();
     	} else {

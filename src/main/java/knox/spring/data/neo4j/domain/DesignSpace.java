@@ -14,7 +14,7 @@ public class DesignSpace {
     @GraphId
     Long id;
     
-    String displayID;
+    String spaceID;
     
     @Relationship(type="CONTAINS") 
     Collection<Node> children;

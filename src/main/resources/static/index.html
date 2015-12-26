@@ -15,10 +15,10 @@
                             <li>
                                 <form class="navbar-form">
                                     <div class="form-group">
-                                        <input type="text" placeholder="Search for Design Space" class="form-control" ng-model="designSpaceID">
+                                        <input type="text" placeholder="Search for Design Space" class="form-control" ng-model="targetID">
                                     </div>
-                                    <button class="btn btn-default" ng-click="findDesignSpace(designSpaceID)">Search</button>
-                                    <button class="btn btn-default" ng-click="joinDesignSpaces(graphs[0].displayID, graphs[1].displayID, designSpaceID)">Join</button>
+                                    <button class="btn btn-default" ng-click="findDesignSpace(targetID)">Search</button>
+                                    <button class="btn btn-default" ng-click="joinDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">Join</button>
                                 </form>
                             </li>
                         </ul>

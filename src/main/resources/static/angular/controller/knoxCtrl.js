@@ -67,7 +67,7 @@ function knoxCtrl($scope) {
 
         // html title attribute
         node.append("title")
-                .text(function (d) { return d.displayID; })
+                .text(function (d) { return d.spaceID; })
 
         // force feed algo ticks
         force.on("tick", function() {
@@ -99,13 +99,13 @@ function knoxCtrl($scope) {
 
 	$scope.graphs = [];
 
-	$scope.designSpaceID = "test1";
+	$scope.targetID = "test1";
 
-	$scope.findDesignSpace = function(id) {
+	$scope.findDesignSpace = function(targetID) {
 
 		var query = "";
-		if (id) {
-			query = "?id=" + encodeURIComponent(id);
+		if (targetID) {
+			query = "?targetID=" + encodeURIComponent(targetID);
 		}
 
 		d3.json("/findDesignSpace" + query, function(error, graph) {
@@ -125,14 +125,15 @@ function knoxCtrl($scope) {
 		});
 	};
 
-    $scope.joinDesignSpaces = function(id1, id2, id3) {
-        if (id1 && id2 && id3 && id1 !== id2) {
-            var query = "?id1=" + encodeURIComponent(id1) + "&id2=" + encodeURIComponent(id2) + "&id3=" + encodeURIComponent(id3);
+    $scope.joinDesignSpaces = function(inputID1, inputID2, targetID) {
+        if (inputID1 && inputID2 && targetID && inputID1 !== inputID2) {
+            var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
+                    + "&targetID=" + encodeURIComponent(targetID);
 
             d3.json("/joinDesignSpaces" + query, function(error, graph) {
                 if (error) return;
 
-                $scope.findDesignSpace(graph.displayID);
+                $scope.findDesignSpace(graph.spaceID);
             });
         }
     };

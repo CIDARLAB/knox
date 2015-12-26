@@ -14,7 +14,7 @@ public class Node {
     @GraphId 
     Long id;
     
-    String displayID;
+    String nodeID;
 
     @Relationship(type="PRECEDES") 
     Collection<Node> successors;
@@ -25,8 +25,8 @@ public class Node {
     	
     }
     
-    public String getDisplayID() {
-    	return displayID;
+    public String getNodeID() {
+    	return nodeID;
     }
 
     public Collection<Node> getSuccessors() {
