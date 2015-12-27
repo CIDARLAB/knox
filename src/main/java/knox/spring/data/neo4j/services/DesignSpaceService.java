@@ -66,4 +66,13 @@ public class DesignSpaceService {
     	}
     }
     
+    public Map<String, Object> orDesignSpaces(String inputID1, String inputID2, String targetID) {
+    	Iterator<Map<String, Object>> result = designSpaceRepository.orDesignSpaces(inputID1, inputID2, targetID).iterator();
+    	if (result.hasNext()) {
+    		return result.next();
+    	} else {
+    		return new HashMap<String, Object>();
+    	}
+    }
+    
 }

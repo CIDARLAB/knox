@@ -126,11 +126,24 @@ function knoxCtrl($scope) {
 	};
 
     $scope.joinDesignSpaces = function(inputID1, inputID2, targetID) {
-        if (inputID1 && inputID2 && targetID && inputID1 !== inputID2) {
+        if (inputID1 && inputID2 && targetID && inputID1 !== inputID2 && targetID !== inputID1 && targetID !== inputID2) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
                     + "&targetID=" + encodeURIComponent(targetID);
 
             d3.json("/joinDesignSpaces" + query, function(error, graph) {
+                if (error) return;
+
+                $scope.findDesignSpace(graph.spaceID);
+            });
+        }
+    };
+
+    $scope.orDesignSpaces = function(inputID1, inputID2, targetID) {
+        if (inputID1 && inputID2 && targetID && inputID1 !== inputID2 && targetID !== inputID1 && targetID !== inputID2) {
+            var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
+                    + "&targetID=" + encodeURIComponent(targetID);
+
+            d3.json("/orDesignSpaces" + query, function(error, graph) {
                 if (error) return;
 
                 $scope.findDesignSpace(graph.spaceID);

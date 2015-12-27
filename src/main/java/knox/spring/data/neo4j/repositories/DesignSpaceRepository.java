@@ -54,8 +54,34 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m)})-[:PRECEDES]->(:Node {nodeID: d3.spaceID + ID(n)})<-[:CONTAINS]-(d3) "
 			+ "RETURN d3.spaceID AS spaceID")
     List<Map<String,Object>> joinDesignSpaces(@Param("inputID1") String inputID1, @Param("inputID2") String inputID2, @Param("targetId") String targetId);
-    
-//    List<Map<String,Object>> orDesignSpaces(@Param("inputID1") String inputID1, @Param("inputID2") String inputID2, @Param("targetId") String targetId);
+      
+    @Query("MERGE (d3:DesignSpace {spaceID: {targetId}}) "
+			+ "WITH d3 "
+			+ "MATCH (d12:DesignSpace)-[:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(d12:DesignSpace) "
+			+ "WHERE d12.spaceID = {inputID1} OR d12.spaceID = {inputID2} "
+			+ "FOREACH(ignoreMe IN CASE WHEN (NOT has(m.nodeType) OR m.nodeType = 'start') AND has(e.componentID) AND has(e.componentRole) AND NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m)})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {nodeID: d3.spaceID + ID(n)})<-[:CONTAINS]-(d3)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN m.nodeType = 'accept' AND has(e.componentID) AND has(e.componentRole) AND NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m), nodeType: m.nodeType})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {nodeID: d3.spaceID + ID(n)})<-[:CONTAINS]-(d3)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN (NOT has(m.nodeType) OR m.nodeType = 'start') AND has(e.componentID) AND has(e.componentRole) AND n.nodeType = 'accept' THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m)})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {nodeID: d3.spaceID + ID(n), nodeType: n.nodeType})<-[:CONTAINS]-(d3)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN m.nodeType = 'accept' AND has(e.componentID) AND has(e.componentRole) AND n.nodeType = 'accept' THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m), nodeType: m.nodeType})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {nodeID: d3.spaceID + ID(n), nodeType: n.nodeType})<-[:CONTAINS]-(d3)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN (NOT has(m.nodeType) OR m.nodeType = 'start') AND NOT has(e.componentID) AND NOT has(e.componentRole) AND NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m)})-[:PRECEDES]->(:Node {nodeID: d3.spaceID + ID(n)})<-[:CONTAINS]-(d3)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN m.nodeType = 'accept' AND NOT has(e.componentID) AND NOT has(e.componentRole) AND NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m), nodeType: m.nodeType})-[:PRECEDES]->(:Node {nodeID: d3.spaceID + ID(n)})<-[:CONTAINS]-(d3)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN (NOT has(m.nodeType) OR m.nodeType = 'start') AND NOT has(e.componentID) AND NOT has(e.componentRole) AND n.nodeType = 'accept' THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m)})-[:PRECEDES]->(:Node {nodeID: d3.spaceID + ID(n), nodeType: n.nodeType})<-[:CONTAINS]-(d3)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN m.nodeType = 'accept' AND NOT has(e.componentID) AND NOT has(e.componentRole) AND n.nodeType = 'accept' THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(m), nodeType: m.nodeType})-[:PRECEDES]->(:Node {nodeID: d3.spaceID + ID(n), nodeType: n.nodeType})<-[:CONTAINS]-(d3)) "
+			+ "WITH d3 "
+			+ "LIMIT 1 "
+			+ "MATCH (d1:DesignSpace {spaceID: {inputID1}})-[:CONTAINS]->(n1:Node {nodeType: 'start'}), (d2:DesignSpace {spaceID: {inputID2}})-[:CONTAINS]->(n2:Node {nodeType: 'start'}) "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(n1) + d3.spaceID + ID(n2), nodeType: 'start'})-[:PRECEDES]->(:Node {nodeID: d3.spaceID + ID(n1)})<-[:CONTAINS]-(d3) "
+			+ "CREATE UNIQUE (d3)-[:CONTAINS]->(:Node {nodeID: d3.spaceID + ID(n1) + d3.spaceID + ID(n2), nodeType: 'start'})-[:PRECEDES]->(:Node {nodeID: d3.spaceID + ID(n2)})<-[:CONTAINS]-(d3) "
+			+ "RETURN d3.spaceID AS spaceID")
+    List<Map<String,Object>> orDesignSpaces(@Param("inputID1") String inputID1, @Param("inputID2") String inputID2, @Param("targetId") String targetId);
     
 }
 
