@@ -38,17 +38,25 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @RequestMapping("/joinDesignSpaces")
     public Map<String, Object> joinDesignSpaces(@RequestParam(value = "inputID1", required = false) String inputID1, 
     		@RequestParam(value = "inputID2", required = false) String inputID2,
-    		@RequestParam(value = "targetID", required = false) String targetID) {
+    		@RequestParam(value = "outputID", required = false) String outputID) {
         return designSpaceService.joinDesignSpaces(inputID1 == null ? "test1" : inputID1, inputID2 == null ? "test2" : inputID2, 
-        		targetID == null ? "test3" : targetID);
+        		outputID == null ? "test3" : outputID);
     }
     
     @RequestMapping("/orDesignSpaces")
     public Map<String, Object> orDesignSpaces(@RequestParam(value = "inputID1", required = false) String inputID1, 
     		@RequestParam(value = "inputID2", required = false) String inputID2,
-    		@RequestParam(value = "targetID", required = false) String targetID) {
+    		@RequestParam(value = "outputID", required = false) String outputID) {
         return designSpaceService.orDesignSpaces(inputID1 == null ? "test1" : inputID1, inputID2 == null ? "test2" : inputID2, 
-        		targetID == null ? "test3" : targetID);
+        		outputID == null ? "test3" : outputID);
+    }
+    
+    @RequestMapping("/andDesignSpaces")
+    public Map<String, Object> andDesignSpaces(@RequestParam(value = "inputID1", required = false) String inputID1, 
+    		@RequestParam(value = "inputID2", required = false) String inputID2,
+    		@RequestParam(value = "outputID", required = false) String outputID) {
+        return designSpaceService.andDesignSpaces(inputID1 == null ? "test1" : inputID1, inputID2 == null ? "test2" : inputID2, 
+        		outputID == null ? "test3" : outputID);
     }
 
 }

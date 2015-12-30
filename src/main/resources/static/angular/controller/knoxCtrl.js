@@ -125,10 +125,10 @@ function knoxCtrl($scope) {
 		});
 	};
 
-    $scope.joinDesignSpaces = function(inputID1, inputID2, targetID) {
-        if (inputID1 && inputID2 && targetID && inputID1 !== inputID2 && targetID !== inputID1 && targetID !== inputID2) {
+    $scope.joinDesignSpaces = function(inputID1, inputID2, outputID) {
+        if (inputID1 && inputID2 && outputID && inputID1 !== inputID2 && outputID !== inputID1 && outputID !== inputID2) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
-                    + "&targetID=" + encodeURIComponent(targetID);
+                    + "&outputID=" + encodeURIComponent(outputID);
 
             d3.json("/joinDesignSpaces" + query, function(error, graph) {
                 if (error) return;
@@ -138,12 +138,25 @@ function knoxCtrl($scope) {
         }
     };
 
-    $scope.orDesignSpaces = function(inputID1, inputID2, targetID) {
-        if (inputID1 && inputID2 && targetID && inputID1 !== inputID2 && targetID !== inputID1 && targetID !== inputID2) {
+    $scope.orDesignSpaces = function(inputID1, inputID2, outputID) {
+        if (inputID1 && inputID2 && outputID && inputID1 !== inputID2 && outputID !== inputID1 && outputID !== inputID2) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
-                    + "&targetID=" + encodeURIComponent(targetID);
+                    + "&outputID=" + encodeURIComponent(outputID);
 
             d3.json("/orDesignSpaces" + query, function(error, graph) {
+                if (error) return;
+
+                $scope.findDesignSpace(graph.spaceID);
+            });
+        }
+    };
+
+    $scope.andDesignSpaces = function(inputID1, inputID2, outputID) {
+        if (inputID1 && inputID2 && outputID && inputID1 !== inputID2 && outputID !== inputID1 && outputID !== inputID2) {
+            var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
+                    + "&outputID=" + encodeURIComponent(outputID);
+
+            d3.json("/andDesignSpaces" + query, function(error, graph) {
                 if (error) return;
 
                 $scope.findDesignSpace(graph.spaceID);

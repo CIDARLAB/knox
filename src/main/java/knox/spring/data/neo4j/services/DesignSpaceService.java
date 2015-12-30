@@ -57,8 +57,8 @@ public class DesignSpaceService {
         return toD3Format(result);
     }
     
-    public Map<String, Object> joinDesignSpaces(String inputID1, String inputID2, String targetID) {
-    	Iterator<Map<String, Object>> result = designSpaceRepository.joinDesignSpaces(inputID1, inputID2, targetID).iterator();
+    public Map<String, Object> joinDesignSpaces(String inputID1, String inputID2, String outputID) {
+    	Iterator<Map<String, Object>> result = designSpaceRepository.joinDesignSpaces(inputID1, inputID2, outputID).iterator();
     	if (result.hasNext()) {
     		return result.next();
     	} else {
@@ -66,13 +66,27 @@ public class DesignSpaceService {
     	}
     }
     
-    public Map<String, Object> orDesignSpaces(String inputID1, String inputID2, String targetID) {
-    	Iterator<Map<String, Object>> result = designSpaceRepository.orDesignSpaces(inputID1, inputID2, targetID).iterator();
+    public Map<String, Object> orDesignSpaces(String inputID1, String inputID2, String outputID) {
+    	Iterator<Map<String, Object>> result = designSpaceRepository.orDesignSpaces(inputID1, inputID2, outputID).iterator();
     	if (result.hasNext()) {
     		return result.next();
     	} else {
     		return new HashMap<String, Object>();
     	}
     }
+    
+    public Map<String, Object> andDesignSpaces(String inputID1, String inputID2, String outputID) {
+    	designSpaceRepository.joinDesignSpaces(inputID1, inputID2, "knox1");
+    	designSpaceRepository.joinDesignSpaces(inputID2, inputID1, "knox2");
+    	Iterator<Map<String, Object>> result = designSpaceRepository.orDesignSpaces("knox1", "knox2", outputID).iterator();
+    	designSpaceRepository.deleteDesignSpace("knox1");
+    	designSpaceRepository.deleteDesignSpace("knox2");
+    	if (result.hasNext()) {
+    		return result.next();
+    	} else {
+    		return new HashMap<String, Object>();
+    	}
+    }
+    
     
 }
