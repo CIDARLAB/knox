@@ -30,6 +30,30 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 			+ "RETURN spaceID "
 			+ "LIMIT 1")
 	List<Map<String, Object>> deleteDesignSpace(@Param("targetID") String targetID);
+	
+	@Query("MERGE (output:DesignSpace {spaceID: {outputID}}) "
+			+ "WITH output "
+			+ "MATCH (input:DesignSpace)-[:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(input:DesignSpace) "
+			+ "WHERE input.spaceID = {inputID} "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(m.nodeType) AND has(e.componentID) AND has(e.componentRole) AND NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m)})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {nodeID: output.spaceID + ID(n)})<-[:CONTAINS]-(output)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN has(m.nodeType) AND has(e.componentID) AND has(e.componentRole) AND NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m), nodeType: m.nodeType})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {nodeID: output.spaceID + ID(n)})<-[:CONTAINS]-(output)) "		
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(m.nodeType) AND has(e.componentID) AND has(e.componentRole) AND n.nodeType = 'accept' THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m)})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {nodeID: output.spaceID + ID(n), nodeType: n.nodeType})<-[:CONTAINS]-(output)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN has(m.nodeType) AND has(e.componentID) AND has(e.componentRole) AND n.nodeType = 'accept' THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m), nodeType: m.nodeType})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {nodeID: output.spaceID + ID(n), nodeType: n.nodeType})<-[:CONTAINS]-(output)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(m.nodeType) AND NOT has(e.componentID) AND NOT has(e.componentRole) AND NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m)})-[:PRECEDES]->(:Node {nodeID: output.spaceID + ID(n)})<-[:CONTAINS]-(output)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN has(m.nodeType) AND NOT has(e.componentID) AND NOT has(e.componentRole) AND NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m), nodeType: m.nodeType})-[:PRECEDES]->(:Node {nodeID: output.spaceID + ID(n)})<-[:CONTAINS]-(output)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(m.nodeType) AND NOT has(e.componentID) AND NOT has(e.componentRole) AND n.nodeType = 'accept' THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m)})-[:PRECEDES]->(:Node {nodeID: output.spaceID + ID(n), nodeType: n.nodeType})<-[:CONTAINS]-(output)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN has(m.nodeType) AND NOT has(e.componentID) AND NOT has(e.componentRole) AND n.nodeType = 'accept' THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m), nodeType: m.nodeType})-[:PRECEDES]->(:Node {nodeID: output.spaceID + ID(n), nodeType: n.nodeType})<-[:CONTAINS]-(output)) "
+			+ "RETURN output.spaceID AS spaceID "
+			+ "LIMIT 1")
+	List<Map<String, Object>> copyDesignSpace(@Param("inputID") String inputID, @Param("outputID") String outputID);
     
     @Query("MERGE (output:DesignSpace {spaceID: {outputID}}) "
 			+ "WITH output "
@@ -55,7 +79,8 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 			+ "LIMIT 1 "
 			+ "MATCH (input1:DesignSpace {spaceID: {inputID1}})-[:CONTAINS]->(m:Node {nodeType: 'accept'}), (input2:DesignSpace {spaceID: {inputID2}})-[:CONTAINS]->(n:Node {nodeType: 'start'}) "
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(m)})-[:PRECEDES]->(:Node {nodeID: output.spaceID + ID(n)})<-[:CONTAINS]-(output) "
-			+ "RETURN output.spaceID AS spaceID")
+			+ "RETURN output.spaceID AS spaceID "
+			+ "LIMIT 1")
     List<Map<String, Object>> joinDesignSpaces(@Param("inputID1") String inputID1, @Param("inputID2") String inputID2, @Param("outputID") String outputID);
       
     @Query("MERGE (output:DesignSpace {spaceID: {outputID}}) "
@@ -81,6 +106,8 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 			+ "WITH output "
 			+ "LIMIT 1 "
 			+ "MATCH (input1:DesignSpace {spaceID: {inputID1}})-[:CONTAINS]->(n1:Node {nodeType: 'start'}), (input2:DesignSpace {spaceID: {inputID2}})-[:CONTAINS]->(n2:Node {nodeType: 'start'}) "
+			+ "WITH output, input1, input2, n1, n2 "
+			+ "LIMIT 1 "
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(n1) + output.spaceID + ID(n2), nodeType: 'start'})-[:PRECEDES]->(:Node {nodeID: output.spaceID + ID(n1)})<-[:CONTAINS]-(output) "
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(n1) + output.spaceID + ID(n2), nodeType: 'start'})-[:PRECEDES]->(:Node {nodeID: output.spaceID + ID(n2)})<-[:CONTAINS]-(output) "
 			+ "RETURN output.spaceID AS spaceID")

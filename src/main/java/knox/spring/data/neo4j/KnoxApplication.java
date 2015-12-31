@@ -40,6 +40,12 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return designSpaceService.deleteDesignSpace(targetID == null ? "test1" : targetID);
     }
     
+    @RequestMapping("/copyDesignSpace")
+    public Map<String, Object> copyDesignSpace(@RequestParam(value = "inputID", required = false) String inputID, 
+    		@RequestParam(value = "outputID", required = false) String outputID) {
+        return designSpaceService.copyDesignSpace(inputID == null ? "test1" : inputID, outputID == null ? "test3" : outputID);
+    }
+    
     @RequestMapping("/joinDesignSpaces")
     public Map<String, Object> joinDesignSpaces(@RequestParam(value = "inputID1", required = false) String inputID1, 
     		@RequestParam(value = "inputID2", required = false) String inputID2,

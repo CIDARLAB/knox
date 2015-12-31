@@ -153,7 +153,7 @@ function knoxCtrl($scope) {
     };
 
     $scope.joinDesignSpaces = function(inputID1, inputID2, outputID) {
-        if (inputID1 && inputID2 && outputID && inputID1 !== inputID2 && outputID !== inputID1 && outputID !== inputID2) {
+        if (inputID1 && inputID2 && outputID && outputID !== inputID1 && outputID !== inputID2) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
                     + "&outputID=" + encodeURIComponent(outputID);
 
@@ -168,7 +168,7 @@ function knoxCtrl($scope) {
     };
 
     $scope.orDesignSpaces = function(inputID1, inputID2, outputID) {
-        if (inputID1 && inputID2 && outputID && inputID1 !== inputID2 && outputID !== inputID1 && outputID !== inputID2) {
+        if (inputID1 && inputID2 && outputID && outputID !== inputID1 && outputID !== inputID2) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
                     + "&outputID=" + encodeURIComponent(outputID);
 
@@ -183,7 +183,7 @@ function knoxCtrl($scope) {
     };
 
     $scope.andDesignSpaces = function(inputID1, inputID2, outputID) {
-        if (inputID1 && inputID2 && outputID && inputID1 !== inputID2 && outputID !== inputID1 && outputID !== inputID2) {
+        if (inputID1 && inputID2 && inputID1 !== inputID2 && outputID && outputID !== inputID1 && outputID !== inputID2) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
                     + "&outputID=" + encodeURIComponent(outputID);
 

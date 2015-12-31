@@ -68,8 +68,24 @@ public class DesignSpaceService {
     	}
     }
     
+    public Map<String, Object> copyDesignSpace(String inputID, String outputID) {
+        Iterator<Map<String, Object>> result = designSpaceRepository.copyDesignSpace(inputID, outputID).iterator();
+        if (result.hasNext()) {
+    		return result.next();
+    	} else {
+    		return new HashMap<String, Object>();
+    	}
+    }
+    
     public Map<String, Object> joinDesignSpaces(String inputID1, String inputID2, String outputID) {
-    	Iterator<Map<String, Object>> result = designSpaceRepository.joinDesignSpaces(inputID1, inputID2, outputID).iterator();
+    	Iterator<Map<String, Object>> result;
+    	if (inputID1.equals(inputID2)) {
+    		designSpaceRepository.copyDesignSpace(inputID1, "knox");
+    		result = designSpaceRepository.joinDesignSpaces(inputID1, "knox", outputID).iterator();
+    		designSpaceRepository.deleteDesignSpace("knox");
+    	} else {
+    		result = designSpaceRepository.joinDesignSpaces(inputID1, inputID2, outputID).iterator();
+    	}
     	if (result.hasNext()) {
     		return result.next();
     	} else {
@@ -78,7 +94,14 @@ public class DesignSpaceService {
     }
     
     public Map<String, Object> orDesignSpaces(String inputID1, String inputID2, String outputID) {
-    	Iterator<Map<String, Object>> result = designSpaceRepository.orDesignSpaces(inputID1, inputID2, outputID).iterator();
+    	Iterator<Map<String, Object>> result;
+    	if (inputID1.equals(inputID2)) {
+    		designSpaceRepository.copyDesignSpace(inputID1, "knox");
+    		result = designSpaceRepository.orDesignSpaces(inputID1, "knox", outputID).iterator();
+    		designSpaceRepository.deleteDesignSpace("knox");
+    	} else {
+    		result = designSpaceRepository.orDesignSpaces(inputID1, inputID2, outputID).iterator();
+    	}
     	if (result.hasNext()) {
     		return result.next();
     	} else {
