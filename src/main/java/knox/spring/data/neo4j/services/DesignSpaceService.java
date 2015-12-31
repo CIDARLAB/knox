@@ -23,23 +23,25 @@ public class DesignSpaceService {
             if (graph.isEmpty()) {
             	graph.put("spaceID", row.get("spaceID"));
             }
-            Map<String, Object> tail = map("nodeID", row.get("tailID"), "nodeType", row.get("tailType"));
-            int source = nodes.indexOf(tail);
-            if (source == -1) {
-            	nodes.add(tail);
-            	source = i++;
+            if (graph.get("spaceID").equals(row.get("spaceID"))) {
+            	Map<String, Object> tail = map("nodeID", row.get("tailID"), "nodeType", row.get("tailType"));
+            	int source = nodes.indexOf(tail);
+            	if (source == -1) {
+            		nodes.add(tail);
+            		source = i++;
+            	}
+            	Map<String, Object> head = map("nodeID", row.get("headID"), "nodeType", row.get("headType"));
+            	int target = nodes.indexOf(head);
+            	if (target == -1) {
+            		nodes.add(head);
+            		target = i++;
+            	}
+            	Map<String, Object> link = map("source", source, "target", target);
+            	if (row.get("componentRole") != null) {
+            		link.put("componentRole", row.get("componentRole"));
+            	}
+            	links.add(link);
             }
-            Map<String, Object> head = map("nodeID", row.get("headID"), "nodeType", row.get("headType"));
-            int target = nodes.indexOf(head);
-            if (target == -1) {
-            	nodes.add(head);
-            	target = i++;
-            }
-            Map<String, Object> link = map("source", source, "target", target);
-            if (row.get("componentRole") != null) {
-            	link.put("componentRole", row.get("componentRole"));
-            }
-            links.add(link);
         }
         graph.putAll(map("nodes", nodes, "links", links));
         return graph;
@@ -55,6 +57,15 @@ public class DesignSpaceService {
     public Map<String, Object> findDesignSpace(String targetID) {
         Iterator<Map<String, Object>> result = designSpaceRepository.findDesignSpace(targetID).iterator();
         return toD3Format(result);
+    }
+    
+    public Map<String, Object> deleteDesignSpace(String targetID) {
+        Iterator<Map<String, Object>> result = designSpaceRepository.deleteDesignSpace(targetID).iterator();
+        if (result.hasNext()) {
+    		return result.next();
+    	} else {
+    		return new HashMap<String, Object>();
+    	}
     }
     
     public Map<String, Object> joinDesignSpaces(String inputID1, String inputID2, String outputID) {
@@ -87,6 +98,5 @@ public class DesignSpaceService {
     		return new HashMap<String, Object>();
     	}
     }
-    
     
 }

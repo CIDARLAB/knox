@@ -10,17 +10,26 @@
         <div role="navigation" class="navbar navbar-default navbar-static-top">
             <div class="container">
                 <div class="row">
-                    <div class="col-sm-6 col-md-6">
+                    <div class="col-sm-12 col-md-12">
                         <ul class="nav navbar-nav">
                             <li>
                                 <form class="navbar-form">
-                                    <div class="form-group">
-                                        <input type="text" placeholder="Search for Design Space" class="form-control" ng-model="targetID">
+                                    <div class="row">
+                                        <div class="col-sm-4 col-md-4">    
+                                            <div class="form-group">
+                                                <input type="text" placeholder="Search for Design Space" class="form-control" ng-model="targetID">
+                                            </div>
+                                            <button class="btn btn-default" ng-click="findDesignSpace(targetID)">Search</button>
+                                        </div>
+                                        <div class="col-sm-3 col-md-3">
+                                            <button class="btn btn-default" ng-click="joinDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">Join</button>
+                                            <button class="btn btn-default" ng-click="orDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">OR</button>
+                                            <button class="btn btn-default" ng-click="andDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">AND</button>
+                                        </div>
+                                        <div class="col-sm-2 col-md-2">
+                                            <button class="btn btn-default" ng-click="deleteDesignSpace(targetID)">Delete</button>
+                                        </div>
                                     </div>
-                                    <button class="btn btn-default" ng-click="findDesignSpace(targetID)">Search</button>
-                                    <button class="btn btn-default" ng-click="joinDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">Join</button>
-                                    <button class="btn btn-default" ng-click="orDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">OR</button>
-                                    <button class="btn btn-default" ng-click="andDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">AND</button>
                                 </form>
                             </li>
                         </ul>
@@ -28,50 +37,6 @@
                 </div>
             </div>
         </div>
-
-       <!--  <div role="navigation" class="navbar navbar-default navbar-static-top">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-md-6">
-                        <ul class="nav navbar-nav">
-                            <li>
-                                <form role="search" class="navbar-form" id="search1">
-                                    <div class="form-group">
-                                        <input type="text" placeholder="Search for Design Space" class="form-control" name="search1" ng-model="designSpaceID1">
-                                    </div>
-                                    <button class="btn btn-default" type="submit" ng-click="findDesignSpace(designSpaceID1, graph1)">Search</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col-sm-6 col-md-6">
-                        <ul class="nav navbar-nav">
-                            <li>
-                                <form role="search" class="navbar-form" id="search2">
-                                    <div class="form-group">
-                                        <input type="text" placeholder="Search for Design Space" class="form-control" name="search2" ng-model="designSpaceID2">
-                                    </div>
-                                    <button class="btn btn-default" type="submit" ng-click="findDesignSpace(designSpaceID2, graph2)">Search</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- <div class="container">
-            <div class="row">
-                <div class="col-sm-6 col-md-6">
-                    <div id="graph1">
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-6">
-                    <div id="graph2">
-                    </div>
-                </div>
-            </div>
-        </div> -->
 
         <div class="container">
             <div class="row">
@@ -102,90 +67,5 @@
         <script type="text/javascript" src="angular/controller/knoxCtrl.js"></script>
         <script type="text/javascript" src="angular/module/knoxApp.js"></script>
 
-        <!--<script type="text/javascript">
-            // $(function () {
-                function search() {
-                    var query = $("#search").find("input[name=search]").val();
-                    $.get("/movies/search/findByTitleContaining?title=" + encodeURIComponent(query),
-                            function (data) {
-                                var t = $("table#results tbody").empty();
-                                if (!data) return;
-                                data = data["_embedded"].movies;
-                                data.forEach(function (movie) {
-                                    $("<tr><td class='movie'>" + movie.title + "</td><td>" + movie.released + "</td><td>" + movie.tagline + "</td></tr>").appendTo(t)
-                                            .click(function() { showMovie($(this).find("td.movie").text());})
-                                });
-                                showMovie(data[0].title);
-                            }, "json");
-                    return false;
-                }
-
-                $("#search").submit(search);
-            //     search();
-            // })
-        </script>-->
-
     </body>
 </html>
- <!-- <div role="navigation" class="navbar navbar-default navbar-static-top">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-6 col-md-6">
-                        <ul class="nav navbar-nav">
-                            <li>
-                                <form role="search" class="navbar-form" id="search">
-                                    <div class="form-group">
-                                        <input type="text" value="Matrix" placeholder="Search for Movie Title" class="form-control" name="search">
-                                    </div>
-                                    <button class="btn btn-default" type="submit">Search</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="navbar-header col-sm-6 col-md-6">
-                        <div class="logo-well">
-                            <a href="http://neo4j.com/developer-resources">
-                                <img src="http://neo4j-contrib.github.io/developer-resources/language-guides/assets/img/logo-white.svg" alt="Neo4j World's Leading Graph Database" id="logo">
-                            </a>
-                        </div>
-                        <div class="navbar-brand">
-                            <div class="brand">Neo4j Movies</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-5">
-                <div class="panel panel-default">
-                    <div class="panel-heading">Search Results</div>
-                    <table id="results" class="table table-striped table-hover">
-                        <thead>
-                        <tr>
-                            <th>Movie</th>
-                            <th>Released</th>
-                            <th>Tagline</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="col-md-7">
-                <div class="panel panel-default">
-                    <div class="panel-heading" id="title">Details</div>
-                    <div class="row">
-                        <div class="col-sm-4 col-md-4">
-                            <img src="" class="well" id="poster"/>
-                        </div>
-                        <div class="col-md-8 col-sm-8">
-                            <h4>Crew</h4>
-                            <ul id="crew">
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->

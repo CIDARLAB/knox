@@ -24,8 +24,11 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 	List<Map<String, Object>> findDesignSpace(@Param("targetID") String targetID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetID}})-[:CONTAINS]->(n:Node) "
+			+ "WITH target, target.spaceID as spaceID, n "
 			+ "DETACH DELETE target "
-			+ "DETACH DELETE n")
+			+ "DETACH DELETE n "
+			+ "RETURN spaceID "
+			+ "LIMIT 1")
 	List<Map<String, Object>> deleteDesignSpace(@Param("targetID") String targetID);
     
     @Query("MERGE (output:DesignSpace {spaceID: {outputID}}) "
