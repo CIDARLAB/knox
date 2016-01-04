@@ -133,19 +133,18 @@ function knoxCtrl($scope) {
                 if (error) return;
 
                 if (graph.spaceID) {
-                    var i;
-                    for (i = 0; i < $scope.graphs.length; i++) {
-                        if ($scope.graphs[i].spaceID === graph.spaceID) {
-                            $scope.clearGraph(i);
-                            
-                            if (i == 0) {
-                                $scope.graphs[0] = $scope.graphs[1];
-                                $scope.clearGraph(1);
-                                $scope.populateGraph($scope.graphs[0], 0, 1110, 300);
-                            }
-
+                    $scope.clearGraph(1);
+                    if ($scope.graphs[0].spaceID === graph.spaceID) {
+                        $scope.clearGraph(0);
+                        if ($scope.graphs[1].spaceID === graph.spaceID) {
+                            $scope.graphs = [];
+                        } else {
+                            $scope.populateGraph($scope.graphs[1], 0, 1110, 300);
+                            $scope.graphs[0] = $scope.graphs[1];
                             $scope.graphs = $scope.graphs.slice(0, 1);
                         }
+                    } else if ($scope.graphs[1].spaceID === graph.spaceID) {
+                        $scope.graphs = $scope.graphs.slice(0, 1);
                     }
                 }
             });
@@ -183,7 +182,7 @@ function knoxCtrl($scope) {
     };
 
     $scope.andDesignSpaces = function(inputID1, inputID2, outputID) {
-        if (inputID1 && inputID2 && inputID1 !== inputID2 && outputID && outputID !== inputID1 && outputID !== inputID2) {
+        if (inputID1 && inputID2 && outputID && outputID !== inputID1 && outputID !== inputID2) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
                     + "&outputID=" + encodeURIComponent(outputID);
 

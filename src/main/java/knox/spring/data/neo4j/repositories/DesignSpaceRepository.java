@@ -24,11 +24,11 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 	List<Map<String, Object>> findDesignSpace(@Param("targetID") String targetID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetID}})-[:CONTAINS]->(n:Node) "
-			+ "WITH target, target.spaceID as spaceID, n "
+			+ "WITH target.spaceID as spaceID, target, n "
 			+ "DETACH DELETE target "
 			+ "DETACH DELETE n "
-			+ "RETURN spaceID "
-			+ "LIMIT 1")
+			+ "WITH collect(spaceID) as spaceIDs "
+			+ "RETURN spaceIDs[0] as spaceID")
 	List<Map<String, Object>> deleteDesignSpace(@Param("targetID") String targetID);
 	
 	@Query("MERGE (output:DesignSpace {spaceID: {outputID}}) "
@@ -112,6 +112,10 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: output.spaceID + ID(n1) + output.spaceID + ID(n2), nodeType: 'start'})-[:PRECEDES]->(:Node {nodeID: output.spaceID + ID(n2)})<-[:CONTAINS]-(output) "
 			+ "RETURN output.spaceID AS spaceID")
     List<Map<String, Object>> orDesignSpaces(@Param("inputID1") String inputID1, @Param("inputID2") String inputID2, @Param("outputID") String outputID);
+    
+//    @Query("MATCH (output:DesignSpace {spaceID: {outputID}) "
+//    		+ "RETURN output.spaceID as spaceID")
+//    List<Map<String, Object>> andDesignSpaces(@Param("inputID1") String inputID1, @Param("inputID2") String inputID2, @Param("outputID") String outputID);
     
 }
 

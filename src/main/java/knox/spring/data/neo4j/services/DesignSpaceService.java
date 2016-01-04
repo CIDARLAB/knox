@@ -110,16 +110,12 @@ public class DesignSpaceService {
     }
     
     public Map<String, Object> andDesignSpaces(String inputID1, String inputID2, String outputID) {
-    	designSpaceRepository.joinDesignSpaces(inputID1, inputID2, "knox1");
-    	designSpaceRepository.joinDesignSpaces(inputID2, inputID1, "knox2");
-    	Iterator<Map<String, Object>> result = designSpaceRepository.orDesignSpaces("knox1", "knox2", outputID).iterator();
+    	joinDesignSpaces(inputID1, inputID2, "knox1");
+    	joinDesignSpaces(inputID2, inputID1, "knox2");
+    	Map<String, Object> result = orDesignSpaces("knox1", "knox2", outputID);
     	designSpaceRepository.deleteDesignSpace("knox1");
     	designSpaceRepository.deleteDesignSpace("knox2");
-    	if (result.hasNext()) {
-    		return result.next();
-    	} else {
-    		return new HashMap<String, Object>();
-    	}
+    	return result;
     }
     
 }
