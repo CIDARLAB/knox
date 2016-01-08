@@ -30,9 +30,9 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @Autowired
     DesignSpaceService designSpaceService;
 
-    @RequestMapping("/findDesignSpace")
+    @RequestMapping("/d3GraphDesignSpace")
     public Map<String, Object> findDesignSpace(@RequestParam(value = "targetID", required = false) String targetID) {
-        return designSpaceService.findDesignSpace(targetID == null ? "test1" : targetID);
+        return designSpaceService.d3GraphDesignSpace(targetID == null ? "test1" : targetID);
     }
     
     @RequestMapping("/deleteDesignSpace")
@@ -67,6 +67,14 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		@RequestParam(value = "inputID2", required = false) String inputID2,
     		@RequestParam(value = "outputID", required = false) String outputID) {
         return designSpaceService.andDesignSpaces(inputID1 == null ? "test1" : inputID1, inputID2 == null ? "test2" : inputID2, 
+        		outputID == null ? "test3" : outputID);
+    }
+    
+    @RequestMapping("/insertDesignSpace")
+    public Map<String, Object> insertDesignSpace(@RequestParam(value = "inputID", required = false) String inputID, 
+    		@RequestParam(value = "targetNodeID", required = false) String targetNodeID,
+    		@RequestParam(value = "outputID", required = false) String outputID) {
+        return designSpaceService.insertDesignSpace(inputID == null ? "test1" : inputID, targetNodeID == null ? "test2" : targetNodeID, 
         		outputID == null ? "test3" : outputID);
     }
 

@@ -67,7 +67,7 @@ function knoxCtrl($scope) {
 
         // html title attribute
         node.append("title")
-                .text(function (d) { return d.spaceID; })
+                .text(function (d) { return d.nodeID; })
 
         // force feed algo ticks
         force.on("tick", function() {
@@ -100,12 +100,13 @@ function knoxCtrl($scope) {
 	$scope.graphs = [];
 
 	$scope.targetID = "test1";
+    $scope.targetNodeID = "";
 
-	$scope.findDesignSpace = function(targetID) {
+	$scope.graphDesignSpace = function(targetID) {
 		if (targetID) {
             var query = "?targetID=" + encodeURIComponent(targetID);
 
-            d3.json("/findDesignSpace" + query, function(error, graph) {
+            d3.json("/d3GraphDesignSpace" + query, function(error, graph) {
                 if (error) return;
 
                 if (graph.spaceID) {
@@ -187,6 +188,21 @@ function knoxCtrl($scope) {
                     + "&outputID=" + encodeURIComponent(outputID);
 
             d3.json("/andDesignSpaces" + query, function(error, graph) {
+                if (error) return;
+
+                if (graph.spaceID) {
+                    $scope.findDesignSpace(graph.spaceID);
+                }
+            });
+        }
+    };
+
+    $scope.insertDesignSpace = function(inputID, targetNodeID, outputID) {
+        if (inputID && targetNodeID && outputID && outputID !== inputID) {
+            var query = "?inputID=" + encodeURIComponent(inputID) + "&targetNodeID=" + encodeURIComponent(targetNodeID) 
+                    + "&outputID=" + encodeURIComponent(outputID);
+
+            d3.json("/insertDesignSpace" + query, function(error, graph) {
                 if (error) return;
 
                 if (graph.spaceID) {
