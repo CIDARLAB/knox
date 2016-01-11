@@ -15,19 +15,25 @@
                             <li>
                                 <form class="navbar-form">
                                     <div class="row">
-                                        <div class="col-sm-4 col-md-4">    
+                                        <div class="col-sm-3 col-md-3">    
                                             <div class="form-group">
-                                                <input type="text" placeholder="Search for Design Space" class="form-control" ng-model="targetID">
+                                                <input type="text" placeholder="Design Space ID" class="form-control" ng-model="spaceID">
                                             </div>
-                                            <button class="btn btn-default" ng-click="graphDesignSpace(targetID)">Search</button>
+                                            <button class="btn btn-default" ng-click="graphDesignSpace(spaceID)">Search</button>
                                         </div>
                                         <div class="col-sm-3 col-md-3">
-                                            <button class="btn btn-default" ng-click="joinDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">Join</button>
-                                            <button class="btn btn-default" ng-click="orDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">OR</button>
-                                            <button class="btn btn-default" ng-click="andDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, targetID)">AND</button>
+                                            <button class="btn btn-default" ng-click="joinDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">Join</button>
+                                            <button class="btn btn-default" ng-click="orDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">OR</button>
+                                            <button class="btn btn-default" ng-click="andDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">AND</button>
+                                        </div>
+                                        <div class="col-sm-3 col-md-3">
+                                            <div class="form-group">
+                                                <input type="text" placeholder="Node ID" class="form-control" ng-model="nodeID">
+                                            </div>
+                                            <button class="btn btn-default" ng-click="insertDesignSpace(graphs[0].spaceID, graphs[1].spaceID, nodeID, spaceID)">Insert</button>
                                         </div>
                                         <div class="col-sm-2 col-md-2">
-                                            <button class="btn btn-default" ng-click="deleteDesignSpace(targetID)">Delete</button>
+                                            <button class="btn btn-default" ng-click="deleteDesignSpace(spaceID)">Delete</button>
                                         </div>
                                     </div>
                                     <!-- <div class="row">

@@ -99,8 +99,8 @@ function knoxCtrl($scope) {
 
 	$scope.graphs = [];
 
-	$scope.targetID = "test1";
-    $scope.targetNodeID = "";
+	$scope.spaceID = "test1";
+    $scope.nodeID = "n1";
 
 	$scope.graphDesignSpace = function(targetID) {
 		if (targetID) {
@@ -197,16 +197,16 @@ function knoxCtrl($scope) {
         }
     };
 
-    $scope.insertDesignSpace = function(inputID, targetNodeID, outputID) {
-        if (inputID && targetNodeID && outputID && outputID !== inputID) {
-            var query = "?inputID=" + encodeURIComponent(inputID) + "&targetNodeID=" + encodeURIComponent(targetNodeID) 
-                    + "&outputID=" + encodeURIComponent(outputID);
+    $scope.insertDesignSpace = function(inputID1, inputID2, nodeID, outputID) {
+        if (inputID1 && inputID2 && nodeID && outputID && outputID !== inputID1 && outputID !== inputID2) {
+            var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
+                    + "&nodeID=" + encodeURIComponent(nodeID) + "&outputID=" + encodeURIComponent(outputID);
 
-            d3.json("/insertDesignSpace" + query, function(error, graph) {
+            d3.json("/insertDesignSpace" + query, function(error, output) {
                 if (error) return;
 
-                if (graph.spaceID) {
-                    $scope.graphDesignSpace(graph.spaceID);
+                if (output.spaceID) {
+                    $scope.graphDesignSpace(output.spaceID);
                 }
             });
         }

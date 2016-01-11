@@ -33,19 +33,19 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 	@Query("MATCH (input:DesignSpace {spaceID: {inputID}})-[:CONTAINS]->(n:Node) "
 			+ "WITH input, collect(n) as nodes "
 			+ "UNWIND range(0, size(nodes) - 1) as nodeIndex "
-			+ "WITH input, nodeIndex, nodes[nodeIndex] as n, size(nodes) as nodeCount "
+			+ "WITH input, nodeIndex, nodes[nodeIndex] as n, size(nodes) + {idIndex} as nextIndex "
 			+ "MERGE (output:DesignSpace {spaceID: {outputID}}) "
 			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(n.nodeType) THEN [1] ELSE [] END | "
-			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + ({idIndex} + nodeIndex), copyID: ID(n)})) "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + ({idIndex} + nodeIndex), copyID: n.nodeID})) "
 			+ "FOREACH(ignoreMe IN CASE WHEN has(n.nodeType) THEN [1] ELSE [] END | "
-			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + ({idIndex} + nodeIndex), copyID: ID(n), nodeType: n.nodeType})) "
-			+ "WITH input, n as m, nodeCount, output "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + ({idIndex} + nodeIndex), copyID: n.nodeID, nodeType: n.nodeType})) "
+			+ "WITH input, n as m, nextIndex, output "
 			+ "MATCH (m)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(input) "
 			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(e.componentID) AND NOT has(e.componentRole) THEN [1] ELSE [] END | "
-			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyID: ID(m)})-[:PRECEDES]->(:Node {copyID: ID(n)})<-[:CONTAINS]-(output)) "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyID: m.nodeID})-[:PRECEDES]->(:Node {copyID: n.nodeID})<-[:CONTAINS]-(output)) "
 			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentID) AND has(e.componentRole) THEN [1] ELSE [] END | "
-			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyID: ID(m)})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {copyID: ID(n)})<-[:CONTAINS]-(output)) "
-			+ "RETURN collect(output.spaceID)[0] AS spaceID, nodeCount")
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyID: m.nodeID})-[:PRECEDES {componentID: e.componentID, componentRole: e.componentRole}]->(:Node {copyID: n.nodeID})<-[:CONTAINS]-(output)) "
+			+ "RETURN collect(output.spaceID)[0] AS spaceID, nextIndex")
 	List<Map<String, Object>> copyDesignSpace(@Param("inputID") String inputID, @Param("outputID") String outputID, @Param("idIndex") int idIndex);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetID}})-[:CONTAINS]->(n:Node {nodeType: {nodeType}}) "
@@ -56,6 +56,10 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 			+ "REMOVE n.nodeType "
 			+ "RETURN n.nodeID as nodeID")
 	List<Map<String, Object>> removeNodeType(@Param("targetID") String targetID, @Param("nodeID") String nodeID);
+	
+	@Query("MATCH (:DesignSpace {spaceID: {targetID1}})-[:CONTAINS]->(n1:Node {nodeID: {nodeID}}), (:DesignSpace {spaceID: {targetID2}})-[:CONTAINS]->(n2:Node {copyID: n1.nodeID}) "
+			+ "RETURN n2.nodeID as nodeID")
+	List<Map<String, Object>> findNodeCopy(@Param("targetID1") String targetID1, @Param("nodeID") String nodeID, @Param("targetID2") String targetID2);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetID}})-[:CONTAINS]->(m:Node {nodeID: {nodeID}}) "
 			+ "OPTIONAL MATCH (m)-[e:Precedes]->(n:Node) "
