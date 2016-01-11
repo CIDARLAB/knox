@@ -130,21 +130,21 @@ function knoxCtrl($scope) {
         if (targetID) {
             var query = "?targetID=" + encodeURIComponent(targetID);
 
-            d3.json("/deleteDesignSpace" + query, function(error, graph) {
+            d3.json("/deleteDesignSpace" + query, function(error, target) {
                 if (error) return;
 
-                if (graph.spaceID) {
+                if (target.spaceID) {
                     $scope.clearGraph(1);
-                    if ($scope.graphs[0].spaceID === graph.spaceID) {
+                    if ($scope.graphs[0].spaceID === target.spaceID) {
                         $scope.clearGraph(0);
-                        if ($scope.graphs[1].spaceID === graph.spaceID) {
+                        if ($scope.graphs[1].spaceID === target.spaceID) {
                             $scope.graphs = [];
                         } else {
                             $scope.populateGraph($scope.graphs[1], 0, 1110, 300);
                             $scope.graphs[0] = $scope.graphs[1];
                             $scope.graphs = $scope.graphs.slice(0, 1);
                         }
-                    } else if ($scope.graphs[1].spaceID === graph.spaceID) {
+                    } else if ($scope.graphs[1].spaceID === target.spaceID) {
                         $scope.graphs = $scope.graphs.slice(0, 1);
                     }
                 }
@@ -157,11 +157,11 @@ function knoxCtrl($scope) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
                     + "&outputID=" + encodeURIComponent(outputID);
 
-            d3.json("/joinDesignSpaces" + query, function(error, graph) {
+            d3.json("/joinDesignSpaces" + query, function(error, output) {
                 if (error) return;
 
-                if (graph.spaceID) {
-                    $scope.findDesignSpace(graph.spaceID);
+                if (output.spaceID) {
+                    $scope.graphDesignSpace(output.spaceID);
                 }
             });
         }
@@ -172,11 +172,11 @@ function knoxCtrl($scope) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
                     + "&outputID=" + encodeURIComponent(outputID);
 
-            d3.json("/orDesignSpaces" + query, function(error, graph) {
+            d3.json("/orDesignSpaces" + query, function(error, output) {
                 if (error) return;
 
-                if (graph.spaceID) {
-                    $scope.findDesignSpace(graph.spaceID);
+                if (output.spaceID) {
+                    $scope.graphDesignSpace(output.spaceID);
                 }
             });
         }
@@ -187,11 +187,11 @@ function knoxCtrl($scope) {
             var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
                     + "&outputID=" + encodeURIComponent(outputID);
 
-            d3.json("/andDesignSpaces" + query, function(error, graph) {
+            d3.json("/andDesignSpaces" + query, function(error, output) {
                 if (error) return;
 
-                if (graph.spaceID) {
-                    $scope.findDesignSpace(graph.spaceID);
+                if (output.spaceID) {
+                    $scope.graphDesignSpace(output.spaceID);
                 }
             });
         }
@@ -206,7 +206,7 @@ function knoxCtrl($scope) {
                 if (error) return;
 
                 if (graph.spaceID) {
-                    $scope.findDesignSpace(graph.spaceID);
+                    $scope.graphDesignSpace(graph.spaceID);
                 }
             });
         }

@@ -43,7 +43,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @RequestMapping("/copyDesignSpace")
     public Map<String, Object> copyDesignSpace(@RequestParam(value = "inputID", required = false) String inputID, 
     		@RequestParam(value = "outputID", required = false) String outputID) {
-        return designSpaceService.copyDesignSpace(inputID == null ? "test1" : inputID, outputID == null ? "test3" : outputID);
+        return designSpaceService.copyDesignSpace(inputID == null ? "test1" : inputID, outputID == null ? "test3" : outputID, 1);
     }
     
     @RequestMapping("/joinDesignSpaces")
@@ -70,12 +70,12 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         		outputID == null ? "test3" : outputID);
     }
     
-    @RequestMapping("/insertDesignSpace")
-    public Map<String, Object> insertDesignSpace(@RequestParam(value = "inputID", required = false) String inputID, 
-    		@RequestParam(value = "targetNodeID", required = false) String targetNodeID,
-    		@RequestParam(value = "outputID", required = false) String outputID) {
-        return designSpaceService.insertDesignSpace(inputID == null ? "test1" : inputID, targetNodeID == null ? "test2" : targetNodeID, 
-        		outputID == null ? "test3" : outputID);
-    }
+//    @RequestMapping("/insertDesignSpace")
+//    public Map<String, Object> insertDesignSpace(@RequestParam(value = "inputID", required = false) String inputID, 
+//    		@RequestParam(value = "targetNodeID", required = false) String targetNodeID,
+//    		@RequestParam(value = "outputID", required = false) String outputID) {
+//        return designSpaceService.insertDesignSpace(inputID == null ? "test1" : inputID, targetNodeID == null ? "test2" : targetNodeID, 
+//        		outputID == null ? "test3" : outputID);
+//    }
 
 }
