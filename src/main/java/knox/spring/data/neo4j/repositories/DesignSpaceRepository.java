@@ -61,10 +61,11 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 			+ "RETURN n2.nodeID as nodeID")
 	List<Map<String, Object>> findNodeCopy(@Param("targetID1") String targetID1, @Param("nodeID") String nodeID, @Param("targetID2") String targetID2);
 	
-	@Query("MATCH (target:DesignSpace {spaceID: {targetID}})-[:CONTAINS]->(m:Node {nodeID: {nodeID}}) "
-			+ "OPTIONAL MATCH (m)-[e:Precedes]->(n:Node) "
+	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(:Node {nodeID: {nodeID}})-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(target:DesignSpace) "
+			+ "WHERE target.spaceID = {targetID} "
+			+ "WITH e, e.componentID as componentID, e.componentRole as componentRole, n "
 			+ "DELETE e "
-			+ "RETURN m.nodeID as tailID, n.nodeID as headID")
+			+ "RETURN componentID, componentRole, n.nodeID as headID")
 	List<Map<String, Object>> deleteOutgoingEdges(@Param("targetID") String targetID, @Param("nodeID") String nodeID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetID}}) "
@@ -75,7 +76,13 @@ public interface DesignSpaceRepository extends GraphRepository<Node> {
 	@Query("MATCH (tail:Node {nodeID: {tailID}})<-[:CONTAINS]-(:DesignSpace {spaceID: {targetID}})-[:CONTAINS]->(head:Node {nodeID: {headID}}) "
 			+ "CREATE UNIQUE (tail)-[:PRECEDES]->(head) "
 			+ "RETURN tail.nodeID as tailID, head.nodeID as headID")
-	List<Map<String, Object>> connectNodes(@Param("targetID") String targetID, @Param("tailID") String tailID, @Param("headID") String headID);
+	List<Map<String, Object>> createEdge(@Param("targetID") String targetID, @Param("tailID") String tailID, @Param("headID") String headID);
+	
+	@Query("MATCH (tail:Node {nodeID: {tailID}})<-[:CONTAINS]-(:DesignSpace {spaceID: {targetID}})-[:CONTAINS]->(head:Node {nodeID: {headID}}) "
+			+ "CREATE UNIQUE (tail)-[:PRECEDES {componentID: {componentID}, componentRole: {componentRole}}]->(head) "
+			+ "RETURN tail.nodeID as tailID, head.nodeID as headID")
+	List<Map<String, Object>> createComponentEdge(@Param("targetID") String targetID, @Param("tailID") String tailID, @Param("headID") String headID, 
+			@Param("componentID") String componentID, @Param("componentRole") String componentRole);
     
 }
 

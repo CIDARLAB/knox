@@ -54,7 +54,7 @@ public class DesignSpaceService {
     				removeNodeType(outputID, startID);
     				for (String acceptID1 : acceptIDs1) {
     					removeNodeType(outputID, acceptID1);
-    					connectNodes(outputID, acceptID1, startID);
+    					createEdge(outputID, acceptID1, startID);
     		    	}
     			}
     		}
@@ -74,7 +74,7 @@ public class DesignSpaceService {
     	
     	for (String startID : startIDs) {
     		removeNodeType(outputID, startID);
-    		connectNodes(outputID, startID0, startID);
+    		createEdge(outputID, startID0, startID);
     	}
     	
     	return copy2;
@@ -103,9 +103,9 @@ public class DesignSpaceService {
     	Set<String> nodeIDs = findNodeCopy(inputID2, nodeID, outputID);
     	String copyID = (nodeIDs.size() > 0) ? nodeIDs.iterator().next() : "";
     	
-    	Set<String> headIDs = (copyID.length() > 0) ? deleteOutgoingEdges(outputID, copyID) : new HashSet<String>();
+    	List<Map<String, Object>> edges = (copyID.length() > 0) ? deleteOutgoingEdges(outputID, copyID) : new LinkedList<Map<String, Object>>();
     	
-    	if (headIDs.size() > 0) {
+    	if (edges.size() > 0) {
     		for (String acceptID1 : acceptIDs1) {
     			removeNodeType(outputID, acceptID1);
     		}
@@ -114,12 +114,16 @@ public class DesignSpaceService {
     		String startID1 = startIDs1.iterator().next();
     		removeNodeType(outputID, startID1);
     		if (copyID.length() > 0) {
-    			connectNodes(outputID, copyID, startID1);
+    			createEdge(outputID, copyID, startID1);
     		}
     	}
     	for (String acceptID1 : acceptIDs1) {
-    		for (String headID : headIDs) {
-    			connectNodes(outputID, acceptID1, headID);
+    		for (Map<String, Object> edge : edges) {
+    			if (edge.containsKey("componentRole")) {
+    				createComponentEdge(outputID, acceptID1, (String) edge.get("headID"), (String) edge.get("componentID"), (String) edge.get("componentRole"));
+    			} else {
+    				createEdge(outputID, acceptID1, (String) edge.get("headID"));
+    			}
     		}
     	}
     	
@@ -128,47 +132,53 @@ public class DesignSpaceService {
     
     private Set<String> findNodesByType(String targetID, String nodeType) {
     	Set<String> nodeIDs = new HashSet<String>();
-    	Iterator<Map<String, Object>> rows = designSpaceRepository.findNodesByType(targetID, nodeType).iterator();
-    	while (rows.hasNext()) {
-    		nodeIDs.add((String) rows.next().get("nodeID"));
+    	List<Map<String, Object>> rows = designSpaceRepository.findNodesByType(targetID, nodeType);
+    	if (rows.size() > 0) {
+    		nodeIDs.add((String) rows.get(0).get("nodeID"));
     	}
     	return nodeIDs;
     }
     
     private boolean removeNodeType(String targetID, String nodeID) {
-    	Iterator<Map<String, Object>> rows = designSpaceRepository.removeNodeType(targetID, nodeID).iterator();
-    	return rows.hasNext();
+    	List<Map<String, Object>> rows = designSpaceRepository.removeNodeType(targetID, nodeID);
+    	return rows.size() > 0;
     }
     
     private Set<String> findNodeCopy(String targetID1, String nodeID, String targetID2) {
     	Set<String> nodeIDs = new HashSet<String>();
-    	Iterator<Map<String, Object>> rows = designSpaceRepository.findNodeCopy(targetID1, nodeID, targetID2).iterator();
-    	while (rows.hasNext()) {
-    		nodeIDs.add((String) rows.next().get("nodeID"));
+    	List<Map<String, Object>> rows = designSpaceRepository.findNodeCopy(targetID1, nodeID, targetID2);
+    	if (rows.size() > 0) {
+    		nodeIDs.add((String) rows.get(0).get("nodeID"));
     	}
     	return nodeIDs;
     }
     
-    private boolean connectNodes(String targetID, String tailID, String headID) {
-    	Iterator<Map<String, Object>> rows = designSpaceRepository.connectNodes(targetID, tailID, headID).iterator();
-    	return rows.hasNext();
+    private boolean createEdge(String targetID, String tailID, String headID) {
+    	List<Map<String, Object>> rows = designSpaceRepository.createEdge(targetID, tailID, headID);
+    	return rows.size() > 0;
+    }
+    
+    private boolean createComponentEdge(String targetID, String tailID, String headID, String componentID, String componentRole) {
+    	List<Map<String, Object>> rows = designSpaceRepository.createComponentEdge(targetID, tailID, headID, componentID, componentRole);
+    	return rows.size() > 0;
     }
     
     private boolean createTypedNode(String targetID, String nodeID, String nodeType) {
-    	Iterator<Map<String, Object>> rows = designSpaceRepository.createTypedNode(targetID, nodeID, nodeType).iterator();
-    	return rows.hasNext();
+    	List<Map<String, Object>> rows = designSpaceRepository.createTypedNode(targetID, nodeID, nodeType);
+    	return rows.size() > 0;
     }
     
-    private Set<String> deleteOutgoingEdges(String targetID, String nodeID) {
-    	Set<String> headIDs = new HashSet<String>();
-    	Iterator<Map<String, Object>> rows = designSpaceRepository.deleteOutgoingEdges(targetID, nodeID).iterator();
-    	while (rows.hasNext()) {
-    		Map<String, Object> row = rows.next();
-    		if (row.get("headID") != null) {
-    			headIDs.add((String) row.get("headID"));
+    private List<Map<String, Object>> deleteOutgoingEdges(String targetID, String nodeID) {
+    	List<Map<String, Object>> rows = designSpaceRepository.deleteOutgoingEdges(targetID, nodeID);
+    	for (Map<String, Object> row : rows) {
+    		if (row.containsKey("componentID")) {
+    			row.remove("componentID");
+    		}
+    		if (row.containsKey("componentRole")) {
+    			row.remove("componentRole");
     		}
     	}
-    	return headIDs;
+    	return rows;
     }
     
     private Map<String, Object> toD3Format(Iterator<Map<String, Object>> rows) {
@@ -195,7 +205,7 @@ public class DesignSpaceService {
             		target = i++;
             	}
             	Map<String, Object> link = buildMap("source", source, "target", target);
-            	if (row.get("componentRole") != null) {
+            	if (row.containsKey("componentRole")) {
             		link.put("componentRole", row.get("componentRole"));
             	}
             	links.add(link);
