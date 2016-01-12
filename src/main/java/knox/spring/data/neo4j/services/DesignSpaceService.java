@@ -109,6 +109,11 @@ public class DesignSpaceService {
     		for (String acceptID1 : acceptIDs1) {
     			removeNodeType(outputID, acceptID1);
     		}
+    	} else if (copyID.length() > 0){
+    		Set<String> acceptIDs = findNodesByType(outputID, NodeType.ACCEPT.value);
+    		if (acceptIDs.contains(copyID)) {
+    			removeNodeType(outputID, copyID);
+    		}
     	}
     	if (startIDs1.size() > 0) {
     		String startID1 = startIDs1.iterator().next();
@@ -171,10 +176,10 @@ public class DesignSpaceService {
     private List<Map<String, Object>> deleteOutgoingEdges(String targetID, String nodeID) {
     	List<Map<String, Object>> rows = designSpaceRepository.deleteOutgoingEdges(targetID, nodeID);
     	for (Map<String, Object> row : rows) {
-    		if (row.containsKey("componentID")) {
+    		if (row.containsKey("componentID") && row.get("componentID") == null) {
     			row.remove("componentID");
     		}
-    		if (row.containsKey("componentRole")) {
+    		if (row.containsKey("componentRole") && row.get("componentRole") == null) {
     			row.remove("componentRole");
     		}
     	}
@@ -229,6 +234,17 @@ public class DesignSpaceService {
     	private final String value;
     	
     	NodeType(String value) {
+    		this.value = value;
+    	}
+    }
+    
+    private enum NodeProperty {
+    	NODE_ID ("nodeID"),
+    	NODE_TYPE ("nodeType");
+    	
+    	private final String value;
+    	
+    	NodeProperty(String value) {
     		this.value = value;
     	}
     }
