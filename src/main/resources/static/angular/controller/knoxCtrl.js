@@ -40,7 +40,7 @@ function knoxCtrl($scope) {
 
        	var componentLinks = [];
         for (i = 0; i < graph.links.length; i++) {
-        	if (graph.links[i].componentRole) {
+        	if (graph.links[i].componentRoles) {
         		componentLinks.push(graph.links[i]);
         	}
         }
@@ -49,7 +49,7 @@ function knoxCtrl($scope) {
                 .data(componentLinks).enter().append("g");
 
         icon.append("image").attr("xlink:href", function (d) {
-                    return "image/" + d.componentRole + ".png";
+                    return "image/" + d.componentRoles[0] + ".png";
                 })
                 .attr("x", -15)
                 .attr("y", -15)

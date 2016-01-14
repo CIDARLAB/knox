@@ -60,6 +60,8 @@ public class DesignSpaceService {
     		}
     	}
     	
+    	removeCopyIDs(outputID);
+    	
     	return copy2;
     }
     
@@ -77,6 +79,8 @@ public class DesignSpaceService {
     		createEdge(outputID, startID0, startID);
     	}
     	
+    	removeCopyIDs(outputID);
+    	
     	return copy2;
     }
     
@@ -92,7 +96,8 @@ public class DesignSpaceService {
     	return output;
     }
     
-    public Map<String, Object> insertDesignSpace(String inputID1, String inputID2, String nodeID, String outputID) {
+    @SuppressWarnings("unchecked")
+	public Map<String, Object> insertDesignSpace(String inputID1, String inputID2, String nodeID, String outputID) {
     	Map<String, Object> copy1 = copyDesignSpace(inputID1, outputID, 1);
 
     	Set<String> startIDs1 = findNodesByType(outputID, NodeType.START.value);
@@ -124,13 +129,15 @@ public class DesignSpaceService {
     	}
     	for (String acceptID1 : acceptIDs1) {
     		for (Map<String, Object> edge : edges) {
-    			if (edge.containsKey("componentRole")) {
-    				createComponentEdge(outputID, acceptID1, (String) edge.get("headID"), (String) edge.get("componentID"), (String) edge.get("componentRole"));
+    			if (edge.containsKey("componentRoles")) {
+    				createComponentEdge(outputID, acceptID1, (String) edge.get("headID"), (ArrayList<String>) edge.get("componentIDs"), (ArrayList<String>) edge.get("componentRoles"));
     			} else {
     				createEdge(outputID, acceptID1, (String) edge.get("headID"));
     			}
     		}
     	}
+    	
+    	removeCopyIDs(outputID);
     	
     	return copy2;
     }
@@ -138,14 +145,19 @@ public class DesignSpaceService {
     private Set<String> findNodesByType(String targetID, String nodeType) {
     	Set<String> nodeIDs = new HashSet<String>();
     	List<Map<String, Object>> rows = designSpaceRepository.findNodesByType(targetID, nodeType);
-    	if (rows.size() > 0) {
-    		nodeIDs.add((String) rows.get(0).get("nodeID"));
+    	for (Map<String, Object> row : rows) {
+    		nodeIDs.add((String) row.get("nodeID"));
     	}
     	return nodeIDs;
     }
     
     private boolean removeNodeType(String targetID, String nodeID) {
     	List<Map<String, Object>> rows = designSpaceRepository.removeNodeType(targetID, nodeID);
+    	return rows.size() > 0;
+    }
+    
+    private boolean removeCopyIDs(String targetID) {
+    	List<Map<String, Object>> rows = designSpaceRepository.removeCopyIDs(targetID);
     	return rows.size() > 0;
     }
     
@@ -163,8 +175,8 @@ public class DesignSpaceService {
     	return rows.size() > 0;
     }
     
-    private boolean createComponentEdge(String targetID, String tailID, String headID, String componentID, String componentRole) {
-    	List<Map<String, Object>> rows = designSpaceRepository.createComponentEdge(targetID, tailID, headID, componentID, componentRole);
+    private boolean createComponentEdge(String targetID, String tailID, String headID, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
+    	List<Map<String, Object>> rows = designSpaceRepository.createComponentEdge(targetID, tailID, headID, componentIDs, componentRoles);
     	return rows.size() > 0;
     }
     
@@ -176,11 +188,11 @@ public class DesignSpaceService {
     private List<Map<String, Object>> deleteOutgoingEdges(String targetID, String nodeID) {
     	List<Map<String, Object>> rows = designSpaceRepository.deleteOutgoingEdges(targetID, nodeID);
     	for (Map<String, Object> row : rows) {
-    		if (row.containsKey("componentID") && row.get("componentID") == null) {
-    			row.remove("componentID");
+    		if (row.containsKey("componentIDs") && row.get("componentIDs") == null) {
+    			row.remove("componentIDs");
     		}
-    		if (row.containsKey("componentRole") && row.get("componentRole") == null) {
-    			row.remove("componentRole");
+    		if (row.containsKey("componentRoles") && row.get("componentRoles") == null) {
+    			row.remove("componentRoles");
     		}
     	}
     	return rows;
@@ -210,8 +222,8 @@ public class DesignSpaceService {
             		target = i++;
             	}
             	Map<String, Object> link = buildMap("source", source, "target", target);
-            	if (row.containsKey("componentRole")) {
-            		link.put("componentRole", row.get("componentRole"));
+            	if (row.containsKey("componentRoles") && row.get("componentRoles") != null) {
+            		link.put("componentRoles", row.get("componentRoles"));
             	}
             	links.add(link);
             }
