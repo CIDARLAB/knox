@@ -1,5 +1,7 @@
 package knox.spring.data.neo4j.domain;
 
+import java.util.ArrayList;
+
 import org.neo4j.ogm.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -18,9 +20,9 @@ public class Edge {
     @EndNode
     Node head;
     
-    String componentID;
+    ArrayList<String> componentIDs;
     
-    String componentRole;
+    ArrayList<String> componentRoles;
 
     public Edge() {
     	
@@ -34,12 +36,16 @@ public class Edge {
         return head;
     }
     
-    public String getComponentID() {
-    	return componentID;
+    public ArrayList<String> getComponentIDs() {
+    	return componentIDs;
     }
     
-    public String getComponentRole() {
-    	return componentRole;
+    public ArrayList<String> getComponentRoles() {
+    	return componentRoles;
+    }
+    
+    public boolean hasRoles() {
+    	return componentRoles != null && componentRoles.size() > 0;
     }
     
 }

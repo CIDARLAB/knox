@@ -16,8 +16,8 @@ public class Node {
     
     String nodeID;
 
-    @Relationship(type="PRECEDES") 
-    Collection<Node> successors;
+    @Relationship(type = "PRECEDES") 
+    Collection<Edge> edges;
     
     String nodeType;
 
@@ -25,12 +25,16 @@ public class Node {
     	
     }
     
+    public Long getID() {
+    	return id;
+    }
+    
     public String getNodeID() {
     	return nodeID;
     }
 
-    public Collection<Node> getSuccessors() {
-        return successors;
+    public Collection<Edge> getEdges() {
+        return edges;
     }
     
     String getNodeType() {
