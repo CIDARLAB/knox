@@ -17,22 +17,32 @@ public class DesignSpace {
     String spaceID;
     
     @Relationship(type = "CONTAINS") 
-    Set<Child> children;
+    Set<NodeLink> nodeLinks;
+    
+    @Relationship(type = "HAS") 
+    Set<BranchLink> branchLinks;
+    
+    @Relationship(type = "SELECTS") 
+    HeadLink headLink;
 
     public DesignSpace() {
     	
     }
     
-    public Long getID() {
-    	return id;
-    }
-    
-    public Set<Child> getChildren() {
-    	return children;
+    public Set<NodeLink> getNodeLinks() {
+    	return nodeLinks;
     }
     
     public String getSpaceID() {
     	return spaceID;
+    }
+    
+    public Set<BranchLink> getBranchLinks() {
+    	return branchLinks;
+    }
+    
+    public HeadLink getHeadLink() {
+    	return headLink;
     }
 
 }

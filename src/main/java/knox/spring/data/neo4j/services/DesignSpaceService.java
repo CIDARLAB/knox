@@ -34,7 +34,7 @@ public class DesignSpaceService {
     	Set<Node> startNodes1 = findNodesByType(outputID, NodeType.START.value);
     	Set<Node> acceptNodes1 = findNodesByType(outputID, NodeType.ACCEPT.value);
     	
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getChildren().size());
+    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getNodeLinks().size());
     	
     	Set<Node> startNodes = findNodesByType(outputID, NodeType.START.value);
     	
@@ -58,7 +58,7 @@ public class DesignSpaceService {
     
     public DesignSpace orDesignSpaces(String inputID1, String inputID2, String outputID) {
     	DesignSpace copy1 = copyDesignSpace(inputID1, outputID, 1);
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getChildren().size() + 1);
+    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getNodeLinks().size() + 1);
 
     	Set<Node> startNodes = findNodesByType(outputID, NodeType.START.value);
     
@@ -92,7 +92,7 @@ public class DesignSpaceService {
     	Set<Node> startNodes1 = findNodesByType(outputID, NodeType.START.value);
     	Set<Node> acceptNodes1 = findNodesByType(outputID, NodeType.ACCEPT.value);
     	
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getChildren().size());
+    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getNodeLinks().size());
     	
     	Node nodeCopy = findNodeCopy(inputID2, nodeID, outputID);
     	

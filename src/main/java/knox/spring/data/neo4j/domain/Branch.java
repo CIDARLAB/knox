@@ -6,28 +6,27 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;
 
 @JsonIdentityInfo(generator=JSOGGenerator.class)
-@RelationshipEntity(type = "CONTAINS")
-public class Child {
+@NodeEntity
+public class Branch {
 	
     @GraphId
     Long id;
     
-    @StartNode
-    DesignSpace parent;
+    String branchID;
     
-    @EndNode
-    Node child;
+    @Relationship(type = "POINTS") 
+    CommitLink commitLink;
 
-    public Child() {
+    public Branch() {
     	
     }
-
-    public DesignSpace getParent() {
-        return parent;
-    }
-
-    public Node getChild() {
-        return child;
+    
+    public CommitLink getCommitLink() {
+    	return commitLink;
     }
     
+    public String getBranchID() {
+    	return branchID;
+    }
+
 }

@@ -1,4 +1,5 @@
-CREATE (d1:DesignSpace {spaceID: "test1"})
+CREATE (d1:DesignSpace {spaceID: "test1"})-[:HAS]->(b1:Branch {branchID: "b0"})
+CREATE (d1)-[:SELECTS]->(b1)
 
 CREATE (n0:Node {nodeID: "n0", nodeType: "start"})
 CREATE (n1:Node {nodeID: "n1"})
@@ -43,7 +44,8 @@ CREATE (d1)-[:CONTAINS]->(n10)
 CREATE (d1)-[:CONTAINS]->(n11)
 CREATE (d1)-[:CONTAINS]->(n12)
 
-CREATE (d2:DesignSpace {spaceID: "test2"})
+CREATE (d2:DesignSpace {spaceID: "test2"})-[:HAS]->(b2:Branch {branchID: "b0"})
+CREATE (d2)-[:SELECTS]->(b2)
 
 CREATE (n13:Node {nodeID: "n13", nodeType: "start"})
 CREATE (n14:Node {nodeID: "n14"})
