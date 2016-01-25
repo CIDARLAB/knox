@@ -34,22 +34,30 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "DETACH DELETE n")
 	void deleteDesignSpace(@Param("targetID") String targetID);
 	
+	@Query("MERGE (target:DesignSpace {spaceID: {outputID}}) "
+			+ "ON CREATE SET target.idIndex = 0 "
+			+ "CREATE UNIQUE (target)-[:HAS]->(:Branch {branchID: 'master'})<-[:SELECTS]-(target)")
+	void createDesignSpace(@Param("outputID") String outputID);
+	
 	@Query("MATCH (input:DesignSpace {spaceID: {inputID}})-[:CONTAINS]->(n:Node) "
 			+ "WITH input, collect(n) as nodes "
-			+ "UNWIND range(0, size(nodes) - 1) as nodeIndex "
-			+ "WITH input, nodeIndex, nodes[nodeIndex] as n "
 			+ "MERGE (output:DesignSpace {spaceID: {outputID}}) "
+			+ "ON CREATE SET output.idIndex = size(nodes) "
+			+ "ON MATCH SET output.idIndex = output.idIndex + size(nodes) "
+			+ "WITH input, nodes, output "
+			+ "UNWIND range(0, size(nodes) - 1) as nodeIndex "
+			+ "WITH input, output, nodeIndex, nodes[nodeIndex] as n "
 			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(n.nodeType) THEN [1] ELSE [] END | "
-			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + ({idIndex} + nodeIndex), copyID: ID(n)})) "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + (output.idIndex - nodeIndex - 1), copyID: ID(n)})) "
 			+ "FOREACH(ignoreMe IN CASE WHEN has(n.nodeType) THEN [1] ELSE [] END | "
-			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + ({idIndex} + nodeIndex), copyID: ID(n), nodeType: n.nodeType})) "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + (output.idIndex - nodeIndex - 1), copyID: ID(n), nodeType: n.nodeType})) "
 			+ "WITH input, n as m, output "
 			+ "MATCH (m)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(input) "
 			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(e.componentIDs) AND NOT has(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyID: ID(m)})-[:PRECEDES]->(:Node {copyID: ID(n)})<-[:CONTAINS]-(output)) "
 			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentIDs) AND has(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyID: ID(m)})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {copyID: ID(n)})<-[:CONTAINS]-(output))")
-	void copyDesignSpace(@Param("inputID") String inputID, @Param("outputID") String outputID, @Param("idIndex") int idIndex);
+	void copyDesignSpace(@Param("inputID") String inputID, @Param("outputID") String outputID);
 	
 	@Query("MATCH (:DesignSpace {spaceID: {targetID1}})-[:CONTAINS]->(n1:Node {nodeID: {nodeID}}), (:DesignSpace {spaceID: {targetID2}})-[:CONTAINS]->(n2:Node {copyID: ID(n1)}) "
 			+ "RETURN n2")

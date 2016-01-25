@@ -29,12 +29,12 @@ public class DesignSpaceService {
     }
     
     public DesignSpace joinDesignSpaces(String inputID1, String inputID2, String outputID) {
-    	DesignSpace copy1 = copyDesignSpace(inputID1, outputID, 0);
+    	copyDesignSpace(inputID1, outputID);
     	
     	Set<Node> startNodes1 = findNodesByType(outputID, NodeType.START.value);
     	Set<Node> acceptNodes1 = findNodesByType(outputID, NodeType.ACCEPT.value);
     	
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getNodeLinks().size());
+    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID);
     	
     	Set<Node> startNodes = findNodesByType(outputID, NodeType.START.value);
     	
@@ -57,12 +57,12 @@ public class DesignSpaceService {
     }
     
     public DesignSpace orDesignSpaces(String inputID1, String inputID2, String outputID) {
-    	DesignSpace copy1 = copyDesignSpace(inputID1, outputID, 1);
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getNodeLinks().size() + 1);
+    	copyDesignSpace(inputID1, outputID);
+    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID);
 
     	Set<Node> startNodes = findNodesByType(outputID, NodeType.START.value);
     
-    	Node startNode0 = createTypedNode(outputID, "n0", NodeType.START.value);
+    	Node startNode0 = createTypedNode(outputID, "n00", NodeType.START.value);
     	
     	for (Node startNode : startNodes) {
     		removeNodeType(outputID, startNode.getNodeID());
@@ -87,12 +87,12 @@ public class DesignSpaceService {
     }
     
 	public DesignSpace insertDesignSpace(String inputID1, String inputID2, String nodeID, String outputID) {
-    	DesignSpace copy1 = copyDesignSpace(inputID1, outputID, 0);
+    	copyDesignSpace(inputID1, outputID);
 
     	Set<Node> startNodes1 = findNodesByType(outputID, NodeType.START.value);
     	Set<Node> acceptNodes1 = findNodesByType(outputID, NodeType.ACCEPT.value);
     	
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID, copy1.getNodeLinks().size());
+    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID);
     	
     	Node nodeCopy = findNodeCopy(inputID2, nodeID, outputID);
     	
@@ -144,8 +144,8 @@ public class DesignSpaceService {
     	return designSpaceRepository.findBySpaceID(targetID);
     }
     
-    private DesignSpace copyDesignSpace(String inputID, String outputID, int idIndex) {
-        designSpaceRepository.copyDesignSpace(inputID, outputID, idIndex);
+    private DesignSpace copyDesignSpace(String inputID, String outputID) {
+        designSpaceRepository.copyDesignSpace(inputID, outputID);
         return findDesignSpace(outputID);
     }
     
