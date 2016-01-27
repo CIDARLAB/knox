@@ -6,27 +6,27 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;
 
 @JsonIdentityInfo(generator=JSOGGenerator.class)
-@RelationshipEntity(type = "CONTAINS")
-public class NodeLink {
+@RelationshipEntity(type = "LATEST")
+public class HeadCommit {
 	
     @GraphId
     Long id;
     
     @StartNode
-    DesignSpace tail;
+    Branch tail;
     
     @EndNode
-    Node head;
+    Commit head;
 
-    public NodeLink() {
+    public HeadCommit() {
     	
     }
 
-    public DesignSpace getTail() {
+    public Branch getTail() {
         return tail;
     }
 
-    public Node getHead() {
+    public Commit getHead() {
         return head;
     }
     

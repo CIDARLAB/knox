@@ -1,5 +1,7 @@
 package knox.spring.data.neo4j.domain;
 
+import java.util.Set;
+
 import org.neo4j.ogm.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -14,15 +16,22 @@ public class Branch {
     
     String branchID;
     
-    @Relationship(type = "POINTS") 
-    CommitLink commitLink;
+    @Relationship(type = "CONTAINS") 
+    Set<BranchToCommit> branchToCommit;
+    
+    @Relationship(type = "LATEST") 
+    HeadCommit latestCommit;
 
     public Branch() {
     	
     }
     
-    public CommitLink getCommitLink() {
-    	return commitLink;
+    public Set<BranchToCommit> getBranchToCommit() {
+    	return branchToCommit;
+    }
+    
+    public HeadCommit getLatestCommit() {
+    	return latestCommit;
     }
     
     public String getBranchID() {

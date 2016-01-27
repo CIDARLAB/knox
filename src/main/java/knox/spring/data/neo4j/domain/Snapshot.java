@@ -9,7 +9,7 @@ import com.voodoodyne.jackson.jsog.JSOGGenerator;
 
 @JsonIdentityInfo(generator=JSOGGenerator.class)
 @NodeEntity
-public class DesignSpace {
+public class Snapshot {
 	
     @GraphId
     Long id;
@@ -19,15 +19,9 @@ public class DesignSpace {
     int idIndex;
     
     @Relationship(type = "CONTAINS") 
-    Set<SpaceToNode> spaceToNode;
-    
-    @Relationship(type = "CONTAINS") 
-    Set<SpaceToBranch> spaceToBranch;
-    
-    @Relationship(type = "SELECTS") 
-    HeadBranch headBranch;
+    Set<SnapToNode> snapToNode;
 
-    public DesignSpace() {
+    public Snapshot() {
     	
     }
     
@@ -39,16 +33,8 @@ public class DesignSpace {
     	return idIndex;
     }
     
-    public Set<SpaceToNode> getSpaceToNode() {
-    	return spaceToNode;
-    }
-    
-    public Set<SpaceToBranch> getSpaceToBranch() {
-    	return spaceToBranch;
-    }
-    
-    public HeadBranch getHeadBranch() {
-    	return headBranch;
+    public Set<SnapToNode> getSnapToNode() {
+    	return snapToNode;
     }
 
 }

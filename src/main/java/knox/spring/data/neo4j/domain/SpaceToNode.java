@@ -6,23 +6,23 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;
 
 @JsonIdentityInfo(generator=JSOGGenerator.class)
-@RelationshipEntity(type = "ARCHIVES")
-public class NodeArchive {
+@RelationshipEntity(type = "CONTAINS")
+public class SpaceToNode {
 	
     @GraphId
     Long id;
     
     @StartNode
-    Commit tail;
+    DesignSpace tail;
     
     @EndNode
     Node head;
 
-    public NodeArchive() {
+    public SpaceToNode() {
     	
     }
 
-    public Commit getTail() {
+    public DesignSpace getTail() {
         return tail;
     }
 

@@ -16,15 +16,15 @@ public class Commit {
     
     String commitID;
     
-    @Relationship(type = "ARCHIVES") 
-    Set<NodeArchive> nodeArchives;
+    @Relationship(type = "CONTAINS") 
+    Set<CommitToSpace> commitToNode;
     
     public Commit() {
     	
     }
     
-    public Set<NodeArchive> getNodeArchives() {
-    	return nodeArchives;
+    public Set<CommitToSpace> getCommitToNode() {
+    	return commitToNode;
     }
 
     public String getCommitID() {

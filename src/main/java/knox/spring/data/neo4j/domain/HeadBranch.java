@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;
 
 @JsonIdentityInfo(generator=JSOGGenerator.class)
-@RelationshipEntity(type = "HAS")
-public class BranchLink {
+@RelationshipEntity(type = "SELECTS")
+public class HeadBranch {
 	
     @GraphId
     Long id;
@@ -18,7 +18,7 @@ public class BranchLink {
     @EndNode
     Branch head;
 
-    public BranchLink() {
+    public HeadBranch() {
     	
     }
 

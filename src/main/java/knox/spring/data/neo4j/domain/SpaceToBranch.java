@@ -6,27 +6,27 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;
 
 @JsonIdentityInfo(generator=JSOGGenerator.class)
-@RelationshipEntity(type = "POINTS")
-public class CommitLink {
+@RelationshipEntity(type = "CONTAINS")
+public class SpaceToBranch {
 	
     @GraphId
     Long id;
     
     @StartNode
-    Branch tail;
+    DesignSpace tail;
     
     @EndNode
-    Commit head;
+    Branch head;
 
-    public CommitLink() {
+    public SpaceToBranch() {
     	
     }
 
-    public Branch getTail() {
+    public DesignSpace getTail() {
         return tail;
     }
 
-    public Commit getHead() {
+    public Branch getHead() {
         return head;
     }
     

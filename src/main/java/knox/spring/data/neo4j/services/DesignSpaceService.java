@@ -23,134 +23,131 @@ public class DesignSpaceService {
     @Autowired DesignSpaceRepository designSpaceRepository;
     
     @Autowired NodeRepository nodeRepository;
-
-    public Map<String, Object> d3GraphDesignSpace(String targetID) {
-        return toD3Format(designSpaceRepository.mapDesignSpace(targetID));
+    
+    public void checkoutBranch(String targetSpaceID, String targetBranchID) {
+    	designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
     }
     
-    public DesignSpace joinDesignSpaces(String inputID1, String inputID2, String outputID) {
-    	copyDesignSpace(inputID1, outputID);
+    public void commitBranch(String targetSpaceID) {
+    	designSpaceRepository.commitBranch(targetSpaceID);
+    }
+
+    public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
+        return toD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
+    }
+    
+    public void joinDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
+    	copyDesignSpace(inputSpaceID1, outputSpaceID);
     	
-    	Set<Node> startNodes1 = findNodesByType(outputID, NodeType.START.value);
-    	Set<Node> acceptNodes1 = findNodesByType(outputID, NodeType.ACCEPT.value);
+    	Set<Node> startNodes1 = findNodesByType(outputSpaceID, NodeType.START.value);
+    	Set<Node> acceptNodes1 = findNodesByType(outputSpaceID, NodeType.ACCEPT.value);
     	
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID);
+    	copyDesignSpace(inputSpaceID2, outputSpaceID);
     	
-    	Set<Node> startNodes = findNodesByType(outputID, NodeType.START.value);
+    	Set<Node> startNodes = findNodesByType(outputSpaceID, NodeType.START.value);
     	
     	if (startNodes1.size() > 0) {
     		Node startNode1 = startNodes1.iterator().next();
     		for (Node startNode : startNodes) {
     			if (!startNode.getNodeID().equals(startNode1.getNodeID())) {
-    				removeNodeType(outputID, startNode.getNodeID());
+    				deleteNodeType(outputSpaceID, startNode.getNodeID());
     				for (Node acceptNode1 : acceptNodes1) {
-    					removeNodeType(outputID, acceptNode1.getNodeID());
-    					createEdge(outputID, acceptNode1.getNodeID(), startNode.getNodeID());
+    					deleteNodeType(outputSpaceID, acceptNode1.getNodeID());
+    					createEdge(outputSpaceID, acceptNode1.getNodeID(), startNode.getNodeID());
     				}
     			}
     		}
     	}
     	
-    	removeCopyIDs(outputID);
-    	
-    	return copy2;
+    	deleteCopyIDs(outputSpaceID);
     }
     
-    public DesignSpace orDesignSpaces(String inputID1, String inputID2, String outputID) {
-    	copyDesignSpace(inputID1, outputID);
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID);
+    public void orDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
+    	copyDesignSpace(inputSpaceID1, outputSpaceID);
+    	copyDesignSpace(inputSpaceID2, outputSpaceID);
 
-    	Set<Node> startNodes = findNodesByType(outputID, NodeType.START.value);
+    	Set<Node> startNodes = findNodesByType(outputSpaceID, NodeType.START.value);
     
-    	Node startNode0 = createTypedNode(outputID, "n00", NodeType.START.value);
+    	createTypedNode(outputSpaceID, "n00", NodeType.START.value);
     	
     	for (Node startNode : startNodes) {
-    		removeNodeType(outputID, startNode.getNodeID());
-    		createEdge(outputID, startNode0.getNodeID(), startNode.getNodeID());
+    		deleteNodeType(outputSpaceID, startNode.getNodeID());
+    		createEdge(outputSpaceID, "n00", startNode.getNodeID());
     	}
     	
-    	removeCopyIDs(outputID);
-    	
-    	return copy2;
+    	deleteCopyIDs(outputSpaceID);
     }
     
-    public DesignSpace andDesignSpaces(String inputID1, String inputID2, String outputID) {
-    	joinDesignSpaces(inputID1, inputID2, "knox1");
-    	joinDesignSpaces(inputID2, inputID1, "knox2");
+    public void andDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
+    	joinDesignSpaces(inputSpaceID1, inputSpaceID2, "knox1");
+    	joinDesignSpaces(inputSpaceID2, inputSpaceID1, "knox2");
     	
-    	DesignSpace orSpace = orDesignSpaces("knox1", "knox2", outputID);
+    	orDesignSpaces("knox1", "knox2", outputSpaceID);
     	
     	designSpaceRepository.deleteDesignSpace("knox1");
     	designSpaceRepository.deleteDesignSpace("knox2");
-    	
-    	return orSpace;
     }
     
-	public DesignSpace insertDesignSpace(String inputID1, String inputID2, String nodeID, String outputID) {
-    	copyDesignSpace(inputID1, outputID);
+	public void insertDesignSpace(String inputSpaceID1, String inputSpaceID2, String targetNodeID, String outputSpaceID) {
+    	copyDesignSpace(inputSpaceID1, outputSpaceID);
 
-    	Set<Node> startNodes1 = findNodesByType(outputID, NodeType.START.value);
-    	Set<Node> acceptNodes1 = findNodesByType(outputID, NodeType.ACCEPT.value);
+    	Set<Node> startNodes1 = findNodesByType(outputSpaceID, NodeType.START.value);
+    	Set<Node> acceptNodes1 = findNodesByType(outputSpaceID, NodeType.ACCEPT.value);
     	
-    	DesignSpace copy2 = copyDesignSpace(inputID2, outputID);
+    	copyDesignSpace(inputSpaceID2, outputSpaceID);
     	
-    	Node nodeCopy = findNodeCopy(inputID2, nodeID, outputID);
+    	Node nodeCopy = findNodeCopy(inputSpaceID2, targetNodeID, outputSpaceID);
     	
     	if (nodeCopy != null) {
-    		Set<Edge> deletedEdges = removeOutgoingEdges(outputID, nodeCopy.getNodeID());
+    		Set<Edge> removedEdges = removeOutgoingEdges(outputSpaceID, nodeCopy.getNodeID());
 
-    		if (deletedEdges.size() > 0) {
+    		if (removedEdges.size() > 0) {
     			for (Node acceptNode1 : acceptNodes1) {
-    				removeNodeType(outputID, acceptNode1.getNodeID());
+    				deleteNodeType(outputSpaceID, acceptNode1.getNodeID());
     			}
     		} else {
-    			Set<Node> acceptNodes = findNodesByType(outputID, NodeType.ACCEPT.value);
+    			Set<Node> acceptNodes = findNodesByType(outputSpaceID, NodeType.ACCEPT.value);
     			for (Node acceptNode : acceptNodes) {
     				if (nodeCopy.getNodeID().equals(acceptNode.getNodeID())) {
-    					removeNodeType(outputID, nodeCopy.getNodeID());
+    					deleteNodeType(outputSpaceID, nodeCopy.getNodeID());
     				}
     			}
     		}
     		if (startNodes1.size() > 0) {
     			Node startNode1 = startNodes1.iterator().next();
-    			removeNodeType(outputID, startNode1.getNodeID());
-    			createEdge(outputID, nodeCopy.getNodeID(), startNode1.getNodeID());
+    			deleteNodeType(outputSpaceID, startNode1.getNodeID());
+    			createEdge(outputSpaceID, nodeCopy.getNodeID(), startNode1.getNodeID());
     		}
     		for (Node acceptNode1 : acceptNodes1) {
-    			for (Edge deletedEdge : deletedEdges) {
-    				if (deletedEdge.hasRoles()) {
-    					createComponentEdge(outputID, acceptNode1.getNodeID(), deletedEdge.getHead().getNodeID(), deletedEdge.getComponentIDs(), deletedEdge.getComponentRoles());
+    			for (Edge removedEdge : removedEdges) {
+    				if (removedEdge.hasRoles()) {
+    					createComponentEdge(outputSpaceID, acceptNode1.getNodeID(), removedEdge.getHead().getNodeID(), removedEdge.getComponentIDs(), removedEdge.getComponentRoles());
     				} else {
-    					createEdge(outputID, acceptNode1.getNodeID(), deletedEdge.getHead().getNodeID());
+    					createEdge(outputSpaceID, acceptNode1.getNodeID(), removedEdge.getHead().getNodeID());
     				}
     			}
     		}
     	}
     	
-    	removeCopyIDs(outputID);
-    	
-    	return copy2;
+    	deleteCopyIDs(outputSpaceID);
     }
 	
-	public DesignSpace deleteDesignSpace(String targetID) {
-    	DesignSpace deleted = findDesignSpace(targetID);
-    	if (deleted != null) {
-    		designSpaceRepository.deleteDesignSpace(targetID);
+	public void deleteDesignSpace(String targetSpaceID) {
+    	if (findDesignSpace(targetSpaceID) != null) {
+    		designSpaceRepository.deleteDesignSpace(targetSpaceID);
     	}
-    	return deleted;
     }
     
-    private DesignSpace findDesignSpace(String targetID) {
-    	return designSpaceRepository.findBySpaceID(targetID);
+    private DesignSpace findDesignSpace(String targetSpaceID) {
+    	return designSpaceRepository.findBySpaceID(targetSpaceID);
     }
     
-    private DesignSpace copyDesignSpace(String inputID, String outputID) {
-        designSpaceRepository.copyDesignSpace(inputID, outputID);
-        return findDesignSpace(outputID);
+    private void copyDesignSpace(String inputSpaceID, String outputSpaceID) {
+        designSpaceRepository.copyDesignSpace(inputSpaceID, outputSpaceID);
     }
     
-    private Node findNodeCopy(String targetID1, String nodeID, String targetID2) {
-    	Set<Node> nodeCopy = designSpaceRepository.findNodeCopy(targetID1, nodeID, targetID2);
+    private Node findNodeCopy(String targetSpaceID1, String targetNodeID, String targetSpaceID2) {
+    	Set<Node> nodeCopy = designSpaceRepository.findNodeCopy(targetSpaceID1, targetNodeID, targetSpaceID2);
     	if (nodeCopy.size() > 0) {
     		return nodeCopy.iterator().next();
     	} else {
@@ -158,57 +155,40 @@ public class DesignSpaceService {
     	}
     }
     
-    private List<Map<String, Object>> removeCopyIDs(String targetID) {
-    	return designSpaceRepository.removeCopyIDs(targetID);
+    private void deleteCopyIDs(String targetSpaceID) {
+    	designSpaceRepository.deleteCopyIDs(targetSpaceID);
     }
     
-    private Set<Node> findNodesByType(String targetID, String nodeType) {
-    	return designSpaceRepository.findNodesByType(targetID, nodeType);
+    private Set<Node> findNodesByType(String targetSpaceID, String nodeType) {
+    	return designSpaceRepository.findNodesByType(targetSpaceID, nodeType);
     }
     
-    private Node createTypedNode(String targetID, String nodeID, String nodeType) {
-    	designSpaceRepository.createTypedNode(targetID, nodeID, nodeType);
-    	return nodeRepository.findByNodeID(nodeID);
+    private void createTypedNode(String targetSpaceID, String targetNodeID, String nodeType) {
+    	designSpaceRepository.createTypedNode(targetSpaceID, targetNodeID, nodeType);
     }
     
-    private Map<String, Object> removeNodeType(String targetID, String nodeID) {
-    	List<Map<String, Object>> nodeType = designSpaceRepository.removeNodeType(targetID, nodeID);
-    	if (nodeType.size() > 0) {
-    		return nodeType.get(0); 
-    	} else {
-    		return null;
+    private void deleteNodeType(String targetSpaceID, String targetNodeID) {
+    	designSpaceRepository.deleteNodeType(targetSpaceID, targetNodeID);
+    }
+    
+    private Set<Edge> findOutgoingEdges(String targetSpaceID, String targetNodeID) {
+    	return designSpaceRepository.findOutgoingEdges(targetSpaceID, targetNodeID);
+    }
+    
+    private void createEdge(String targetSpaceID, String targetTailID, String targetHeadID) {
+    	designSpaceRepository.createEdge(targetSpaceID, targetTailID, targetHeadID);
+    }
+    
+    private void createComponentEdge(String targetSpaceID, String targetTailID, String targetHeadID, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
+    	designSpaceRepository.createComponentEdge(targetSpaceID, targetTailID, targetHeadID, componentIDs, componentRoles);
+    }
+    
+    private Set<Edge> removeOutgoingEdges(String targetSpaceID, String targetNodeID) {
+    	Set<Edge> removedEdges = findOutgoingEdges(targetSpaceID, targetNodeID);
+    	if (removedEdges.size() > 0) {
+    		designSpaceRepository.deleteOutgoingEdges(targetSpaceID, targetNodeID);
     	}
-    }
-    
-    private Edge findEdge(String targetID, String tailID, String headID) {
-    	Set<Edge> edge = designSpaceRepository.findEdge(targetID, tailID, headID);
-    	if (edge.size() > 0) {
-    		return edge.iterator().next();
-    	} else {
-    		return null;
-    	}
-    }
-    
-    private Set<Edge> findOutgoingEdges(String targetID, String nodeID) {
-    	return designSpaceRepository.findOutgoingEdges(targetID, nodeID);
-    }
-    
-    private Edge createEdge(String targetID, String tailID, String headID) {
-    	designSpaceRepository.createEdge(targetID, tailID, headID);
-    	return findEdge(targetID, tailID, headID);
-    }
-    
-    private Edge createComponentEdge(String targetID, String tailID, String headID, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
-    	designSpaceRepository.createComponentEdge(targetID, tailID, headID, componentIDs, componentRoles);
-    	return findEdge(targetID, tailID, headID);
-    }
-    
-    private Set<Edge> removeOutgoingEdges(String targetID, String nodeID) {
-    	Set<Edge> deletedEdges = findOutgoingEdges(targetID, nodeID);
-    	if (deletedEdges.size() > 0) {
-    		designSpaceRepository.removeOutgoingEdges(targetID, nodeID);
-    	}
-    	return deletedEdges;
+    	return removedEdges;
     }
     
     private Map<String, Object> toD3Format(List<Map<String, Object>> spaceMap) {
