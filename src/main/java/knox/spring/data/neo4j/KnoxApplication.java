@@ -40,9 +40,9 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
-    @RequestMapping(value = "/branch/commit", method = RequestMethod.POST)
-    public ResponseEntity<String> commitBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-    	designSpaceService.commitBranch(targetSpaceID);
+    @RequestMapping(value = "/branch/commitTo", method = RequestMethod.POST)
+    public ResponseEntity<String> commitToBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+    	designSpaceService.commitToBranch(targetSpaceID);
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     

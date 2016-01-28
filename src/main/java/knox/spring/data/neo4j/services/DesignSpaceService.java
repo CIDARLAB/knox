@@ -28,8 +28,8 @@ public class DesignSpaceService {
     	designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
     }
     
-    public void commitBranch(String targetSpaceID) {
-    	designSpaceRepository.commitBranch(targetSpaceID);
+    public void commitToBranch(String targetSpaceID) {
+    	designSpaceRepository.commitToBranch(targetSpaceID);
     }
 
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
