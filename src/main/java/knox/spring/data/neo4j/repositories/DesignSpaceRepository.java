@@ -23,8 +23,10 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	
 	DesignSpace findBySpaceID(@Param("spaceID") String spaceID);
 	
-	@Query("MATCH (s:Snapshot)<-[:CONTAINS]-(:Commit)<-[:LATEST]-(b:Branch {branchID: {targetBranchID}})<-[:CONTAINS]-(target:DesignSpace {spaceID: {targetSpaceID}})-[h:SELECTS]->(:Branch) "
-			+ "DELETE h "
+	@Query("MATCH (s:Snapshot)<-[:CONTAINS]-(:Commit)<-[:LATEST]-(b:Branch {branchID: {targetBranchID}})<-[:CONTAINS]-(target:DesignSpace {spaceID: {targetSpaceID}}) "
+			+ "OPTIONAL MATCH (target)-[h:SELECTS]->(:Branch) "
+			+ "FOREACH(ignoreMe IN CASE WHEN h IS NOT NULL THEN [1] ELSE [] END | "
+			+ "DELETE h) "
 			+ "CREATE UNIQUE (target)-[:SELECTS]->(b) "
 			+ "SET target.idIndex = s.idIndex "
 			+ "WITH target, s "
@@ -110,6 +112,10 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Branch {branchID: 'master'})<-[:SELECTS]-(output)")
 	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
 	
+	@Query("MATCH (target {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch) "
+			+ "CREATE UNIQUE (target)-[:CONTAINS]->(b:Branch {branchID: {outputBranchID}, idIndex: hb.idIndex})-[:CONTAINS]->(c:Commit)<-[:LATEST]-(hb), (b)-[:LATEST]->(c)")
+	void createBranch(@Param("targetSpaceID") String targetSpaceID, @Param("outputBranchID") String outputBranchID);
+	
 	@Query("MATCH (input:DesignSpace {spaceID: {inputSpaceID}})-[:CONTAINS]->(n:Node) "
 			+ "WITH input, collect(n) as nodes "
 			+ "MERGE (output:DesignSpace {spaceID: {outputSpaceID}}) "
@@ -135,20 +141,30 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	Set<Node> findNodeCopy(@Param("targetSpaceID1") String targetSpaceID1, @Param("targetNodeID") String targetNodeID, @Param("targetSpaceID2") String targetSpaceID2);
 	
 	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node) "
-			+ "WITH n, n.copyID as copyID "
 			+ "REMOVE n.copyID")
 	void deleteCopyIDs(@Param("targetSpaceID") String targetSpaceID);
 	
+	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(:Branch {branchID: {targetBranchID}})-[:CONTAINS]->(:Commit)-[:CONTAINS]->(:Snapshot)-[:CONTAINS]->(n:Node) "
+			+ "REMOVE n.copyID")
+	void deleteBranchCopyIDs(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID);
+	
+	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(:Branch)-[:LATEST]->(:Commit)-[:CONTAINS]->(:Snapshot)-[:CONTAINS]->(n:Node) "
+			+ "REMOVE n.copyID")
+	void deleteLatestHeadCopyIDs(@Param("targetSpaceID") String targetSpaceID);
+	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node {nodeType: {nodeType}}) "
 			+ "RETURN n")
-	Set<Node> findNodesByType(@Param("targetSpaceID") String targetSpaceID, @Param("nodeType") String nodeType);
+	Set<Node> getNodesByType(@Param("targetSpaceID") String targetSpaceID, @Param("nodeType") String nodeType);
+	
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(b:Branch) "
+			+ "RETURN b.branchID as branchID")
+	List<Map<String, Object>> getBranchIDs(@Param("targetSpaceID") String targetSpaceID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
 			+ "CREATE UNIQUE (target)-[:CONTAINS]->(n:Node {nodeID: {targetNodeID}, nodeType: {nodeType}})")
 	void createTypedNode(@Param("targetSpaceID") String targetSpaceID, @Param("targetNodeID") String targetNodeID, @Param("nodeType") String nodeType);
 	
 	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node {nodeID: {targetNodeID}}) "
-			+ "WITH n, n.nodeType as nodeType "
 			+ "REMOVE n.nodeType")
 	void deleteNodeType(@Param("targetSpaceID") String targetSpaceID, @Param("targetNodeID") String targetNodeID);
 	
@@ -160,7 +176,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(:Node {nodeID: {targetNodeID}})-[e:PRECEDES]->(:Node)<-[:CONTAINS]-(target:DesignSpace) "
 			+ "WHERE target.spaceID = {targetSpaceID} "
 			+ "RETURN e")
-	Set<Edge> findOutgoingEdges(@Param("targetSpaceID") String targetSpaceID, @Param("targetNodeID") String targetNodeID);
+	Set<Edge> getOutgoingEdges(@Param("targetSpaceID") String targetSpaceID, @Param("targetNodeID") String targetNodeID);
 	
 	@Query("MATCH (tail:Node {nodeID: {targetTailID}})<-[:CONTAINS]-(:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(head:Node {nodeID: {targetHeadID}}) "
 			+ "CREATE UNIQUE (tail)-[e:PRECEDES]->(head)")

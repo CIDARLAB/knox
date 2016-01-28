@@ -16,6 +16,8 @@ public class Branch {
     
     String branchID;
     
+    int idIndex;
+    
     @Relationship(type = "CONTAINS") 
     Set<BranchToCommit> branchToCommit;
     
@@ -36,6 +38,10 @@ public class Branch {
     
     public String getBranchID() {
     	return branchID;
+    }
+    
+    public int getIDIndex() {
+    	return idIndex;
     }
 
 }
