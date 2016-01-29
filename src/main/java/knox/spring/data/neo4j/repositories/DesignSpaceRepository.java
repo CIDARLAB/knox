@@ -107,13 +107,22 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "DETACH DELETE n")
 	void deleteDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 	
-	@Query("MERGE (output:DesignSpace {spaceID: {outputSpaceID}}) "
+	@Query("OPTIONAL MATCH (:DesignSpace {spaceID: {outputSpaceID}})-[:CONTAINS]->(b:Branch) "
+			+ "MERGE (output:DesignSpace {spaceID: {outputSpaceID}}) "
 			+ "ON CREATE SET output.idIndex = 0 "
-			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Branch {branchID: 'master'})<-[:SELECTS]-(output)")
+			+ "FOREACH(ignoreMe IN CASE WHEN b IS NULL THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Branch {branchID: 'master'})<-[:SELECTS]-(output))")
 	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
 	
 	@Query("MATCH (target {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch) "
-			+ "CREATE UNIQUE (target)-[:CONTAINS]->(b:Branch {branchID: {outputBranchID}, idIndex: hb.idIndex})-[:CONTAINS]->(c:Commit)<-[:LATEST]-(hb), (b)-[:LATEST]->(c)")
+			+ "OPTIONAL MATCH (target)-[:CONTAINS]->(pb:Branch {branchID: {outputBranchID}}) "
+			+ "OPTIONAL MATCH (hb)-[:CONTAINS]->(c:Commit)<-[:LATEST]-(hb) "
+			+ "FOREACH(ignoreMe IN CASE WHEN pb IS NULL THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (target)-[:CONTAINS]->(:Branch {branchID: {outputBranchID}, idIndex: hb.idIndex})) "
+			+ "FOREACH(ignoreMe IN CASE WHEN pb IS NULL AND c IS NOT NULL THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (target)-[:CONTAINS]->(:Branch {branchID: {outputBranchID}})-[:CONTAINS]->(c)) "
+			+ "FOREACH(ignoreMe IN CASE WHEN pb IS NULL AND c IS NOT NULL THEN [1] ELSE [] END | "
+			+ "CREATE UNIQUE (target)-[:CONTAINS]->(:Branch {branchID: {outputBranchID}})-[:LATEST]->(c))")
 	void createBranch(@Param("targetSpaceID") String targetSpaceID, @Param("outputBranchID") String outputBranchID);
 	
 	@Query("MATCH (input:DesignSpace {spaceID: {inputSpaceID}})-[:CONTAINS]->(n:Node) "

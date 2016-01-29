@@ -25,6 +25,14 @@ public class DesignSpaceService {
     
     @Autowired NodeRepository nodeRepository;
     
+    public void createBranch(String targetSpaceID, String outputBranchID) {
+    	designSpaceRepository.createBranch(targetSpaceID, outputBranchID);
+    }
+    
+    public void createDesignSpace(String outputSpaceID) {
+    	designSpaceRepository.createDesignSpace(outputSpaceID);
+    }
+    
     public void checkoutBranch(String targetSpaceID, String targetBranchID) {
     	designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
     	deleteCopyIDs(targetSpaceID);

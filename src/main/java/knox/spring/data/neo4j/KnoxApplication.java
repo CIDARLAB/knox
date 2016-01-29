@@ -33,6 +33,13 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @Autowired
     DesignSpaceService designSpaceService;
     
+    @RequestMapping(value = "/branch", method = RequestMethod.POST)
+    public ResponseEntity<String> createBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "outputBranchID", required = true) String outputBranchID) {
+    	designSpaceService.createBranch(targetSpaceID, outputBranchID);
+        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    }
+    
     @RequestMapping(value = "/branch/checkout", method = RequestMethod.PUT)
     public ResponseEntity<String> checkoutBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "targetBranchID", required = true) String targetBranchID) {
@@ -49,6 +56,12 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @RequestMapping(value = "/designSpace", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
     	designSpaceService.deleteDesignSpace(targetSpaceID);
+        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    }
+    
+    @RequestMapping(value = "/designSpace", method = RequestMethod.POST)
+    public ResponseEntity<String> createDesignSpace(@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
+    	designSpaceService.createDesignSpace(outputSpaceID);
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
