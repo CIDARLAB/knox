@@ -104,9 +104,9 @@ function knoxCtrl($scope) {
 
 	$scope.graphDesignSpace = function(targetID) {
 		if (targetID) {
-            var query = "?targetID=" + encodeURIComponent(targetID);
+            var query = "?targetSpaceID=" + encodeURIComponent(targetID);
 
-            d3.json("designSpace/graph/d3" + query, function(error, graph) {
+            d3.json("/designSpace/graph/d3" + query, function(error, graph) {
                 if (!error && graph.spaceID) {
 
                     var i;
@@ -128,22 +128,28 @@ function knoxCtrl($scope) {
 
     $scope.deleteDesignSpace = function(targetID) {
         if (targetID) {
-            var query = "?targetID=" + encodeURIComponent(targetID);
+            var query = "?targetSpaceID=" + encodeURIComponent(targetID);
 
             d3.xhr("/designSpace" + query).send("DELETE", function(error, request) {
                 if (!error) {
 
-                    $scope.clearGraph(1);
-                    if ($scope.graphs[0].spaceID === targetID) {
+                    if ($scope.graphs.length > 1) {
+                        $scope.clearGraph(1);
+                    }
+                    if ($scope.graphs.length > 0 && $scope.graphs[0].spaceID === targetID) {
                         $scope.clearGraph(0);
-                        if ($scope.graphs[1].spaceID === targetID) {
-                            $scope.graphs = [];
+                        if ($scope.graphs.length > 1) { 
+                            if ($scope.graphs[1].spaceID === targetID) {
+                                $scope.graphs = [];
+                            } else {
+                                $scope.populateGraph($scope.graphs[1], 0, 1110, 300);
+                                $scope.graphs[0] = $scope.graphs[1];
+                                $scope.graphs = $scope.graphs.slice(0, 1);
+                            }
                         } else {
-                            $scope.populateGraph($scope.graphs[1], 0, 1110, 300);
-                            $scope.graphs[0] = $scope.graphs[1];
-                            $scope.graphs = $scope.graphs.slice(0, 1);
+                            $scope.graphs = [];
                         }
-                    } else if ($scope.graphs[1].spaceID === targetID) {
+                    } else if ($scope.graphs.length > 1 && $scope.graphs[1].spaceID === targetID) {
                         $scope.graphs = $scope.graphs.slice(0, 1);
                     }
 
@@ -154,8 +160,8 @@ function knoxCtrl($scope) {
 
     $scope.joinDesignSpaces = function(inputID1, inputID2, outputID) {
         if (inputID1 && inputID2 && outputID && outputID !== inputID1 && outputID !== inputID2) {
-            var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
-                    + "&outputID=" + encodeURIComponent(outputID);
+            var query = "?inputSpaceID1=" + encodeURIComponent(inputID1) + "&inputSpaceID2=" + encodeURIComponent(inputID2) 
+                    + "&outputSpaceID=" + encodeURIComponent(outputID);
 
             d3.xhr("/designSpace/join" + query).post(function(error, request) {
                 if (!error) {
@@ -169,8 +175,8 @@ function knoxCtrl($scope) {
 
     $scope.orDesignSpaces = function(inputID1, inputID2, outputID) {
         if (inputID1 && inputID2 && outputID && outputID !== inputID1 && outputID !== inputID2) {
-            var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
-                    + "&outputID=" + encodeURIComponent(outputID);
+            var query = "?inputSpaceID1=" + encodeURIComponent(inputID1) + "&inputSpaceID2=" + encodeURIComponent(inputID2) 
+                    + "&outputSpaceID=" + encodeURIComponent(outputID);
 
             d3.xhr("/designSpace/or" + query).post(function(error, request) {
                 if (!error) {
@@ -184,8 +190,8 @@ function knoxCtrl($scope) {
 
     $scope.andDesignSpaces = function(inputID1, inputID2, outputID) {
         if (inputID1 && inputID2 && outputID && outputID !== inputID1 && outputID !== inputID2) {
-            var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
-                    + "&outputID=" + encodeURIComponent(outputID);
+            var query = "?inputSpaceID1=" + encodeURIComponent(inputID1) + "&inputSpaceID2=" + encodeURIComponent(inputID2) 
+                    + "&outputSpaceID=" + encodeURIComponent(outputID);
 
             d3.xhr("/designSpace/and" + query).post(function(error, request) {
                 if (!error) {
@@ -199,8 +205,8 @@ function knoxCtrl($scope) {
 
     $scope.insertDesignSpace = function(inputID1, inputID2, nodeID, outputID) {
         if (inputID1 && inputID2 && nodeID && outputID && outputID !== inputID1 && outputID !== inputID2) {
-            var query = "?inputID1=" + encodeURIComponent(inputID1) + "&inputID2=" + encodeURIComponent(inputID2) 
-                    + "&nodeID=" + encodeURIComponent(nodeID) + "&outputID=" + encodeURIComponent(outputID);
+            var query = "?inputSpaceID1=" + encodeURIComponent(inputID1) + "&inputSpaceID2=" + encodeURIComponent(inputID2) 
+                    + "&targetNodeID=" + encodeURIComponent(nodeID) + "&outputSpaceID=" + encodeURIComponent(outputID);
 
             d3.xhr("/designSpace/insert" + query).post(function(error, request) {
                 if (!error) {
