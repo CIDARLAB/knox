@@ -40,7 +40,7 @@ public class DesignSpaceService {
     
     public void commitToBranch(String targetSpaceID) {
     	designSpaceRepository.commitToBranch(targetSpaceID);
-    	deleteLatestHeadCopyIDs(targetSpaceID);
+    	deleteLatestCopyIDs(targetSpaceID);
     }
 
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
@@ -182,12 +182,12 @@ public class DesignSpaceService {
     	designSpaceRepository.deleteCopyIDs(targetSpaceID);
     }
     
-    private void deleteBranchCopyIDs(String targetSpaceID, String targetBranchID) {
-    	designSpaceRepository.deleteBranchCopyIDs(targetSpaceID, targetBranchID);
+    private void deleteCopyIDs(String targetSpaceID, String targetBranchID) {
+    	designSpaceRepository.deleteCopyIDs(targetSpaceID, targetBranchID);
     }
     
-    private void deleteLatestHeadCopyIDs(String targetSpaceID) {
-    	designSpaceRepository.deleteLatestHeadCopyIDs(targetSpaceID);
+    private void deleteLatestCopyIDs(String targetSpaceID) {
+    	designSpaceRepository.deleteLatestCopyIDs(targetSpaceID);
     }
     
     private Set<Node> findNodesByType(String targetSpaceID, String nodeType) {
@@ -212,7 +212,7 @@ public class DesignSpaceService {
     			outputBranchID += "1";
     		}
     		copyBranch(inputSpaceID1, inputBranchID1, outputSpaceID, outputBranchID);
-    		deleteBranchCopyIDs(outputSpaceID, outputBranchID);
+    		deleteCopyIDs(outputSpaceID, outputBranchID);
     	}
     	for (String inputBranchID2 : inputBranchIDs2) {
     		String outputBranchID = inputBranchID2;
@@ -220,7 +220,7 @@ public class DesignSpaceService {
     			outputBranchID += "2";
     		}
     		copyBranch(inputSpaceID2, inputBranchID2, outputSpaceID, outputBranchID);
-    		deleteBranchCopyIDs(outputSpaceID, outputBranchID);
+    		deleteCopyIDs(outputSpaceID, outputBranchID);
     	}
     }
     
