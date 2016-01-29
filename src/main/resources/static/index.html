@@ -22,28 +22,21 @@
                                             <button class="btn btn-default" ng-click="graphDesignSpace(spaceID)">Search</button>
                                         </div>
                                         <div class="col-sm-3 col-md-3">
-                                            <button class="btn btn-default" ng-click="joinDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">Join</button>
-                                            <button class="btn btn-default" ng-click="orDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">OR</button>
-                                            <button class="btn btn-default" ng-click="andDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">AND</button>
+                                            <button class="btn btn-default" ng-click="joinDesignSpaces(spaceGraphs[0].spaceID, spaceGraphs[1].spaceID, spaceID)">Join</button>
+                                            <button class="btn btn-default" ng-click="orDesignSpaces(spaceGraphs[0].spaceID, spaceGraphs[1].spaceID, spaceID)">OR</button>
+                                            <button class="btn btn-default" ng-click="andDesignSpaces(spaceGraphs[0].spaceID, spaceGraphs[1].spaceID, spaceID)">AND</button>
                                         </div>
                                         <div class="col-sm-3 col-md-3">
                                             <div class="form-group">
                                                 <input type="text" placeholder="Node ID" class="form-control" ng-model="nodeID">
                                             </div>
-                                            <button class="btn btn-default" ng-click="insertDesignSpace(graphs[0].spaceID, graphs[1].spaceID, nodeID, spaceID)">Insert</button>
+                                            <button class="btn btn-default" ng-click="insertDesignSpace(spaceGraphs[0].spaceID, spaceGraphs[1].spaceID, nodeID, spaceID)">Insert</button>
                                         </div>
                                         <div class="col-sm-2 col-md-2">
                                             <button class="btn btn-default" ng-click="deleteDesignSpace(spaceID)">Delete</button>
+                                            <button class="btn btn-default" ng-click="toggleGraphStyle()">Toggle</button>
                                         </div>
                                     </div>
-                                    <!-- <div class="row">
-                                        <div class="col-sm-4 col-md-4">    
-                                            <div class="form-group">
-                                                <input type="text" placeholder="Search for Design Space" class="form-control" ng-model="targetNodeID">
-                                            </div>
-                                            <button class="btn btn-default" ng-click="insertDesignSpace(graphs[0].spaceID, targetNodeID, targetID)">Insert</button>
-                                        </div>
-                                    </div> -->
                                 </form>
                             </li>
                         </ul>
@@ -72,6 +65,9 @@
             .node.inner { fill: #FFFFFF; }
             .node.start { fill: #00B200; }
             .node.accept { fill: #B30000; }
+            .node.Branch { fill: #CD9F00; }
+            .node.Branch { fill: #F44D27; }
+            .node.Commit { fill: #EFEFE7; }
             .link { stroke: #999;  stroke-width: 1px; marker-end: url(#endArrow); }
         </style>
 

@@ -53,6 +53,11 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
+    @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
+    public Map<String, Object> d3GraphBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+        return designSpaceService.d3GraphBranches(targetSpaceID);
+    }
+    
     @RequestMapping(value = "/designSpace", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
     	designSpaceService.deleteDesignSpace(targetSpaceID);

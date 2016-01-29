@@ -4,7 +4,6 @@ import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
-import knox.spring.data.neo4j.repositories.NodeRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,8 +21,6 @@ import java.util.Set;
 public class DesignSpaceService {
 
     @Autowired DesignSpaceRepository designSpaceRepository;
-    
-    @Autowired NodeRepository nodeRepository;
     
     public void createBranch(String targetSpaceID, String outputBranchID) {
     	designSpaceRepository.createBranch(targetSpaceID, outputBranchID);
@@ -44,7 +41,11 @@ public class DesignSpaceService {
     }
 
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
-        return toD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
+        return spaceMapToD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
+    }
+    
+    public Map<String, Object> d3GraphBranches(String targetSpaceID) {
+    	return branchMapToD3Format(designSpaceRepository.mapBranches(targetSpaceID));
     }
     
     public void joinDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
@@ -252,7 +253,7 @@ public class DesignSpaceService {
     	return removedEdges;
     }
     
-    private Map<String, Object> toD3Format(List<Map<String, Object>> spaceMap) {
+    private Map<String, Object> spaceMapToD3Format(List<Map<String, Object>> spaceMap) {
     	Map<String, Object> d3Graph = new HashMap<String, Object>();
         List<Map<String,Object>> nodes = new ArrayList<Map<String,Object>>();
         List<Map<String,Object>> links = new ArrayList<Map<String,Object>>();
@@ -261,31 +262,85 @@ public class DesignSpaceService {
             if (d3Graph.isEmpty()) {
             	d3Graph.put("spaceID", row.get("spaceID"));
             }
-            if (d3Graph.get("spaceID").equals(row.get("spaceID"))) {
-            	Map<String, Object> tail = makeMap("nodeID", row.get("tailID"), "nodeType", row.get("tailType"));
-            	int source = nodes.indexOf(tail);
-            	if (source == -1) {
-            		nodes.add(tail);
-            		source = i++;
-            	}
-            	Map<String, Object> head = makeMap("nodeID", row.get("headID"), "nodeType", row.get("headType"));
-            	int target = nodes.indexOf(head);
-            	if (target == -1) {
-            		nodes.add(head);
-            		target = i++;
-            	}
-            	Map<String, Object> link = makeMap("source", source, "target", target);
-            	if (row.containsKey("componentRoles") && row.get("componentRoles") != null) {
-            		link.put("componentRoles", row.get("componentRoles"));
-            	}
-            	links.add(link);
+            Map<String, Object> tail = makeD3("nodeID", row.get("tailID"), "nodeType", row.get("tailType"));
+            int source = nodes.indexOf(tail);
+            if (source == -1) {
+            	nodes.add(tail);
+            	source = i++;
             }
+            Map<String, Object> head = makeD3("nodeID", row.get("headID"), "nodeType", row.get("headType"));
+            int target = nodes.indexOf(head);
+            if (target == -1) {
+            	nodes.add(head);
+            	target = i++;
+            }
+            Map<String, Object> link = makeD3("source", source, "target", target);
+            if (row.containsKey("componentRoles") && row.get("componentRoles") != null) {
+            	link.put("componentRoles", row.get("componentRoles"));
+            }
+            links.add(link);
         }
-        d3Graph.putAll(makeMap("nodes", nodes, "links", links));
+        d3Graph.putAll(makeD3("nodes", nodes, "links", links));
         return d3Graph;
     }
+    
+    private Map<String, Object> branchMapToD3Format(List<Map<String, Object>> branchMap) {
+    	Map<String, Object> d3Graph = new HashMap<String, Object>();
 
-    private Map<String, Object> makeMap(String key1, Object value1, String key2, Object value2) {
+        if (branchMap.size() > 0) {
+        	List<Map<String,Object>> nodes = new ArrayList<Map<String,Object>>();
+            List<Map<String,Object>> links = new ArrayList<Map<String,Object>>();
+            
+            Map<Map<String, Object>, Integer> nodeAddresses = new HashMap<Map<String, Object>, Integer>();
+            Set<String> branchIDs = new HashSet<String>();
+        	
+        	d3Graph.put("spaceID", branchMap.get(0).get("spaceID"));
+        	
+        	Map<String, Object> tail = makeD3("knoxID", "Head", "knoxClass", "Head");
+        	Map<String, Object> head = makeD3("knoxID", branchMap.get(0).get("headBranchID"), "knoxClass", "Branch");
+        	
+        	links.add(makeLink(tail, head, nodes, nodeAddresses));
+        	
+        	for (Map<String, Object> row : branchMap) {
+        		tail = makeD3("knoxID", row.get("tailID"), "knoxClass", "Commit");
+        		head = makeD3("knoxID", row.get("headID"), "knoxClass", "Commit");
+
+        		links.add(makeLink(tail, head, nodes, nodeAddresses));
+
+        		String branchID = (String) row.get("branchID");
+        		if (!branchIDs.contains(branchID)) {
+        			branchIDs.add(branchID);
+        			tail = makeD3("knoxID", branchID, "knoxClass", "Branch");
+        			head = makeD3("knoxID", row.get("latestID"), "knoxClass", "Commit");
+        			links.add(makeLink(tail, head, nodes, nodeAddresses));
+        		}
+        	}
+        	d3Graph.putAll(makeD3("nodes", nodes, "links", links));
+        }
+        return d3Graph;
+    }
+    
+    private Map<String, Object> makeLink(Map<String, Object> tail, Map<String, Object> head, List<Map<String,Object>> nodes, Map<Map<String, Object>, Integer> nodeAddresses) {
+    	 int source;
+         if (nodeAddresses.containsKey(tail)) {
+         	source = nodeAddresses.get(tail);
+         } else {
+         	source = nodes.size();
+         	nodes.add(tail);
+         	nodeAddresses.put(tail, source);
+         }
+         int target;
+         if (nodeAddresses.containsKey(head)) {
+         	target = nodeAddresses.get(head);
+         } else {
+         	target = nodes.size();
+         	nodes.add(head);
+         	nodeAddresses.put(head, target);
+         }
+         return makeD3("source", source, "target", target);
+    }
+
+    private Map<String, Object> makeD3(String key1, Object value1, String key2, Object value2) {
         Map<String, Object> result = new HashMap<String, Object>();
         result.put(key1, value1);
         result.put(key2, value2);
