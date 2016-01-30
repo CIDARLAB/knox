@@ -302,10 +302,14 @@ public class DesignSpaceService {
         	links.add(makeLink(tail, head, nodes, nodeAddresses));
         	
         	for (Map<String, Object> row : branchMap) {
-        		tail = makeD3("knoxID", row.get("tailID"), "knoxClass", "Commit");
-        		head = makeD3("knoxID", row.get("headID"), "knoxClass", "Commit");
-
-        		links.add(makeLink(tail, head, nodes, nodeAddresses));
+        		
+        		String tailID = (String) row.get("tailID");
+        		String headID = (String) row.get("headID");
+        		if (tailID != null && headID != null) {
+        			tail = makeD3("knoxID", row.get("tailID"), "knoxClass", "Commit");
+        			head = makeD3("knoxID", row.get("headID"), "knoxClass", "Commit");
+        			links.add(makeLink(tail, head, nodes, nodeAddresses));
+        		}
 
         		String branchID = (String) row.get("branchID");
         		if (!branchIDs.contains(branchID)) {

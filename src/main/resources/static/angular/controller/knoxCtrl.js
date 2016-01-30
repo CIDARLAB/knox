@@ -1,7 +1,6 @@
 function knoxCtrl($scope) {
 
-    $scope.spaceGraphs = [];
-    $scope.branchGraphs = [];
+    $scope.graphs = [];
     $scope.isSpaceGraph = true;
 
     $scope.spaceID = "test1";
@@ -13,12 +12,12 @@ function knoxCtrl($scope) {
 
     $scope.toggleGraphStyle = function() {
         var i;
-        for (i = 0; i < $scope.spaceGraphs.length; i++) {
+        for (i = 0; i < $scope.graphs.length; i++) {
             $scope.removeGraphSVG(i);
             if ($scope.isSpaceGraph) {
-                $scope.populateVersionControlGraph($scope.spaceGraphs[i], i, 1110, 300);
+                $scope.appendVersionControlGraphSVG($scope.graphs[i].branch, i, 1110, 300);
             } else {
-                $scope.appendDesignSpaceGraphSVG($scope.spaceGraphs[i], i, 1110, 300);
+                $scope.appendDesignSpaceGraphSVG($scope.graphs[i].space, i, 1110, 300);
             }
         }
         $scope.isSpaceGraph = !$scope.isSpaceGraph;
@@ -117,7 +116,7 @@ function knoxCtrl($scope) {
         });
 	};
 
-    $scope.populateVersionControlGraph = function(graph, index, width, height) {
+    $scope.appendVersionControlGraphSVG = function(graph, index, width, height) {
         var force = d3.layout.force()
                 .charge(-250).linkDistance(60).size([width, height]);
 
@@ -153,11 +152,12 @@ function knoxCtrl($scope) {
 
         var node = svg.selectAll(".node")
                 .data(graph.nodes).enter()
-                .append("square")
+                .append("rect")
                 .attr("class", function (d) {
                     return "node " + d.knoxClass;
                 })
-                .attr("r", 10)
+                .attr("width", 30)
+                .attr("height", 10)
                 .call(force.drag);
 
         // html title attribute
@@ -182,8 +182,8 @@ function knoxCtrl($scope) {
                 return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
             });
 
-            node.attr("cx", function(d) { return d.x; })
-                    .attr("cy", function(d) { return d.y; });
+            node.attr("x", function(d) { return d.x; })
+                    .attr("y", function(d) { return d.y; });
 
         });
     };
@@ -197,21 +197,18 @@ function knoxCtrl($scope) {
                     d3.json("/branch/graph/d3" + query, function(error, branchGraph) {
                         if (!error && branchGraph.spaceID) {
                             var i;
-                            for (i = 0; i < $scope.spaceGraphs.length; i++) {
+                            for (i = 0; i < $scope.graphs.length; i++) {
                                 $scope.removeGraphSVG(i);
                             }
 
-                            $scope.spaceGraphs.unshift(spaceGraph);
-                            $scope.spaceGraphs = $scope.spaceGraphs.slice(0, 2);
+                            $scope.graphs.unshift({spaceID: spaceGraph.spaceID, space: spaceGraph, branch: branchGraph});
+                            $scope.graphs = $scope.graphs.slice(0, 2);
 
-                            $scope.branchGraphs.unshift(branchGraph);
-                            $scope.branchGraphs = $scope.spaceGraphs.slice(0, 2);
-
-                            for (i = 0; i < $scope.spaceGraphs.length; i++) {
+                            for (i = 0; i < $scope.graphs.length; i++) {
                                 if ($scope.isSpaceGraph) {
-                                    $scope.appendDesignSpaceGraphSVG($scope.spaceGraphs[i], i, 1110, 300);
+                                    $scope.appendDesignSpaceGraphSVG($scope.graphs[i].space, i, 1110, 300);
                                 } else {
-                                    $scope.populateVersionControlGraph($scope.branchGraphs[i], i, 1110, 300);
+                                    $scope.appendVersionControlGraphSVG($scope.graphs[i].branch, i, 1110, 300);
                                 }
                             }
                          }
@@ -228,24 +225,28 @@ function knoxCtrl($scope) {
             d3.xhr("/designSpace" + query).send("DELETE", function(error, request) {
                 if (!error) {
 
-                    if ($scope.spaceGraphs.length > 1) {
+                    if ($scope.graphs.length > 1) {
                         $scope.removeGraphSVG(1);
                     }
-                    if ($scope.spaceGraphs.length > 0 && $scope.spaceGraphs[0].spaceID === targetID) {
+                    if ($scope.graphs.length > 0 && $scope.graphs[0].spaceID === targetID) {
                         $scope.removeGraphSVG(0);
-                        if ($scope.spaceGraphs.length > 1) { 
-                            if ($scope.spaceGraphs[1].spaceID === targetID) {
-                                $scope.spaceGraphs = [];
+                        if ($scope.graphs.length > 1) { 
+                            if ($scope.graphs[1].spaceID === targetID) {
+                                $scope.graphs = [];
                             } else {
-                                $scope.appendDesignSpaceGraphSVG($scope.spaceGraphs[1], 0, 1110, 300);
-                                $scope.spaceGraphs[0] = $scope.spaceGraphs[1];
-                                $scope.spaceGraphs = $scope.spaceGraphs.slice(0, 1);
+                                if ($scope.isSpaceGraph) {
+                                    $scope.appendDesignSpaceGraphSVG($scope.graphs[1].space, 0, 1110, 300);
+                                } else {
+                                    $scope.appendVersionControlGraphSVG($scope.graphs[1].branch, 0, 1110, 300);
+                                }
+                                $scope.graphs[0] = $scope.graphs[1];
+                                $scope.graphs = $scope.graphs.slice(0, 1);
                             }
                         } else {
-                            $scope.spaceGraphs = [];
+                            $scope.graphs = [];
                         }
-                    } else if ($scope.spaceGraphs.length > 1 && $scope.spaceGraphs[1].spaceID === targetID) {
-                        $scope.spaceGraphs = $scope.spaceGraphs.slice(0, 1);
+                    } else if ($scope.graphs.length > 1 && $scope.graphs[1].spaceID === targetID) {
+                        $scope.graphs = $scope.graphs.slice(0, 1);
                     }
 
                 }

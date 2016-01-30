@@ -101,9 +101,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "n.nodeID as headID, n.nodeType as headType")
 	List<Map<String, Object>> mapDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 	
-	@Query("MATCH (b:Branch)<-[:CONTAINS]-(target:DesignSpace)-[:CONTAINS]->(h:Branch)<-[:SELECTS]-(target:DesignSpace) "
-			+ "WHERE target.spaceID = {targetSpaceID} "
-			+ "OPTIONAL MATCH (b)-[:CONTAINS]->(l:Commit)<-[:LATEST]-(b) "
+	@Query("MATCH (l:Commit)<-[:LATEST]-(b:Branch)<-[:CONTAINS]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(h:Branch) "
 			+ "OPTIONAL MATCH (b)-[:CONTAINS]->(c:Commit)-[:SUCCEEDS]->(d:Commit)<-[:CONTAINS]-(b) "
 			+ "RETURN target.spaceID as spaceID, h.branchID as headBranchID, l.commitID as latestID, b.branchID as branchID, "
 			+ "c.commitID as tailID, d.commitID as headID")
@@ -114,16 +112,14 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "DETACH DELETE n")
 	void deleteDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 	
-	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0})-[:CONTAINS]->(b:Branch {branchID: 'master'}) "
-			+ "CREATE (output)-[:SELECTS]->(b)")
+	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0})-[:CONTAINS]->(b:Branch {branchID: 'master', idIndex: 1})-[:CONTAINS]->(c:Commit {commitID: 'c0'})-[:CONTAINS]->(s:Snapshot {spaceID: {outputSpaceID}, idIndex: 0}) "
+			+ "CREATE (output)-[:SELECTS]->(b)-[:LATEST]->(c)")
 	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
 	
-	@Query("MATCH (target:DesignSpace)-[:SELECTS]->(hb:Branch)<-[:CONTAINS]-(target:DesignSpace) "
+	@Query("MATCH (target:DesignSpace)-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(c:Commit)<-[:LATEST]-(hb:Branch)<-[:CONTAINS]-(target:DesignSpace) "
 			+ "WHERE target.spaceID = {targetSpaceID} "
-			+ "OPTIONAL MATCH (hb)-[:CONTAINS]->(c:Commit)<-[:LATEST]-(hb) "
 			+ "CREATE (target)-[:CONTAINS]->(b:Branch {branchID: {outputBranchID}, idIndex: hb.idIndex}) "
-			+ "FOREACH(ignoreMe IN CASE WHEN c IS NOT NULL THEN [1] ELSE [] END | "
-			+ "CREATE (c)<-[:LATEST]-(b)-[:CONTAINS]->(c))")
+			+ "CREATE (c)<-[:LATEST]-(b)-[:CONTAINS]->(c)")
 	void createBranch(@Param("targetSpaceID") String targetSpaceID, @Param("outputBranchID") String outputBranchID);
 	
 	@Query("MATCH (input:DesignSpace {spaceID: {inputSpaceID}})-[:CONTAINS]->(n:Node) "
