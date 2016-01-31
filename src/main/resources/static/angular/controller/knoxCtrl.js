@@ -25,7 +25,14 @@ function knoxCtrl($scope) {
 
 	$scope.appendDesignSpaceGraphSVG = function(graph, index, width, height) {
 		var force = d3.layout.force()
-	            .charge(-250).linkDistance(60).size([width, height]);
+	            .charge(-250)
+                .linkDistance(60)
+                .size([width, height]);
+
+        var drag = force.drag()
+                .on("dragstart", function (d) {
+                    d3.select(this).classed("fixed", d.fixed = true);
+                });
 
 	    var svg = d3.select("#graph" + index).append("svg")
 	            .attr("width", "100%").attr("height", "50%")
@@ -41,15 +48,6 @@ function knoxCtrl($scope) {
 	        .append('path')
 	            .attr('d', 'M0,-5L10,0L0,5')
 	            .attr('fill', '#000');
-
-		var i;
-        for (i = 0; i < graph.nodes.length; i++) {
-        	if (graph.nodes[i].nodeType === "start" && !graph.nodes[i].fixed) {
-        		graph.nodes[i].x = width/3;
-		        graph.nodes[i].y = height/2;
-		        graph.nodes[i].fixed = true;
-        	}
-        }
 
         force.nodes(graph.nodes).links(graph.links).start();
 
@@ -82,7 +80,10 @@ function knoxCtrl($scope) {
                     return "node " + ((d.nodeType) ? d.nodeType:"inner");
                 })
                 .attr("r", 10)
-                .call(force.drag);
+                .on("dblclick", function (d) {
+                    d3.select(this).classed("fixed", d.fixed = false);
+                })
+                .call(drag);
 
         // html title attribute
         node.append("title")
@@ -120,6 +121,11 @@ function knoxCtrl($scope) {
         var force = d3.layout.force()
                 .charge(-250).linkDistance(60).size([width, height]);
 
+        var drag = force.drag()
+                .on("dragstart", function (d) {
+                    d3.select(this).classed("fixed", d.fixed = true);
+                });
+
         var svg = d3.select("#graph" + index).append("svg")
                 .attr("width", "100%").attr("height", "50%")
                 .attr("pointer-events", "all");
@@ -135,15 +141,6 @@ function knoxCtrl($scope) {
                 .attr('d', 'M0,-5L10,0L0,5')
                 .attr('fill', '#000');
 
-        var i;
-        for (i = 0; i < graph.nodes.length; i++) {
-            if (graph.nodes[i].knoxClass === "Head" && !graph.nodes[i].fixed) {
-                graph.nodes[i].x = width/3;
-                graph.nodes[i].y = height/2;
-                graph.nodes[i].fixed = true;
-            }
-        }
-
         force.nodes(graph.nodes).links(graph.links).start();
 
         var link = svg.selectAll(".link")
@@ -158,7 +155,10 @@ function knoxCtrl($scope) {
                 })
                 .attr("width", 30)
                 .attr("height", 10)
-                .call(force.drag);
+                .on("dblclick", function (d) {
+                    d3.select(this).classed("fixed", d.fixed = false);
+                })
+                .call(drag);
 
         // html title attribute
         node.append("title")
@@ -182,8 +182,8 @@ function knoxCtrl($scope) {
                 return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
             });
 
-            node.attr("x", function(d) { return d.x; })
-                    .attr("y", function(d) { return d.y; });
+            node.attr("x", function(d) { return d.x - 15; })
+                    .attr("y", function(d) { return d.y - 5 });
 
         });
     };
