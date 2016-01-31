@@ -87,7 +87,7 @@ function knoxCtrl($scope) {
 
         // html title attribute
         node.append("title")
-                .text(function (d) { return d.nodeID; })
+                .text(function (d) { return d.nodeID; });
 
         // force feed algo ticks
         force.on("tick", function() {
@@ -98,12 +98,12 @@ function knoxCtrl($scope) {
                     dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
                     normX = deltaX / dist,
                     normY = deltaY / dist,
-                    sourcePadding = d.left ? 17 : 12,
-                    targetPadding = d.right ? 17 : 12,
-                    sourceX = d.source.x + (sourcePadding * normX),
-                    sourceY = d.source.y + (sourcePadding * normY),
-                    targetX = d.target.x - (targetPadding * normX),
-                    targetY = d.target.y - (targetPadding * normY);
+                    sourcePadding = 12,
+                    targetPadding = 12,
+                    sourceX = d.source.x + normX*sourcePadding,
+                    sourceY = d.source.y + normY*sourcePadding,
+                    targetX = d.target.x - normX*targetPadding,
+                    targetY = d.target.y - normY*targetPadding;
                 return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
             });
 
@@ -153,16 +153,20 @@ function knoxCtrl($scope) {
                 .attr("class", function (d) {
                     return "node " + d.knoxClass;
                 })
-                .attr("width", 30)
-                .attr("height", 10)
+                .attr("width", 60)
+                .attr("height", 20)
                 .on("dblclick", function (d) {
                     d3.select(this).classed("fixed", d.fixed = false);
                 })
                 .call(drag);
 
-        // html title attribute
-        node.append("title")
-                .text(function (d) { return d.knoxID; })
+        var text = svg.selectAll("text.label")
+                .data(graph.nodes).enter()
+                .append("text")
+                .attr("class", "label")
+                .attr("text-anchor", "middle")
+                .attr("fill", "black")
+                .text(function(d) { return d.knoxID; });
 
         // force feed algo ticks
         force.on("tick", function() {
@@ -173,17 +177,21 @@ function knoxCtrl($scope) {
                     dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
                     normX = deltaX / dist,
                     normY = deltaY / dist,
-                    sourcePadding = d.left ? 17 : 12,
-                    targetPadding = d.right ? 17 : 12,
-                    sourceX = d.source.x + (sourcePadding * normX),
-                    sourceY = d.source.y + (sourcePadding * normY),
-                    targetX = d.target.x - (targetPadding * normX),
-                    targetY = d.target.y - (targetPadding * normY);
+                    xPadding = 33,
+                    yPadding = 13,
+                    sourceX = d.source.x + normX*xPadding,
+                    sourceY = d.source.y + normY*yPadding,
+                    targetX = d.target.x - normX*xPadding,
+                    targetY = d.target.y - normY*yPadding;
                 return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
             });
 
-            node.attr("x", function(d) { return d.x - 15; })
-                    .attr("y", function(d) { return d.y - 5 });
+            node.attr("x", function(d) { return d.x - 30; })
+                    .attr("y", function(d) { return d.y - 10 });
+
+            text.attr("transform", function(d) {
+                return "translate(" + d.x + "," + (d.y + 3) + ")";
+            });
 
         });
     };
