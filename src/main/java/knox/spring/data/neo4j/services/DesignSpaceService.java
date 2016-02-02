@@ -157,6 +157,10 @@ public class DesignSpaceService {
     		designSpaceRepository.deleteDesignSpace(targetSpaceID);
     	}
     }
+	
+	public void deleteBranch(String targetSpaceID, String targetBranchID) {
+		designSpaceRepository.deleteBranch(targetSpaceID, targetBranchID);
+	}
     
     private DesignSpace findDesignSpace(String targetSpaceID) {
     	return designSpaceRepository.findBySpaceID(targetSpaceID);
@@ -296,7 +300,7 @@ public class DesignSpaceService {
         	
         	d3Graph.put("spaceID", branchMap.get(0).get("spaceID"));
         	
-        	Map<String, Object> tail = makeD3("knoxID", "Head", "knoxClass", "Head");
+        	Map<String, Object> tail = makeD3("knoxID", "head", "knoxClass", "Head");
         	Map<String, Object> head = makeD3("knoxID", branchMap.get(0).get("headBranchID"), "knoxClass", "Branch");
         	
         	links.add(makeLink(tail, head, nodes, nodeAddresses));

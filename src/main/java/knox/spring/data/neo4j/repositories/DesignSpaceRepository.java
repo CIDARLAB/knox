@@ -46,7 +46,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "FOREACH(ignoreMe IN CASE WHEN l IS NOT NULL THEN [1] ELSE [] END | "
 			+ "DELETE l) "
 			+ "CREATE (hb)-[:LATEST]->(c:Commit {commitID: 'c'+ hb.idIndex})<-[:CONTAINS]-(hb) "
-			+ "CREATE (c)-[:CONTAINS]->(s:Snapshot {spaceID: target.spaceID, idIndex: target.idIndex}) "
+			+ "CREATE (c)-[:CONTAINS]->(s:Snapshot {idIndex: target.idIndex}) "
 			+ "FOREACH(ignoreMe IN CASE WHEN d IS NOT NULL THEN [1] ELSE [] END | "
 			+ "CREATE (c)-[:SUCCEEDS]->(d)) "
 			+ "SET hb.idIndex = hb.idIndex + 1 "
@@ -78,7 +78,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "WITH bi, bo "
 			+ "MATCH (bi)-[:CONTAINS]->(ci:Commit)-[:CONTAINS]->(si:Snapshot) "
 			+ "OPTIONAL MATCH (ci)-[:SUCCEEDS]->(d:Commit)<-[:CONTAINS]-(bi) "
-			+ "CREATE UNIQUE (bo)-[:CONTAINS]->(co:Commit {commitID: ci.commitID})-[:CONTAINS]->(so:Snapshot {spaceID: si.spaceID, idIndex: si.idIndex}) "
+			+ "CREATE UNIQUE (bo)-[:CONTAINS]->(co:Commit {commitID: ci.commitID})-[:CONTAINS]->(so:Snapshot {idIndex: si.idIndex}) "
 			+ "FOREACH(ignoreMe IN CASE WHEN d IS NOT NULL THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (co)-[:SUCCEEDS]->(:Commit {commitID: d.commitID})<-[:CONTAINS]-(bo)) "
 			+ "WITH si, so "
@@ -107,12 +107,20 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "c.commitID as tailID, d.commitID as headID")
 	List<Map<String, Object>> mapBranches(@Param("targetSpaceID") String targetSpaceID);
 	
-	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node) "
+	@Query("MATCH (n:Node)<-[:CONTAINS]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot)-[:CONTAINS]->(sn:Node) "
 			+ "DETACH DELETE target "
-			+ "DETACH DELETE n")
+			+ "DETACH DELETE n "
+			+ "DETACH DELETE b "
+			+ "DETACH DELETE c "
+			+ "DETACH DELETE s "
+			+ "DETACH DELETE sn")
 	void deleteDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 	
-	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0})-[:CONTAINS]->(b:Branch {branchID: 'master', idIndex: 1})-[:CONTAINS]->(c:Commit {commitID: 'c0'})-[:CONTAINS]->(s:Snapshot {spaceID: {outputSpaceID}, idIndex: 0}) "
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(b:Branch {branchID: {targetBranchID}}) "
+			+ "DETACH DELETE b")
+	void deleteBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID);
+	
+	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0})-[:CONTAINS]->(b:Branch {branchID: {outputSpaceID}, idIndex: 1})-[:CONTAINS]->(c:Commit {commitID: 'c0'})-[:CONTAINS]->(s:Snapshot {idIndex: 0}) "
 			+ "CREATE (output)-[:SELECTS]->(b)-[:LATEST]->(c)")
 	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
 	

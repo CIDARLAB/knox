@@ -33,6 +33,13 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @Autowired
     DesignSpaceService designSpaceService;
     
+    @RequestMapping(value = "/branch", method = RequestMethod.DELETE)
+    public ResponseEntity<String> deleteBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "targetBranchID", required = true) String targetBranchID) {
+    	designSpaceService.deleteBranch(targetSpaceID, targetBranchID);
+        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    }
+    
     @RequestMapping(value = "/branch", method = RequestMethod.POST)
     public ResponseEntity<String> createBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "outputBranchID", required = true) String outputBranchID) {
