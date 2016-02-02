@@ -31,6 +31,7 @@ public class DesignSpaceService {
     }
     
     public void checkoutBranch(String targetSpaceID, String targetBranchID) {
+    	deleteNodes(targetSpaceID);
     	designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
     	deleteCopyIDs(targetSpaceID);
     }
@@ -158,6 +159,10 @@ public class DesignSpaceService {
     	}
     }
 	
+	public void deleteNodes(String targetSpaceID) {
+    	designSpaceRepository.deleteNodes(targetSpaceID);
+    }
+	
 	public void deleteBranch(String targetSpaceID, String targetBranchID) {
 		designSpaceRepository.deleteBranch(targetSpaceID, targetBranchID);
 	}
@@ -184,15 +189,15 @@ public class DesignSpaceService {
     }
     
     private void deleteCopyIDs(String targetSpaceID) {
-    	designSpaceRepository.deleteCopyIDs(targetSpaceID);
+    	designSpaceRepository.deleteCopyIndices(targetSpaceID);
     }
     
     private void deleteCopyIDs(String targetSpaceID, String targetBranchID) {
-    	designSpaceRepository.deleteCopyIDs(targetSpaceID, targetBranchID);
+    	designSpaceRepository.deleteCopyIndices(targetSpaceID, targetBranchID);
     }
     
     private void deleteLatestCopyIDs(String targetSpaceID) {
-    	designSpaceRepository.deleteLatestCopyIDs(targetSpaceID);
+    	designSpaceRepository.deleteLatestCopyIndices(targetSpaceID);
     }
     
     private Set<Node> findNodesByType(String targetSpaceID, String nodeType) {
@@ -306,12 +311,13 @@ public class DesignSpaceService {
         	links.add(makeLink(tail, head, nodes, nodeAddresses));
         	
         	for (Map<String, Object> row : branchMap) {
-        		
         		String tailID = (String) row.get("tailID");
         		String headID = (String) row.get("headID");
         		if (tailID != null && headID != null) {
         			tail = makeD3("knoxID", row.get("tailID"), "knoxClass", "Commit");
+        			tail.put("copyIndex", row.get("tailCopyIndex"));
         			head = makeD3("knoxID", row.get("headID"), "knoxClass", "Commit");
+        			head.put("copyIndex", row.get("headCopyIndex"));
         			links.add(makeLink(tail, head, nodes, nodeAddresses));
         		}
 
@@ -319,9 +325,13 @@ public class DesignSpaceService {
         		if (!branchIDs.contains(branchID)) {
         			branchIDs.add(branchID);
         			tail = makeD3("knoxID", branchID, "knoxClass", "Branch");
-        			head = makeD3("knoxID", row.get("latestID"), "knoxClass", "Commit");
+        			head = makeD3("knoxID", row.get("latestCommitID"), "knoxClass", "Commit");
+        			head.put("copyIndex", row.get("latestCopyIndex"));
         			links.add(makeLink(tail, head, nodes, nodeAddresses));
         		}
+        	}
+        	for (Map<String, Object> node : nodes) {
+        		node.remove("copyIndex");
         	}
         	d3Graph.putAll(makeD3("nodes", nodes, "links", links));
         }
