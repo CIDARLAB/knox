@@ -5,7 +5,8 @@ function knoxCtrl($scope) {
     $scope.isDSGraph = true;
 
     $scope.spaceID = "";
-    $scope.nodeID = "";
+    $scope.nodeID1 = "";
+    $scope.nodeID2 = "";
     $scope.branchID = "";
 
 	$scope.removeGraphSVG = function(index) {
@@ -242,21 +243,6 @@ function knoxCtrl($scope) {
         }
     };
 
-    $scope.insertDesignSpace = function(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID) {
-        if (inputSpaceID1 && inputSpaceID2 && targetNodeID && outputSpaceID && outputSpaceID !== inputSpaceID1 && outputSpaceID !== inputSpaceID2) {
-            var query = "?inputSpaceID1=" + encodeURIComponent(inputSpaceID1) + "&inputSpaceID2=" + encodeURIComponent(inputSpaceID2) 
-                    + "&targetNodeID=" + encodeURIComponent(targetNodeID) + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
-
-            d3.xhr("/designSpace/insert" + query).post(function(error, request) {
-                if (!error) {
-
-                    $scope.graphDesignSpace(outputSpaceID);
-
-                }
-            });
-        }
-    };
-
     $scope.joinDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
         if (inputSpaceID1 && inputSpaceID2 && outputSpaceID && outputSpaceID !== inputSpaceID1 && outputSpaceID !== inputSpaceID2) {
             var query = "?inputSpaceID1=" + encodeURIComponent(inputSpaceID1) + "&inputSpaceID2=" + encodeURIComponent(inputSpaceID2) 
@@ -400,6 +386,50 @@ function knoxCtrl($scope) {
                 if (!error) {
 
                     $scope.graphDesignSpace(targetSpaceID);
+
+                }
+            });
+        }
+    };
+
+    $scope.createNode = function(targetSpaceID, outputNodeID) {
+        if (targetSpaceID && outputNodeID) {
+            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&outputNodeID=" + encodeURIComponent(outputNodeID);
+
+            d3.xhr("/node" + query).send("PUT", function(error, request) {
+                if (!error) {
+
+                    $scope.graphDesignSpace(targetSpaceID);
+
+                }
+            });
+        }
+    };
+
+    $scope.createEdge = function(targetSpaceID, targetTailID, targetHeadID) {
+        if (targetSpaceID && targetTailID && targetHeadID && targetTailID !== targetHeadID) {
+            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetTailID=" + encodeURIComponent(targetTailID) 
+                    + "&targetHeadID=" + encodeURIComponent(targetHeadID);
+
+            d3.xhr("/edge" + query).send("PUT", function(error, request) {
+                if (!error) {
+
+                    $scope.graphDesignSpace(targetSpaceID);
+
+                }
+            });
+        }
+    };
+
+    $scope.insertDesignSpace = function(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID) {
+        if (inputSpaceID1 && inputSpaceID2 && targetNodeID && outputSpaceID && outputSpaceID !== inputSpaceID1 && outputSpaceID !== inputSpaceID2) {
+            var query = "?inputSpaceID1=" + encodeURIComponent(inputSpaceID1) + "&inputSpaceID2=" + encodeURIComponent(inputSpaceID2) 
+                    + "&targetNodeID=" + encodeURIComponent(targetNodeID) + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
+
+            d3.xhr("/designSpace/insert" + query).post(function(error, request) {
+                if (!error) {
+
+                    $scope.graphDesignSpace(outputSpaceID);
 
                 }
             });

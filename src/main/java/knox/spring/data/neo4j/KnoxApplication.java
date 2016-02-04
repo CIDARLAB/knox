@@ -114,5 +114,20 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	designSpaceService.orDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
+    
+    @RequestMapping(value = "/edge", method = RequestMethod.PUT)
+    public ResponseEntity<String> createEdge(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "targetTailID", required = true) String targetTailID,
+    		@RequestParam(value = "targetHeadID", required = true) String targetHeadID) {
+    	designSpaceService.createEdge(targetSpaceID, targetTailID, targetHeadID);
+        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    }
+    
+    @RequestMapping(value = "/node", method = RequestMethod.PUT)
+    public ResponseEntity<String> createNode(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "outputNodeID", required = true) String outputNodeID) {
+    	designSpaceService.createNode(targetSpaceID, outputNodeID);
+        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    }
 
 }

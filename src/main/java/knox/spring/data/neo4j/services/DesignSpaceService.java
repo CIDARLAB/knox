@@ -33,12 +33,11 @@ public class DesignSpaceService {
     public void checkoutBranch(String targetSpaceID, String targetBranchID) {
     	deleteNodes(targetSpaceID);
     	designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
-    	deleteCopyIndices(targetSpaceID);
+    	deleteNodeCopyIndices(targetSpaceID);
     }
     
     public void commitToBranch(String targetSpaceID) {
     	designSpaceRepository.commitToBranch(targetSpaceID);
-    	deleteHeadCopyIndices(targetSpaceID);
     }
 
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
@@ -72,7 +71,8 @@ public class DesignSpaceService {
     		}
     	}
     	
-    	deleteCopyIndices(targetSpaceID, outputBranchID);
+    	deleteNodeCopyIndices(targetSpaceID, outputBranchID);
+    	deleteCommitCopyIndices(targetSpaceID, outputBranchID);
     }
     
     public void orBranches(String targetSpaceID, String inputBranchID1, String inputBranchID2, String outputBranchID) {
@@ -88,7 +88,8 @@ public class DesignSpaceService {
     		createEdge(targetSpaceID, outputBranchID, "n00", startNode.getNodeID());
     	}
     	
-    	deleteCopyIndices(targetSpaceID, outputBranchID);
+    	deleteNodeCopyIndices(targetSpaceID, outputBranchID);
+    	deleteCommitCopyIndices(targetSpaceID, outputBranchID);
     }
     
     public void andBranches(String targetSpaceID, String inputBranchID1, String inputBranchID2, String outputBranchID) {
@@ -142,7 +143,8 @@ public class DesignSpaceService {
     		}
     	}
     	
-    	deleteCopyIndices(targetSpaceID, outputBranchID);
+    	deleteNodeCopyIndices(targetSpaceID, outputBranchID);
+    	deleteCommitCopyIndices(targetSpaceID, outputBranchID);
     }
     
     public void joinDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
@@ -168,7 +170,7 @@ public class DesignSpaceService {
     		}
     	}
     	
-    	deleteCopyIndices(outputSpaceID);
+    	deleteNodeCopyIndices(outputSpaceID);
     	
     	Set<String> inputBranchIDs1 = getBranchIDs(inputSpaceID1);
     	Set<String> inputBranchIDs2 = getBranchIDs(inputSpaceID2);
@@ -181,8 +183,12 @@ public class DesignSpaceService {
     	if (!inputBranchIDs1.contains(headBranchID2) && !inputBranchIDs1.contains(outputSpaceID) 
     			&& !inputBranchIDs2.contains(outputSpaceID)) {
     		joinBranches(outputSpaceID, headBranchID1, headBranchID2, outputSpaceID);
-    		selectHeadBranch(outputSpaceID, outputSpaceID);
+    		fastForwardBranch(outputSpaceID, headBranchID1, outputSpaceID);
+    		fastForwardBranch(outputSpaceID, headBranchID2, outputSpaceID);
+    		deleteBranch(outputSpaceID, outputSpaceID);
     	}
+    	
+    	selectHeadBranch(outputSpaceID, headBranchID1);
     }
     
     public void orDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
@@ -198,7 +204,7 @@ public class DesignSpaceService {
     		createEdge(outputSpaceID, "n00", startNode.getNodeID());
     	}
     	
-    	deleteCopyIndices(outputSpaceID);
+    	deleteNodeCopyIndices(outputSpaceID);
     	
     	Set<String> inputBranchIDs1 = getBranchIDs(inputSpaceID1);
     	Set<String> inputBranchIDs2 = getBranchIDs(inputSpaceID2);
@@ -211,8 +217,12 @@ public class DesignSpaceService {
     	if (!inputBranchIDs1.contains(headBranchID2) && !inputBranchIDs1.contains(outputSpaceID) 
     			&& !inputBranchIDs2.contains(outputSpaceID)) {
     		orBranches(outputSpaceID, headBranchID1, headBranchID2, outputSpaceID);
-    		selectHeadBranch(outputSpaceID, outputSpaceID);
+    		fastForwardBranch(outputSpaceID, headBranchID1, outputSpaceID);
+    		fastForwardBranch(outputSpaceID, headBranchID2, outputSpaceID);
+    		deleteBranch(outputSpaceID, outputSpaceID);
     	}
+    	
+    	selectHeadBranch(outputSpaceID, headBranchID1);
     }
     
     public void andDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
@@ -235,8 +245,12 @@ public class DesignSpaceService {
     	if (!inputBranchIDs1.contains(headBranchID2) && !inputBranchIDs1.contains(outputSpaceID) 
     			&& !inputBranchIDs2.contains(outputSpaceID)) {
     		andBranches(outputSpaceID, headBranchID1, headBranchID2, outputSpaceID);
-    		selectHeadBranch(outputSpaceID, outputSpaceID);
+    		fastForwardBranch(outputSpaceID, headBranchID1, outputSpaceID);
+    		fastForwardBranch(outputSpaceID, headBranchID2, outputSpaceID);
+    		deleteBranch(outputSpaceID, outputSpaceID);
     	}
+    	
+    	selectHeadBranch(outputSpaceID, headBranchID1);
     }
     
 	public void insertDesignSpace(String inputSpaceID1, String inputSpaceID2, String targetNodeID, String outputSpaceID) {
@@ -280,7 +294,7 @@ public class DesignSpaceService {
     		}
     	}
     	
-    	deleteCopyIndices(outputSpaceID);
+    	deleteNodeCopyIndices(outputSpaceID);
     	
     	Set<String> inputBranchIDs1 = getBranchIDs(inputSpaceID1);
     	Set<String> inputBranchIDs2 = getBranchIDs(inputSpaceID2);
@@ -293,8 +307,12 @@ public class DesignSpaceService {
     	if (!inputBranchIDs1.contains(headBranchID2) && !inputBranchIDs1.contains(outputSpaceID) 
     			&& !inputBranchIDs2.contains(outputSpaceID)) {
     		insertBranch(outputSpaceID, headBranchID1, headBranchID2, targetNodeID, outputSpaceID);
-    		selectHeadBranch(outputSpaceID, outputSpaceID);
+    		fastForwardBranch(outputSpaceID, headBranchID1, outputSpaceID);
+    		fastForwardBranch(outputSpaceID, headBranchID2, outputSpaceID);
+    		deleteBranch(outputSpaceID, outputSpaceID);
     	}
+    	
+    	selectHeadBranch(outputSpaceID, headBranchID1);
     }
 	
 	public void deleteDesignSpace(String targetSpaceID) {
@@ -317,6 +335,10 @@ public class DesignSpaceService {
     
     private void copyDesignSpace(String inputSpaceID, String outputSpaceID) {
         designSpaceRepository.copyDesignSpace(inputSpaceID, outputSpaceID);
+    }
+    
+    private void fastForwardBranch(String targetSpaceID, String targetBranchID1, String targetBranchID2) {
+    	designSpaceRepository.fastForwardBranch(targetSpaceID, targetBranchID1, targetBranchID2);
     }
     
     private void copyBranch(String targetSpaceID, String inputBranchID, String outputBranchID) {
@@ -349,16 +371,16 @@ public class DesignSpaceService {
     	designSpaceRepository.selectHeadBranch(targetSpaceID, targetBranchID);
     }
     
-    private void deleteCopyIndices(String targetSpaceID) {
-    	designSpaceRepository.deleteCopyIndices(targetSpaceID);
+    private void deleteNodeCopyIndices(String targetSpaceID) {
+    	designSpaceRepository.deleteNodeCopyIndices(targetSpaceID);
     }
     
-    private void deleteCopyIndices(String targetSpaceID, String targetBranchID) {
-    	designSpaceRepository.deleteCopyIndices(targetSpaceID, targetBranchID);
+    private void deleteNodeCopyIndices(String targetSpaceID, String targetBranchID) {
+    	designSpaceRepository.deleteNodeCopyIndices(targetSpaceID, targetBranchID);
     }
     
-    private void deleteHeadCopyIndices(String targetSpaceID) {
-    	designSpaceRepository.deleteHeadCopyIndices(targetSpaceID);
+    private void deleteCommitCopyIndices(String targetSpaceID, String targetBranchID) {
+    	designSpaceRepository.deleteCommitCopyIndices(targetSpaceID, targetBranchID);
     }
     
     private Set<Node> getNodesByType(String targetSpaceID, String nodeType) {
@@ -391,22 +413,24 @@ public class DesignSpaceService {
     		Set<String> inputBranchIDs2, String outputSpaceID) {
     	for (String inputBranchID1 : inputBranchIDs1) {
     		copyBranch(inputSpaceID1, inputBranchID1, outputSpaceID, inputBranchID1);
-    		deleteCopyIndices(outputSpaceID, inputBranchID1);
     	} 
     	for (String inputBranchID2 : inputBranchIDs2) {
     		if (!inputBranchIDs1.contains(inputBranchID2)) {
     			copyBranch(inputSpaceID2, inputBranchID2, outputSpaceID, inputBranchID2);
-        		deleteCopyIndices(outputSpaceID, inputBranchID2);
     		}
     	}
     }
     
-    private void createTypedNode(String targetSpaceID, String targetNodeID, String nodeType) {
-    	designSpaceRepository.createTypedNode(targetSpaceID, targetNodeID, nodeType);
+    public void createNode(String targetSpaceID, String outputNodeID) {
+    	designSpaceRepository.createNode(targetSpaceID, outputNodeID);
     }
     
-    private void createTypedNode(String targetSpaceID, String targetBranchID, String targetNodeID, String nodeType) {
-    	designSpaceRepository.createTypedNode(targetSpaceID, targetBranchID, targetNodeID, nodeType);
+    private void createTypedNode(String targetSpaceID, String outputNodeID, String nodeType) {
+    	designSpaceRepository.createTypedNode(targetSpaceID, outputNodeID, nodeType);
+    }
+    
+    private void createTypedNode(String targetSpaceID, String targetBranchID, String outputNodeID, String nodeType) {
+    	designSpaceRepository.createTypedNode(targetSpaceID, targetBranchID, outputNodeID, nodeType);
     }
     
     private void deleteNodeType(String targetSpaceID, String targetNodeID) {
@@ -425,7 +449,7 @@ public class DesignSpaceService {
     	return designSpaceRepository.getOutgoingEdges(targetSpaceID, targetBranchID, targetNodeID);
     }
     
-    private void createEdge(String targetSpaceID, String targetTailID, String targetHeadID) {
+    public void createEdge(String targetSpaceID, String targetTailID, String targetHeadID) {
     	designSpaceRepository.createEdge(targetSpaceID, targetTailID, targetHeadID);
     }
     

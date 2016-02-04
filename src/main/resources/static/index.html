@@ -31,8 +31,7 @@
                                     <li role="separator" class="divider"></li>
                                     <li><a href="#" ng-click="joinDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">Join</a></li>
                                     <li><a href="#" ng-click="orDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">OR</a></li>
-                                    <li><a href="#" ng-click="andDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">AND</a></li>
-                                    <li><a href="#" ng-click="insertDesignSpace(graphs[0].spaceID, graphs[1].spaceID, nodeID, spaceID)">Insert</a></li>
+                                    <li><a href="#" ng-click="andDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">AND</a></li>       
                                     <li role="separator" class="divider"></li>
                                     <li><a href="#" ng-click="createDesignSpace(spaceID)">New</a></li>
                                     <li role="separator" class="divider"></li>
@@ -41,6 +40,21 @@
                             </div><!-- /btn-group -->
                             <input type="text" placeholder="Design Space ID" class="form-control" aria-label="..." ng-model="spaceID">
                         </div><!-- /input-group -->
+                    </form>
+                    <form class="navbar-form navbar-left" role="search" ng-show="isDSGraph">
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Insert <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" ng-click="createNode(graphs[0].spaceID, nodeID1)">Node</a></li>
+                                    <li><a href="#" ng-click="createEdge(graphs[0].spaceID, nodeID1, nodeID2)">Edge</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" ng-click="insertDesignSpace(graphs[0].spaceID, graphs[1].spaceID, nodeID1, spaceID)">Design Space</a></li>
+                                </ul>
+                            </div><!-- /btn-group -->
+                            <input type="text" placeholder="Node ID 1" class="form-control" aria-label="..." ng-model="nodeID1" size="5">
+                        </div><!-- /input-group -->
+                        <input type="text" placeholder="Node ID 2" class="form-control" aria-label="..." ng-model="nodeID2" size="5">
                     </form>
                     <form class="navbar-form navbar-left" role="search" ng-hide="isDSGraph">
                         <div class="input-group">

@@ -40,10 +40,8 @@ CREATE (n6)-[:PRECEDES]->(n7)
 CREATE (n7)-[:PRECEDES {componentIDs: ["rb1"], componentRoles: ["ribosome_entry_site"]}]->(n8)
 CREATE (n8)-[:PRECEDES]->(n9)
 CREATE (n9)-[:PRECEDES {componentIDs: ["c1"], componentRoles: ["coding_sequence"]}]->(n10)
-CREATE (n10)-[:PRECEDES]->(n7)
 CREATE (n10)-[:PRECEDES]->(n11)
 CREATE (n11)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n12)
-CREATE (n12)-[:PRECEDES]->(n1)
 CREATE (n12)-[:PRECEDES]->(n13)
 
 CREATE (d1)-[:CONTAINS]->(b0:Branch {branchID: "test1", idIndex: 1})-[:CONTAINS]->(c0:Commit {commitID: "c0"})-[:CONTAINS]->(s1:Snapshot {idIndex: 14})
@@ -123,10 +121,8 @@ CREATE (n15)-[:PRECEDES]->(n16)
 CREATE (n16)-[:PRECEDES {componentIDs: ["rb1"], componentRoles: ["ribosome_entry_site"]}]->(n17)
 CREATE (n17)-[:PRECEDES]->(n18)
 CREATE (n18)-[:PRECEDES {componentIDs: ["c1"], componentRoles: ["coding_sequence"]}]->(n19)
-CREATE (n19)-[:PRECEDES]->(n16)
 CREATE (n19)-[:PRECEDES]->(n20)
 CREATE (n20)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n21)
-CREATE (n21)-[:PRECEDES]->(n14)
 CREATE (n21)-[:PRECEDES]->(n22)
 
 CREATE (d2)-[:CONTAINS]->(b1:Branch {branchID: "test2", idIndex: 1})-[:CONTAINS]->(c1:Commit {commitID: "c0"})-[:CONTAINS]->(s2:Snapshot {idIndex: 10})
@@ -163,10 +159,5 @@ CREATE (n42)-[:PRECEDES {componentIDs: ["c1"], componentRoles: ["coding_sequence
 CREATE (n43)-[:PRECEDES]->(n44)
 CREATE (n44)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n45)
 CREATE (n45)-[:PRECEDES]->(n46)
-
-CREATE (d3:DesignSpace {spaceID: "test3", idIndex: 0})
-
-CREATE (d3)-[:CONTAINS]->(b2:Branch {branchID: "test3", idIndex: 0})-[:CONTAINS]->(c2:Commit {commitID: "c0"})-[:CONTAINS]->(s3:Snapshot {idIndex: 0})
-CREATE (d3)-[:SELECTS]->(b2)
 
 ;
