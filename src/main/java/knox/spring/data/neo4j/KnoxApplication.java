@@ -43,7 +43,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @RequestMapping(value = "/branch", method = RequestMethod.POST)
     public ResponseEntity<String> createBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "outputBranchID", required = true) String outputBranchID) {
-    	designSpaceService.createBranch(targetSpaceID, outputBranchID);
+    	designSpaceService.copyHeadBranch(targetSpaceID, outputBranchID);
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
