@@ -354,7 +354,7 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
 
-            d3.xhr("/branch/commitTo" + query).post(function(error, request) {
+            d3.xhr("/branch/commitToHead" + query).post(function(error, request) {
                 if (!error) {
 
                     $scope.graphDesignSpace(targetSpaceID);
