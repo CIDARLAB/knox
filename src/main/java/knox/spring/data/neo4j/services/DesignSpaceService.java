@@ -146,11 +146,20 @@ public class DesignSpaceService {
 
     	Set<Node> startNodes = getNodesByType(targetSpaceID, outputBranchID, NodeType.START.value);
     
-    	createTypedNode(outputBranchID, outputBranchID, "n00", NodeType.START.value);
+    	Node startNodePrime = createTypedNode(outputBranchID, outputBranchID, NodeType.START.value);
     	
     	for (Node startNode : startNodes) {
     		deleteNodeType(targetSpaceID, outputBranchID, startNode.getNodeID());
-    		createEdge(targetSpaceID, outputBranchID, "n00", startNode.getNodeID());
+    		createEdge(targetSpaceID, outputBranchID, startNodePrime.getNodeID(), startNode.getNodeID());
+    	}
+    	
+    	Set<Node> acceptNodes = getNodesByType(targetSpaceID, outputBranchID, NodeType.ACCEPT.value);
+        
+    	Node acceptNodePrime = createTypedNode(outputBranchID, outputBranchID, NodeType.ACCEPT.value);
+    	
+    	for (Node acceptNode : acceptNodes) {
+    		deleteNodeType(targetSpaceID, outputBranchID, acceptNode.getNodeID());
+    		createEdge(targetSpaceID, outputBranchID, acceptNode.getNodeID(), acceptNodePrime.getNodeID());
     	}
     }
    
@@ -172,23 +181,6 @@ public class DesignSpaceService {
     	
     	deleteDesignSpace("knox1");
     	deleteDesignSpace("knox2");
-    	
-    	unionVersionHistories(inputSpaceID1, inputSpaceID2, outputSpaceID);
-    	
-    	Set<String> inputBranchIDs1 = getBranchIDs(inputSpaceID1);
-    	Set<String> inputBranchIDs2 = getBranchIDs(inputSpaceID2);
-    	String headBranchID1 = getHeadBranchID(inputSpaceID1);
-    	String headBranchID2 = getHeadBranchID(inputSpaceID2);
-
-    	if (!inputBranchIDs1.contains(headBranchID2) && !inputBranchIDs1.contains(outputSpaceID) 
-    			&& !inputBranchIDs2.contains(outputSpaceID)) {
-    		andBranches(outputSpaceID, headBranchID1, headBranchID2, outputSpaceID);
-    		fastForwardBranch(outputSpaceID, headBranchID1, outputSpaceID);
-    		fastForwardBranch(outputSpaceID, headBranchID2, outputSpaceID);
-    		deleteBranch(outputSpaceID, outputSpaceID);
-    	}
-    	
-    	selectHeadBranch(outputSpaceID, headBranchID1);
     }
     
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
@@ -307,11 +299,20 @@ public class DesignSpaceService {
 
     	Set<Node> startNodes = getNodesByType(outputSpaceID, NodeType.START.value);
     
-    	createTypedNode(outputSpaceID, "n00", NodeType.START.value);
+    	Node startNodePrime = createTypedNode(outputSpaceID, NodeType.START.value);
     	
     	for (Node startNode : startNodes) {
     		deleteNodeType(outputSpaceID, startNode.getNodeID());
-    		createEdge(outputSpaceID, "n00", startNode.getNodeID());
+    		createEdge(outputSpaceID, startNodePrime.getNodeID(), startNode.getNodeID());
+    	}
+    	
+    	Set<Node> acceptNodes = getNodesByType(outputSpaceID, NodeType.ACCEPT.value);
+        
+    	Node acceptNodePrime = createTypedNode(outputSpaceID, NodeType.ACCEPT.value);
+    	
+    	for (Node acceptNode : acceptNodes) {
+    		deleteNodeType(outputSpaceID, acceptNode.getNodeID());
+    		createEdge(outputSpaceID, acceptNode.getNodeID(), acceptNodePrime.getNodeID());
     	}
     	
     	unionVersionHistories(inputSpaceID1, inputSpaceID2, outputSpaceID);
@@ -344,8 +345,8 @@ public class DesignSpaceService {
     	designSpaceRepository.createEdge(targetSpaceID, targetTailID, targetHeadID);
     }
 	
-	public void createNode(String targetSpaceID, String outputNodeID) {
-    	designSpaceRepository.createNode(targetSpaceID, outputNodeID);
+	public void createNode(String targetSpaceID) {
+    	designSpaceRepository.createNode(targetSpaceID);
     }
     
 	private void createCommit(String targetSpaceID, String targetBranchID) {
@@ -364,12 +365,22 @@ public class DesignSpaceService {
 		designSpaceRepository.createEdge(targetSpaceID, targetBranchID, targetTailID, targetHeadID);
 	}
 
-	private void createTypedNode(String targetSpaceID, String outputNodeID, String nodeType) {
-		designSpaceRepository.createTypedNode(targetSpaceID, outputNodeID, nodeType);
+	private Node createTypedNode(String targetSpaceID, String nodeType) {
+		Set<Node> typedNode = designSpaceRepository.createTypedNode(targetSpaceID, nodeType);
+		if (typedNode.size() > 0) {
+			return typedNode.iterator().next();
+		} else {
+			return null;
+		}
 	}
 
-	private void createTypedNode(String targetSpaceID, String targetBranchID, String outputNodeID, String nodeType) {
-		designSpaceRepository.createTypedNode(targetSpaceID, targetBranchID, outputNodeID, nodeType);
+	private Node createTypedNode(String targetSpaceID, String targetBranchID, String nodeType) {
+		Set<Node> typedNode = designSpaceRepository.createTypedNode(targetSpaceID, targetBranchID, nodeType);
+		if (typedNode.size() > 0) {
+			return typedNode.iterator().next();
+		} else {
+			return null;
+		}
 	}
 
 	private void deleteCommitCopyIndices(String targetSpaceID, String targetBranchID) {
