@@ -73,7 +73,7 @@ public class DesignSpaceService {
     	deleteNodeCopyIndices(targetSpaceID, outputBranchID);
     	
     	if (nodeCopy != null) {
-    		Set<Edge> removedEdges = removeOutgoingEdges(targetSpaceID, outputBranchID, nodeCopy.getNodeID());
+    		Set<Edge> removedEdges = deleteOutgoingEdges(targetSpaceID, outputBranchID, nodeCopy.getNodeID());
 
     		if (removedEdges.size() > 0) {
     			for (Node acceptNode1 : acceptNodes1) {
@@ -200,7 +200,7 @@ public class DesignSpaceService {
     	deleteNodeCopyIndices(outputSpaceID);
     	
     	if (nodeCopy != null) {
-    		Set<Edge> removedEdges = removeOutgoingEdges(outputSpaceID, nodeCopy.getNodeID());
+    		Set<Edge> removedEdges = deleteOutgoingEdges(outputSpaceID, nodeCopy.getNodeID());
 
     		if (removedEdges.size() > 0) {
     			for (Node acceptNode1 : acceptNodes1) {
@@ -578,18 +578,18 @@ public class DesignSpaceService {
 	    designSpaceRepository.mergeBranch(inputSpaceID, inputBranchID, outputSpaceID, outputBranchID);
 	}
 
-	private Set<Edge> removeOutgoingEdges(String targetSpaceID, String targetNodeID) {
+	private Set<Edge> deleteOutgoingEdges(String targetSpaceID, String targetNodeID) {
 		Set<Edge> removedEdges = getOutgoingEdges(targetSpaceID, targetNodeID);
 		if (removedEdges.size() > 0) {
-			designSpaceRepository.removeOutgoingEdges(targetSpaceID, targetNodeID);
+			designSpaceRepository.deleteOutgoingEdges(targetSpaceID, targetNodeID);
 		}
 		return removedEdges;
 	}
 
-	private Set<Edge> removeOutgoingEdges(String targetSpaceID, String targetBranchID, String targetNodeID) {
+	private Set<Edge> deleteOutgoingEdges(String targetSpaceID, String targetBranchID, String targetNodeID) {
 		Set<Edge> removedEdges = getOutgoingEdges(targetSpaceID, targetBranchID, targetNodeID);
 		if (removedEdges.size() > 0) {
-			designSpaceRepository.removeOutgoingEdges(targetSpaceID, targetBranchID, targetNodeID);
+			designSpaceRepository.deleteOutgoingEdges(targetSpaceID, targetBranchID, targetNodeID);
 		}
 		return removedEdges;
 	}
