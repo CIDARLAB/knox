@@ -160,4 +160,25 @@ CREATE (n43)-[:PRECEDES]->(n44)
 CREATE (n44)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n45)
 CREATE (n45)-[:PRECEDES]->(n46)
 
+CREATE (d3:DesignSpace {spaceID: "test3", idIndex: 2})
+
+CREATE (n47:Node {nodeID: "n0", nodeType: "start"})
+CREATE (n48:Node {nodeID: "n1", nodeType: "accept"})
+
+CREATE (d3)-[:CONTAINS]->(n47)
+CREATE (d3)-[:CONTAINS]->(n48)
+
+CREATE (n47)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n48)
+
+CREATE (d3)-[:CONTAINS]->(b2:Branch {branchID: "test3", idIndex: 1})-[:CONTAINS]->(c2:Commit {commitID: "c0"})-[:CONTAINS]->(s3:Snapshot {idIndex: 2})
+CREATE (d3)-[:SELECTS]->(b2)-[:LATEST]->(c2)
+
+CREATE (n49:Node {nodeID: "n0", nodeType: "start"})
+CREATE (n50:Node {nodeID: "n1", nodeType: "accept"})
+
+CREATE (s3)-[:CONTAINS]->(n49)
+CREATE (s3)-[:CONTAINS]->(n50)
+
+CREATE (n49)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n50)
+
 ;

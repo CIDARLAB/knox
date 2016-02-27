@@ -123,10 +123,9 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
-    @RequestMapping(value = "/node", method = RequestMethod.PUT)
-    public ResponseEntity<String> createNode(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-    		@RequestParam(value = "outputNodeID", required = true) String outputNodeID) {
-    	designSpaceService.createNode(targetSpaceID, outputNodeID);
+    @RequestMapping(value = "/node", method = RequestMethod.POST)
+    public ResponseEntity<String> createNode(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+    	designSpaceService.createNode(targetSpaceID);
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 

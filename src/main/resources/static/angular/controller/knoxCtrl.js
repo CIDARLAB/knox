@@ -392,11 +392,11 @@ function knoxCtrl($scope) {
         }
     };
 
-    $scope.createNode = function(targetSpaceID, outputNodeID) {
+    $scope.createNode = function(targetSpaceID) {
         if (targetSpaceID && outputNodeID) {
-            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&outputNodeID=" + encodeURIComponent(outputNodeID);
+            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
 
-            d3.xhr("/node" + query).send("PUT", function(error, request) {
+            d3.xhr("/node" + query).post(function(error, request) {
                 if (!error) {
 
                     $scope.graphDesignSpace(targetSpaceID);
