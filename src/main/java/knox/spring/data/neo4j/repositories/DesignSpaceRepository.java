@@ -1,5 +1,6 @@
 package knox.spring.data.neo4j.repositories;
 
+import knox.spring.data.neo4j.domain.Branch;
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
@@ -180,12 +181,21 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "CREATE (b1)-[:CONTAINS]->(c)")
 	void fastForwardBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID1") String targetBranchID1, @Param("targetBranchID2") String targetBranchID2);
 
+	
+	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(b:Branch {branchID: {targetBranchID}}) "
+			+ "RETURN b")
+	Set<Branch> findBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID);
+	
 	DesignSpace findBySpaceID(@Param("spaceID") String spaceID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(:Node {nodeID: {targetTailID}})-[e:PRECEDES]->(n:Node {nodeID: {targetHeadID}}), (target)-[:CONTAINS]->(n) "
 			+ "RETURN e")
 	Set<Edge> findEdge(@Param("targetSpaceID") String targetSpaceID, @Param("targetTailID") String targetTailID, @Param("targetHeadID") String targetHeadID);
 
+	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node {nodeID: {targetNodeID}}) "
+			+ "RETURN n")
+	Set<Node> findNode(@Param("targetSpaceID") String targetSpaceID, @Param("targetNodeID") String targetNodeID);
+	
 	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID1}})-[:CONTAINS]->(n1:Node {nodeID: {targetNodeID}}), (:DesignSpace {spaceID: {targetSpaceID2}})-[:CONTAINS]->(n2:Node {copyIndex: ID(n1)}) "
 			+ "RETURN n2")
 	Set<Node> findNodeCopy(@Param("targetSpaceID1") String targetSpaceID1, @Param("targetNodeID") String targetNodeID, @Param("targetSpaceID2") String targetSpaceID2);
@@ -197,6 +207,11 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(b:Branch) "
 			+ "RETURN b.branchID as branchID")
 	List<Map<String, Object>> getBranchIDs(@Param("targetSpaceID") String targetSpaceID);
+	
+	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID1}})-[:CONTAINS]->(b1:Branch), (:DesignSpace {spaceID: {targetSpaceID2}})-[:CONTAINS]->(b2:Branch) "
+			+ "WHERE b1.branchID = b2.branchID "
+			+ "RETURN b1.branchID as commonBranchIDs")
+	Set<String> getCommonBranchIDs(@Param("targetSpaceID1") String targetSpaceID1, @Param("targetSpaceID2") String targetSpaceID2);
 
 	@Query("MATCH (b:Branch)<-[:CONTAINS]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(b:Branch) "
 			+ "RETURN b.branchID as headBranchID")

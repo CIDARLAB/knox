@@ -68,13 +68,17 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     @RequestMapping(value = "/designSpace", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
     	designSpaceService.deleteDesignSpace(targetSpaceID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+        return new ResponseEntity<String>("Design space was deleted successfully.", HttpStatus.NO_CONTENT);
     }
     
     @RequestMapping(value = "/designSpace", method = RequestMethod.POST)
     public ResponseEntity<String> createDesignSpace(@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	designSpaceService.createDesignSpace(outputSpaceID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    	if (designSpaceService.hasDesignSpace(outputSpaceID)) {
+    		return new ResponseEntity<String>("Output design space ID conflicts with existing design space ID.", HttpStatus.BAD_REQUEST);
+    	} else {
+    		designSpaceService.createDesignSpace(outputSpaceID);
+    		return new ResponseEntity<String>("Design space was created successfully.", HttpStatus.NO_CONTENT);
+    	}
     }
     
     @RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
@@ -94,9 +98,22 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> insertDesignSpace(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1,
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
     		@RequestParam(value = "targetNodeID", required = true) String targetNodeID,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT); 
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+    	if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
+    		return new ResponseEntity<String>("First input design space not found.", HttpStatus.NOT_FOUND);
+    	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
+    		return new ResponseEntity<String>("Second input design space not found.", HttpStatus.NOT_FOUND);
+    	} else if (!designSpaceService.hasNode(inputSpaceID1, targetNodeID)) {
+    		return new ResponseEntity<String>("Target node not found in first input design space.", HttpStatus.NOT_FOUND);
+    	} else if (outputSpaceID != null && designSpaceService.hasDesignSpace(outputSpaceID)) {
+    		return new ResponseEntity<String>("Output design space already exists.", HttpStatus.BAD_REQUEST);
+    	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
+    		return new ResponseEntity<String>("Input design spaces contain branches with conflicting IDs.", HttpStatus.BAD_REQUEST);
+    	} else {
+    		System.out.println("Go go go go go go go go");
+    		designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID);
+    		return new ResponseEntity<String>("Design space was inserted successfully.", HttpStatus.NO_CONTENT);
+    	}
     }
     
     @RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
@@ -115,7 +132,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
-    @RequestMapping(value = "/edge", method = RequestMethod.PUT)
+    @RequestMapping(value = "/edge", method = RequestMethod.POST)
     public ResponseEntity<String> createEdge(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "targetTailID", required = true) String targetTailID,
     		@RequestParam(value = "targetHeadID", required = true) String targetHeadID) {

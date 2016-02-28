@@ -199,9 +199,17 @@ function knoxCtrl($scope) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
 
             d3.json("/designSpace/graph/d3" + query, function(error, dsGraph) {
-                if (!error && dsGraph.spaceID) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else if (dsGraph.spaceID) {
                     d3.json("/branch/graph/d3" + query, function(error, vcGraph) {
-                        if (!error && vcGraph.spaceID) {
+                        if (error) {
+
+                            sweetAlert("Error", error.responseText, "error");
+
+                        } else if (vcGraph.spaceID) {
                             var targetI = -1;
                             var i;
                             for (i = 0; i < $scope.graphs.length; i++) {
@@ -249,7 +257,11 @@ function knoxCtrl($scope) {
                     + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
 
             d3.xhr("/designSpace/join" + query).post(function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(outputSpaceID);
 
@@ -264,7 +276,11 @@ function knoxCtrl($scope) {
                     + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
 
             d3.xhr("/designSpace/or" + query).post(function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(outputSpaceID);
 
@@ -279,7 +295,11 @@ function knoxCtrl($scope) {
                     + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
 
             d3.xhr("/designSpace/and" + query).post(function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(outputSpaceID);
 
@@ -292,7 +312,11 @@ function knoxCtrl($scope) {
         var query = "?outputSpaceID=" + encodeURIComponent(outputSpaceID);
 
         d3.xhr("/designSpace" + query).post(function(error, request) {
-            if (!error) {
+            if (error) {
+
+                sweetAlert("Error", error.responseText, "error");
+
+            } else {
 
                 $scope.graphDesignSpace(outputSpaceID);
 
@@ -305,7 +329,11 @@ function knoxCtrl($scope) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
 
             d3.xhr("/designSpace" + query).send("DELETE", function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     if ($scope.graphs.length > 1) {
                         $scope.removeGraphSVG(1);
@@ -341,7 +369,11 @@ function knoxCtrl($scope) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetBranchID=" + encodeURIComponent(targetBranchID);
 
             d3.xhr("/branch/checkout" + query).send("PUT", function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(targetSpaceID);
 
@@ -355,7 +387,11 @@ function knoxCtrl($scope) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
 
             d3.xhr("/branch/commitToHead" + query).post(function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(targetSpaceID);
 
@@ -369,7 +405,11 @@ function knoxCtrl($scope) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&outputBranchID=" + encodeURIComponent(outputBranchID);
 
             d3.xhr("/branch" + query).post(function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(targetSpaceID);
 
@@ -383,7 +423,11 @@ function knoxCtrl($scope) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetBranchID=" + encodeURIComponent(targetBranchID);
 
             d3.xhr("/branch" + query).send("DELETE", function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(targetSpaceID);
 
@@ -397,7 +441,11 @@ function knoxCtrl($scope) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
 
             d3.xhr("/node" + query).post(function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(targetSpaceID);
 
@@ -411,8 +459,12 @@ function knoxCtrl($scope) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetTailID=" + encodeURIComponent(targetTailID) 
                     + "&targetHeadID=" + encodeURIComponent(targetHeadID);
 
-            d3.xhr("/edge" + query).send("PUT", function(error, request) {
-                if (!error) {
+            d3.xhr("/edge" + query).post(function(error, request) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(targetSpaceID);
 
@@ -427,7 +479,11 @@ function knoxCtrl($scope) {
                     + "&targetNodeID=" + encodeURIComponent(targetNodeID) + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
 
             d3.xhr("/designSpace/insert" + query).post(function(error, request) {
-                if (!error) {
+                if (error) {
+
+                    sweetAlert("Error", error.responseText, "error");
+
+                } else {
 
                     $scope.graphDesignSpace(outputSpaceID);
 
