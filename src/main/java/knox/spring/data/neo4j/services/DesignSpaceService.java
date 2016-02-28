@@ -196,28 +196,22 @@ public class DesignSpaceService {
     	
     	unionDesignSpace(inputSpaceID1, outputSpaceID);
     	
-    	Node nodeCopy = findNodeCopy(inputSpaceID1, targetNodeID, outputSpaceID);
+    	Node targetNode = findNodeCopy(inputSpaceID1, targetNodeID, outputSpaceID);
     	
     	deleteNodeCopyIndices(outputSpaceID);
     	
-    	Set<Edge> removedEdges = removeOutgoingEdges(outputSpaceID, nodeCopy.getNodeID());
+    	Set<Edge> removedEdges = removeOutgoingEdges(outputSpaceID, targetNode.getNodeID());
 
     	if (removedEdges.size() > 0) {
     		for (Node acceptNode2 : acceptNodes2) {
     			deleteNodeType(outputSpaceID, acceptNode2.getNodeID());
     		}
-    	} else {
-    		Set<Node> acceptNodes = getNodesByType(outputSpaceID, NodeType.ACCEPT.value);
-    		for (Node acceptNode : acceptNodes) {
-    			if (nodeCopy.getNodeID().equals(acceptNode.getNodeID())) {
-    				deleteNodeType(outputSpaceID, nodeCopy.getNodeID());
-    			}
-    		}
-    	}
+    	} 
+    	
     	if (startNodes2.size() > 0) {
     		Node startNode2 = startNodes2.iterator().next();
     		deleteNodeType(outputSpaceID, startNode2.getNodeID());
-    		createEdge(outputSpaceID, nodeCopy.getNodeID(), startNode2.getNodeID());
+    		createEdge(outputSpaceID, targetNode.getNodeID(), startNode2.getNodeID());
     	}
     	for (Node acceptNode2 : acceptNodes2) {
     		for (Edge removedEdge : removedEdges) {
@@ -240,6 +234,64 @@ public class DesignSpaceService {
     	deleteBranch(outputSpaceID, RESERVED_ID);
     	
     	selectHeadBranch(outputSpaceID, headBranchID1);
+    }
+    
+    public void insertDesignSpace(String inputSpaceID1, String inputSpaceID2, String targetNodeID) {
+    	Set<Node> startNodes1 = getNodesByType(inputSpaceID1, NodeType.START.value);
+    	Set<Node> acceptNodes1 = getNodesByType(inputSpaceID1, NodeType.ACCEPT.value);
+    	
+    	unionDesignSpace(inputSpaceID2, inputSpaceID1);
+    	
+    	deleteNodeCopyIndices(inputSpaceID1);
+    	
+    	Set<Node> startNodes2 = new HashSet<Node>();
+    	Set<Node> acceptNodes2 = new HashSet<Node>();
+    	
+    	for (Node startNode : getNodesByType(inputSpaceID1, NodeType.START.value)) {
+    		if (!startNodes1.contains(startNode)) {
+    			startNodes2.add(startNode);
+    		}
+    	}
+    	for (Node acceptNode : getNodesByType(inputSpaceID1, NodeType.ACCEPT.value)) {
+    		if (!acceptNodes1.contains(acceptNode)) {
+    			acceptNodes2.add(acceptNode);
+    		}
+    	}
+
+    	Node targetNode = findNode(inputSpaceID1, targetNodeID);
+    	
+    	Set<Edge> removedEdges = removeOutgoingEdges(inputSpaceID1, targetNode.getNodeID());
+
+    	if (removedEdges.size() > 0) {
+    		for (Node acceptNode2 : acceptNodes2) {
+    			deleteNodeType(inputSpaceID1, acceptNode2.getNodeID());
+    		}
+    	} 
+    	
+    	if (startNodes2.size() > 0) {
+    		Node startNode2 = startNodes2.iterator().next();
+    		deleteNodeType(inputSpaceID1, startNode2.getNodeID());
+    		createEdge(inputSpaceID1, targetNode.getNodeID(), startNode2.getNodeID());
+    	}
+    	for (Node acceptNode2 : acceptNodes2) {
+    		for (Edge removedEdge : removedEdges) {
+    			if (removedEdge.hasRoles()) {
+    				createComponentEdge(inputSpaceID1, acceptNode2.getNodeID(), removedEdge.getHead().getNodeID(), removedEdge.getComponentIDs(), removedEdge.getComponentRoles());
+    			} else {
+    				createEdge(inputSpaceID1, acceptNode2.getNodeID(), removedEdge.getHead().getNodeID());
+    			}
+    		}
+    	}
+    		
+    	unionVersionHistory(inputSpaceID2, inputSpaceID1);
+    	
+    	String headBranchID1 = getHeadBranchID(inputSpaceID1);
+    	String headBranchID2 = getHeadBranchID(inputSpaceID2);
+
+    	insertBranch(inputSpaceID1, headBranchID1, headBranchID2, targetNodeID, RESERVED_ID);
+    	fastForwardBranch(inputSpaceID1, headBranchID1, RESERVED_ID);
+    	fastForwardBranch(inputSpaceID1, headBranchID2, RESERVED_ID);
+    	deleteBranch(inputSpaceID1, RESERVED_ID);
     }
     
     public void joinDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
@@ -638,6 +690,17 @@ public class DesignSpaceService {
         designSpaceRepository.unionSnapshot(targetSpaceID, inputBranchID, outputBranchID);
     }
     
+    private void unionVersionHistory(String inputSpaceID, String outputSpaceID) {
+    	Set<String> inputBranchIDs = getBranchIDs(inputSpaceID);
+    	for (String inputBranchID : inputBranchIDs) {
+    		mergeBranch(inputSpaceID, inputBranchID, outputSpaceID, inputBranchID);
+    		copySnapshots(inputSpaceID, inputBranchID, outputSpaceID, inputBranchID);
+    	}
+    	for (String inputBranchID : inputBranchIDs) {
+    		deleteCommitCopyIndices(outputSpaceID, inputBranchID);
+    	}
+    }
+    
     private void unionVersionHistories(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
     	Set<String> inputBranchIDs1 = getBranchIDs(inputSpaceID1);
     	Set<String> inputBranchIDs2 = getBranchIDs(inputSpaceID2);
@@ -649,15 +712,11 @@ public class DesignSpaceService {
     		deleteCommitCopyIndices(outputSpaceID, inputBranchID1);
     	}
     	for (String inputBranchID2 : inputBranchIDs2) {
-    		if (!inputBranchIDs1.contains(inputBranchID2)) {
-    			mergeBranch(inputSpaceID2, inputBranchID2, outputSpaceID, inputBranchID2);
-    			copySnapshots(inputSpaceID2, inputBranchID2, outputSpaceID, inputBranchID2);
-    		}
+    		mergeBranch(inputSpaceID2, inputBranchID2, outputSpaceID, inputBranchID2);
+    		copySnapshots(inputSpaceID2, inputBranchID2, outputSpaceID, inputBranchID2);
     	}
     	for (String inputBranchID2 : inputBranchIDs2) {
-    		if (!inputBranchIDs1.contains(inputBranchID2)) {
-    			deleteCommitCopyIndices(outputSpaceID, inputBranchID2);
-    		}
+    		deleteCommitCopyIndices(outputSpaceID, inputBranchID2);
     	}
     }
     

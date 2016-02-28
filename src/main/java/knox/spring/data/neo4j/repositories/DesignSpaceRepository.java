@@ -180,7 +180,6 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "WHERE NOT (b1)-[:CONTAINS]->(c:Commit) "
 			+ "CREATE (b1)-[:CONTAINS]->(c)")
 	void fastForwardBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID1") String targetBranchID1, @Param("targetBranchID2") String targetBranchID2);
-
 	
 	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(b:Branch {branchID: {targetBranchID}}) "
 			+ "RETURN b")

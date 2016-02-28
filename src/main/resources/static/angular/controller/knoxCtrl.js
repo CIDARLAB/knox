@@ -474,21 +474,37 @@ function knoxCtrl($scope) {
     };
 
     $scope.insertDesignSpace = function(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID) {
-        if (inputSpaceID1 && inputSpaceID2 && targetNodeID && outputSpaceID && outputSpaceID !== inputSpaceID1 && outputSpaceID !== inputSpaceID2) {
-            var query = "?inputSpaceID1=" + encodeURIComponent(inputSpaceID1) + "&inputSpaceID2=" + encodeURIComponent(inputSpaceID2) 
-                    + "&targetNodeID=" + encodeURIComponent(targetNodeID) + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
+        var query = "?";
 
-            d3.xhr("/designSpace/insert" + query).post(function(error, request) {
-                if (error) {
+        if (inputSpaceID1) {
+            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
+        }
+        if (inputSpaceID2) {
+            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        }
+        if (targetNodeID) {
+            query += $scope.encodeQueryParameter("targetNodeID", targetNodeID, query);
+        }
+        if (outputSpaceID) {
+            query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
+        }
 
-                    sweetAlert("Error", error.responseText, "error");
+        d3.xhr("/designSpace/insert" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else if (!outputSpaceID) {
+                $scope.graphDesignSpace(inputSpaceID1);
+            } else {
+                $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
+    };
 
-                } else {
-
-                    $scope.graphDesignSpace(outputSpaceID);
-
-                }
-            });
+    $scope.encodeQueryParameter = function(parameterName, parameterValue, query) {
+        if (query.length > 1) {
+            return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
+        } else {
+            return parameterName + "=" + encodeURIComponent(parameterValue);
         }
     };
 

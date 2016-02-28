@@ -100,19 +100,22 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		@RequestParam(value = "targetNodeID", required = true) String targetNodeID,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
     	if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
-    		return new ResponseEntity<String>("First input design space not found.", HttpStatus.NOT_FOUND);
+    		return new ResponseEntity<String>("{\"message\": \"First input design space not found.\"}", HttpStatus.NOT_FOUND);
     	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
-    		return new ResponseEntity<String>("Second input design space not found.", HttpStatus.NOT_FOUND);
+    		return new ResponseEntity<String>("{\"message\": \"Second input design space not found.\"}", HttpStatus.NOT_FOUND);
     	} else if (!designSpaceService.hasNode(inputSpaceID1, targetNodeID)) {
-    		return new ResponseEntity<String>("Target node not found in first input design space.", HttpStatus.NOT_FOUND);
+    		return new ResponseEntity<String>("{\"message\": \"Target node not found in first input design space.\"}", HttpStatus.NOT_FOUND);
     	} else if (outputSpaceID != null && designSpaceService.hasDesignSpace(outputSpaceID)) {
-    		return new ResponseEntity<String>("Output design space already exists.", HttpStatus.BAD_REQUEST);
+    		return new ResponseEntity<String>("{\"message\": \"Output design space already exists.\"}", HttpStatus.BAD_REQUEST);
     	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
-    		return new ResponseEntity<String>("Input design spaces contain branches with conflicting IDs.", HttpStatus.BAD_REQUEST);
+    		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
     	} else {
-    		System.out.println("Go go go go go go go go");
-    		designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID);
-    		return new ResponseEntity<String>("Design space was inserted successfully.", HttpStatus.NO_CONTENT);
+    		if (outputSpaceID == null) {
+    			designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID);
+    		} else {
+    			designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID);
+    		}
+    		return new ResponseEntity<String>("{\"message\": \"Design space was inserted successfully.\"}", HttpStatus.NO_CONTENT);
     	}
     }
     
