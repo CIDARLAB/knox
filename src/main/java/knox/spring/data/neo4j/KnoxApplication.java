@@ -111,28 +111,75 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
     	} else {
     		if (outputSpaceID == null) {
-    			designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID);
+    			designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, inputSpaceID1);
     		} else {
     			designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID);
     		}
-    		return new ResponseEntity<String>("{\"message\": \"Design space was inserted successfully.\"}", HttpStatus.NO_CONTENT);
+    		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", HttpStatus.NO_CONTENT);
     	}
     }
     
     @RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
     public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+    	if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
+    		return new ResponseEntity<String>("{\"message\": \"First input design space not found.\"}", HttpStatus.NOT_FOUND);
+    	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
+    		return new ResponseEntity<String>("{\"message\": \"Second input design space not found.\"}", HttpStatus.NOT_FOUND);
+    	}  else if (outputSpaceID != null && designSpaceService.hasDesignSpace(outputSpaceID)) {
+    		return new ResponseEntity<String>("{\"message\": \"Output design space already exists.\"}", HttpStatus.BAD_REQUEST);
+    	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
+    		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
+    	} else {
+    		if (outputSpaceID == null) {
+    			designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2, inputSpaceID1);
+    		} else {
+    			designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2,  outputSpaceID);
+    		}
+    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully joined.\"}", HttpStatus.NO_CONTENT);
+    	}
     }
+    
+//    if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
+//		return new ResponseEntity<String>("{\"message\": \"Input design space " + inputSpaceID1 + " not found.\"}", HttpStatus.NOT_FOUND);
+//	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
+//		return new ResponseEntity<String>("{\"message\": \"Input design space " + inputSpaceID2 + " not found.\"}", HttpStatus.NOT_FOUND);
+//	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
+//		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
+//	} else if (outputSpaceID == null || outputSpaceID.equals(inputSpaceID1)) {
+//		designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2, inputSpaceID1);
+//		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", HttpStatus.NO_CONTENT);
+//	} else if (outputSpaceID.equals(inputSpaceID2)) {
+//		designSpaceService.joinDesignSpaces(inputSpaceID2, inputSpaceID1, inputSpaceID2);
+//		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", HttpStatus.NO_CONTENT);
+//	} else if (designSpaceService.hasDesignSpace(outputSpaceID)) {
+//		return new ResponseEntity<String>("{\"message\": \"Output design space " + outputSpaceID + " already exists.\"}", HttpStatus.BAD_REQUEST);
+//	} else {
+//		designSpaceService.joinDesignSpaces(inputSpaceID2, inputSpaceID1, inputSpaceID2);
+//		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", HttpStatus.NO_CONTENT);
+//	}
     
     @RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
     public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	designSpaceService.orDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+    	if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
+    		return new ResponseEntity<String>("{\"message\": \"First input design space not found.\"}", HttpStatus.NOT_FOUND);
+    	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
+    		return new ResponseEntity<String>("{\"message\": \"Second input design space not found.\"}", HttpStatus.NOT_FOUND);
+    	}  else if (outputSpaceID != null && designSpaceService.hasDesignSpace(outputSpaceID)) {
+    		return new ResponseEntity<String>("{\"message\": \"Output design space already exists.\"}", HttpStatus.BAD_REQUEST);
+    	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
+    		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
+    	} else {
+    		if (outputSpaceID == null) {
+    			designSpaceService.orDesignSpaces(inputSpaceID1, inputSpaceID2, inputSpaceID1);
+    		} else {
+    			designSpaceService.orDesignSpaces(inputSpaceID1, inputSpaceID2,  outputSpaceID);
+    		}
+    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully disjoined.\"}", HttpStatus.NO_CONTENT);
+    	}
     }
     
     @RequestMapping(value = "/edge", method = RequestMethod.POST)

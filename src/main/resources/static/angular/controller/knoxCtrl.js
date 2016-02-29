@@ -252,41 +252,51 @@ function knoxCtrl($scope) {
     };
 
     $scope.joinDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
-        if (inputSpaceID1 && inputSpaceID2 && outputSpaceID && outputSpaceID !== inputSpaceID1 && outputSpaceID !== inputSpaceID2) {
-            var query = "?inputSpaceID1=" + encodeURIComponent(inputSpaceID1) + "&inputSpaceID2=" + encodeURIComponent(inputSpaceID2) 
-                    + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
+        var query = "?";
 
-            d3.xhr("/designSpace/join" + query).post(function(error, request) {
-                if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
-                } else {
-
-                    $scope.graphDesignSpace(outputSpaceID);
-
-                }
-            });
+        if (inputSpaceID1) {
+            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
         }
+        if (inputSpaceID2) {
+            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        }
+        if (outputSpaceID) {
+            query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
+        }
+
+        d3.xhr("/designSpace/join" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else if (!outputSpaceID) {
+                $scope.graphDesignSpace(inputSpaceID1);
+            } else {
+                $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
     };
 
     $scope.orDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
-        if (inputSpaceID1 && inputSpaceID2 && outputSpaceID && outputSpaceID !== inputSpaceID1 && outputSpaceID !== inputSpaceID2) {
-            var query = "?inputSpaceID1=" + encodeURIComponent(inputSpaceID1) + "&inputSpaceID2=" + encodeURIComponent(inputSpaceID2) 
-                    + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
+        var query = "?";
 
-            d3.xhr("/designSpace/or" + query).post(function(error, request) {
-                if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
-                } else {
-
-                    $scope.graphDesignSpace(outputSpaceID);
-
-                }
-            });
+        if (inputSpaceID1) {
+            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
         }
+        if (inputSpaceID2) {
+            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        }
+        if (outputSpaceID) {
+            query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
+        }
+
+        d3.xhr("/designSpace/or" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else if (!outputSpaceID) {
+                $scope.graphDesignSpace(inputSpaceID1);
+            } else {
+                $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
     };
 
     $scope.andDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
