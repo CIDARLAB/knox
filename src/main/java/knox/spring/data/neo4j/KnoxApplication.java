@@ -1,5 +1,9 @@
 package knox.spring.data.neo4j;
 
+import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
+import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
+import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
+import knox.spring.data.neo4j.exception.NodeNotFoundException;
 import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,23 +103,16 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
     		@RequestParam(value = "targetNodeID", required = true) String targetNodeID,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-    	if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
-    		return new ResponseEntity<String>("{\"message\": \"First input design space not found.\"}", HttpStatus.NOT_FOUND);
-    	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
-    		return new ResponseEntity<String>("{\"message\": \"Second input design space not found.\"}", HttpStatus.NOT_FOUND);
-    	} else if (!designSpaceService.hasNode(inputSpaceID1, targetNodeID)) {
-    		return new ResponseEntity<String>("{\"message\": \"Target node not found in first input design space.\"}", HttpStatus.NOT_FOUND);
-    	} else if (outputSpaceID != null && designSpaceService.hasDesignSpace(outputSpaceID)) {
-    		return new ResponseEntity<String>("{\"message\": \"Output design space already exists.\"}", HttpStatus.BAD_REQUEST);
-    	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
-    		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
-    	} else {
-    		if (outputSpaceID == null) {
-    			designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, inputSpaceID1);
-    		} else {
-    			designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID);
-    		}
-    		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", HttpStatus.NO_CONTENT);
+    	if (outputSpaceID == null) {
+			outputSpaceID = inputSpaceID1;
+		}
+    	try {
+    		designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID);
+    		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", 
+    				HttpStatus.NO_CONTENT);
+    	} catch (NodeNotFoundException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
     	}
     }
     
@@ -123,62 +120,33 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-    	if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
-    		return new ResponseEntity<String>("{\"message\": \"First input design space not found.\"}", HttpStatus.NOT_FOUND);
-    	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
-    		return new ResponseEntity<String>("{\"message\": \"Second input design space not found.\"}", HttpStatus.NOT_FOUND);
-    	}  else if (outputSpaceID != null && designSpaceService.hasDesignSpace(outputSpaceID)) {
-    		return new ResponseEntity<String>("{\"message\": \"Output design space already exists.\"}", HttpStatus.BAD_REQUEST);
-    	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
-    		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
-    	} else {
-    		if (outputSpaceID == null) {
-    			designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2, inputSpaceID1);
-    		} else {
-    			designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2,  outputSpaceID);
-    		}
-    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully joined.\"}", HttpStatus.NO_CONTENT);
+    	if (outputSpaceID == null) {
+			outputSpaceID = inputSpaceID1;
+		}
+    	try {
+    		designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
+    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully joined.\"}", 
+    				HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
     	}
     }
-    
-//    if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
-//		return new ResponseEntity<String>("{\"message\": \"Input design space " + inputSpaceID1 + " not found.\"}", HttpStatus.NOT_FOUND);
-//	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
-//		return new ResponseEntity<String>("{\"message\": \"Input design space " + inputSpaceID2 + " not found.\"}", HttpStatus.NOT_FOUND);
-//	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
-//		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
-//	} else if (outputSpaceID == null || outputSpaceID.equals(inputSpaceID1)) {
-//		designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2, inputSpaceID1);
-//		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", HttpStatus.NO_CONTENT);
-//	} else if (outputSpaceID.equals(inputSpaceID2)) {
-//		designSpaceService.joinDesignSpaces(inputSpaceID2, inputSpaceID1, inputSpaceID2);
-//		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", HttpStatus.NO_CONTENT);
-//	} else if (designSpaceService.hasDesignSpace(outputSpaceID)) {
-//		return new ResponseEntity<String>("{\"message\": \"Output design space " + outputSpaceID + " already exists.\"}", HttpStatus.BAD_REQUEST);
-//	} else {
-//		designSpaceService.joinDesignSpaces(inputSpaceID2, inputSpaceID1, inputSpaceID2);
-//		return new ResponseEntity<String>("{\"message\": \"Design space was successfully inserted.\"}", HttpStatus.NO_CONTENT);
-//	}
     
     @RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
     public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-    	if (!designSpaceService.hasDesignSpace(inputSpaceID1)) {
-    		return new ResponseEntity<String>("{\"message\": \"First input design space not found.\"}", HttpStatus.NOT_FOUND);
-    	} else if (!designSpaceService.hasDesignSpace(inputSpaceID2)) {
-    		return new ResponseEntity<String>("{\"message\": \"Second input design space not found.\"}", HttpStatus.NOT_FOUND);
-    	}  else if (outputSpaceID != null && designSpaceService.hasDesignSpace(outputSpaceID)) {
-    		return new ResponseEntity<String>("{\"message\": \"Output design space already exists.\"}", HttpStatus.BAD_REQUEST);
-    	} else if (designSpaceService.hasCommonBranches(inputSpaceID1, inputSpaceID2)) {
-    		return new ResponseEntity<String>("{\"message\": \"Input design spaces contain branches with conflicting IDs.\"}", HttpStatus.BAD_REQUEST);
-    	} else {
-    		if (outputSpaceID == null) {
-    			designSpaceService.orDesignSpaces(inputSpaceID1, inputSpaceID2, inputSpaceID1);
-    		} else {
-    			designSpaceService.orDesignSpaces(inputSpaceID1, inputSpaceID2,  outputSpaceID);
-    		}
-    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully disjoined.\"}", HttpStatus.NO_CONTENT);
+    	if (outputSpaceID == null) {
+			outputSpaceID = inputSpaceID1;
+		}
+    	try {
+    		designSpaceService.orDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
+    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully disjoined.\"}", 
+    				HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
     	}
     }
     
