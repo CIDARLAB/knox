@@ -133,6 +133,23 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	}
     }
     
+    @RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
+    public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
+    		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+    	if (outputSpaceID == null) {
+			outputSpaceID = inputSpaceID1;
+		}
+    	try {
+    		designSpaceService.mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
+    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
+    				HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
+    	}
+    }
+    
     @RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
     public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,

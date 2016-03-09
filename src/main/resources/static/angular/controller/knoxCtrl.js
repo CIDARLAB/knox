@@ -61,7 +61,7 @@ function knoxCtrl($scope) {
 
        	var componentLinks = [];
         for (i = 0; i < graph.links.length; i++) {
-        	if (graph.links[i].componentRoles) {
+        	if (graph.links[i].componentRoles && graph.links[i].componentRoles.length > 0) {
         		componentLinks.push(graph.links[i]);
         	}
         }
@@ -318,6 +318,30 @@ function knoxCtrl($scope) {
         }
     };
 
+    $scope.mergeDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
+        var query = "?";
+
+        if (inputSpaceID1) {
+            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
+        }
+        if (inputSpaceID2) {
+            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        }
+        if (outputSpaceID) {
+            query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
+        }
+
+        d3.xhr("/designSpace/merge" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else if (!outputSpaceID) {
+                $scope.graphDesignSpace(inputSpaceID1);
+            } else {
+                $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
+    };
+
     $scope.createDesignSpace = function(outputSpaceID) {
         var query = "?outputSpaceID=" + encodeURIComponent(outputSpaceID);
 
@@ -447,7 +471,7 @@ function knoxCtrl($scope) {
     };
 
     $scope.createNode = function(targetSpaceID) {
-        if (targetSpaceID && outputNodeID) {
+        if (targetSpaceID) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
 
             d3.xhr("/node" + query).post(function(error, request) {

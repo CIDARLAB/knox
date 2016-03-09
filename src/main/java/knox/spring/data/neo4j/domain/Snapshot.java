@@ -19,7 +19,7 @@ public class Snapshot {
     int idIndex;
     
     @Relationship(type = "CONTAINS") 
-    Set<SnapToNode> snapToNode;
+    Set<Node> nodes;
 
     public Snapshot() {
     	
@@ -33,8 +33,16 @@ public class Snapshot {
     	return idIndex;
     }
     
-    public Set<SnapToNode> getSnapToNode() {
-    	return snapToNode;
+    public Set<Node> getNodes() {
+    	return nodes;
+    }
+    
+    public boolean hasNodes() {
+    	if (nodes == null) {
+    		return false;
+    	} else {
+    		return nodes.size() > 0;
+    	}
     }
 
 }

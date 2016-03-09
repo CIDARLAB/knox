@@ -1,7 +1,5 @@
 package knox.spring.data.neo4j.domain;
 
-import java.util.Set;
-
 import org.neo4j.ogm.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -17,14 +15,14 @@ public class Commit {
     String commitID;
     
     @Relationship(type = "CONTAINS") 
-    Set<CommitToSpace> commitToNode;
+    Snapshot snapshot;
     
     public Commit() {
     	
     }
     
-    public Set<CommitToSpace> getCommitToNode() {
-    	return commitToNode;
+    public Snapshot getSnapshot() {
+    	return snapshot;
     }
 
     public String getCommitID() {

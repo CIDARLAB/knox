@@ -2,6 +2,7 @@ package knox.spring.data.neo4j.domain;
 
 import org.neo4j.ogm.annotation.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -19,13 +20,13 @@ public class DesignSpace {
     int idIndex;
     
     @Relationship(type = "CONTAINS") 
-    Set<SpaceToNode> spaceToNode;
+    Set<Node> nodes;
     
     @Relationship(type = "CONTAINS") 
-    Set<SpaceToBranch> spaceToBranch;
+    Set<Branch> branches;
     
     @Relationship(type = "SELECTS") 
-    HeadBranch headBranch;
+    Branch headBranch;
 
     public DesignSpace() {
     	
@@ -39,16 +40,45 @@ public class DesignSpace {
     	return idIndex;
     }
     
-    public Set<SpaceToNode> getSpaceToNode() {
-    	return spaceToNode;
+    public Set<Node> getNodes() {
+    	return nodes;
     }
     
-    public Set<SpaceToBranch> getSpaceToBranch() {
-    	return spaceToBranch;
+    public Set<Branch> getBranches() {
+    	return branches;
     }
     
-    public HeadBranch getHeadBranch() {
+    public Branch getHeadBranch() {
     	return headBranch;
+    }
+    
+    public Node createNode(String nodeType) {
+    	if (nodes == null) {
+    		nodes = new HashSet<Node>();
+    	}
+    	Node node = new Node("n" + idIndex++, nodeType);
+    	nodes.add(node);
+    	return node;
+    }
+    
+    public Node copyNode(Node node) {
+    	return createNode(node.getNodeType());
+    }
+    
+    public boolean hasNodes() {
+    	if (nodes == null) {
+    		return false;
+    	} else {
+    		return nodes.size() > 0;
+    	}
+    }
+    
+    public boolean hasBranches() {
+    	if (branches == null) {
+    		return false;
+    	} else {
+    		return branches.size() > 0;
+    	}
     }
 
 }

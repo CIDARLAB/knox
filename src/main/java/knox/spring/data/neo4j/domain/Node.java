@@ -2,7 +2,8 @@ package knox.spring.data.neo4j.domain;
 
 import org.neo4j.ogm.annotation.*;
 
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;
@@ -17,7 +18,7 @@ public class Node {
     String nodeID;
 
     @Relationship(type = "PRECEDES") 
-    Collection<Edge> edges;
+    Set<Edge> edges;
     
     String nodeType;
 
@@ -25,20 +26,49 @@ public class Node {
     	
     }
     
-    public Long getID() {
-    	return id;
+    public Node(String nodeID, String nodeType) {
+    	this.nodeID = nodeID;
+    	this.nodeType = nodeType;
     }
     
     public String getNodeID() {
     	return nodeID;
     }
 
-    public Collection<Edge> getEdges() {
+    public Set<Edge> getEdges() {
         return edges;
     }
     
-    String getNodeType() {
+    public String getNodeType() {
     	return nodeType;
+    }
+    
+    public void addEdge(Edge edge) {
+    	if (edges == null) {
+    		edges = new HashSet<Edge>();
+    	}
+    	edges.add(edge);
+    }
+    
+    public boolean hasEdges() {
+    	if (edges == null) {
+    		return false;
+    	} else {
+    		return edges.size() > 0;
+    	}
+    }
+    
+    public boolean hasEdge(Edge targetEdge) {
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (targetEdge.isIdenticalTo(edge)) {
+    				return true;
+    			}
+    		}
+    		return false;
+    	} else {
+    		return false;
+    	}
     }
     
 }

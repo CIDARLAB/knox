@@ -19,20 +19,20 @@ public class Branch {
     int idIndex;
     
     @Relationship(type = "CONTAINS") 
-    Set<BranchToCommit> branchToCommit;
+    Set<Commit> commits;
     
     @Relationship(type = "LATEST") 
-    HeadCommit latestCommit;
+    Commit latestCommit;
 
     public Branch() {
     	
     }
     
-    public Set<BranchToCommit> getBranchToCommit() {
-    	return branchToCommit;
+    public Set<Commit> getCommits() {
+    	return commits;
     }
     
-    public HeadCommit getLatestCommit() {
+    public Commit getLatestCommit() {
     	return latestCommit;
     }
     
@@ -42,6 +42,14 @@ public class Branch {
     
     public int getIDIndex() {
     	return idIndex;
+    }
+    
+    public boolean hasCommits() {
+    	if (commits == null) {
+    		return false;
+    	} else {
+    		return commits.size() > 0;
+    	}
     }
 
 }
