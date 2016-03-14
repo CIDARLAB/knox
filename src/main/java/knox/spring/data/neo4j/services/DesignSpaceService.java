@@ -719,12 +719,12 @@ public class DesignSpaceService {
 		}
 	}
 	
-	private Set<Node> getStartNodes(String targetSpaceID, String targetBranchID) {
+	private Set<Node> getStartNodes(String targetSpaceID) {
 		return getNodesByType(targetSpaceID, NodeType.START.value);
 	}
 	
-	private Set<Node> getStartNodes(String targetSpaceID) {
-		return getNodesByType(targetSpaceID, NodeType.START.value);
+	private Set<Node> getStartNodes(String targetSpaceID, String targetBranchID) {
+		return getNodesByType(targetSpaceID, targetBranchID, NodeType.START.value);
 	}
 	
 	public boolean hasBranch(String targetSpaceID, String targetBranchID) {
