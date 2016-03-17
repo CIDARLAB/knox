@@ -44,7 +44,7 @@ CREATE (n10)-[:PRECEDES]->(n11)
 CREATE (n11)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n12)
 CREATE (n12)-[:PRECEDES]->(n13)
 
-CREATE (d1)-[:CONTAINS]->(b0:Branch {branchID: "test1", idIndex: 1})-[:CONTAINS]->(c0:Commit {commitID: "c0"})-[:CONTAINS]->(s1:Snapshot {idIndex: 14})
+CREATE (d1)-[:ARCHIVES]->(b0:Branch {branchID: "test1", idIndex: 1})-[:CONTAINS]->(c0:Commit {commitID: "c0"})-[:CONTAINS]->(s1:Snapshot {idIndex: 14})
 CREATE (d1)-[:SELECTS]->(b0)-[:LATEST]->(c0)
 
 CREATE (n23:Node {nodeID: "n0", nodeType: "start"})
@@ -125,7 +125,7 @@ CREATE (n19)-[:PRECEDES]->(n20)
 CREATE (n20)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n21)
 CREATE (n21)-[:PRECEDES]->(n22)
 
-CREATE (d2)-[:CONTAINS]->(b1:Branch {branchID: "test2", idIndex: 1})-[:CONTAINS]->(c1:Commit {commitID: "c0"})-[:CONTAINS]->(s2:Snapshot {idIndex: 10})
+CREATE (d2)-[:ARCHIVES]->(b1:Branch {branchID: "test2", idIndex: 1})-[:CONTAINS]->(c1:Commit {commitID: "c0"})-[:CONTAINS]->(s2:Snapshot {idIndex: 10})
 CREATE (d2)-[:SELECTS]->(b1)-[:LATEST]->(c1)
 
 CREATE (n37:Node {nodeID: "n0", nodeType: "start"})
@@ -170,7 +170,7 @@ CREATE (d3)-[:CONTAINS]->(n48)
 
 CREATE (n47)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n48)
 
-CREATE (d3)-[:CONTAINS]->(b2:Branch {branchID: "test3", idIndex: 1})-[:CONTAINS]->(c2:Commit {commitID: "c0"})-[:CONTAINS]->(s3:Snapshot {idIndex: 2})
+CREATE (d3)-[:ARCHIVES]->(b2:Branch {branchID: "test3", idIndex: 1})-[:CONTAINS]->(c2:Commit {commitID: "c0"})-[:CONTAINS]->(s3:Snapshot {idIndex: 2})
 CREATE (d3)-[:SELECTS]->(b2)-[:LATEST]->(c2)
 
 CREATE (n49:Node {nodeID: "n0", nodeType: "start"})

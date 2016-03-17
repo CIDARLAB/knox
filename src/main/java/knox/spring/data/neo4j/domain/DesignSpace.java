@@ -9,20 +9,11 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;
 
 @JsonIdentityInfo(generator=JSOGGenerator.class)
-@NodeEntity
-public class DesignSpace {
-	
-    @GraphId
-    Long id;
+public class DesignSpace extends NodeSpace {
     
     String spaceID;
     
-    int idIndex;
-    
-    @Relationship(type = "CONTAINS") 
-    Set<Node> nodes;
-    
-    @Relationship(type = "CONTAINS") 
+    @Relationship(type = "ARCHIVES") 
     Set<Branch> branches;
     
     @Relationship(type = "SELECTS") 
@@ -32,16 +23,31 @@ public class DesignSpace {
     	
     }
     
-    public String getSpaceID() {
-    	return spaceID;
+    public DesignSpace(String spaceID, int idIndex) {
+    	super(idIndex);
+    	this.spaceID = spaceID;
     }
     
-    public int getIDIndex() {
-    	return idIndex;
+    public Branch createBranch(String branchID, int idIndex) {
+    	if (branches == null) {
+    		branches = new HashSet<Branch>();
+    	}
+    	Branch branch = new Branch(branchID, idIndex);
+    	branches.add(branch);
+    	return branch;
     }
     
-    public Set<Node> getNodes() {
-    	return nodes;
+    public Branch findBranch(String branchID) {
+    	if (hasBranches()) {
+    		for (Branch branch : branches) {
+        		if (branch.getBranchID().equals(branchID)) {
+        			return branch;
+        		}
+        	}
+    		return null;
+    	} else {
+    		return null;
+    	}
     }
     
     public Set<Branch> getBranches() {
@@ -52,25 +58,8 @@ public class DesignSpace {
     	return headBranch;
     }
     
-    public Node createNode(String nodeType) {
-    	if (nodes == null) {
-    		nodes = new HashSet<Node>();
-    	}
-    	Node node = new Node("n" + idIndex++, nodeType);
-    	nodes.add(node);
-    	return node;
-    }
-    
-    public Node copyNode(Node node) {
-    	return createNode(node.getNodeType());
-    }
-    
-    public boolean hasNodes() {
-    	if (nodes == null) {
-    		return false;
-    	} else {
-    		return nodes.size() > 0;
-    	}
+    public String getSpaceID() {
+    	return spaceID;
     }
     
     public boolean hasBranches() {
@@ -80,5 +69,4 @@ public class DesignSpace {
     		return branches.size() > 0;
     	}
     }
-
 }

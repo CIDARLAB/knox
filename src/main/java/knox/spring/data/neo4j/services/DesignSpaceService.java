@@ -1,9 +1,12 @@
 package knox.spring.data.neo4j.services;
 
 import knox.spring.data.neo4j.domain.Branch;
+import knox.spring.data.neo4j.domain.Commit;
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
+import knox.spring.data.neo4j.domain.NodeSpace;
+import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
@@ -137,6 +140,63 @@ public class DesignSpaceService {
     	}
     }
     
+    public void mergeBranches(String targetSpaceID, String inputBranchID1, String inputBranchID2, String outputBranchID) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+    	
+    	Branch inputBranch1 = targetSpace.findBranch(inputBranchID1);
+    	Branch inputBranch2 = targetSpace.findBranch(inputBranchID2);
+    	
+    	Branch outputBranch;
+    	if (outputBranchID.equals(inputBranchID1)) {
+    		outputBranch = inputBranch1;
+    	} else if (outputBranchID.equals(inputBranchID2)) {
+    		outputBranch = inputBranch2;
+    	} else {
+    		outputBranch = targetSpace.createBranch(outputBranchID, 
+    				Math.max(inputBranch1.getIDIndex(), inputBranch2.getIDIndex()));
+    	}
+    	
+    	Commit inputCommit1 = inputBranch1.getLatestCommit();
+    	Commit inputCommit2 = inputBranch2.getLatestCommit();
+    	
+    	outputBranch.addCommit(inputCommit1);
+    	outputBranch.addCommit(inputCommit2);
+    	
+    	Commit outputCommit = outputBranch.createCommit();
+    	
+    	outputCommit.addPredecessor(inputCommit1);
+    	outputCommit.addPredecessor(inputCommit2);
+    	
+    	Snapshot outputSnapshot = outputCommit.createSnapshot();
+    	outputSnapshot.setIDIndex(0);
+    	
+    	Node startNode1 = inputCommit1.getSnapshot().getStartNode();
+    	Node startNode2 = inputCommit2.getSnapshot().getStartNode();
+    	
+    	HashMap<String, Set<Node>> inputToOutputNodes1 = new HashMap<String, Set<Node>>();
+		HashMap<String, Set<Node>> inputToOutputNodes2 = new HashMap<String, Set<Node>>();
+    	if (startNode1 != null && startNode2 != null) {
+    		mergeNodeSpaces(startNode1, startNode2, outputSnapshot, new HashMap<String, Node>(), 
+    				inputToOutputNodes1, inputToOutputNodes2);
+    	}
+   
+    	if (startNode1 != null) {
+    		Set<Node> visitedNodes1 = new HashSet<Node>();
+    		visitedNodes1.add(startNode1);
+    		mergeNodeSpace(startNode1, outputSnapshot, inputToOutputNodes1, 
+    				new HashMap<String, Node>(), visitedNodes1);
+    	}
+
+    	if (startNode2 != null) {
+    		Set<Node> visitedNodes2 = new HashSet<Node>();
+    		visitedNodes2.add(startNode2);
+    		mergeNodeSpace(startNode2, outputSnapshot, inputToOutputNodes2, 
+    				new HashMap<String, Node>(), visitedNodes2);
+    	}
+    	
+    	designSpaceRepository.save(targetSpace);
+    }
+    
     public void orBranches(String targetSpaceID, String inputBranchID1, String inputBranchID2, String outputBranchID) {
     	mergeBranch(targetSpaceID, inputBranchID1, outputBranchID);
     	mergeBranch(targetSpaceID, inputBranchID2, outputBranchID);
@@ -147,14 +207,14 @@ public class DesignSpaceService {
     	
     	deleteNodeCopyIndices(targetSpaceID, outputBranchID);
     
-    	Node startNodePrime = createTypedNode(targetSpaceID, outputBranchID, NodeType.START.value);
+    	Node startNodePrime = createTypedNode(targetSpaceID, outputBranchID, Node.NodeType.START.getValue());
     	
     	for (Node startNode : getStartNodes(targetSpaceID, outputBranchID)) {
     		deleteNodeType(targetSpaceID, outputBranchID, startNode.getNodeID());
     		createEdge(targetSpaceID, outputBranchID, startNodePrime.getNodeID(), startNode.getNodeID());
     	}
         
-    	Node acceptNodePrime = createTypedNode(targetSpaceID, outputBranchID, NodeType.ACCEPT.value);
+    	Node acceptNodePrime = createTypedNode(targetSpaceID, outputBranchID, Node.NodeType.ACCEPT.getValue());
     	
     	for (Node acceptNode : getAcceptNodes(targetSpaceID, outputBranchID)) {
     		deleteNodeType(targetSpaceID, outputBranchID, acceptNode.getNodeID());
@@ -349,61 +409,57 @@ public class DesignSpaceService {
     	} else if (outputSpaceID.equals(inputSpaceID2)) {
     		outputSpace = inputSpace2; 
     	} else {
-    		createDesignSpace(outputSpaceID);
-    		outputSpace = loadDesignSpace(outputSpaceID, 2);
+    		outputSpace = new DesignSpace(outputSpaceID, 0);
     	}
     	
-    	Node startNode1 = null;
-    	Node startNode2 = null;
-    	
-    	if (inputSpace1.hasNodes()) {
-    		startNode1 = getStartNode(inputSpaceID1);
-    		if (startNode1 != null) {
-    			for (Node node : inputSpace1.getNodes()) {
-    				if (node.getNodeID().equals(startNode1.getNodeID())) {
-    					startNode1 = node;
-    				}
-    			}
-    		}
-    	}
-    	
-    	if (inputSpace2.hasNodes()) {
-    		startNode2 = getStartNode(inputSpaceID2);
-    		if (startNode2 != null) {
-    			for (Node node : inputSpace2.getNodes()) {
-    				if (node.getNodeID().equals(startNode2.getNodeID())) {
-    					startNode2 = node;
-    				}
-    			}
-    		}
-    	}
+    	Node startNode1 = inputSpace1.getStartNode();
+    	Node startNode2 = inputSpace2.getStartNode();
     	
     	HashMap<String, Set<Node>> inputToOutputNodes1 = new HashMap<String, Set<Node>>();
 		HashMap<String, Set<Node>> inputToOutputNodes2 = new HashMap<String, Set<Node>>();
     	if (startNode1 != null && startNode2 != null) {
-    		mergeDesignSpacesHelper(startNode1, startNode2, outputSpace, new HashMap<String, Node>(), 
+    		mergeNodeSpaces(startNode1, startNode2, outputSpace, new HashMap<String, Node>(), 
     				inputToOutputNodes1, inputToOutputNodes2);
     	}
    
     	if (startNode1 != null) {
     		Set<Node> visitedNodes1 = new HashSet<Node>();
     		visitedNodes1.add(startNode1);
-    		mergeDesignSpaceHelper(startNode1, outputSpace, inputToOutputNodes1, 
+    		mergeNodeSpace(startNode1, outputSpace, inputToOutputNodes1, 
     				new HashMap<String, Node>(), visitedNodes1);
     	}
 
     	if (startNode2 != null) {
     		Set<Node> visitedNodes2 = new HashSet<Node>();
     		visitedNodes2.add(startNode2);
-    		mergeDesignSpaceHelper(startNode2, outputSpace, inputToOutputNodes2, 
+    		mergeNodeSpace(startNode2, outputSpace, inputToOutputNodes2, 
     				new HashMap<String, Node>(), visitedNodes2);
     	}
     	
     	designSpaceRepository.save(outputSpace);
+    	
+    	if (!outputSpaceID.equals(inputSpaceID1)) {
+    		mergeVersionHistory(inputSpaceID1, outputSpaceID);
+    	}
+    	if (!outputSpaceID.equals(inputSpaceID2)) {
+    		mergeVersionHistory(inputSpaceID2, outputSpaceID);
+    	}
+    	
+    	String headBranchID1 = getHeadBranchID(inputSpaceID1);
+    	String headBranchID2 = getHeadBranchID(inputSpaceID2);
+
+    	mergeBranches(outputSpaceID, headBranchID1, headBranchID2, RESERVED_ID);
+    	fastForwardBranch(outputSpaceID, headBranchID1, RESERVED_ID);
+    	fastForwardBranch(outputSpaceID, headBranchID2, RESERVED_ID);
+    	deleteBranch(outputSpaceID, RESERVED_ID);
+    	
+    	if (!outputSpaceID.equals(inputSpaceID1) && !outputSpaceID.equals(inputSpaceID2)) {
+    		selectHeadBranch(outputSpaceID, headBranchID1);
+    	}
     }
     
-    private void mergeDesignSpaceHelper(Node inputNode, 
-    		DesignSpace outputSpace, HashMap<String, Set<Node>> inputToOutputNodes, 
+    private void mergeNodeSpace(Node inputNode, 
+    		NodeSpace outputSpace, HashMap<String, Set<Node>> inputToOutputNodes, 
     		HashMap<String, Node> inputToSurplusOutputNodes, Set<Node> visitedInputNodes) {
     	if (inputNode.hasEdges()) {
     		for (Edge inputEdge : inputNode.getEdges()) {
@@ -430,14 +486,14 @@ public class DesignSpaceService {
     			}
     			if (!visitedInputNodes.contains(inputSuccessor)) {
     				visitedInputNodes.add(inputSuccessor);
-    				mergeDesignSpaceHelper(inputSuccessor, outputSpace, inputToOutputNodes, 
+    				mergeNodeSpace(inputSuccessor, outputSpace, inputToOutputNodes, 
     						inputToSurplusOutputNodes, visitedInputNodes);
     			}
     		}
     	}
     }
     
-    private Node mergeDesignSpacesHelper(Node inputNode1, Node inputNode2, DesignSpace outputSpace, HashMap<String, Node> mergedInputsToOutputNodes, 
+    private Node mergeNodeSpaces(Node inputNode1, Node inputNode2, NodeSpace outputSpace, HashMap<String, Node> mergedInputsToOutputNodes, 
     		HashMap<String, Set<Node>> inputToOutputNodes1, HashMap<String, Set<Node>> inputToOutputNodes2) {
     	Node outputNode;
     	if (inputNode1.getNodeType() != null || inputNode2.getNodeType() == null) {
@@ -466,7 +522,7 @@ public class DesignSpaceService {
     					if (mergedInputsToOutputNodes.containsKey(mergedInputIDs)) {
     						outputSuccessor = mergedInputsToOutputNodes.get(mergedInputIDs);
     					} else {
-    						outputSuccessor = mergeDesignSpacesHelper(inputSuccessor1, inputSuccessor2, outputSpace, 
+    						outputSuccessor = mergeNodeSpaces(inputSuccessor1, inputSuccessor2, outputSpace, 
     								mergedInputsToOutputNodes, inputToOutputNodes1, inputToOutputNodes2);
     					}
     					outputNode.addEdge(new Edge(outputNode, outputSuccessor, 
@@ -493,7 +549,7 @@ public class DesignSpaceService {
 
     	Set<Node> startNodes = getStartNodes(outputSpaceID);
     
-    	Node startNodePrime = createTypedNode(outputSpaceID, NodeType.START.value);
+    	Node startNodePrime = createTypedNode(outputSpaceID, Node.NodeType.START.getValue());
     	
     	for (Node startNode : startNodes) {
     		deleteNodeType(outputSpaceID, startNode.getNodeID());
@@ -502,7 +558,7 @@ public class DesignSpaceService {
     	
     	Set<Node> acceptNodes = getAcceptNodes(outputSpaceID);
         
-    	Node acceptNodePrime = createTypedNode(outputSpaceID, NodeType.ACCEPT.value);
+    	Node acceptNodePrime = createTypedNode(outputSpaceID, Node.NodeType.ACCEPT.getValue());
     	
     	for (Node acceptNode : acceptNodes) {
     		deleteNodeType(outputSpaceID, acceptNode.getNodeID());
@@ -543,7 +599,7 @@ public class DesignSpaceService {
 	
 	public void createNode(String targetSpaceID) {
     	designSpaceRepository.createNode(targetSpaceID);
-    }
+	}
     
 	private void createCommit(String targetSpaceID, String targetBranchID) {
 		designSpaceRepository.createCommit(targetSpaceID, targetBranchID);
@@ -678,11 +734,11 @@ public class DesignSpaceService {
 	}
 	
 	private Set<Node> getAcceptNodes(String targetSpaceID) {
-		return getNodesByType(targetSpaceID, NodeType.ACCEPT.value);
+		return getNodesByType(targetSpaceID, Node.NodeType.ACCEPT.getValue());
 	}
 	
 	private Set<Node> getAcceptNodes(String targetSpaceID, String targetBranchID) {
-		return getNodesByType(targetSpaceID, targetBranchID, NodeType.ACCEPT.value);
+		return getNodesByType(targetSpaceID, targetBranchID, Node.NodeType.ACCEPT.getValue());
 	}
 
 	private Set<Node> getNodesByType(String targetSpaceID, String nodeType) {
@@ -702,7 +758,7 @@ public class DesignSpaceService {
 	}
 	
 	private Node getStartNode(String targetSpaceID) {
-		Set<Node> startNodes = getNodesByType(targetSpaceID, NodeType.START.value);
+		Set<Node> startNodes = getNodesByType(targetSpaceID, Node.NodeType.START.getValue());
 		if (startNodes.size() > 0) {
 			return startNodes.iterator().next();
 		} else {
@@ -711,7 +767,7 @@ public class DesignSpaceService {
 	}
 	
 	private Node getStartNode(String targetSpaceID, String targetBranchID) {
-		Set<Node> startNodes = getNodesByType(targetSpaceID, targetBranchID, NodeType.START.value);
+		Set<Node> startNodes = getNodesByType(targetSpaceID, targetBranchID, Node.NodeType.START.getValue());
 		if (startNodes.size() > 0) {
 			return startNodes.iterator().next();
 		} else {
@@ -720,11 +776,11 @@ public class DesignSpaceService {
 	}
 	
 	private Set<Node> getStartNodes(String targetSpaceID) {
-		return getNodesByType(targetSpaceID, NodeType.START.value);
+		return getNodesByType(targetSpaceID, Node.NodeType.START.getValue());
 	}
 	
 	private Set<Node> getStartNodes(String targetSpaceID, String targetBranchID) {
-		return getNodesByType(targetSpaceID, targetBranchID, NodeType.START.value);
+		return getNodesByType(targetSpaceID, targetBranchID, Node.NodeType.START.getValue());
 	}
 	
 	public boolean hasBranch(String targetSpaceID, String targetBranchID) {
@@ -913,15 +969,6 @@ public class DesignSpaceService {
     	}
     }
     
-    private enum NodeType {
-    	START ("start"),
-    	ACCEPT ("accept");
-    	
-    	private final String value;
-    	
-    	NodeType(String value) {
-    		this.value = value;
-    	}
-    }
+    
     
 }

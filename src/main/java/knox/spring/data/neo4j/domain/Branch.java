@@ -1,5 +1,6 @@
 package knox.spring.data.neo4j.domain;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.*;
@@ -27,6 +28,24 @@ public class Branch {
     public Branch() {
     	
     }
+    
+    public Branch(String branchID, int idIndex) {
+    	this.branchID = branchID;
+    	this.idIndex = idIndex;
+    }
+    
+    public void addCommit(Commit commit) {
+    	if (commits == null) {
+    		commits = new HashSet<Commit>();
+    	}
+    	commits.add(commit);
+    }
+    
+   public Commit createCommit() {
+	   latestCommit = new Commit("c" + idIndex++);
+	   addCommit(latestCommit);
+	   return latestCommit;
+   }
     
     public Set<Commit> getCommits() {
     	return commits;

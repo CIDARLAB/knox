@@ -31,6 +31,13 @@ public class Node {
     	this.nodeType = nodeType;
     }
     
+    public void addEdge(Edge edge) {
+    	if (edges == null) {
+    		edges = new HashSet<Edge>();
+    	}
+    	edges.add(edge);
+    }
+    
     public String getNodeID() {
     	return nodeID;
     }
@@ -43,13 +50,6 @@ public class Node {
     	return nodeType;
     }
     
-    public void addEdge(Edge edge) {
-    	if (edges == null) {
-    		edges = new HashSet<Edge>();
-    	}
-    	edges.add(edge);
-    }
-    
     public boolean hasEdges() {
     	if (edges == null) {
     		return false;
@@ -58,16 +58,35 @@ public class Node {
     	}
     }
     
-    public boolean hasEdge(Edge targetEdge) {
+    public boolean hasEdge(Edge edge) {
     	if (hasEdges()) {
-    		for (Edge edge : edges) {
-    			if (targetEdge.isIdenticalTo(edge)) {
+    		for (Edge e : edges) {
+    			if (edge.isIdenticalTo(e)) {
     				return true;
     			}
     		}
     		return false;
     	} else {
     		return false;
+    	}
+    }
+    
+    public boolean hasNodeType() {
+    	return nodeType != null;
+    }
+    
+    public enum NodeType {
+    	START ("start"),
+    	ACCEPT ("accept");
+    	
+    	private final String value;
+    	
+    	NodeType(String value) {
+    		this.value = value;
+    	}
+    	
+    	public String getValue() {
+    		return value;
     	}
     }
     

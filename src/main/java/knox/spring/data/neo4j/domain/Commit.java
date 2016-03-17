@@ -1,5 +1,8 @@
 package knox.spring.data.neo4j.domain;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.neo4j.ogm.annotation.*;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -14,11 +17,27 @@ public class Commit {
     
     String commitID;
     
+    @Relationship(type = "SUCCEEDS")
+    Set<Commit> predecessors;
+    
     @Relationship(type = "CONTAINS") 
     Snapshot snapshot;
     
     public Commit() {
     	
+    }
+ 
+    public Commit(String commitID) {
+    	this.commitID = commitID;
+    }
+    
+    public Snapshot createSnapshot() {
+    	snapshot = new Snapshot();
+    	return snapshot;
+    }
+    
+    public Set<Commit> getPredecessors() {
+    	return predecessors;
     }
     
     public Snapshot getSnapshot() {
@@ -27,5 +46,12 @@ public class Commit {
 
     public String getCommitID() {
     	return commitID;
+    }
+    
+    public void addPredecessor(Commit predecessor) {
+    	if (predecessors == null) {
+    		predecessors = new HashSet<Commit>();
+    	}
+    	predecessors.add(predecessor);
     }
 }
