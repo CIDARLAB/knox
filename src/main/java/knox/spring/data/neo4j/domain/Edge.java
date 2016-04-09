@@ -58,11 +58,27 @@ public class Edge {
     	return componentRoles;
     }
     
+    public boolean hasComponentID(String compID) {
+    	if (hasComponentIDs()) {
+    		return componentIDs.contains(compID);
+    	} else {
+    		return false;
+    	}
+    }
+    
     public boolean hasComponentIDs() {
     	if (componentIDs == null) {
     		return false;
     	} else {
     		return componentIDs.size() > 0;
+    	}
+    }
+    
+    public boolean hasComponentRole(String compRole) {
+    	if (hasComponentRoles()) {
+    		return componentRoles.contains(compRole);
+    	} else {
+    		return false;
     	}
     }
     
@@ -72,6 +88,10 @@ public class Edge {
     	} else {
     		return componentRoles.size() > 0;
     	}
+    }
+    
+    public boolean hasComponents() {
+    	return hasComponentIDs() && hasComponentRoles();
     }
     
     public boolean isIdenticalTo(Edge edge) {
@@ -91,8 +111,8 @@ public class Edge {
     		compIDs2.addAll(edge.getComponentIDs());
     		Set<String> compRoles1 = new HashSet<String>();
     		Set<String> compRoles2 = new HashSet<String>();
-    		compRoles1.addAll(componentIDs);
-    		compRoles2.addAll(edge.getComponentIDs());
+    		compRoles1.addAll(componentRoles);
+    		compRoles2.addAll(edge.getComponentRoles());
     		return compIDs1.equals(compIDs2) && compRoles1.equals(compRoles2);
     	} else if (!hasComponentIDs() && !edge.hasComponentIDs() && !hasComponentRoles() 
     			&& !edge.hasComponentRoles()) {
@@ -100,6 +120,32 @@ public class Edge {
     	} else {
     		return false;
     	}
+    }
+    
+    public boolean hasSameComponentRoles(Edge edge) {
+    	if (hasComponentRoles() && edge.hasComponentRoles()) {
+    		Set<String> compRoles1 = new HashSet<String>();
+    		Set<String> compRoles2 = new HashSet<String>();
+    		compRoles1.addAll(componentRoles);
+    		compRoles2.addAll(edge.getComponentRoles());
+    		return compRoles1.equals(compRoles2);
+    	} else if (!hasComponentRoles() && !edge.hasComponentRoles()) {
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
+    public boolean isCyclicEdge() {
+    	return tail.equals(head);
+    }
+    
+    public void setHead(Node head) {
+    	this.head = head;
+    }
+    
+    public void setTail(Node tail) {
+    	this.tail = tail;
     }
     
 }

@@ -342,6 +342,22 @@ function knoxCtrl($scope) {
         });
     };
 
+    $scope.minimizeDesignSpace = function(targetSpaceID) {
+        var query = "?";
+
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
+        }
+
+        d3.xhr("/designSpace/minimize" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else {
+                $scope.graphDesignSpace(targetSpaceID);
+            }
+        });
+    };
+
     $scope.createDesignSpace = function(outputSpaceID) {
         var query = "?outputSpaceID=" + encodeURIComponent(outputSpaceID);
 

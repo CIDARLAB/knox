@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 @Service
 @Transactional
@@ -41,13 +42,46 @@ public class DesignSpaceService {
     }
     
     public void andBranches(String targetSpaceID, String inputBranchID1, String inputBranchID2, String outputBranchID) {
-    	joinBranches(targetSpaceID, inputBranchID1, inputBranchID2, "knox1");
-    	joinBranches(targetSpaceID, inputBranchID1, inputBranchID2, "knox2");
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
     	
-    	orBranches(targetSpaceID, "knox1", "knox2", outputBranchID);
+    	Branch inputBranch1 = targetSpace.findBranch(inputBranchID1);
+    	Branch inputBranch2 = targetSpace.findBranch(inputBranchID2);
     	
-    	deleteBranch(targetSpaceID, "knox1");
-    	deleteBranch(targetSpaceID, "knox2");
+    	Branch outputBranch;
+    	if (outputBranchID.equals(inputBranchID1)) {
+    		outputBranch = inputBranch1;
+    	} else if (outputBranchID.equals(inputBranchID2)) {
+    		outputBranch = inputBranch2;
+    	} else {
+    		outputBranch = targetSpace.createBranch(outputBranchID, 
+    				Math.max(inputBranch1.getIDIndex(), inputBranch2.getIDIndex()));
+    	}
+    	
+    	Commit inputCommit1 = inputBranch1.getLatestCommit();
+    	Commit inputCommit2 = inputBranch2.getLatestCommit();
+    	
+    	outputBranch.addCommit(inputCommit1);
+    	outputBranch.addCommit(inputCommit2);
+    	
+    	Commit outputCommit = outputBranch.createCommit();
+    	
+    	outputCommit.addPredecessor(inputCommit1);
+    	outputCommit.addPredecessor(inputCommit2);
+    	
+    	Snapshot outputSnapshot = outputCommit.createSnapshot();
+    	outputSnapshot.setIDIndex(0);
+    	
+    	Node startNode1 = inputCommit1.getSnapshot().getStartNode();
+    	Node startNode2 = inputCommit2.getSnapshot().getStartNode();
+    	
+    	HashMap<String, Set<Node>> inputToOutputNodes1 = new HashMap<String, Set<Node>>();
+		HashMap<String, Set<Node>> inputToOutputNodes2 = new HashMap<String, Set<Node>>();
+    	if (startNode1 != null && startNode2 != null) {
+    		mergeNodeSpaces(startNode1, startNode2, outputSnapshot, new HashMap<String, Node>(), 
+    				inputToOutputNodes1, inputToOutputNodes2, true);
+    	}
+    	
+    	designSpaceRepository.save(targetSpace);
     }
     
     public void checkoutBranch(String targetSpaceID, String targetBranchID) {
@@ -177,7 +211,7 @@ public class DesignSpaceService {
 		HashMap<String, Set<Node>> inputToOutputNodes2 = new HashMap<String, Set<Node>>();
     	if (startNode1 != null && startNode2 != null) {
     		mergeNodeSpaces(startNode1, startNode2, outputSnapshot, new HashMap<String, Node>(), 
-    				inputToOutputNodes1, inputToOutputNodes2);
+    				inputToOutputNodes1, inputToOutputNodes2, false);
     	}
    
     	if (startNode1 != null) {
@@ -230,14 +264,50 @@ public class DesignSpaceService {
     	designSpaceRepository.createDesignSpace(outputSpaceID);
     }
     
-    public void andDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) {
-    	joinDesignSpaces(inputSpaceID1, inputSpaceID2, "knox1");
-    	joinDesignSpaces(inputSpaceID2, inputSpaceID1, "knox2");
+    public void andDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) throws DesignSpaceNotFoundException, DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateBinaryDesignSpaceOperatorParameters(inputSpaceID1, inputSpaceID2, outputSpaceID);
     	
-    	orDesignSpaces("knox1", "knox2", outputSpaceID);
+    	DesignSpace inputSpace1 = loadDesignSpace(inputSpaceID1, 2);
+    	DesignSpace inputSpace2 = loadDesignSpace(inputSpaceID2, 2);
     	
-    	deleteDesignSpace("knox1");
-    	deleteDesignSpace("knox2");
+    	DesignSpace outputSpace;
+    	
+    	if (outputSpaceID.equals(inputSpaceID1)) {
+    		outputSpace = inputSpace1;
+    	} else if (outputSpaceID.equals(inputSpaceID2)) {
+    		outputSpace = inputSpace2; 
+    	} else {
+    		outputSpace = new DesignSpace(outputSpaceID, 0);
+    	}
+    	
+    	Node startNode1 = inputSpace1.getStartNode();
+    	Node startNode2 = inputSpace2.getStartNode();
+    	
+    	if (startNode1 != null && startNode2 != null) {
+    		mergeNodeSpaces(startNode1, startNode2, outputSpace, new HashMap<String, Node>(), 
+    				new HashMap<String, Set<Node>>(), new HashMap<String, Set<Node>>(), true);
+    	}
+    	
+    	designSpaceRepository.save(outputSpace);
+    	
+    	if (!outputSpaceID.equals(inputSpaceID1)) {
+    		mergeVersionHistory(inputSpaceID1, outputSpaceID);
+    	}
+    	if (!outputSpaceID.equals(inputSpaceID2)) {
+    		mergeVersionHistory(inputSpaceID2, outputSpaceID);
+    	}
+    	
+    	String headBranchID1 = getHeadBranchID(inputSpaceID1);
+    	String headBranchID2 = getHeadBranchID(inputSpaceID2);
+
+    	andBranches(outputSpaceID, headBranchID1, headBranchID2, RESERVED_ID);
+    	fastForwardBranch(outputSpaceID, headBranchID1, RESERVED_ID);
+    	fastForwardBranch(outputSpaceID, headBranchID2, RESERVED_ID);
+    	deleteBranch(outputSpaceID, RESERVED_ID);
+    	
+    	if (!outputSpaceID.equals(inputSpaceID1) && !outputSpaceID.equals(inputSpaceID2)) {
+    		selectHeadBranch(outputSpaceID, headBranchID1);
+    	}
     }
     
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
@@ -419,7 +489,7 @@ public class DesignSpaceService {
 		HashMap<String, Set<Node>> inputToOutputNodes2 = new HashMap<String, Set<Node>>();
     	if (startNode1 != null && startNode2 != null) {
     		mergeNodeSpaces(startNode1, startNode2, outputSpace, new HashMap<String, Node>(), 
-    				inputToOutputNodes1, inputToOutputNodes2);
+    				inputToOutputNodes1, inputToOutputNodes2, false);
     	}
    
     	if (startNode1 != null) {
@@ -494,7 +564,8 @@ public class DesignSpaceService {
     }
     
     private Node mergeNodeSpaces(Node inputNode1, Node inputNode2, NodeSpace outputSpace, HashMap<String, Node> mergedInputsToOutputNodes, 
-    		HashMap<String, Set<Node>> inputToOutputNodes1, HashMap<String, Set<Node>> inputToOutputNodes2) {
+    		HashMap<String, Set<Node>> inputToOutputNodes1, HashMap<String, Set<Node>> inputToOutputNodes2, 
+    		boolean intersectComponents) {
     	Node outputNode;
     	if (inputNode1.getNodeType() != null || inputNode2.getNodeType() == null) {
     		outputNode = outputSpace.copyNode(inputNode1);
@@ -514,7 +585,7 @@ public class DesignSpaceService {
     	if (inputNode1.hasEdges() && inputNode2.hasEdges()) {
     		for (Edge edge1 : inputNode1.getEdges()) {
     			for (Edge edge2 : inputNode2.getEdges()) {
-    				if (edge1.hasSameComponents(edge2)) {
+    				if (edge1.hasSameComponentRoles(edge2)) {
     					Node inputSuccessor1 = edge1.getHead();
     					Node inputSuccessor2 = edge2.getHead();
     					Node outputSuccessor;
@@ -523,15 +594,73 @@ public class DesignSpaceService {
     						outputSuccessor = mergedInputsToOutputNodes.get(mergedInputIDs);
     					} else {
     						outputSuccessor = mergeNodeSpaces(inputSuccessor1, inputSuccessor2, outputSpace, 
-    								mergedInputsToOutputNodes, inputToOutputNodes1, inputToOutputNodes2);
+    								mergedInputsToOutputNodes, inputToOutputNodes1, inputToOutputNodes2, 
+    								intersectComponents);
     					}
-    					outputNode.addEdge(new Edge(outputNode, outputSuccessor, 
-    							edge1.getComponentIDs(), edge1.getComponentRoles()));
+    					if (intersectComponents) {
+    						outputNode.addEdge(intersectEdges(edge1, edge2, outputNode, outputSuccessor));
+    					} else {
+    						outputNode.addEdge(unionEdges(edge1, edge2, outputNode, outputSuccessor));
+    					}
     				}
     			}
     		}
     	}
     	return outputNode;
+    }
+    
+    public void minimizeDesignSpace(String targetSpaceID) 
+    		throws DesignSpaceNotFoundException {
+    	validateUnaryDesignSpaceOperatorParameters(targetSpaceID);
+    	
+    	Map<String, Set<Edge>> nodeToIncomingEdges = new HashMap<String, Set<Edge>>();
+
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 2);
+    	Stack<Node> nodeStack = new Stack<Node>();
+    	for (Node node : targetSpace.getNodes()) {
+    		nodeStack.push(node);
+    		if (node.hasEdges()) {
+    			for (Edge edge : node.getEdges()) {
+    				if (!nodeToIncomingEdges.containsKey(edge.getHead().getNodeID())) {
+    					nodeToIncomingEdges.put(edge.getHead().getNodeID(), new HashSet<Edge>());
+    				}
+    				nodeToIncomingEdges.get(edge.getHead().getNodeID()).add(edge);
+    			}
+    		}
+    	}
+    	
+    	Set<String> deletedNodeIDs = new HashSet<String>();
+    	while (nodeStack.size() > 0) {
+    		Node node = nodeStack.pop();
+    		if (!deletedNodeIDs.contains(node.getNodeID())) {
+    			for (Edge blankEdge : node.minimizeEdges()) {
+    				if (!blankEdge.isCyclicEdge()) {
+    					Node successor = blankEdge.getHead();
+    					if (successor.hasEdges()) {
+    						for (Edge edge : successor.getEdges()) {
+    							node.copyEdge(edge);
+    							for (Edge incomingEdge : nodeToIncomingEdges.get(successor.getNodeID())) {
+    								if (!blankEdge.equals(incomingEdge)) {
+    									incomingEdge.setHead(node);
+    								}
+    							}
+    						}
+    					}
+    					nodeToIncomingEdges.remove(successor.getNodeID());
+    					deletedNodeIDs.add(successor.getNodeID());
+    					if (successor.isAcceptNode()) {
+    						node.setNodeType(Node.NodeType.ACCEPT.getValue());
+    					}
+    				}
+    			}
+    			if (node.hasMinimizableEdges()) {
+    				nodeStack.push(node);
+    			}
+    		}
+    	}
+    	targetSpace.deleteNodesByID(deletedNodeIDs);
+    	
+    	designSpaceRepository.save(targetSpace);
     }
     
     public void orDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) 
@@ -799,6 +928,29 @@ public class DesignSpaceService {
 		return findNode(targetSpaceID, targetNodeID) != null;
 	}
 	
+	private Edge intersectEdges(Edge edge1, Edge edge2, Node tail, Node head) {
+    	Set<String> intersectedCompIDs = new HashSet<String>();
+    	Set<String> intersectedCompRoles = new HashSet<String>();
+    	if (edge1.hasComponentIDs()) {
+    		intersectedCompIDs.addAll(edge1.getComponentIDs());
+    	}
+    	if (edge1.hasComponentRoles()) {
+    		intersectedCompRoles.addAll(edge1.getComponentRoles());
+    	}
+    	for (String compID : intersectedCompIDs) {
+    		if (!edge2.hasComponentID(compID)) {
+    			intersectedCompIDs.remove(compID);
+    		}
+    	}
+    	for (String compRole : intersectedCompRoles) {
+    		if (!edge2.hasComponentRole(compRole)) {
+    			intersectedCompRoles.remove(compRole);
+    		}
+    	}
+    	return new Edge(tail, head, new ArrayList<String>(intersectedCompIDs), 
+    			new ArrayList<String>(intersectedCompRoles));
+    }
+	
 	private Map<String, Object> mapBranchesToD3Format(List<Map<String, Object>> branchMap) {
 		Map<String, Object> d3Graph = new HashMap<String, Object>();
 	
@@ -909,7 +1061,7 @@ public class DesignSpaceService {
 	private void mergeBranch(String inputSpaceID, String inputBranchID, String outputSpaceID, String outputBranchID) {
 	    designSpaceRepository.mergeBranch(inputSpaceID, inputBranchID, outputSpaceID, outputBranchID);
 	}
-
+	
 	private Set<Edge> removeOutgoingEdges(String targetSpaceID, String targetNodeID) {
 		Set<Edge> removedEdges = getOutgoingEdges(targetSpaceID, targetNodeID);
 		if (removedEdges.size() > 0) {
@@ -933,6 +1085,25 @@ public class DesignSpaceService {
 	private void unionDesignSpace(String inputSpaceID, String outputSpaceID) {
         designSpaceRepository.unionDesignSpace(inputSpaceID, outputSpaceID);
     }
+	
+	private Edge unionEdges(Edge edge1, Edge edge2, Node tail, Node head) {
+    	Set<String> mergedCompIDs = new HashSet<String>();
+    	Set<String> mergedCompRoles = new HashSet<String>();
+    	if (edge1.hasComponentIDs()) {
+    		mergedCompIDs.addAll(edge1.getComponentIDs());
+    	}
+    	if (edge2.hasComponentIDs()) {
+    		mergedCompIDs.addAll(edge2.getComponentIDs());
+    	}
+    	if (edge1.hasComponentRoles()) {
+    		mergedCompRoles.addAll(edge1.getComponentRoles());
+    	}
+    	if (edge2.hasComponentRoles()) {
+    		mergedCompRoles.addAll(edge2.getComponentRoles());
+    	}
+    	return new Edge(tail, head, new ArrayList<String>(mergedCompIDs), 
+    			new ArrayList<String>(mergedCompRoles));
+    }
     
     private void unionSnapshot(String targetSpaceID, String inputBranchID, String outputBranchID) {
         designSpaceRepository.unionSnapshot(targetSpaceID, inputBranchID, outputBranchID);
@@ -953,6 +1124,12 @@ public class DesignSpaceService {
     		throws NodeNotFoundException {
     	if (!hasNode(targetSpaceID, targetNodeID)) {
     		throw new NodeNotFoundException(targetSpaceID, targetNodeID);
+    	}
+    }
+    
+    private void validateUnaryDesignSpaceOperatorParameters(String targetSpaceID) {
+    	if (!hasDesignSpace(targetSpaceID)) {
+    		throw new DesignSpaceNotFoundException(targetSpaceID);
     	}
     }
     

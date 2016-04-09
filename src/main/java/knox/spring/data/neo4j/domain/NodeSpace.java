@@ -30,12 +30,16 @@ public class NodeSpace {
 		this.idIndex = idIndex;
 	}
 	
-	public Node createNode(String nodeType) {
+	public void addNode(Node node) {
 		if (nodes == null) {
 			nodes = new HashSet<Node>();
 		}
-		Node node = new Node("n" + idIndex++, nodeType);
 		nodes.add(node);
+	}
+	
+	public Node createNode(String nodeType) {
+		Node node = new Node("n" + idIndex++, nodeType);
+		addNode(node);
 		return node;
 	}
 
@@ -47,7 +51,7 @@ public class NodeSpace {
     	Set<Node> acceptNodes = new HashSet<Node>();
     	if (hasNodes()) {
     		for (Node node : nodes) {
-        		if (node.hasNodeType() && node.getNodeType().equals(Node.NodeType.ACCEPT.getValue())) {
+        		if (node.isAcceptNode()) {
         			acceptNodes.add(node);
         		}
         	}
@@ -66,7 +70,7 @@ public class NodeSpace {
     public Node getStartNode() {
     	if (hasNodes()) {
     		for (Node node : nodes) {
-        		if (node.hasNodeType() && node.getNodeType().equals(Node.NodeType.START.getValue())) {
+        		if (node.isStartNode()) {
         			return node;
         		}
         	}
@@ -86,5 +90,15 @@ public class NodeSpace {
     
     public void setIDIndex(int idIndex) {
     	this.idIndex = idIndex;
+    }
+    
+    public void deleteNodesByID(Set<String> nodeIDs) {
+    	Set<Node> deletedNodes = new HashSet<Node>();
+    	for (Node node : nodes) {
+    		if (nodeIDs.contains(node.getNodeID())) {
+    			deletedNodes.add(node);
+    		}
+    	}
+    	nodes.removeAll(deletedNodes);
     }
 }

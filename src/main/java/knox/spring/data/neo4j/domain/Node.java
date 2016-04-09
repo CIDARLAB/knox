@@ -2,6 +2,7 @@ package knox.spring.data.neo4j.domain;
 
 import org.neo4j.ogm.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,6 +39,16 @@ public class Node {
     	edges.add(edge);
     }
     
+    public Edge copyEdge(Edge edge) {
+    	return createEdge(edge.getHead(), edge.getComponentIDs(), edge.getComponentRoles());
+    }
+    
+    public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
+    	Edge edge = new Edge(this, head, compIDs, compRoles);
+    	addEdge(edge);
+    	return edge;
+    }
+    
     public String getNodeID() {
     	return nodeID;
     }
@@ -46,8 +57,26 @@ public class Node {
         return edges;
     }
     
+    public Set<Edge> getMinimizableEdges() {
+    	Set<Edge> minimizableEdges = new HashSet<Edge>();
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (!edge.hasComponents() 
+    					&& !(edge.getTail().isStartNode() && edge.getHead().isAcceptNode() 
+						|| edge.getHead().isStartNode())) {
+    				minimizableEdges.add(edge);
+    			}
+    		}
+    	}
+    	return minimizableEdges;
+    }
+    
     public String getNodeType() {
     	return nodeType;
+    }
+    
+    public boolean hasMinimizableEdges() {
+    	return getMinimizableEdges().size() > 0;
     }
     
     public boolean hasEdges() {
@@ -75,6 +104,22 @@ public class Node {
     	return nodeType != null;
     }
     
+    public boolean isAcceptNode() {
+    	return hasNodeType() && nodeType.equals(NodeType.ACCEPT.getValue());
+    }
+    
+    public boolean isStartNode() {
+    	return hasNodeType() && nodeType.equals(NodeType.START.getValue());
+    }
+    
+    public Set<Edge> minimizeEdges() {
+    	Set<Edge> minimizableEdges = getMinimizableEdges();
+    	if (hasEdges()) {
+    		edges.removeAll(minimizableEdges);
+    	}
+    	return minimizableEdges;
+    }
+    
     public enum NodeType {
     	START ("start"),
     	ACCEPT ("accept");
@@ -90,4 +135,7 @@ public class Node {
     	}
     }
     
+    public void setNodeType(String nodeType) {
+    	this.nodeType = nodeType;
+    }
 }

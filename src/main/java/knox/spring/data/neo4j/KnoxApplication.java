@@ -150,6 +150,18 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	}
     }
     
+    @RequestMapping(value = "/designSpace/minimize", method = RequestMethod.POST)
+    public ResponseEntity<String> minimizeDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+    	try {
+    		designSpaceService.minimizeDesignSpace(targetSpaceID);
+    		return new ResponseEntity<String>("{\"message\": \"Design space was successfully minimized.\"}", 
+    				HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceNotFoundException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
+    	}
+    }
+    
     @RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
     public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,

@@ -28,12 +28,16 @@ public class DesignSpace extends NodeSpace {
     	this.spaceID = spaceID;
     }
     
-    public Branch createBranch(String branchID, int idIndex) {
+    public void addBranch(Branch branch) {
     	if (branches == null) {
     		branches = new HashSet<Branch>();
     	}
-    	Branch branch = new Branch(branchID, idIndex);
     	branches.add(branch);
+    }
+    
+    public Branch createBranch(String branchID, int idIndex) {
+    	Branch branch = new Branch(branchID, idIndex);
+    	addBranch(branch);
     	return branch;
     }
     
