@@ -51,11 +51,39 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
+    @RequestMapping(value = "/branch/and", method = RequestMethod.POST)
+    public ResponseEntity<String> andBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
+    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
+    	designSpaceService.andBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID);
+    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully intersected.\"}", 
+    				HttpStatus.NO_CONTENT);
+    }
+    
     @RequestMapping(value = "/branch/checkout", method = RequestMethod.PUT)
     public ResponseEntity<String> checkoutBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "targetBranchID", required = true) String targetBranchID) {
     	designSpaceService.checkoutBranch(targetSpaceID, targetBranchID);
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    }
+    
+    @RequestMapping(value = "/branch/resetHead", method = RequestMethod.POST)
+    public ResponseEntity<String> resetHeadBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "targetCommitID", required = true) String targetCommitID) {
+    	try {
+    		designSpaceService.resetHeadBranch(targetSpaceID, targetCommitID);
+    		return new ResponseEntity<String>("{\"message\": \"Head branch was successfully reset.\"}", 
+    				HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceNotFoundException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
+    	}
+    }
+    
+    @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
+    public Map<String, Object> d3GraphBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+        return designSpaceService.d3GraphBranches(targetSpaceID);
     }
     
     @RequestMapping(value = "/branch/commitToHead", method = RequestMethod.POST)
@@ -64,24 +92,58 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
-    @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
-    public Map<String, Object> d3GraphBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-        return designSpaceService.d3GraphBranches(targetSpaceID);
+    @RequestMapping(value = "/branch/join", method = RequestMethod.POST)
+    public ResponseEntity<String> joinBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
+    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
+    	designSpaceService.joinBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID);
+    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully joined.\"}", 
+    				HttpStatus.NO_CONTENT);
+    }
+    
+    @RequestMapping(value = "/branch/merge", method = RequestMethod.POST)
+    public ResponseEntity<String> mergeBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
+    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
+    	if (outputBranchID == null) {
+    		outputBranchID = inputBranchID1;
+		}
+    	designSpaceService.mergeBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID);
+    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged.\"}", 
+    				HttpStatus.NO_CONTENT);
+    }
+    
+    @RequestMapping(value = "/branch/or", method = RequestMethod.POST)
+    public ResponseEntity<String> orBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
+    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
+    	designSpaceService.orBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID);
+    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully disjoined.\"}", 
+    				HttpStatus.NO_CONTENT);
     }
     
     @RequestMapping(value = "/designSpace", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-    	designSpaceService.deleteDesignSpace(targetSpaceID);
-        return new ResponseEntity<String>("Design space was deleted successfully.", HttpStatus.NO_CONTENT);
+    	try {
+    		designSpaceService.deleteDesignSpace(targetSpaceID);
+    		return new ResponseEntity<String>("Design space was deleted successfully.", HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceNotFoundException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
+    	}
     }
     
     @RequestMapping(value = "/designSpace", method = RequestMethod.POST)
     public ResponseEntity<String> createDesignSpace(@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	if (designSpaceService.hasDesignSpace(outputSpaceID)) {
-    		return new ResponseEntity<String>("Output design space ID conflicts with existing design space ID.", HttpStatus.BAD_REQUEST);
-    	} else {
+    	try {
     		designSpaceService.createDesignSpace(outputSpaceID);
     		return new ResponseEntity<String>("Design space was created successfully.", HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceConflictException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
     	}
     }
     
@@ -89,8 +151,17 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
     		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
     		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	designSpaceService.andDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+        if (outputSpaceID == null) {
+			outputSpaceID = inputSpaceID1;
+		}
+    	try {
+    		designSpaceService.andDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
+    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 
+    				HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
+    	}
     }
 
     @RequestMapping(value = "/designSpace/graph/d3", method = RequestMethod.GET)
@@ -177,20 +248,20 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
     				HttpStatus.BAD_REQUEST);
     	}
+    	
+    	
     }
     
     @RequestMapping(value = "/edge", method = RequestMethod.POST)
     public ResponseEntity<String> createEdge(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "targetTailID", required = true) String targetTailID,
     		@RequestParam(value = "targetHeadID", required = true) String targetHeadID) {
-    	designSpaceService.createEdge(targetSpaceID, targetTailID, targetHeadID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    	try {
+    		designSpaceService.createEdge(targetSpaceID, targetTailID, targetHeadID);
+    		return new ResponseEntity<String>("Edge was created successfully.", HttpStatus.NO_CONTENT);
+    	} catch (DesignSpaceNotFoundException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
+    	}
     }
-    
-    @RequestMapping(value = "/node", method = RequestMethod.POST)
-    public ResponseEntity<String> createNode(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-    	designSpaceService.createNode(targetSpaceID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
-    }
-
 }

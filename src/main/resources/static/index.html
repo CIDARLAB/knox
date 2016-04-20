@@ -76,6 +76,24 @@
                             <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." ng-model="branchID">
                         </div><!-- /input-group -->
                     </form>
+                    <form class="navbar-form navbar-left" role="search" ng-hide="isDSGraph">
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Combine <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" ng-click="joinBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">Join</a></li>
+                                    <li><a href="#" ng-click="orBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">OR</a></li>
+                                    <li><a href="#" ng-click="andBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">AND</a></li>
+                                    <li><a href="#" ng-click="mergeBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">Merge</a></li>
+                                </ul>
+                            </div><!-- /btn-group -->
+                            <div class="btn-group">
+                                <input type="text" placeholder="Input Branch ID 1" class="form-control" aria-label="..." ng-model="inputBranchID1">
+                                <input type="text" placeholder="Input Branch ID 2" class="form-control" aria-label="..." ng-model="inputBranchID2">
+                                <input type="text" placeholder="Output Branch ID" class="form-control" aria-label="..." ng-model="outputBranchID">
+                            </div>
+                        </div><!-- /input-group -->
+                    </form>
                     <form class="navbar-form navbar-right">
                         <div class="btn-group">
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds'" ng-change="switchToGraphType(graphType)">Workspace</label>

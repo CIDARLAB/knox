@@ -83,7 +83,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "CREATE UNIQUE (so)-[:CONTAINS]->(:Node {nodeID: m.nodeID})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {nodeID: n.nodeID})<-[:CONTAINS]-(so))")
 	void copySnapshots(@Param("inputSpaceID") String inputSpaceID, @Param("inputBranchID") String inputBranchID, @Param("outputSpaceID") String outputSpaceID, @Param("outputBranchID") String outputBranchID);
 
-	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(b:Branch {branchID: {targetBranchID}}) "
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(b:Branch {branchID: {targetBranchID}}) "
 			+ "CREATE (b)-[:LATEST]->(c:Commit {commitID: 'c'+ b.idIndex})<-[:CONTAINS]-(b) "
 			+ "CREATE (c)-[:CONTAINS]->(s:Snapshot {idIndex: 0}) "
 			+ "SET b.idIndex = b.idIndex + 1 "
@@ -106,7 +106,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	void createComponentEdge(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID, @Param("targetTailID") String targetTailID, @Param("targetHeadID") String targetHeadID, 
 			@Param("componentIDs") ArrayList<String> componentIDs, @Param("componentRoles") ArrayList<String> componentRoles);
 
-	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0})-[:ARCHIVES]->(b:Branch {branchID: {outputSpaceID}, idIndex: 0}) "
+	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0, mergeIndex: 0})-[:ARCHIVES]->(b:Branch {branchID: {outputSpaceID}, idIndex: 0}) "
 			+ "CREATE (output)-[:SELECTS]->(b)")
 	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
 
@@ -249,14 +249,40 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(b:Branch {branchID: {targetBranchID}})-[:LATEST]->(c:Commit)-[:CONTAINS]->(s:Snapshot)-[:CONTAINS]->(:Node {nodeID: {targetNodeID}})-[e:PRECEDES]->(n:Node), (b)-[:CONTAINS]->(c), (s)-[:CONTAINS]->(n) "
 			+ "RETURN e")
 	Set<Edge> getOutgoingEdges(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID, @Param("targetNodeID") String targetNodeID);
-
+	
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(:Branch {branchID: {targetBranchID}})-[:CONTAINS]->(c:Commit) "
+			+ "WHERE NOT has(c.mergeID) "
+			+ "WITH target, collect(distinct c) as cs "
+			+ "SET target.mergeIndex = target.mergeIndex + 1 "
+			+ "FOREACH(c IN cs| "
+			+ "SET c.mergeID = 'm' + (target.mergeIndex - 1))")
+	void indexVersionMerger(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID);
+	
 	@Query("MATCH (b:Branch)<-[:ARCHIVES]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch) "
 			+ "OPTIONAL MATCH (b)-[:LATEST]->(lc:Commit) "
+			+ "WHERE NOT has(lc.mergeID) "
 			+ "OPTIONAL MATCH (b)-[:CONTAINS]->(c:Commit)-[:SUCCEEDS]->(d:Commit)<-[:CONTAINS]-(b) "
+			+ "WHERE NOT has(c.mergeID) AND NOT has(d.mergeID) "
 			+ "RETURN target.spaceID as spaceID, hb.branchID as headBranchID, lc.commitID as latestCommitID, ID(lc) as latestCopyIndex, b.branchID as branchID, "
-			+ "c.commitID as tailID, ID(c) as tailCopyIndex, d.commitID as headID, ID(d) as headCopyIndex")
+			+ "c.commitID as tailID, ID(c) as tailCopyIndex, d.commitID as headID, ID(d) as headCopyIndex "
+			+ "UNION "
+			+ "MATCH (b:Branch)<-[:ARCHIVES]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch) "
+			+ "OPTIONAL MATCH (b)-[:LATEST]->(lc:Commit) "
+			+ "WHERE has(lc.mergeID) "
+			+ "OPTIONAL MATCH (b)-[:CONTAINS]->(cm:Commit)-[:SUCCEEDS]->(dm:Commit)<-[:CONTAINS]-(b) "
+			+ "WHERE has(cm.mergeID) AND has(dm.mergeID) "
+			+ "RETURN target.spaceID as spaceID, hb.branchID as headBranchID, lc.commitID + lc.mergeID as latestCommitID, ID(lc) as latestCopyIndex, b.branchID as branchID, "
+			+ "cm.commitID + cm.mergeID as tailID, ID(cm) as tailCopyIndex, dm.commitID + dm.mergeID as headID, ID(dm) as headCopyIndex "
+			+ "UNION "
+			+ "MATCH (b:Branch)<-[:ARCHIVES]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch) "
+			+ "OPTIONAL MATCH (b)-[:LATEST]->(lc:Commit) "
+			+ "WHERE NOT has(lc.mergeID) "
+			+ "OPTIONAL MATCH (b)-[:CONTAINS]->(ch:Commit)-[:SUCCEEDS]->(dh:Commit)<-[:CONTAINS]-(b) "
+			+ "WHERE NOT has(ch.mergeID) AND has(dh.mergeID) "
+			+ "RETURN target.spaceID as spaceID, hb.branchID as headBranchID, lc.commitID as latestCommitID, ID(lc) as latestCopyIndex, b.branchID as branchID, "
+			+ "ch.commitID as tailID, ID(ch) as tailCopyIndex, dh.commitID + dh.mergeID as headID, ID(dh) as headCopyIndex")
 	List<Map<String, Object>> mapBranches(@Param("targetSpaceID") String targetSpaceID);
-
+	
 	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(target:DesignSpace) "
 			+ "WHERE target.spaceID = {targetSpaceID} "
 			+ "RETURN target.spaceID as spaceID, m.nodeID as tailID, m.nodeType as tailType, e.componentRoles as componentRoles, "
@@ -303,6 +329,20 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "CREATE UNIQUE (bo)-[:CONTAINS]->(:Commit {copyIndex: ID(ci)})-[:SUCCEEDS]->(:Commit {copyIndex: ID(di)})<-[:CONTAINS]-(bo)")
 	void mergeBranch(@Param("inputSpaceID") String inputSpaceID, @Param("inputBranchID") String inputBranchID, @Param("outputSpaceID") String outputSpaceID, @Param("outputBranchID") String outputBranchID);
 	
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(tc:Commit {commitID: {targetCommitID}}), (target)-[:ARCHIVES]->(hb) "
+			+ "MATCH (hb)-[:CONTAINS]->(c:Commmit)-[:SUCCEEDS*]->(tc)"
+			+ "DETACH DELETE c "
+			+ "CREATE UNIQUE (hb)-[:LATEST]->(tc)")
+	void resetHeadBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetCommitID") String targetCommitID);
+	
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(tc:Commit {commitID: {targetCommitID}}), (target)-[:ARCHIVES]->(hb) "
+			+ "DETACH DELETE lc")
+	void revertHeadBranch(@Param("targetSpaceID") String targetSpaceID);
+	
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(b:Branch {branchID: {targetBranchID}}) "
+			+ "CREATE (target)-[:SELECTS]->(b)")
+	void selectHeadBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID);
+	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(bi:Branch {branchID: {inputBranchID}})-[:LATEST]->(ci:Commit)-[:CONTAINS]->(si:Snapshot)-[:CONTAINS]->(n:Node), (bi)-[:CONTAINS]->(ci) "
 			+ "WITH target, si, collect(n) as nodes "
 			+ "MATCH (target)-[:ARCHIVES]->(bo:Branch {branchID: {outputBranchID}})-[:LATEST]->(co:Commit)-[:CONTAINS]->(so:Snapshot), (bo)-[:CONTAINS]->(co) "
@@ -325,8 +365,10 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	@Query("MATCH (input:DesignSpace {spaceID: {inputSpaceID}})-[:CONTAINS]->(n:Node) "
 			+ "WITH input, collect(n) as nodes "
 			+ "MERGE (output:DesignSpace {spaceID: {outputSpaceID}}) "
-			+ "ON CREATE SET output.idIndex = size(nodes) "
+			+ "ON CREATE SET output.idIndex = size(nodes), output.mergeIndex = input.mergeIndex "
 			+ "ON MATCH SET output.idIndex = output.idIndex + size(nodes) "
+			+ "FOREACH(ignoreMe IN CASE WHEN output.mergeIndex < input.mergeIndex THEN [1] ELSE [] END | "
+			+ "SET output.mergeIndex = input.mergeIndex) "
 			+ "WITH input, nodes, output "
 			+ "UNWIND range(0, size(nodes) - 1) as nodeIndex "
 			+ "WITH input, nodeIndex, nodes[nodeIndex] as n, output "
@@ -341,13 +383,4 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentIDs) AND has(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyIndex: ID(m)})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {copyIndex: ID(n)})<-[:CONTAINS]-(output))")
 	void unionDesignSpace(@Param("inputSpaceID") String inputSpaceID, @Param("outputSpaceID") String outputSpaceID);
-	
-	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:LATEST]->(lc:Commit), (target)-[:ARCHIVES]->(hb), (hb)-[:CONTAINS]->(lc) "
-			+ "DETACH DELETE lc")
-	void resetHeadBranch(@Param("targetSpaceID") String targetSpaceID);
-	
-	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(b:Branch {branchID: {targetBranchID}}) "
-			+ "CREATE (target)-[:SELECTS]->(b)")
-	void selectHeadBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID);
-	
 }

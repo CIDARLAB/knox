@@ -1,4 +1,4 @@
-CREATE (d1:DesignSpace {spaceID: "test1", idIndex: 14})
+CREATE (d1:DesignSpace {spaceID: "test1", idIndex: 14, mergeIndex: 0})
 
 CREATE (n0:Node {nodeID: "n0", nodeType: "start"})
 CREATE (n1:Node {nodeID: "n1"})
@@ -91,7 +91,7 @@ CREATE (n33)-[:PRECEDES]->(n34)
 CREATE (n34)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n35)
 CREATE (n35)-[:PRECEDES]->(n36)
 
-CREATE (d2:DesignSpace {spaceID: "test2", idIndex: 10})
+CREATE (d2:DesignSpace {spaceID: "test2", idIndex: 10, mergeIndex: 0})
 
 CREATE (n13b:Node {nodeID: "n0", nodeType: "start"})
 CREATE (n14:Node {nodeID: "n1"})
@@ -160,7 +160,7 @@ CREATE (n43)-[:PRECEDES]->(n44)
 CREATE (n44)-[:PRECEDES {componentIDs: ["t1"], componentRoles: ["terminator"]}]->(n45)
 CREATE (n45)-[:PRECEDES]->(n46)
 
-CREATE (d3:DesignSpace {spaceID: "test3", idIndex: 2})
+CREATE (d3:DesignSpace {spaceID: "test3", idIndex: 2, mergeIndex: 0})
 
 CREATE (n47:Node {nodeID: "n0", nodeType: "start"})
 CREATE (n48:Node {nodeID: "n1", nodeType: "accept"})

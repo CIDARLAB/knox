@@ -8,6 +8,9 @@ function knoxCtrl($scope) {
     $scope.nodeID1 = "";
     $scope.nodeID2 = "";
     $scope.branchID = "";
+    $scope.inputBranchID1 = "";
+    $scope.inputBranchID2 = "";
+    $scope.outputBranchID = "";
 
 	$scope.removeGraphSVG = function(index) {
 		d3.select("#graph" + index).select("svg").remove();
@@ -300,22 +303,27 @@ function knoxCtrl($scope) {
     };
 
     $scope.andDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
-        if (inputSpaceID1 && inputSpaceID2 && outputSpaceID && outputSpaceID !== inputSpaceID1 && outputSpaceID !== inputSpaceID2) {
-            var query = "?inputSpaceID1=" + encodeURIComponent(inputSpaceID1) + "&inputSpaceID2=" + encodeURIComponent(inputSpaceID2) 
-                    + "&outputSpaceID=" + encodeURIComponent(outputSpaceID);
+        var query = "?";
 
-            d3.xhr("/designSpace/and" + query).post(function(error, request) {
-                if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
-                } else {
-
-                    $scope.graphDesignSpace(outputSpaceID);
-
-                }
-            });
+        if (inputSpaceID1) {
+            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
         }
+        if (inputSpaceID2) {
+            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        }
+        if (outputSpaceID) {
+            query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
+        }
+
+        d3.xhr("/designSpace/and" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", error.responseText, "error");
+            } else if (!outputSpaceID) {
+                $scope.graphDesignSpace(inputSpaceID1);
+            } else {
+                $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
     };
 
     $scope.mergeDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
@@ -359,17 +367,17 @@ function knoxCtrl($scope) {
     };
 
     $scope.createDesignSpace = function(outputSpaceID) {
-        var query = "?outputSpaceID=" + encodeURIComponent(outputSpaceID);
+        var query = "?";
+
+        if (outputSpaceID) {
+            query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
+        }
 
         d3.xhr("/designSpace" + query).post(function(error, request) {
             if (error) {
-
                 sweetAlert("Error", error.responseText, "error");
-
             } else {
-
                 $scope.graphDesignSpace(outputSpaceID);
-
             }
         });
     };
@@ -414,78 +422,6 @@ function knoxCtrl($scope) {
         }
     };
 
-    $scope.checkoutBranch = function(targetSpaceID, targetBranchID) {
-        if (targetSpaceID && targetBranchID) {
-            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetBranchID=" + encodeURIComponent(targetBranchID);
-
-            d3.xhr("/branch/checkout" + query).send("PUT", function(error, request) {
-                if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
-                } else {
-
-                    $scope.graphDesignSpace(targetSpaceID);
-
-                }
-            });
-        }
-    };
-
-    $scope.commitToHead = function(targetSpaceID) {
-        if (targetSpaceID) {
-            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
-
-            d3.xhr("/branch/commitToHead" + query).post(function(error, request) {
-                if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
-                } else {
-
-                    $scope.graphDesignSpace(targetSpaceID);
-
-                }
-            });
-        }
-    };
-
-    $scope.createBranch = function(targetSpaceID, outputBranchID) {
-        if (targetSpaceID && outputBranchID) {
-            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&outputBranchID=" + encodeURIComponent(outputBranchID);
-
-            d3.xhr("/branch" + query).post(function(error, request) {
-                if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
-                } else {
-
-                    $scope.graphDesignSpace(targetSpaceID);
-
-                }
-            });
-        }
-    };
-
-    $scope.deleteBranch = function(targetSpaceID, targetBranchID) {
-        if (targetSpaceID && targetBranchID) {
-            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetBranchID=" + encodeURIComponent(targetBranchID);
-
-            d3.xhr("/branch" + query).send("DELETE", function(error, request) {
-                if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
-                } else {
-
-                    $scope.graphDesignSpace(targetSpaceID);
-
-                }
-            });
-        }
-    };
-
     $scope.createNode = function(targetSpaceID) {
         if (targetSpaceID) {
             var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
@@ -505,22 +441,25 @@ function knoxCtrl($scope) {
     };
 
     $scope.createEdge = function(targetSpaceID, targetTailID, targetHeadID) {
-        if (targetSpaceID && targetTailID && targetHeadID && targetTailID !== targetHeadID) {
-            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetTailID=" + encodeURIComponent(targetTailID) 
-                    + "&targetHeadID=" + encodeURIComponent(targetHeadID);
+        var query = "?";
 
-            d3.xhr("/edge" + query).post(function(error, request) {
-                if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
-                } else {
-
-                    $scope.graphDesignSpace(targetSpaceID);
-
-                }
-            });
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+        if (targetTailID) {
+            query += $scope.encodeQueryParameter("targetTailID", targetTailID, query);
+        }
+        if (targetHeadID) {
+            query += $scope.encodeQueryParameter("targetHeadID", targetHeadID, query);
+        }
+
+        d3.xhr("/edge" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", error.responseText, "error");
+            } else {
+                $scope.graphDesignSpace(targetSpaceID);
+            }
+        });
     };
 
     $scope.insertDesignSpace = function(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID) {
@@ -546,6 +485,162 @@ function knoxCtrl($scope) {
                 $scope.graphDesignSpace(inputSpaceID1);
             } else {
                 $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
+    };
+
+    $scope.checkoutBranch = function(targetSpaceID, targetBranchID) {
+        if (targetSpaceID && targetBranchID) {
+            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetBranchID=" + encodeURIComponent(targetBranchID);
+
+            d3.xhr("/branch/checkout" + query).send("PUT", function(error, request) {
+                if (error) {
+                    sweetAlert("Error", error.responseText, "error");
+                } else {
+                    $scope.graphDesignSpace(targetSpaceID);
+                }
+            });
+        }
+    };
+
+    $scope.commitToHead = function(targetSpaceID) {
+        if (targetSpaceID) {
+            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
+
+            d3.xhr("/branch/commitToHead" + query).post(function(error, request) {
+                if (error) {
+                    sweetAlert("Error", error.responseText, "error");
+                } else {
+                    $scope.graphDesignSpace(targetSpaceID);
+                }
+            });
+        }
+    };
+
+    $scope.createBranch = function(targetSpaceID, outputBranchID) {
+        if (targetSpaceID && outputBranchID) {
+            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&outputBranchID=" + encodeURIComponent(outputBranchID);
+
+            d3.xhr("/branch" + query).post(function(error, request) {
+                if (error) {
+                    sweetAlert("Error", error.responseText, "error");
+                } else {
+                    $scope.graphDesignSpace(targetSpaceID);
+                }
+            });
+        }
+    };
+
+    $scope.deleteBranch = function(targetSpaceID, targetBranchID) {
+        if (targetSpaceID && targetBranchID) {
+            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID) + "&targetBranchID=" + encodeURIComponent(targetBranchID);
+
+            d3.xhr("/branch" + query).send("DELETE", function(error, request) {
+                if (error) {
+                    sweetAlert("Error", error.responseText, "error");
+                } else {
+                    $scope.graphDesignSpace(targetSpaceID);
+                }
+            });
+        }
+    };
+
+    $scope.joinBranches = function(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID) {
+        var query = "?";
+
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
+        }
+        if (inputBranchID1) {
+            query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
+        }
+        if (inputBranchID2) {
+            query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
+        }
+        if (outputBranchID) {
+            query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
+        }
+
+        d3.xhr("/branch/join" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            }  else {
+                $scope.graphDesignSpace(targetSpaceID);
+            }
+        });
+    };
+
+    $scope.orBranches = function(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID) {
+        var query = "?";
+
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
+        }
+        if (inputBranchID1) {
+            query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
+        }
+        if (inputBranchID2) {
+            query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
+        }
+        if (outputBranchID) {
+            query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
+        }
+
+        d3.xhr("/branch/or" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else {
+                $scope.graphDesignSpace(targetSpaceID);
+            }
+        });
+    };
+
+    $scope.andBranches = function(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID) {
+        var query = "?";
+
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
+        }
+        if (inputBranchID1) {
+            query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
+        }
+        if (inputBranchID2) {
+            query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
+        }
+        if (outputBranchID) {
+            query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
+        }
+
+        d3.xhr("/branch/and" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", error.responseText, "error");
+            } else {
+                $scope.graphDesignSpace(targetSpaceID);
+            }
+        });
+    };
+
+    $scope.mergeBranches = function(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID) {
+        var query = "?";
+
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
+        }
+        if (inputBranchID1) {
+            query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
+        }
+        if (inputBranchID2) {
+            query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
+        }
+        if (outputBranchID) {
+            query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
+        }
+
+        d3.xhr("/branch/merge" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else {
+                $scope.graphDesignSpace(targetSpaceID);
             }
         });
     };

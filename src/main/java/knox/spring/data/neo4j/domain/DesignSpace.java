@@ -18,14 +18,17 @@ public class DesignSpace extends NodeSpace {
     
     @Relationship(type = "SELECTS") 
     Branch headBranch;
+    
+    int mergeIndex;
 
     public DesignSpace() {
     	
     }
     
-    public DesignSpace(String spaceID, int idIndex) {
+    public DesignSpace(String spaceID, int idIndex, int mergeIndex) {
     	super(idIndex);
     	this.spaceID = spaceID;
+    	this.mergeIndex = mergeIndex;
     }
     
     public void addBranch(Branch branch) {
@@ -72,5 +75,9 @@ public class DesignSpace extends NodeSpace {
     	} else {
     		return branches.size() > 0;
     	}
+    }
+    
+    public int getMergeIndex() {
+    	return mergeIndex;
     }
 }
