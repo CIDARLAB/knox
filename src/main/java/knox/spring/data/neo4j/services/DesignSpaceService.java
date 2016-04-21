@@ -12,6 +12,7 @@ import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.NodeNotFoundException;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
+import knox.spring.data.neo4j.repositories.NodeRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import java.util.Stack;
 public class DesignSpaceService {
 
     @Autowired DesignSpaceRepository designSpaceRepository;
+    @Autowired NodeRepository nodeRepository;
     
     public static final String RESERVED_ID = "knox";
     
@@ -744,7 +746,8 @@ public class DesignSpaceService {
     			}
     		}
     	}
-    	targetSpace.deleteNodesByID(deletedNodeIDs);
+    	
+    	nodeRepository.delete(targetSpace.removeNodesByID(deletedNodeIDs));
     	
     	designSpaceRepository.save(targetSpace);
     }

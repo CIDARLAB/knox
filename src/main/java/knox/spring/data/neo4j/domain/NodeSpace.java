@@ -92,13 +92,14 @@ public class NodeSpace {
     	this.idIndex = idIndex;
     }
     
-    public void deleteNodesByID(Set<String> nodeIDs) {
-    	Set<Node> deletedNodes = new HashSet<Node>();
+    public Set<Node> removeNodesByID(Set<String> nodeIDs) {
+    	Set<Node> removedNodes = new HashSet<Node>();
     	for (Node node : nodes) {
     		if (nodeIDs.contains(node.getNodeID())) {
-    			deletedNodes.add(node);
+    			removedNodes.add(node);
     		}
     	}
-    	nodes.removeAll(deletedNodes);
+    	nodes.removeAll(removedNodes);
+    	return removedNodes;
     }
 }
