@@ -52,31 +52,17 @@ public class Node {
     public String getNodeID() {
     	return nodeID;
     }
+    
+    public int getNumEdges() {
+    	return edges.size();
+    }
 
     public Set<Edge> getEdges() {
         return edges;
     }
     
-    public Set<Edge> getMinimizableEdges() {
-    	Set<Edge> minimizableEdges = new HashSet<Edge>();
-    	if (hasEdges()) {
-    		for (Edge edge : edges) {
-    			if (!edge.hasComponents() 
-    					&& !(edge.getTail().isStartNode() && edge.getHead().isAcceptNode() 
-						|| edge.getHead().isStartNode())) {
-    				minimizableEdges.add(edge);
-    			}
-    		}
-    	}
-    	return minimizableEdges;
-    }
-    
     public String getNodeType() {
     	return nodeType;
-    }
-    
-    public boolean hasMinimizableEdges() {
-    	return getMinimizableEdges().size() > 0;
     }
     
     public boolean hasEdges() {
@@ -100,6 +86,10 @@ public class Node {
     	}
     }
     
+    public boolean hasConflictingNodeType(Node node) {
+    	return hasNodeType() && (!node.hasNodeType() || !nodeType.equals(node.getNodeType()));
+    }
+    
     public boolean hasNodeType() {
     	return nodeType != null;
     }
@@ -112,12 +102,13 @@ public class Node {
     	return hasNodeType() && nodeType.equals(NodeType.START.getValue());
     }
     
-    public Set<Edge> minimizeEdges() {
-    	Set<Edge> minimizableEdges = getMinimizableEdges();
+    public boolean deleteEdges(Set<Edge> deletedEdges) {
     	if (hasEdges()) {
-    		edges.removeAll(minimizableEdges);
+    		edges.removeAll(deletedEdges);
+    		return true;
+    	} else {
+    		return false;
     	}
-    	return minimizableEdges;
     }
     
     public enum NodeType {

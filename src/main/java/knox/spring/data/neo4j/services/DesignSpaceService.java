@@ -655,7 +655,7 @@ public class DesignSpaceService {
     		HashMap<String, Set<Node>> inputToOutputNodes1, HashMap<String, Set<Node>> inputToOutputNodes2, 
     		boolean intersectComponents) {
     	Node outputNode;
-    	if (inputNode1.getNodeType() != null || inputNode2.getNodeType() == null) {
+    	if (inputNode1.hasNodeType() || !inputNode2.hasNodeType()) {
     		outputNode = outputSpace.copyNode(inputNode1);
     	} else {
     		outputNode = outputSpace.copyNode(inputNode2);
@@ -700,56 +700,62 @@ public class DesignSpaceService {
     public void minimizeDesignSpace(String targetSpaceID) 
     		throws DesignSpaceNotFoundException {
     	validateDesignSpaceOperator(targetSpaceID);
-    	
-    	Map<String, Set<Edge>> nodeToIncomingEdges = new HashMap<String, Set<Edge>>();
 
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 2);
+    	
+    	HashMap<String, Set<Edge>> nodeIDToIncomingEdges = targetSpace.mapNodeIDsToIncomingEdges();
+    	
+    	HashMap<String, Node> nodeIDToNode = targetSpace.mapNodeIDsToNodes();
+    	
     	Stack<Node> nodeStack = new Stack<Node>();
     	for (Node node : targetSpace.getNodes()) {
     		nodeStack.push(node);
-    		if (node.hasEdges()) {
-    			for (Edge edge : node.getEdges()) {
-    				if (!nodeToIncomingEdges.containsKey(edge.getHead().getNodeID())) {
-    					nodeToIncomingEdges.put(edge.getHead().getNodeID(), new HashSet<Edge>());
-    				}
-    				nodeToIncomingEdges.get(edge.getHead().getNodeID()).add(edge);
-    			}
-    		}
     	}
     	
     	Set<String> deletedNodeIDs = new HashSet<String>();
+    	
     	while (nodeStack.size() > 0) {
-    		Node node = nodeStack.pop();
-    		if (!deletedNodeIDs.contains(node.getNodeID())) {
-    			for (Edge blankEdge : node.minimizeEdges()) {
-    				if (!blankEdge.isCyclicEdge()) {
-    					Node successor = blankEdge.getHead();
-    					if (successor.hasEdges()) {
-    						for (Edge edge : successor.getEdges()) {
-    							node.copyEdge(edge);
-    							for (Edge incomingEdge : nodeToIncomingEdges.get(successor.getNodeID())) {
-    								if (!blankEdge.equals(incomingEdge)) {
-    									incomingEdge.setHead(node);
-    								}
-    							}
-    						}
-    					}
-    					nodeToIncomingEdges.remove(successor.getNodeID());
-    					deletedNodeIDs.add(successor.getNodeID());
-    					if (successor.isAcceptNode()) {
-    						node.setNodeType(Node.NodeType.ACCEPT.getValue());
+    		Node node = nodeStack.peek();
+    		
+    		Set<Edge> minimizableEdges = targetSpace.getMinimizableEdges(node, nodeIDToIncomingEdges);
+    		
+    		if (minimizableEdges.size() == 0 || deletedNodeIDs.contains(node.getNodeID())) {
+    			nodeStack.pop();
+    		} else {
+    			for (Edge minimizableEdge : minimizableEdges) {
+    				Node predecessor = nodeIDToNode.get(minimizableEdge.getTail().getNodeID());
+    				
+    				deletedNodeIDs.add(predecessor.getNodeID());
+    				
+    				if (nodeIDToIncomingEdges.containsKey(predecessor.getNodeID())) {
+    					for (Edge incomingEdge : nodeIDToIncomingEdges.get(predecessor.getNodeID())) {
+    						incomingEdge.setHead(node);
+    						nodeIDToIncomingEdges.get(node.getNodeID()).add(incomingEdge);
     					}
     				}
+    				
+    				if (minimizableEdges.size() == 1) {
+    					for (Edge edge : predecessor.getEdges()) {
+    						if (!edge.equals(minimizableEdge)) {
+    							node.copyEdge(edge);
+    						}
+    					}
+    				}
+
+    				if (predecessor.hasNodeType()) {
+    					node.setNodeType(predecessor.getNodeType());
+    				}
     			}
-    			if (node.hasMinimizableEdges()) {
-    				nodeStack.push(node);
-    			}
+    			
+    			nodeIDToIncomingEdges.get(node.getNodeID()).removeAll(minimizableEdges);
     		}
     	}
     	
-    	nodeRepository.delete(targetSpace.removeNodesByID(deletedNodeIDs));
+    	Set<Node> deletedNodes = targetSpace.removeNodesByID(deletedNodeIDs);
     	
     	designSpaceRepository.save(targetSpace);
+    	
+    	nodeRepository.delete(deletedNodes);
     }
     
     public void orDesignSpaces(String inputSpaceID1, String inputSpaceID2, String outputSpaceID) 

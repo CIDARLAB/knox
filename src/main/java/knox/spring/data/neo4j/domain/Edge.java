@@ -136,7 +136,7 @@ public class Edge {
     	}
     }
     
-    public boolean isCyclicEdge() {
+    public boolean isCyclic() {
     	return tail.equals(head);
     }
     
