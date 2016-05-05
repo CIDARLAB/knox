@@ -109,6 +109,13 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0, mergeIndex: 0})-[:ARCHIVES]->(b:Branch {branchID: {outputSpaceID}, idIndex: 0}) "
 			+ "CREATE (output)-[:SELECTS]->(b)")
 	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
+	
+	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0, mergeIndex: 0})-[:ARCHIVES]->(b:Branch {branchID: {outputSpaceID}, idIndex: 0}) "
+			+ "CREATE (output)-[:SELECTS]->(b) "
+			+ "CREATE (output)-[:CONTAINS]->(m:Node {nodeID: 'n0', nodeType: 'start'}) "
+			+ "CREATE (output)-[:CONTAINS]->(n:Node {nodeID: 'n1', nodeType: 'accept'}) "
+			+ "CREATE (m)-[:PRECEDES {componentIDs: [{componentID}], componentRoles: {componentRoles}}]->(n)")
+	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID, @Param("componentID") String componentID, @Param("componentRoles") ArrayList<String> componentRoles);
 
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
 			+ "CREATE (target)-[:CONTAINS]->(:Node {nodeID: 'n' + target.idIndex}) "

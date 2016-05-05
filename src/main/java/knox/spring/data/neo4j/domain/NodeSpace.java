@@ -38,6 +38,12 @@ public class NodeSpace {
 		nodes.add(node);
 	}
 	
+	public Node createNode() {
+		Node node = new Node("n" + idIndex++);
+		addNode(node);
+		return node;
+	}
+	
 	public Node createNode(String nodeType) {
 		Node node = new Node("n" + idIndex++, nodeType);
 		addNode(node);

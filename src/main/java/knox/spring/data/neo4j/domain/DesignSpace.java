@@ -25,6 +25,12 @@ public class DesignSpace extends NodeSpace {
     	
     }
     
+    public DesignSpace(String spaceID) {
+    	super(0);
+    	this.spaceID = spaceID;
+    	this.mergeIndex = 0;
+    }
+    
     public DesignSpace(String spaceID, int idIndex, int mergeIndex) {
     	super(idIndex);
     	this.spaceID = spaceID;
@@ -42,6 +48,12 @@ public class DesignSpace extends NodeSpace {
     	Branch branch = new Branch(branchID, idIndex);
     	addBranch(branch);
     	return branch;
+    }
+    
+    public Branch createHeadBranch(String branchID) {
+    	Branch headBranch = createBranch(branchID, 0);
+    	this.headBranch = headBranch;
+    	return headBranch;
     }
     
     public Branch findBranch(String branchID) {

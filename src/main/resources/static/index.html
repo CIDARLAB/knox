@@ -23,7 +23,7 @@
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <form class="navbar-form navbar-left" role="search" ng-show="isDSGraph">
+                    <form class="navbar-form navbar-left"  ng-show="isDSGraph">
                         <div class="input-group">
                             <div class="input-group-btn">
                                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action <span class="caret"></span></button>
@@ -44,7 +44,7 @@
                             <input type="text" placeholder="Design Space ID" class="form-control" aria-label="..." ng-model="spaceID">
                         </div><!-- /input-group -->
                     </form>
-                    <form class="navbar-form navbar-left" role="search" ng-show="isDSGraph">
+                    <form class="navbar-form navbar-left" ng-show="isDSGraph">
                         <div class="input-group">
                             <div class="input-group-btn">
                                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Insert <span class="caret"></span></button>
@@ -59,7 +59,18 @@
                         </div><!-- /input-group -->
                         <input type="text" placeholder="Node ID 2" class="form-control" aria-label="..." ng-model="nodeID2" size="5">
                     </form>
-                    <form class="navbar-form navbar-left" role="search" ng-hide="isDSGraph">
+                    <form method="POST" enctype="multipart/form-data" action="merge/sbol" class="navbar-form navbar-left" ng-show="isDSGraph">
+                        <input type="file" name="inputSBOLFiles[]" ng-file-select="onFileSelect($files)" multiple>
+                        <input type="text" name="outputSpaceID" placeholder="Design Space ID" class="form-control" aria-label="..." size="5">
+                        <input type="submit" value="Merge">
+                        <!--<b>Preview:</b><br/>
+                        <i ng-hide="imageSrc">No image chosen</i>
+                        <pre>{{imageSrc}}</pre><br/>-->
+                        <b>Progress:</b>
+                        <progress value="{{progress}}"></progress>
+                        <!--<button type="button" class="btn btn-default" ng-click="mergeSBOL(file, 'potato')">Merge SBOL</button>-->
+                    </form>
+                    <form class="navbar-form navbar-left" ng-hide="isDSGraph">
                         <div class="input-group">
                             <div class="input-group-btn">
                                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action <span class="caret"></span></button>
@@ -76,7 +87,7 @@
                             <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." ng-model="branchID">
                         </div><!-- /input-group -->
                     </form>
-                    <form class="navbar-form navbar-left" role="search" ng-hide="isDSGraph">
+                    <form class="navbar-form navbar-left" ng-hide="isDSGraph">
                         <div class="input-group">
                             <div class="input-group-btn">
                                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Combine <span class="caret"></span></button>
@@ -135,8 +146,11 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
         <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-1.1.2.js"></script>
         <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
-        <script type="text/javascript" src="angular/controller/knoxCtrl.js"></script>
-        <script type="text/javascript" src="angular/module/knoxApp.js"></script>
+        <script type="text/javascript" src="upload/uploadCtrl.js"></script>
+        <script type="text/javascript" src="upload/ngFileSelect.js"></script>
+        <script type="text/javascript" src="upload/uploadApp.js"></script>
+        <script type="text/javascript" src="knoxCtrl.js"></script>
+        <script type="text/javascript" src="knoxApp.js"></script>
         <script src="alert/sweetalert.min.js"></script>
 
     </body>

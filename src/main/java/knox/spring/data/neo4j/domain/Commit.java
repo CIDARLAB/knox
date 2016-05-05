@@ -32,7 +32,7 @@ public class Commit {
     }
     
     public Snapshot createSnapshot() {
-    	snapshot = new Snapshot();
+    	snapshot = new Snapshot(0);
     	return snapshot;
     }
     

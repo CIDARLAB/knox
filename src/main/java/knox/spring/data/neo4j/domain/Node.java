@@ -27,6 +27,10 @@ public class Node {
     	
     }
     
+    public Node(String nodeID) {
+    	this.nodeID = nodeID;
+    }
+    
     public Node(String nodeID, String nodeType) {
     	this.nodeID = nodeID;
     	this.nodeType = nodeType;

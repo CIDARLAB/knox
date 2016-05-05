@@ -14,4 +14,8 @@ public class Snapshot extends NodeSpace {
     public Snapshot() {
     	
     }
+    
+    public Snapshot(int idIndex) {
+    	super(idIndex);
+    }
 }

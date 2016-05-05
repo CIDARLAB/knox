@@ -645,6 +645,25 @@ function knoxCtrl($scope) {
         });
     };
 
+    $scope.mergeSBOL = function(inputXML, outputSpaceID) {
+        var query = "?";
+
+        if (inputXML) {
+            query += $scope.encodeQueryParameter("inputXML", inputXML, query);
+        }
+        if (outputSpaceID) {
+            query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
+        }
+
+        d3.xhr("/merge/sbol" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else {
+                $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
+    }
+
     $scope.encodeQueryParameter = function(parameterName, parameterValue, query) {
         if (query.length > 1) {
             return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
