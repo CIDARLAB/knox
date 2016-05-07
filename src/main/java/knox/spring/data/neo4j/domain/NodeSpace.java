@@ -66,7 +66,7 @@ public class NodeSpace {
     	return acceptNodes;
     }
 	
-	public int getIDIndex() {
+	public int getIdIndex() {
 		return idIndex;
 	}
 	

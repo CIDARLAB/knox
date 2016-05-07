@@ -93,7 +93,8 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
     		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
-    	designSpaceService.andBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID);
+    	designSpaceService.mergeBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID,
+    			true, true);
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully intersected.\"}", 
     				HttpStatus.NO_CONTENT);
     }
@@ -157,7 +158,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	}
     	
     	designSpaceService.mergeBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID, 
-    			parsedIsStrong);
+    			false, parsedIsStrong);
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
@@ -203,7 +204,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
 			outputSpaceID = inputSpaceID1;
 		}
     	try {
-    		designSpaceService.andDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
+    		designSpaceService.mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID, true, true);
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
@@ -269,7 +270,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	}
     	
     	try {
-    		designSpaceService.mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID, parsedIsStrong);
+    		designSpaceService.mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID, false, parsedIsStrong);
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {

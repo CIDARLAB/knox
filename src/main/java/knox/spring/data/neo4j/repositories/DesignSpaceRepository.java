@@ -82,7 +82,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentIDs) AND has(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (so)-[:CONTAINS]->(:Node {nodeID: m.nodeID})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {nodeID: n.nodeID})<-[:CONTAINS]-(so))")
 	void copySnapshots(@Param("inputSpaceID") String inputSpaceID, @Param("inputBranchID") String inputBranchID, @Param("outputSpaceID") String outputSpaceID, @Param("outputBranchID") String outputBranchID);
-
+	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(b:Branch {branchID: {targetBranchID}}) "
 			+ "CREATE (b)-[:LATEST]->(c:Commit {commitID: 'c'+ b.idIndex})<-[:CONTAINS]-(b) "
 			+ "CREATE (c)-[:CONTAINS]->(s:Snapshot {idIndex: 0}) "
@@ -335,6 +335,10 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "MATCH (bi)-[:CONTAINS]->(ci:Commit)-[:SUCCEEDS]->(di:Commit)<-[:CONTAINS]-(bi)"
 			+ "CREATE UNIQUE (bo)-[:CONTAINS]->(:Commit {copyIndex: ID(ci)})-[:SUCCEEDS]->(:Commit {copyIndex: ID(di)})<-[:CONTAINS]-(bo)")
 	void mergeBranch(@Param("inputSpaceID") String inputSpaceID, @Param("inputBranchID") String inputBranchID, @Param("outputSpaceID") String outputSpaceID, @Param("outputBranchID") String outputBranchID);
+	
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
+			+ "SET target.spaceID = {outputSpaceID}")
+	void renameDesignSpace(@Param("targetSpaceID") String targetSpaceID, @Param("outputSpaceID") String outputSpaceID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(tc:Commit {commitID: {targetCommitID}}), (target)-[:ARCHIVES]->(hb) "
 			+ "MATCH (hb)-[:CONTAINS]->(c:Commmit)-[:SUCCEEDS*]->(tc)"

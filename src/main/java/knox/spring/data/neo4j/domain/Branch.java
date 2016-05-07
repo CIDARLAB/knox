@@ -59,7 +59,7 @@ public class Branch {
     	return branchID;
     }
     
-    public int getIDIndex() {
+    public int getIdIndex() {
     	return idIndex;
     }
     
