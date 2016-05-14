@@ -45,7 +45,9 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     
     @RequestMapping(value = "/merge/sbol", method = RequestMethod.POST)
     public ResponseEntity<String> mergeSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
+    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
+    		@RequestParam(value = "authority", required = false) String authority) {
+    	System.out.println(authority + " " + outputSpaceID);
     	List<InputStream> inputSBOLStreams = new ArrayList<InputStream>();
     	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
     		if (!inputSBOLFile.isEmpty()) {
@@ -59,7 +61,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	}
     	
     	try {
-			designSpaceService.mergeSBOL(inputSBOLStreams, outputSpaceID);
+			designSpaceService.mergeSBOL(inputSBOLStreams, outputSpaceID, authority);
 		} catch (SBOLValidationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

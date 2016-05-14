@@ -1,3 +1,3 @@
 angular
-	.module('knoxApp', ['ui.bootstrap','uploadApp'])
+	.module('knoxApp', ['ui.bootstrap'])
 	.controller('knoxCtrl', knoxCtrl);
