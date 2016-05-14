@@ -120,11 +120,11 @@ public class DesignSpaceService {
     				outputSpaceID, false, false);
     	}
     	
-//    	while (defIterator.hasNext()) {
-//    		String defID = defIterator.next().getIdentity().toString();
-//    		System.out.println("merging " + defID);
-//    		mergeDesignSpaces(outputSpaceID, defID, outputSpaceID, false, false);
-//    	}
+    	while (defIterator.hasNext()) {
+    		String defID = defIterator.next().getIdentity().toString();
+    		System.out.println("merging " + defID);
+    		mergeDesignSpaces(outputSpaceID, defID, outputSpaceID, false, false);
+    	}
     }
     
     private List<ComponentDefinition> flattenComponentDefinition(ComponentDefinition rootDef) {
