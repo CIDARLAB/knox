@@ -695,7 +695,7 @@ public class DesignSpaceService {
     	indexVersionMerger(outputSpace.getSpaceID(), headBranchID1);
     	mergeVersionHistory(inputSpaceID2, outputSpace.getSpaceID());
     	indexVersionMerger(outputSpace.getSpaceID(), headBranchID2);
-    	
+
     	mergeBranches(outputSpace.getSpaceID(), headBranchID1, headBranchID2, null, isIntersection, isStrong);
     	
     	selectHeadBranch(outputSpace.getSpaceID(), headBranchID1);
