@@ -38,6 +38,20 @@ public class NodeSpace {
 		nodes.add(node);
 	}
 	
+	public Set<Node> removeAllNodes() {
+		Set<Node> removedNodes = nodes;
+		nodes.clear();
+		return removedNodes;
+	}
+	
+	public Node copyNode(Node node) {
+		if (node.hasNodeType()) {
+			return createNode(node.getNodeType());
+		} else {
+			return createNode();
+		}
+	}
+	
 	public Node createNode() {
 		Node node = new Node("n" + idIndex++);
 		addNode(node);
@@ -49,9 +63,9 @@ public class NodeSpace {
 		addNode(node);
 		return node;
 	}
-
-	public Node copyNode(Node node) {
-		return createNode(node.getNodeType());
+	
+	public void deleteNodes(Set<Node> targetNodes) {
+		nodes.removeAll(targetNodes);
 	}
 	
 	public Set<Node> getAcceptNodes() {
@@ -98,33 +112,6 @@ public class NodeSpace {
     	}
     	return minimizableEdges;
     }
-	
-//	public Set<Edge> getMinimizableEdges(Node node, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
-//    	Set<Edge> minimizableEdges = new HashSet<Edge>();
-//    	if (node.hasEdges()) {
-//    		for (Edge edge : node.getEdges()) {
-//    			Node successor = edge.getHead();
-//    			if (!edge.hasComponents() 
-//    					&& !edge.isCyclic()
-//    					&& nodeIDToIncomingEdges.get(successor.getNodeID()).size() == 1
-//    					&& !(edge.getTail().isStartNode() && successor.isAcceptNode() 
-//						|| edge.getTail().isAcceptNode() && successor.isStartNode())) {
-//    				Iterator<Edge> incomingEdges = nodeIDToIncomingEdges.get(successor.getNodeID()).iterator();
-//    				boolean minimizable = true;
-//    				while (minimizable && incomingEdges.hasNext()) {
-//    					Edge incomingEdge = incomingEdges.next();
-//    					if (!incomingEdge.hasComponents() && incomingEdge.getTail().getEdges().size() > 1) {
-//    						minimizable = false;
-//    					}
-//    				} 
-//    				if (minimizable) {
-//    					minimizableEdges.add(edge);
-//    				}
-//    			}
-//    		}
-//    	}
-//    	return minimizableEdges;
-//    }
     
     public Set<Node> getNodes() {
     	return nodes;

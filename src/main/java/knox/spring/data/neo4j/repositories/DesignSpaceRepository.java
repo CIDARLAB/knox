@@ -325,7 +325,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "WHERE NOT (output)-[:ARCHIVES]->(:Branch)-[:CONTAINS]->(:Commit {copyIndex: ID(ci)}) AND NOT has(ci.mergeID) "
 			+ "OPTIONAL MATCH (bi)-[:CONTAINS]->(cim:Commit) "
 			+ "WHERE NOT (output)-[:ARCHIVES]->(:Branch)-[:CONTAINS]->(:Commit {copyIndex: ID(cim)}) AND has(cim.mergeID) "
-			+ "WITH bi, bo, collect(distinct ci) as cis, collect(cim) as cims, collect(distinct co) as cos "
+			+ "WITH bi, bo, collect(distinct ci) as cis, collect(distinct cim) as cims, collect(distinct co) as cos "
 			+ "FOREACH(ci IN cis| "
 			+ "CREATE (bo)-[:CONTAINS]->(:Commit {commitID: ci.commitID, copyIndex: ID(ci)})-[:CONTAINS]->(:Snapshot {idIndex: 0})) "
 			+ "FOREACH(cim IN cims| "
@@ -343,6 +343,10 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
 			+ "SET target.spaceID = {outputSpaceID}")
 	void renameDesignSpace(@Param("targetSpaceID") String targetSpaceID, @Param("outputSpaceID") String outputSpaceID);
+	
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node) "
+			+ "RETURN n")
+	Set<Node> getNodes(@Param("targetSpaceID") String targetSpaceID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(tc:Commit {commitID: {targetCommitID}}), (target)-[:ARCHIVES]->(hb) "
 			+ "MATCH (hb)-[:CONTAINS]->(c:Commmit)-[:SUCCEEDS*]->(tc)"
