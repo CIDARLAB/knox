@@ -47,7 +47,6 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> mergeSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
     		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
     		@RequestParam(value = "authority", required = false) String authority) {
-    	System.out.println(authority + " " + outputSpaceID);
     	List<InputStream> inputSBOLStreams = new ArrayList<InputStream>();
     	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
     		if (!inputSBOLFile.isEmpty()) {
@@ -92,11 +91,15 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     
     @RequestMapping(value = "/branch/and", method = RequestMethod.POST)
     public ResponseEntity<String> andBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
-    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
-    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
-    	designSpaceService.mergeBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID,
+    	if (outputBranchID == null) {
+    		outputBranchID = inputBranchIDs.get(0);
+		}
+    	
+    	designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID,
     			true, true);
+    	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully intersected.\"}", 
     				HttpStatus.NO_CONTENT);
     }
@@ -144,12 +147,11 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     
     @RequestMapping(value = "/branch/merge", method = RequestMethod.POST)
     public ResponseEntity<String> mergeBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
-    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
-    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "isStrong", required = false) String isStrong) {
     	if (outputBranchID == null) {
-    		outputBranchID = inputBranchID1;
+    		outputBranchID = inputBranchIDs.get(0);
 		}
     	
     	boolean parsedIsStrong;
@@ -159,7 +161,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		parsedIsStrong = Boolean.parseBoolean(isStrong);
     	}
     	
-    	designSpaceService.mergeBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID, 
+    	designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
     			false, parsedIsStrong);
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged.\"}", 
@@ -199,14 +201,13 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     }
     
     @RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
-    public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
-    		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
+    public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
         if (outputSpaceID == null) {
-			outputSpaceID = inputSpaceID1;
+			outputSpaceID = inputSpaceIDs.get(0);
 		}
     	try {
-    		designSpaceService.mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID, true, true);
+    		designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, true, true);
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
@@ -256,12 +257,11 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     }
     
     @RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
-    public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
-    		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
+    public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
     		@RequestParam(value = "isStrong", required = false) String isStrong) {
     	if (outputSpaceID == null) {
-			outputSpaceID = inputSpaceID1;
+			outputSpaceID = inputSpaceIDs.get(0);
 		}
     	
     	boolean parsedIsStrong;
@@ -270,9 +270,9 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	} else {
     		parsedIsStrong = Boolean.parseBoolean(isStrong);
     	}
-    	
+  
     	try {
-    		designSpaceService.mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID, false, parsedIsStrong);
+    		designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, false, parsedIsStrong);
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {

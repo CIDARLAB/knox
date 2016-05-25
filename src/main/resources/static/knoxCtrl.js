@@ -305,11 +305,8 @@ function knoxCtrl($scope) {
     $scope.andDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
         var query = "?";
 
-        if (inputSpaceID1) {
-            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
-        }
-        if (inputSpaceID2) {
-            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        if (inputSpaceID1 && inputSpaceID2) {
+            query += $scope.encodeQueryParameter("inputSpaceIDs", [inputSpaceID1, inputSpaceID2], query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -329,11 +326,8 @@ function knoxCtrl($scope) {
     $scope.mergeDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
         var query = "?";
 
-        if (inputSpaceID1) {
-            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
-        }
-        if (inputSpaceID2) {
-            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        if (inputSpaceID1 && inputSpaceID2) {
+            query += $scope.encodeQueryParameter("inputSpaceIDs", [inputSpaceID1, inputSpaceID2], query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -601,11 +595,8 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
-        if (inputBranchID1) {
-            query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
-        }
-        if (inputBranchID2) {
-            query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
+        if (inputBranchID1 && inputBranchID2) {
+            query += $scope.encodeQueryParameter("inputBranchIDs", [inputBranchID1, inputBranchID2], query);
         }
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
@@ -626,11 +617,8 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
-        if (inputBranchID1) {
-            query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
-        }
-        if (inputBranchID2) {
-            query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
+        if (inputBranchID1 && inputBranchID2) {
+            query += $scope.encodeQueryParameter("inputBranchIDs", [inputBranchID1, inputBranchID2], query);
         }
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
@@ -644,28 +632,6 @@ function knoxCtrl($scope) {
             }
         });
     };
-
-    // $scope.mergeSBOL = function(inputXML, outputSpaceID, authority) {
-    //     var query = "?";
-
-    //     if (inputXML) {
-    //         query += $scope.encodeQueryParameter("inputXML", inputXML, query);
-    //     }
-    //     if (outputSpaceID) {
-    //         query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
-    //     }
-    //     if (authority) {
-    //         query += $scope.encodeQueryParameter("authority", authority, query);
-    //     }
-
-    //     d3.xhr("/merge/sbol" + query).post(function(error, request) {
-    //         if (error) {
-    //             sweetAlert("Error", JSON.parse(error.response).message, "error");
-    //         } else {
-    //             $scope.graphDesignSpace(outputSpaceID);
-    //         }
-    //     });
-    // }
 
     $scope.encodeQueryParameter = function(parameterName, parameterValue, query) {
         if (query.length > 1) {

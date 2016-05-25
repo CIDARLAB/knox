@@ -41,6 +41,10 @@ public class Edge {
     	this.componentIDs = componentIDs;
     	this.componentRoles = componentRoles;
     }
+    
+    public Edge copy(Node tail, Node head) {
+    	return new Edge(tail, head, new ArrayList<String>(componentIDs), new ArrayList<String>(componentRoles));
+    }
 
     public Node getTail() {
         return tail;
@@ -92,6 +96,38 @@ public class Edge {
     
     public boolean hasComponents() {
     	return hasComponentIDs() && hasComponentRoles();
+    }
+    
+    public void intersectWithEdge(Edge edge) {
+    	Set<String> intersectedCompIDs = new HashSet<String>();
+    	
+    	if (hasComponentIDs()) {
+    		Set<String> tempIDs = new HashSet<String>(componentIDs);
+    		
+    		if (edge.hasComponentIDs()) {
+    			for (String compID : edge.getComponentIDs()) {
+    				if (tempIDs.contains(compID)) {
+    					intersectedCompIDs.add(compID);
+    				}
+    			}
+    		}
+    	}
+    	
+    	Set<String> intersectedCompRoles = new HashSet<String>();
+    	
+    	if (hasComponentRoles()) {
+    		Set<String> tempRoles = new HashSet<String>(componentRoles);
+    		
+    		if (edge.hasComponentRoles()) {
+    			for (String compRole : edge.getComponentRoles()) {
+    				if (tempRoles.contains(compRole)) {
+    					intersectedCompRoles.add(compRole);
+    				}
+    			}
+    		}
+    	}
+    	componentIDs = new ArrayList<String>(intersectedCompIDs);
+    	componentRoles = new ArrayList<String>(intersectedCompRoles);
     }
     
     public boolean isIdenticalTo(Edge edge) {
@@ -146,6 +182,30 @@ public class Edge {
     
     public void setTail(Node tail) {
     	this.tail = tail;
+    }
+    
+    public void unionWithEdge(Edge edge) {
+    	Set<String> mergedCompIDs = new HashSet<String>();
+    	Set<String> mergedCompRoles = new HashSet<String>();
+    	
+    	if (hasComponentIDs()) {
+    		mergedCompIDs.addAll(componentIDs);
+    	}
+    	
+    	if (edge.hasComponentIDs()) {
+    		mergedCompIDs.addAll(edge.getComponentIDs());
+    	}
+    	
+    	if (hasComponentRoles()) {
+    		mergedCompRoles.addAll(componentRoles);
+    	}
+    	
+    	if (edge.hasComponentRoles()) {
+    		mergedCompRoles.addAll(edge.getComponentRoles());
+    	}
+    	
+    	componentIDs = new ArrayList<String>(mergedCompIDs);
+    	componentRoles = new ArrayList<String>(mergedCompRoles);
     }
     
 }
