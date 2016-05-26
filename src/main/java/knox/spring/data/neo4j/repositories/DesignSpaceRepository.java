@@ -110,17 +110,18 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "CREATE (output)-[:SELECTS]->(b)")
 	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
 	
-	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0, mergeIndex: 0})-[:ARCHIVES]->(b:Branch {branchID: {outputSpaceID}, idIndex: 0}) "
+	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 2, mergeIndex: 0})-[:ARCHIVES]->(b:Branch {branchID: {outputSpaceID}, idIndex: 0}) "
 			+ "CREATE (output)-[:SELECTS]->(b) "
 			+ "CREATE (output)-[:CONTAINS]->(m:Node {nodeID: 'n0', nodeType: 'start'}) "
 			+ "CREATE (output)-[:CONTAINS]->(n:Node {nodeID: 'n1', nodeType: 'accept'}) "
-			+ "CREATE (m)-[:PRECEDES {componentIDs: [{componentID}], componentRoles: {componentRoles}}]->(n)")
-	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID, @Param("componentID") String componentID, @Param("componentRoles") ArrayList<String> componentRoles);
+			+ "CREATE (m)-[:PRECEDES {componentIDs: {componentIDs}, componentRoles: {componentRoles}}]->(n)")
+	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID, @Param("componentIDs") ArrayList<String> componentIDs, @Param("componentRoles") ArrayList<String> componentRoles);
 
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
-			+ "CREATE (target)-[:CONTAINS]->(:Node {nodeID: 'n' + target.idIndex}) "
-			+ "SET target.idIndex = target.idIndex + 1")
-	void createNode(@Param("targetSpaceID") String targetSpaceID);
+			+ "CREATE (target)-[:CONTAINS]->(n:Node {nodeID: 'n' + target.idIndex}) "
+			+ "SET target.idIndex = target.idIndex + 1 "
+			+ "RETURN n.nodeID as nodeID")
+	String createNode(@Param("targetSpaceID") String targetSpaceID);
 
 	@Query("MATCH (tail:Node {nodeID: {targetTailID}})<-[:CONTAINS]-(:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(head:Node {nodeID: {targetHeadID}}) "
 			+ "CREATE (tail)-[:PRECEDES]->(head)")
@@ -158,7 +159,16 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "DETACH DELETE s "
 			+ "DETACH DELETE sn")
 	void deleteDesignSpace(@Param("targetSpaceID") String targetSpaceID);
+	
+	@Query("MATCH (tail:Node {nodeID: {targetTailID}})<-[:CONTAINS]-(:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(head:Node {nodeID: {targetHeadID}}), (tail)-[e:PRECEDES]->(head) "
+			+ "DELETE e")
+	void deleteEdge(@Param("targetSpaceID") String targetSpaceID, @Param("targetTailID") String targetTailID, @Param("targetHeadID") String targetHeadID);
 
+	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(target:Node {nodeID: {targetNodeID}}) "
+			+ "WHERE NOT has(target.nodeType) OR NOT target.nodeType = 'start' "
+			+ "DETACH DELETE target")
+	void deleteNode(@Param("targetSpaceID") String targetSpaceID, @Param("targetNodeID") String targetNodeID);
+	
 	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node) "
 			+ "REMOVE n.copyIndex")
 	void deleteNodeCopyIndices(@Param("targetSpaceID") String targetSpaceID);

@@ -23,63 +23,99 @@
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <form class="navbar-form navbar-left"  ng-show="isDSGraph">
-                        <div class="input-group">
-                            <div class="input-group-btn">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action <span class="caret"></span></button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" ng-click="graphDesignSpace(spaceID)">Search</a></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#" ng-click="joinDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">Join</a></li>
-                                    <li><a href="#" ng-click="orDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">OR</a></li>
-                                    <li><a href="#" ng-click="andDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">AND</a></li>
-                                    <li><a href="#" ng-click="mergeDesignSpaces(graphs[0].spaceID, graphs[1].spaceID, spaceID)">Merge</a></li>
-                                    <li><a href="#" ng-click="minimizeDesignSpace(graphs[0].spaceID)">Minimize</a></li>         
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#" ng-click="createDesignSpace(spaceID)">New</a></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#" ng-click="deleteDesignSpace(spaceID)">Delete</a></li>
-                                </ul>
-                            </div><!-- /btn-group -->
-                            <input type="text" placeholder="Design Space ID" class="form-control" aria-label="..." ng-model="spaceID">
-                        </div><!-- /input-group -->
-                    </form>
                     <form class="navbar-form navbar-left" ng-show="isDSGraph">
                         <div class="input-group">
                             <div class="input-group-btn">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Insert <span class="caret"></span></button>
+                                <button type="button" class="btn btn-default" ng-click="graphDesignSpace(searchSpaceID)">Search</button>
+                            </div><!-- /btn-group -->
+                            <input type="text" placeholder="Space ID" class="form-control" aria-label="..." size="10" ng-model="searchSpaceID">
+                        </div><!-- /input-group -->
+                    </form>
+                    <form class="navbar-form navbar-left" ng-show="isCombinationMode">
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Combine <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" ng-click="createNode(graphs[0].spaceID)">Node</a></li>
-                                    <li><a href="#" ng-click="createEdge(graphs[0].spaceID, nodeID1, nodeID2)">Edge</a></li>
+                                    <li><a href="#" ng-click="joinDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID)">Join</a></li>
+                                    <li><a href="#" ng-click="orDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID)">OR</a></li>
+                                    <li><a href="#" ng-click="andDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID)">AND</a></li>
+                                    <li><a href="#" ng-click="mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID)">Merge (Weak)</a></li>
+                                    <li><a href="#" ng-click="mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID, 'true')">Merge (Strong)</a></li>
                                     <li role="separator" class="divider"></li>
-                                    <li><a href="#" ng-click="insertDesignSpace(graphs[0].spaceID, graphs[1].spaceID, nodeID1, spaceID)">Design Space</a></li>
+                                    <li><a href="#" ng-click="insertDesignSpace(inputSpaceID1, inputSpaceID2, insertNodeID1, outputSpaceID)">Insert</a></li>
                                 </ul>
                             </div><!-- /btn-group -->
-                            <input type="text" placeholder="Node ID 1" class="form-control" aria-label="..." ng-model="nodeID1" size="5">
+                            <div class="btn-group">
+                                <input type="text" placeholder="Space ID" class="form-control" aria-label="..." size="10" ng-model="inputSpaceID1">
+                                <input type="text" placeholder="Space ID" class="form-control" aria-label="..." size="10" ng-model="inputSpaceID2">
+                                <input type="text" placeholder="Output ID" class="form-control" aria-label="..." size="10" ng-model="outputSpaceID">
+                                <input type="text" placeholder="Node ID" class="form-control" aria-label="..." size="10" ng-model="insertNodeID1">
+                            </div>
                         </div><!-- /input-group -->
-                        <input type="text" placeholder="Node ID 2" class="form-control" aria-label="..." ng-model="nodeID2" size="5">
                     </form>
-                    <form method="POST" enctype="multipart/form-data" action="merge/sbol" class="navbar-form navbar-left" ng-show="isDSGraph">
+                    <form class="navbar-form navbar-left" ng-show="isCreationMode">
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Create <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" ng-click="createDesignSpace(spaceID, compIDs, compRoles)">Design Space</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" ng-click="createEdge(spaceID, nodeID1, nodeID2, compIDs, compRoles)">Edge</a></li>
+                                </ul>
+                            </div><!-- /btn-group -->
+                            <div class="btn-group">
+                                <input type="text" placeholder="Space ID" class="form-control" aria-label="..." size="8" ng-model="spaceID">
+                                <input type="text" placeholder="Part IDs" class="form-control" aria-label="..." size="8" ng-model="compIDs">
+                                <input type="text" placeholder="Part Types" class="form-control" aria-label="..." size="8" ng-model="compRoles">
+                                <input type="text" placeholder="Node ID" class="form-control" aria-label="..." size="8" ng-model="nodeID1">
+                                <input type="text" placeholder="Node ID" class="form-control" aria-label="..." size="8" ng-model="nodeID2">
+                            </div>
+                        </div><!-- /input-group -->
+                    </form>
+                    <form class="navbar-form navbar-left" ng-show="isDeletionMode">
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Delete <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" ng-click="deleteDesignSpace(deleteSpaceID)">Design Space</a></li>
+                                    <li><a href="#" ng-click="minimizeDesignSpace(deleteSpaceID)">Minimize</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" ng-click="deleteNode(deleteSpaceID, deleteNodeID1)">Node</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" ng-click="deleteNode(deleteSpaceID, deleteNodeID1, deleteNodeID2)">Edge</a></li>
+                                </ul>
+                            </div><!-- /btn-group -->
+                            <div class="btn-group">
+                                <input type="text" placeholder="Space ID" class="form-control" aria-label="..." size="10" ng-model="deleteSpaceID">
+                                <input type="text" placeholder="Node ID" class="form-control" aria-label="..." size="10" ng-model="deleteNodeID1">
+                                <input type="text" placeholder="Node ID" class="form-control" aria-label="..." size="10" cng-model="deleteNodeID2">
+                            </div>
+                        </div><!-- /input-group -->
+                    </form>
+                    <form method="POST" enctype="multipart/form-data" action="merge/sbol" class="navbar-form navbar-left" ng-show="isSBOLMode">
                         <input type="file" name="inputSBOLFiles[]" multiple>
-                        <input type="text" name="outputSpaceID" placeholder="Design Space ID" class="form-control" aria-label="..." size="5">
-                        <input type="text" name="authority" placeholder="Authority" class="form-control" aria-label="..." size="5">
+                        <input type="text" name="outputSpaceID" placeholder="Space ID" class="form-control" aria-label="..." size="10">
+                        <input type="text" name="authority" placeholder="Authority" class="form-control" aria-label="..." size="10">
                         <input type="submit" value="Merge">
                     </form>
                     <form class="navbar-form navbar-left" ng-hide="isDSGraph">
                         <div class="input-group">
                             <div class="input-group-btn">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action <span class="caret"></span></button>
+                                <button type="button" class="btn btn-default" ng-click="commitToHead(graphs[0].spaceID)">Commit</button>
+                            </div><!-- /btn-group -->
+                        </div><!-- /input-group -->
+                    </form>
+                    <form class="navbar-form navbar-left" ng-hide="isDSGraph">
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Control <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
                                     <li><a href="#" ng-click="checkoutBranch(graphs[0].spaceID, branchID)">Checkout</a></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#" ng-click="commitToHead(graphs[0].spaceID)">Commit</a></li>
-                                    <li role="separator" class="divider"></li>
                                     <li><a href="#" ng-click="createBranch(graphs[0].spaceID, branchID)">Branch</a></li>
-                                    <li role="separator" class="divider"></li>
                                     <li><a href="#" ng-click="deleteBranch(graphs[0].spaceID, branchID)">Delete</a></li>
                                 </ul>
                             </div><!-- /btn-group -->
-                            <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." ng-model="branchID">
+                            <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." size="8" ng-model="branchID">
                         </div><!-- /input-group -->
                     </form>
                     <form class="navbar-form navbar-left" ng-hide="isDSGraph">
@@ -90,20 +126,27 @@
                                     <li><a href="#" ng-click="joinBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">Join</a></li>
                                     <li><a href="#" ng-click="orBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">OR</a></li>
                                     <li><a href="#" ng-click="andBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">AND</a></li>
-                                    <li><a href="#" ng-click="mergeBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">Merge</a></li>
+                                    <li><a href="#" ng-click="mergeBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">Merge (Weak)</a></li>
+                                    <li><a href="#" ng-click="mergeBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID, 'true')">Merge (Strong)</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" ng-click="insertBranch(graphs[0].spaceID, inputBranchID1, inputBranchID2, insertNodeID2, outputBranchID)">Insert</a></li>
                                 </ul>
                             </div><!-- /btn-group -->
                             <div class="btn-group">
-                                <input type="text" placeholder="Input Branch ID 1" class="form-control" aria-label="..." ng-model="inputBranchID1">
-                                <input type="text" placeholder="Input Branch ID 2" class="form-control" aria-label="..." ng-model="inputBranchID2">
-                                <input type="text" placeholder="Output Branch ID" class="form-control" aria-label="..." ng-model="outputBranchID">
+                                <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." size="8" ng-model="inputBranchID1">
+                                <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." size="8" ng-model="inputBranchID2">
+                                <input type="text" placeholder="Output ID" class="form-control" aria-label="..." size="8" ng-model="outputBranchID">
+                                <input type="text" placeholder="Node ID" class="form-control" aria-label="..." size="7" ng-model="insertNodeID2">
                             </div>
                         </div><!-- /input-group -->
                     </form>
                     <form class="navbar-form navbar-right">
                         <div class="btn-group">
-                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds'" ng-change="switchToGraphType(graphType)">Workspace</label>
-                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'vc'" ng-change="switchToGraphType(graphType)">Version History</label>
+                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds1'" ng-change="switchToGraphType(graphType)">Combine</label>
+                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds2'" ng-change="switchToGraphType(graphType)">Create</label>
+                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds3'" ng-change="switchToGraphType(graphType)">Delete</label>
+                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds4'" ng-change="switchToGraphType(graphType)">SBOL</label>
+                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'vc'" ng-change="switchToGraphType(graphType)">Version</label>
                         </div>
                     </form>
                 </div><!-- /.navbar-collapse -->

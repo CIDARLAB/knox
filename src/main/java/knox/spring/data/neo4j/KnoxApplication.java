@@ -135,6 +135,17 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
+    @RequestMapping(value = "/branch/insert", method = RequestMethod.POST)
+    public ResponseEntity<String> insertBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
+    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "targetNodeID", required = true) String targetNodeID,
+    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
+    	designSpaceService.insertBranch(targetSpaceID, inputBranchID1, inputBranchID2, targetNodeID, outputBranchID);
+    	return new ResponseEntity<String>("{\"message\": \"Branch was successfully inserted.\"}", 
+    				HttpStatus.NO_CONTENT);
+    }
+    
     @RequestMapping(value = "/branch/join", method = RequestMethod.POST)
     public ResponseEntity<String> joinBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
     		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
@@ -190,13 +201,25 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     }
     
     @RequestMapping(value = "/designSpace", method = RequestMethod.POST)
-    public ResponseEntity<String> createDesignSpace(@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	try {
-    		designSpaceService.createDesignSpace(outputSpaceID);
-    		return new ResponseEntity<String>("Design space was created successfully.", HttpStatus.NO_CONTENT);
-    	} catch (DesignSpaceConflictException ex) {
-    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
-    				HttpStatus.BAD_REQUEST);
+    public ResponseEntity<String> createDesignSpace(@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
+    		@RequestParam(value = "componentIDs", required = false) List<String> compIDs,
+    		@RequestParam(value = "componentRoles", required = false) List<String> compRoles) {
+    	if (compIDs != null && compRoles != null) {
+    		try {
+    			designSpaceService.createDesignSpace(outputSpaceID, compIDs, compRoles);
+    			return new ResponseEntity<String>("Design space was created successfully.", HttpStatus.NO_CONTENT);
+    		} catch (DesignSpaceConflictException ex) {
+    			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    					HttpStatus.BAD_REQUEST);
+    		}
+    	} else {
+    		try {
+    			designSpaceService.createDesignSpace(outputSpaceID);
+    			return new ResponseEntity<String>("Design space was created successfully.", HttpStatus.NO_CONTENT);
+    		} catch (DesignSpaceConflictException ex) {
+    			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    					HttpStatus.BAD_REQUEST);
+    		}
     	}
     }
     
@@ -312,16 +335,48 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	
     }
     
+    @RequestMapping(value = "/edge", method = RequestMethod.DELETE)
+    public ResponseEntity<String> deleteEdge(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "targetTailID", required = true) String targetTailID,
+    		@RequestParam(value = "targetHeadID", required = true) String targetHeadID) {
+    	designSpaceService.deleteEdge(targetSpaceID, targetTailID, targetHeadID);
+    	return new ResponseEntity<String>("Edge was deleted successfully.", HttpStatus.NO_CONTENT);
+    }
+    
     @RequestMapping(value = "/edge", method = RequestMethod.POST)
     public ResponseEntity<String> createEdge(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "targetTailID", required = true) String targetTailID,
-    		@RequestParam(value = "targetHeadID", required = true) String targetHeadID) {
-    	try {
-    		designSpaceService.createEdge(targetSpaceID, targetTailID, targetHeadID);
-    		return new ResponseEntity<String>("Edge was created successfully.", HttpStatus.NO_CONTENT);
-    	} catch (DesignSpaceNotFoundException ex) {
-    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
-    				HttpStatus.BAD_REQUEST);
+    		@RequestParam(value = "targetHeadID", required = false) String targetHeadID,
+    		@RequestParam(value = "componentIDs", required = false) List<String> compIDs,
+    		@RequestParam(value = "componentRoles", required = false) List<String> compRoles) {
+    	if (targetHeadID == null) {
+    		targetHeadID = designSpaceService.createNode(targetSpaceID);
     	}
+    	
+    	if (compIDs != null && compRoles != null) {
+    		try {
+    			designSpaceService.createComponentEdge(targetSpaceID, targetTailID, targetHeadID, 
+    					new ArrayList<String>(compIDs), new ArrayList<String>(compRoles));
+    			return new ResponseEntity<String>("Edge was created successfully.", HttpStatus.NO_CONTENT);
+    		} catch (DesignSpaceNotFoundException ex) {
+    			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    					HttpStatus.BAD_REQUEST);
+    		}
+    	} else {
+    		try {
+    			designSpaceService.createEdge(targetSpaceID, targetTailID, targetHeadID);
+    			return new ResponseEntity<String>("Edge was created successfully.", HttpStatus.NO_CONTENT);
+    		} catch (DesignSpaceNotFoundException ex) {
+    			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    					HttpStatus.BAD_REQUEST);
+    		}
+    	}
+    }
+    
+    @RequestMapping(value = "/node", method = RequestMethod.DELETE)
+    public ResponseEntity<String> deleteNode(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "targetNodeID", required = true) String targetNodeID) {
+    	designSpaceService.deleteNode(targetSpaceID, targetNodeID);
+    	return new ResponseEntity<String>("Node was deleted successfully.", HttpStatus.NO_CONTENT);
     }
 }
