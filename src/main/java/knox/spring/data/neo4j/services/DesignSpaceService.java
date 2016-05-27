@@ -87,7 +87,7 @@ public class DesignSpaceService {
     						nextNode = outputSpace.createNode("accept");
     					}
 
-    					currentNode.createEdge(nextNode, compIDs, compRoles);
+    					currentNode.createOutgoingEdge(nextNode, compIDs, compRoles);
 
     					currentNode = nextNode;
     				}
@@ -745,27 +745,24 @@ public class DesignSpaceService {
     		
     		if (inputNode.hasEdges() && outputNode.hasEdges()) {
     			for (Edge inputEdge : inputNode.getEdges()) {
-    				if (inputEdge.getTail().getNodeID().equals(inputNode.getNodeID())) {
-    					for (Edge outputEdge : outputNode.getEdges()) {
-    						if (outputEdge.getTail().getNodeID().equals(outputNode.getNodeID())
-    								&& (isStrong && inputEdge.hasSameComponentRoles(outputEdge) 
-    										|| !isStrong && inputEdge.hasSameComponents(outputEdge))) {
-    							Node inputSuccessor = inputEdge.getHead();
-    							Node outputSuccessor = outputEdge.getHead();
+    				for (Edge outputEdge : outputNode.getEdges()) {
+    					if (isStrong && inputEdge.hasSameComponentRoles(outputEdge) 
+    									|| !isStrong && inputEdge.hasSameComponents(outputEdge)) {
+    						Node inputSuccessor = inputEdge.getHead();
+    						Node outputSuccessor = outputEdge.getHead();
 
-    							outputSuccessor = mergeNodes(inputSuccessor, outputSuccessor, outputSpace, 
-    									inputNodeStack, outputNodeStack, mergedIDsToOutputNodes, 
-    									inputIDsToOutputNodes, outputSuccessorIDs);
-    							
-    							if (outputSuccessor == outputEdge.getHead()) {
-    								if (isIntersection) {
-    									outputEdge.intersectWithEdge(inputEdge);
-    								} else {
-    									outputEdge.unionWithEdge(inputEdge);
-    								}
+    						outputSuccessor = mergeNodes(inputSuccessor, outputSuccessor, outputSpace, 
+    								inputNodeStack, outputNodeStack, mergedIDsToOutputNodes, 
+    								inputIDsToOutputNodes, outputSuccessorIDs);
+
+    						if (outputSuccessor == outputEdge.getHead()) {
+    							if (isIntersection) {
+    								outputEdge.intersectWithEdge(inputEdge);
     							} else {
-    								duplicateEdges.add(outputEdge.copy(outputNode, outputSuccessor));
+    								outputEdge.unionWithEdge(inputEdge);
     							}
+    						} else {
+    							duplicateEdges.add(outputEdge.copy(outputNode, outputSuccessor));
     						}
     					}
     				}
@@ -816,12 +813,12 @@ public class DesignSpaceService {
     						if (outputSuccessor != null) {
     							if (inputIDsToOutputNodes.containsKey(inputNode.getNodeID())) {
     								for (Node outputNode : inputIDsToOutputNodes.get(inputNode.getNodeID())) {
-    									outputNode.createEdge(outputSuccessor, inputEdge.getComponentIDs(), 
+    									outputNode.createOutgoingEdge(outputSuccessor, inputEdge.getComponentIDs(), 
     											inputEdge.getComponentRoles());
     								}
     							} else if (inputIDsToSurplusNodes.containsKey(inputNode.getNodeID())) {
     								Node outputNode = inputIDsToSurplusNodes.get(inputNode.getNodeID());
-    								outputNode.createEdge(outputSuccessor, inputEdge.getComponentIDs(), 
+    								outputNode.createOutgoingEdge(outputSuccessor, inputEdge.getComponentIDs(), 
     										inputEdge.getComponentRoles());
     							}
     						}
@@ -838,9 +835,8 @@ public class DesignSpaceService {
 
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 2);
     	
-    	HashMap<String, Set<Edge>> nodeIDToIncomingEdges = targetSpace.mapNodeIDsToIncomingEdges();
-    	
     	HashMap<String, Node> nodeIDToNode = targetSpace.mapNodeIDsToNodes();
+    	HashMap<String, Set<Edge>> nodeIDsToIncomingEdges = targetSpace.mapNodeIDsToIncomingEdges();
     	
     	Stack<Node> nodeStack = new Stack<Node>();
     	for (Node node : targetSpace.getNodes()) {
@@ -852,27 +848,28 @@ public class DesignSpaceService {
     	while (nodeStack.size() > 0) {
     		Node node = nodeStack.peek();
     		
-    		Set<Edge> minimizableEdges = targetSpace.getMinimizableEdges(node, nodeIDToIncomingEdges);
-    		
+    		Set<Edge> minimizableEdges = targetSpace.getMinimizableEdges(node, nodeIDsToIncomingEdges);
+
     		if (minimizableEdges.size() == 0 || deletedNodeIDs.contains(node.getNodeID())) {
     			nodeStack.pop();
     		} else {
     			for (Edge minimizableEdge : minimizableEdges) {
     				Node predecessor = nodeIDToNode.get(minimizableEdge.getTail().getNodeID());
-    				
+
     				deletedNodeIDs.add(predecessor.getNodeID());
-    				
-    				if (nodeIDToIncomingEdges.containsKey(predecessor.getNodeID())) {
-    					for (Edge incomingEdge : nodeIDToIncomingEdges.get(predecessor.getNodeID())) {
+
+    				if (nodeIDsToIncomingEdges.containsKey(predecessor.getNodeID())) {
+    					for (Edge incomingEdge : nodeIDsToIncomingEdges.get(predecessor.getNodeID())) {
     						incomingEdge.setHead(node);
-    						nodeIDToIncomingEdges.get(node.getNodeID()).add(incomingEdge);
+    						nodeIDsToIncomingEdges.get(node.getNodeID()).add(incomingEdge);
     					}
     				}
-    				
+
     				if (minimizableEdges.size() == 1) {
     					for (Edge edge : predecessor.getEdges()) {
     						if (!edge.equals(minimizableEdge)) {
-    							node.copyEdge(edge);
+    							nodeIDsToIncomingEdges.get(edge.getHead().getNodeID()).add(node.copyEdge(edge));
+    							nodeIDsToIncomingEdges.get(edge.getHead().getNodeID()).remove(edge);
     						}
     					}
     				}
@@ -882,7 +879,7 @@ public class DesignSpaceService {
     				}
     			}
     			
-    			nodeIDToIncomingEdges.get(node.getNodeID()).removeAll(minimizableEdges);
+    			nodeIDsToIncomingEdges.get(node.getNodeID()).removeAll(minimizableEdges);
     		}
     	}
     	
@@ -1361,6 +1358,16 @@ public class DesignSpaceService {
     	}
     }
     
-    
+    private void printSpace(DesignSpace d) {
+    	System.out.println(d.getSpaceID());
+    	for (Node n : d.getNodes()) {
+    		System.out.println(n.getNodeID());
+    		if (n.hasEdges()) {
+    			for (Edge e : n.getEdges()) {
+    				System.out.println(e.getTail().getNodeID() + "-" + e.getHead().getNodeID());
+    			}
+    		}
+    	}
+    }
     
 }

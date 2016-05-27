@@ -80,38 +80,39 @@ public class NodeSpace {
     	return acceptNodes;
     }
 	
+	 public Set<Edge> getMinimizableEdges(Node node, HashMap<String, Set<Edge>> nodeIDsToIncomingEdges) {
+		 Set<Edge> minimizableEdges = new HashSet<Edge>();
+
+		 if (nodeIDsToIncomingEdges.containsKey(node.getNodeID())) {
+			 Set<Edge> incomingEdges = nodeIDsToIncomingEdges.get(node.getNodeID());
+
+			 if (incomingEdges.size() == 1) {
+				 Edge incomingEdge = incomingEdges.iterator().next();
+
+				 Node predecessor = incomingEdge.getTail();
+
+				 if (!incomingEdge.hasComponents() && !incomingEdge.isCyclic()
+						 && (predecessor.getNumEdges() == 1 || !node.hasConflictingNodeType(predecessor))) {
+					 minimizableEdges.add(incomingEdge);
+				 }
+			 } else if (incomingEdges.size() > 1) {
+				 for (Edge incomingEdge : incomingEdges) {
+					 Node predecessor = incomingEdge.getTail();
+
+					 if (!incomingEdge.hasComponents() && !incomingEdge.isCyclic() 
+							 && predecessor.getNumEdges() == 1 && !predecessor.hasConflictingNodeType(node)) {
+						 minimizableEdges.add(incomingEdge);
+					 }
+				 }
+			 }
+		 }
+
+		 return minimizableEdges;
+	 }
+	
 	public int getIdIndex() {
 		return idIndex;
 	}
-	
-	public Set<Edge> getMinimizableEdges(Node node, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
-    	Set<Edge> minimizableEdges = new HashSet<Edge>();
-    	
-    	if (nodeIDToIncomingEdges.containsKey(node.getNodeID())) {
-    		Set<Edge> incomingEdges = nodeIDToIncomingEdges.get(node.getNodeID());
-    		
-    		if (incomingEdges.size() == 1) {
-    			Edge incomingEdge = incomingEdges.iterator().next();
-    			
-    			Node predecessor = incomingEdge.getTail();
-    			
-    			if (!incomingEdge.hasComponents() && !incomingEdge.isCyclic()
-    					&& (predecessor.getNumEdges() == 1 || !node.hasConflictingNodeType(predecessor))) {
-    				minimizableEdges.add(incomingEdge);
-    			}
-    		} else if (incomingEdges.size() > 1) {
-    			for (Edge incomingEdge : incomingEdges) {
-    				Node predecessor = incomingEdge.getTail();
-    				
-    				if (!incomingEdge.hasComponents() && !incomingEdge.isCyclic() 
-    						&& predecessor.getNumEdges() == 1 && !predecessor.hasConflictingNodeType(node)) {
-        				minimizableEdges.add(incomingEdge);
-        			}
-    			}
-    		}
-    	}
-    	return minimizableEdges;
-    }
     
     public Set<Node> getNodes() {
     	return nodes;

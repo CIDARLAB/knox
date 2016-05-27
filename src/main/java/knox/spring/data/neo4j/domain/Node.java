@@ -44,10 +44,10 @@ public class Node {
     }
     
     public Edge copyEdge(Edge edge) {
-    	return createEdge(edge.getHead(), edge.getComponentIDs(), edge.getComponentRoles());
+    	return createOutgoingEdge(edge.getHead(), edge.getComponentIDs(), edge.getComponentRoles());
     }
     
-    public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
+    public Edge createOutgoingEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
     	Edge edge = new Edge(this, head, compIDs, compRoles);
     	addEdge(edge);
     	return edge;
@@ -65,9 +65,33 @@ public class Node {
         return edges;
     }
     
+//    public Set<Edge> getIncomingEdges() {
+//    	Set<Edge> incomingEdges = new HashSet<Edge>();
+//    	
+//    	for (Edge edge : edges) {
+//    		if (edge.getHead().getNodeID().equals(nodeID)) {
+//    			incomingEdges.add(edge);
+//    		}
+//    	}
+//    	
+//    	return incomingEdges;
+//    }
+    
     public String getNodeType() {
     	return nodeType;
     }
+    
+//    public Set<Edge> getOutgoingEdges() {
+//    	Set<Edge> outgoingEdges = new HashSet<Edge>();
+//    	
+//    	for (Edge edge : edges) {
+//    		if (edge.getTail().getNodeID().equals(nodeID)) {
+//    			outgoingEdges.add(edge);
+//    		}
+//    	}
+//    	
+//    	return outgoingEdges;
+//    }
     
     public boolean hasEdges() {
     	if (edges == null) {
