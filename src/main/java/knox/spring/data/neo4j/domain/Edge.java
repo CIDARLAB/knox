@@ -141,14 +141,10 @@ public class Edge {
     public boolean hasSameComponents(Edge edge) {
     	if (hasComponentIDs() && edge.hasComponentIDs() && hasComponentRoles() 
     			&& edge.hasComponentRoles()) {
-        	Set<String> compIDs1 = new HashSet<String>();
-    		Set<String> compIDs2 = new HashSet<String>();
-    		compIDs1.addAll(componentIDs);
-    		compIDs2.addAll(edge.getComponentIDs());
-    		Set<String> compRoles1 = new HashSet<String>();
-    		Set<String> compRoles2 = new HashSet<String>();
-    		compRoles1.addAll(componentRoles);
-    		compRoles2.addAll(edge.getComponentRoles());
+        	Set<String> compIDs1 = new HashSet<String>(componentIDs);
+    		Set<String> compIDs2 = new HashSet<String>(edge.getComponentIDs());
+    		Set<String> compRoles1 = new HashSet<String>(componentRoles);
+    		Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
     		return compIDs1.equals(compIDs2) && compRoles1.equals(compRoles2);
     	} else if (!hasComponentIDs() && !edge.hasComponentIDs() && !hasComponentRoles() 
     			&& !edge.hasComponentRoles()) {
@@ -160,10 +156,8 @@ public class Edge {
     
     public boolean hasSameComponentRoles(Edge edge) {
     	if (hasComponentRoles() && edge.hasComponentRoles()) {
-    		Set<String> compRoles1 = new HashSet<String>();
-    		Set<String> compRoles2 = new HashSet<String>();
-    		compRoles1.addAll(componentRoles);
-    		compRoles2.addAll(edge.getComponentRoles());
+    		Set<String> compRoles1 = new HashSet<String>(componentRoles);
+    		Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
     		return compRoles1.equals(compRoles2);
     	} else if (!hasComponentRoles() && !edge.hasComponentRoles()) {
     		return true;

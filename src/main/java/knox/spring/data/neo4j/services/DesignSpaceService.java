@@ -87,7 +87,7 @@ public class DesignSpaceService {
     						nextNode = outputSpace.createNode("accept");
     					}
 
-    					currentNode.createOutgoingEdge(nextNode, compIDs, compRoles);
+    					currentNode.createEdge(nextNode, compIDs, compRoles);
 
     					currentNode = nextNode;
     				}
@@ -776,7 +776,7 @@ public class DesignSpaceService {
     	
     	if (inputStart != null && !isIntersection) {
     		HashMap<String, Node> inputIDsToSurplusNodes = new HashMap<String, Node>();
-    		Set<Node> visitedInputNodes = new HashSet<Node>();
+    		Set<String> visitedNodeIDs = new HashSet<String>();
 
     		inputNodeStack.clear();
     		inputNodeStack.push(inputStart);
@@ -789,36 +789,49 @@ public class DesignSpaceService {
     		while (inputNodeStack.size() > 0) {
 
     			Node inputNode = inputNodeStack.pop();
-
-    			visitedInputNodes.add(inputNode);
+    			
+    			visitedNodeIDs.add(inputNode.getNodeID());
 
     			if (inputNode.hasEdges()) {
+    				Set<Node> outputNodes;
+    				
+    				if (inputIDsToOutputNodes.containsKey(inputNode.getNodeID())) {
+    					outputNodes = inputIDsToOutputNodes.get(inputNode.getNodeID());
+    				} else {
+    					outputNodes = new HashSet<Node>();
+    					if (inputIDsToSurplusNodes.containsKey(inputNode.getNodeID())) {
+    						outputNodes.add(inputIDsToSurplusNodes.get(inputNode.getNodeID()));
+    					}
+    				}
+    				
     				for (Edge inputEdge : inputNode.getEdges()) {
-    					if (inputEdge.getTail().getNodeID().equals(inputNode.getNodeID())) {
-    						Node inputSuccessor = inputEdge.getHead();
+    					Node inputSuccessor = inputEdge.getHead();
 
-    						if (!visitedInputNodes.contains(inputSuccessor)) {
-    							inputNodeStack.push(inputSuccessor);
-    						}
+    					if (!visitedNodeIDs.contains(inputSuccessor.getNodeID())) {
+    						inputNodeStack.push(inputSuccessor);
+    					}
 
-    						Node outputSuccessor = null;
+    					Set<Node> outputSuccessors;
 
+    					if (inputIDsToOutputNodes.containsKey(inputSuccessor.getNodeID())) {
+    						outputSuccessors = inputIDsToOutputNodes.get(inputSuccessor.getNodeID());
+    					} else {
+    						outputSuccessors = new HashSet<Node>();
+    
     						if (inputIDsToSurplusNodes.containsKey(inputSuccessor.getNodeID())) {
-    							outputSuccessor = inputIDsToSurplusNodes.get(inputSuccessor.getNodeID());
-    						} else if (!inputIDsToOutputNodes.containsKey(inputSuccessor.getNodeID())) {
-    							outputSuccessor = outputSpace.copyNode(inputSuccessor);
+    							outputSuccessors.add(inputIDsToSurplusNodes.get(inputSuccessor.getNodeID()));
+    						} else {
+    							Node outputSuccessor = outputSpace.copyNode(inputSuccessor);
+    							outputSuccessors.add(outputSuccessor);
     							inputIDsToSurplusNodes.put(inputSuccessor.getNodeID(), outputSuccessor);
-    						}
-
-    						if (outputSuccessor != null) {
-    							if (inputIDsToOutputNodes.containsKey(inputNode.getNodeID())) {
-    								for (Node outputNode : inputIDsToOutputNodes.get(inputNode.getNodeID())) {
-    									outputNode.createOutgoingEdge(outputSuccessor, inputEdge.getComponentIDs(), 
-    											inputEdge.getComponentRoles());
-    								}
-    							} else if (inputIDsToSurplusNodes.containsKey(inputNode.getNodeID())) {
-    								Node outputNode = inputIDsToSurplusNodes.get(inputNode.getNodeID());
-    								outputNode.createOutgoingEdge(outputSuccessor, inputEdge.getComponentIDs(), 
+        					}
+    					}
+    				
+    					if (!inputIDsToOutputNodes.containsKey(inputNode.getNodeID()) 
+    							|| !inputIDsToOutputNodes.containsKey(inputSuccessor.getNodeID())) {
+    						for (Node outputNode : outputNodes) {
+    							for (Node outputSuccessor : outputSuccessors) { 
+    								outputNode.createEdge(outputSuccessor, inputEdge.getComponentIDs(), 
     										inputEdge.getComponentRoles());
     							}
     						}

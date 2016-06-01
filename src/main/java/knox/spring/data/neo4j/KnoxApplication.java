@@ -289,7 +289,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	
     	boolean parsedIsStrong;
     	if (isStrong == null) {
-    		parsedIsStrong = true;
+    		parsedIsStrong = false;
     	} else {
     		parsedIsStrong = Boolean.parseBoolean(isStrong);
     	}

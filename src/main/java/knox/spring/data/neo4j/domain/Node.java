@@ -44,10 +44,10 @@ public class Node {
     }
     
     public Edge copyEdge(Edge edge) {
-    	return createOutgoingEdge(edge.getHead(), edge.getComponentIDs(), edge.getComponentRoles());
+    	return createEdge(edge.getHead(), edge.getComponentIDs(), edge.getComponentRoles());
     }
     
-    public Edge createOutgoingEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
+    public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
     	Edge edge = new Edge(this, head, compIDs, compRoles);
     	addEdge(edge);
     	return edge;
