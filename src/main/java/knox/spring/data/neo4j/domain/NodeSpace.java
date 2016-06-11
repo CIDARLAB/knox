@@ -64,8 +64,12 @@ public class NodeSpace {
 		return node;
 	}
 	
-	public void deleteNodes(Set<Node> targetNodes) {
-		nodes.removeAll(targetNodes);
+	public boolean deleteNodes(Set<Node> nodes) {
+		if (hasNodes()) {
+    		return this.nodes.removeAll(nodes);
+    	} else {
+    		return false;
+    	}
 	}
 	
 	public Set<Node> getAcceptNodes() {

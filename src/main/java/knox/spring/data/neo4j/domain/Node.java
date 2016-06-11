@@ -130,10 +130,9 @@ public class Node {
     	return hasNodeType() && nodeType.equals(NodeType.START.getValue());
     }
     
-    public boolean deleteEdges(Set<Edge> deletedEdges) {
+    public boolean deleteEdges(Set<Edge> edges) {
     	if (hasEdges()) {
-    		edges.removeAll(deletedEdges);
-    		return true;
+    		return this.edges.removeAll(edges);
     	} else {
     		return false;
     	}
