@@ -43,7 +43,11 @@ public class Edge {
     }
     
     public Edge copy(Node tail, Node head) {
-    	return new Edge(tail, head, new ArrayList<String>(componentIDs), new ArrayList<String>(componentRoles));
+    	if (hasComponentIDs() && hasComponentRoles()) {
+    		return new Edge(tail, head, new ArrayList<String>(componentIDs), new ArrayList<String>(componentRoles));
+    	} else {
+    		return new Edge(tail, head);
+    	}
     }
 
     public Node getTail() {

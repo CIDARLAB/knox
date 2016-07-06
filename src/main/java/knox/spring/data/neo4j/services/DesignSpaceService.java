@@ -704,7 +704,7 @@ public class DesignSpaceService {
         		headBranchIDs.add(headBranchID);
     		}
     	}
-
+    	
     	mergeBranches(outputSpaceID, headBranchIDs, null, isIntersection, isStrong);
     	
     	if (ioIndex < 0) {
@@ -720,7 +720,7 @@ public class DesignSpaceService {
 		if (mergedIDToOutputNode.containsKey(mergerID)) {
 			return mergedIDToOutputNode.get(mergerID);
 		} else {
-			if (mergedIDToOutputNode.values().contains(outputNode.getNodeID())) {
+			if (mergedIDToOutputNode.values().contains(outputNode)) {
 				outputNode = outputSpace.copyNode(outputNode);
 			} 
 			
@@ -782,7 +782,7 @@ public class DesignSpaceService {
     						outputSuccessor = mergeNodes(inputSuccessor, outputSuccessor, outputSpace, 
     								inputNodeStack, outputNodeStack, mergedIDToOutputNode, inputIDToOutputNodes);
 
-    						if (outputSuccessor.equals(outputEdge.getHead())) {	
+    						if (outputSuccessor == outputEdge.getHead()) {	
     							if (isIntersection) {
     								outputEdge.intersectWithEdge(inputEdge);
     							} else {
@@ -820,7 +820,7 @@ public class DesignSpaceService {
     		duplicateEdge.getTail().addEdge(duplicateEdge);
 		}
     	
-    	if (isIntersection) {
+    	if (isIntersection && diffNodes.size() > 0) {
     		outputNodeStack.clear();
 
     		for (Node diffNode : diffNodes) {
@@ -841,9 +841,7 @@ public class DesignSpaceService {
     			}
     		}
     		
-    		if (diffNodes.size() > 0) {
-    			outputSpace.deleteNodes(diffNodes);
-    		}
+    		outputSpace.deleteNodes(diffNodes);
     	}
     	
     	if (inputStart != null && (!isIntersection || !outputSpace.hasNodes())) {
