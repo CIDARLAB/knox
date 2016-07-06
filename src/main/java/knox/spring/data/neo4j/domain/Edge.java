@@ -101,33 +101,33 @@ public class Edge {
     public void intersectWithEdge(Edge edge) {
     	Set<String> intersectedCompIDs = new HashSet<String>();
     	
-    	if (hasComponentIDs()) {
+    	if (hasComponentIDs() && edge.hasComponentIDs()) {
     		Set<String> tempIDs = new HashSet<String>(componentIDs);
-    		
-    		if (edge.hasComponentIDs()) {
-    			for (String compID : edge.getComponentIDs()) {
-    				if (tempIDs.contains(compID)) {
-    					intersectedCompIDs.add(compID);
-    				}
+    		for (String compID : edge.getComponentIDs()) {
+    			if (tempIDs.contains(compID)) {
+    				intersectedCompIDs.add(compID);
     			}
     		}
     	}
     	
     	Set<String> intersectedCompRoles = new HashSet<String>();
     	
-    	if (hasComponentRoles()) {
+    	if (hasComponentRoles() && edge.hasComponentRoles()) {
     		Set<String> tempRoles = new HashSet<String>(componentRoles);
-    		
-    		if (edge.hasComponentRoles()) {
-    			for (String compRole : edge.getComponentRoles()) {
-    				if (tempRoles.contains(compRole)) {
-    					intersectedCompRoles.add(compRole);
-    				}
+    		for (String compRole : edge.getComponentRoles()) {
+    			if (tempRoles.contains(compRole)) {
+    				intersectedCompRoles.add(compRole);
     			}
     		}
     	}
-    	componentIDs = new ArrayList<String>(intersectedCompIDs);
-    	componentRoles = new ArrayList<String>(intersectedCompRoles);
+    	
+    	if (intersectedCompIDs.size() > 0) {
+    		componentIDs = new ArrayList<String>(intersectedCompIDs);
+    	}
+    	
+    	if (intersectedCompRoles.size() > 0) {
+    		componentRoles = new ArrayList<String>(intersectedCompRoles);
+    	}
     }
     
     public boolean isIdenticalTo(Edge edge) {
@@ -198,8 +198,13 @@ public class Edge {
     		mergedCompRoles.addAll(edge.getComponentRoles());
     	}
     	
-    	componentIDs = new ArrayList<String>(mergedCompIDs);
-    	componentRoles = new ArrayList<String>(mergedCompRoles);
+    	if (mergedCompIDs.size() > 0) {
+    		componentIDs = new ArrayList<String>(mergedCompIDs);
+    	}
+    	
+    	if (mergedCompRoles.size() > 0) {
+    		componentRoles = new ArrayList<String>(mergedCompRoles);
+    	}
     }
     
 }

@@ -714,18 +714,15 @@ public class DesignSpaceService {
     
     private Node mergeNodes(Node inputNode, Node outputNode, NodeSpace outputSpace, 
     		Stack<Node> inputNodeStack, Stack<Node> outputNodeStack,
-    		HashMap<String, Node> mergedIDToOutputNode, HashMap<String, Set<Node>> inputIDToOutputNodes, 
-    		Set<String> outputSuccessorIDs) {
+    		HashMap<String, Node> mergedIDToOutputNode, HashMap<String, Set<Node>> inputIDToOutputNodes) {
     	String mergerID = inputNode.getNodeID() + outputNode.getNodeID();
     	
 		if (mergedIDToOutputNode.containsKey(mergerID)) {
 			return mergedIDToOutputNode.get(mergerID);
 		} else {
-			if (outputSuccessorIDs.contains(outputNode.getNodeID())) {
+			if (mergedIDToOutputNode.values().contains(outputNode.getNodeID())) {
 				outputNode = outputSpace.copyNode(outputNode);
-			} else {
-				outputSuccessorIDs.add(outputNode.getNodeID());
-			}
+			} 
 			
 			if (inputNode.hasNodeType() && !outputNode.hasNodeType()) {
 				outputNode.setNodeType(inputNode.getNodeType());
@@ -760,7 +757,7 @@ public class DesignSpaceService {
     	
     	if (inputStart != null && outputStart != null) {
     		mergeNodes(inputStart, outputStart, outputSpace, inputNodeStack, outputNodeStack, 
-    				mergedIDToOutputNode, inputIDToOutputNodes, new HashSet<String>());
+    				mergedIDToOutputNode, inputIDToOutputNodes);
     	}
     	
     	List<Edge> duplicateEdges = new LinkedList<Edge>();
@@ -770,7 +767,6 @@ public class DesignSpaceService {
     		Node outputNode = outputNodeStack.pop();
     		
     		if (inputNode.hasEdges() && outputNode.hasEdges()) {
-    			Set<String> outputSuccessorIDs = new HashSet<String>();
         		Set<Edge> diffEdges = new HashSet<Edge>();
         		
     			for (Edge outputEdge : outputNode.getEdges()) {
@@ -784,8 +780,7 @@ public class DesignSpaceService {
     						Node inputSuccessor = inputEdge.getHead();
     						
     						outputSuccessor = mergeNodes(inputSuccessor, outputSuccessor, outputSpace, 
-    								inputNodeStack, outputNodeStack, mergedIDToOutputNode, 
-    								inputIDToOutputNodes, outputSuccessorIDs);
+    								inputNodeStack, outputNodeStack, mergedIDToOutputNode, inputIDToOutputNodes);
 
     						if (outputSuccessor.equals(outputEdge.getHead())) {	
     							if (isIntersection) {
@@ -794,7 +789,15 @@ public class DesignSpaceService {
     								outputEdge.unionWithEdge(inputEdge);
     							}
     						} else {
-    							duplicateEdges.add(outputEdge.copy(outputNode, outputSuccessor));
+    							Edge duplicateEdge = outputEdge.copy(outputNode, outputSuccessor);
+    							
+    							if (isIntersection) {
+    								duplicateEdge.intersectWithEdge(inputEdge);
+    							} else {
+    								duplicateEdge.unionWithEdge(inputEdge);
+    							}
+    							
+    							duplicateEdges.add(duplicateEdge);
     						}
     						
     						isMatch = true;
