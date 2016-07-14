@@ -36,18 +36,17 @@
                             <div class="input-group-btn">
                                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Combine <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" ng-click="joinDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID)">Join</a></li>
-                                    <li><a href="#" ng-click="orDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID)">OR</a></li>
-                                    <li><a href="#" ng-click="andDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID)">AND</a></li>
-                                    <li><a href="#" ng-click="mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID)">Merge (Weak)</a></li>
-                                    <li><a href="#" ng-click="mergeDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID, 'true')">Merge (Strong)</a></li>
+                                    <li><a href="#" ng-click="joinDesignSpaces(inputSpaceIDs, outputSpaceID)">Join</a></li>
+                                    <li><a href="#" ng-click="orDesignSpaces(inputSpaceIDs, outputSpaceID)">OR</a></li>
+                                    <li><a href="#" ng-click="andDesignSpaces(inputSpaceIDs, outputSpaceID)">AND</a></li>
+                                    <li><a href="#" ng-click="mergeDesignSpaces(inputSpaceIDs, outputSpaceID)">Merge (Weak)</a></li>
+                                    <li><a href="#" ng-click="mergeDesignSpaces(inputSpaceIDs, outputSpaceID, 'true')">Merge (Strong)</a></li>
                                     <li role="separator" class="divider"></li>
-                                    <li><a href="#" ng-click="insertDesignSpace(inputSpaceID1, inputSpaceID2, insertNodeID1, outputSpaceID)">Insert</a></li>
+                                    <li><a href="#" ng-click="insertDesignSpace(inputSpaceIDs, insertNodeID1, outputSpaceID)">Insert</a></li>
                                 </ul>
                             </div><!-- /btn-group -->
                             <div class="btn-group">
-                                <input type="text" placeholder="Space ID" class="form-control" aria-label="..." size="10" ng-model="inputSpaceID1">
-                                <input type="text" placeholder="Space ID" class="form-control" aria-label="..." size="10" ng-model="inputSpaceID2">
+                                <input type="text" placeholder="Space IDs" class="form-control" aria-label="..." size="10" ng-model="inputSpaceIDs">
                                 <input type="text" placeholder="Output ID" class="form-control" aria-label="..." size="10" ng-model="outputSpaceID">
                                 <input type="text" placeholder="Node ID" class="form-control" aria-label="..." size="10" ng-model="insertNodeID1">
                             </div>
@@ -123,8 +122,8 @@
                             <div class="input-group-btn">
                                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Combine <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" ng-click="joinBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">Join</a></li>
-                                    <li><a href="#" ng-click="orBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">OR</a></li>
+                                    <li><a href="#" ng-click="joinBranches(graphs[0].spaceID, inputBranchIDs, outputBranchID)">Join</a></li>
+                                    <li><a href="#" ng-click="orBranches(graphs[0].spaceID, inputBranchIDs, outputBranchID)">OR</a></li>
                                     <li><a href="#" ng-click="andBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">AND</a></li>
                                     <li><a href="#" ng-click="mergeBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID)">Merge (Weak)</a></li>
                                     <li><a href="#" ng-click="mergeBranches(graphs[0].spaceID, inputBranchID1, inputBranchID2, outputBranchID, 'true')">Merge (Strong)</a></li>
@@ -133,8 +132,7 @@
                                 </ul>
                             </div><!-- /btn-group -->
                             <div class="btn-group">
-                                <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." size="8" ng-model="inputBranchID1">
-                                <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." size="8" ng-model="inputBranchID2">
+                                <input type="text" placeholder="Branch IDs" class="form-control" aria-label="..." size="8" ng-model="inputBranchIDs">
                                 <input type="text" placeholder="Output ID" class="form-control" aria-label="..." size="8" ng-model="outputBranchID">
                                 <input type="text" placeholder="Node ID" class="form-control" aria-label="..." size="7" ng-model="insertNodeID2">
                             </div>

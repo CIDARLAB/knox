@@ -77,6 +77,10 @@ public class DesignSpace extends NodeSpace {
     	return headBranch;
     }
     
+    public int getMergeIndex() {
+    	return mergeIndex;
+    }
+    
     public String getSpaceID() {
     	return spaceID;
     }
@@ -89,7 +93,7 @@ public class DesignSpace extends NodeSpace {
     	}
     }
     
-    public int getMergeIndex() {
-    	return mergeIndex;
+    public void setHeadBranch(Branch headBranch) {
+    	this.headBranch = headBranch;
     }
 }

@@ -1,20 +1,38 @@
 package knox.spring.data.neo4j.exception;
 
+import java.util.Set;
+
 public class DesignSpaceBranchesConflictException extends RuntimeException {
 
 	private static final long serialVersionUID = 2536217673758883842L;
 	
-	String spaceID1;
-	String spaceID2;
 	
-	public DesignSpaceBranchesConflictException(String spaceID1, String spaceID2) {
-		this.spaceID1 = spaceID1;
-		this.spaceID2 = spaceID2;
+	Set<String> spaceIDs;
+	
+	Set<String> branchIDs;
+	
+	public DesignSpaceBranchesConflictException(Set<String> spaceIDs, Set<String> branchIDs) {
+		this.spaceIDs = spaceIDs;
+		
+		this.branchIDs = branchIDs;
 	}
 	
 	public String getMessage() {
-		return "Design space " + spaceID1 + " and design space " + spaceID2 
-				+ " have branches with conflicting IDs.";
+		String message = "Design spaces ";
+	
+		for (String spaceID : spaceIDs) {
+			message = message + spaceID + ", ";
+		}
+		
+		message = message + " have branches with conflicting IDs:  ";
+		
+		for (String branchID : branchIDs) {
+			message = message + branchID + ", ";
+		}
+		
+		message = message.substring(0, message.length() - 2);
+		
+		return message;
 	}
 
 }

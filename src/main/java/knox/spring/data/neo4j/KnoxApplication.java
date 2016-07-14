@@ -4,6 +4,7 @@ import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.NodeNotFoundException;
+import knox.spring.data.neo4j.exception.ParameterEmptyException;
 import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import org.sbolstandard.core2.SBOLConversionException;
@@ -148,10 +149,14 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     
     @RequestMapping(value = "/branch/join", method = RequestMethod.POST)
     public ResponseEntity<String> joinBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
-    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
-    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
-    	designSpaceService.joinBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID);
+    	if (outputBranchID == null) {
+    		designSpaceService.joinBranches(targetSpaceID, inputBranchIDs);
+    	} else {
+    		designSpaceService.joinBranches(targetSpaceID, inputBranchIDs, outputBranchID);
+    	}
+    	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully joined.\"}", 
     				HttpStatus.NO_CONTENT);
     }
@@ -181,10 +186,14 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     
     @RequestMapping(value = "/branch/or", method = RequestMethod.POST)
     public ResponseEntity<String> orBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
-    		@RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
-    		@RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
+    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
-    	designSpaceService.orBranches(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID);
+    	if (outputBranchID == null) {
+    		designSpaceService.orBranches(targetSpaceID, inputBranchIDs);
+    	} else {
+    		designSpaceService.orBranches(targetSpaceID, inputBranchIDs, outputBranchID);
+    	}
+    	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully disjoined.\"}", 
     				HttpStatus.NO_CONTENT);
     }
@@ -233,7 +242,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, true, true);
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 
     				HttpStatus.NO_CONTENT);
-    	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
     		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
     				HttpStatus.BAD_REQUEST);
     	}
@@ -263,17 +272,13 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     }
     
     @RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
-    public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
-    		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
+    public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-    	if (outputSpaceID == null) {
-			outputSpaceID = inputSpaceID1;
-		}
     	try {
-    		designSpaceService.joinDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
+    		designSpaceService.joinDesignSpaces(inputSpaceIDs, outputSpaceID);
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully joined.\"}", 
     				HttpStatus.NO_CONTENT);
-    	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
     		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
     				HttpStatus.BAD_REQUEST);
     	}
@@ -298,7 +303,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, false, parsedIsStrong);
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
-    	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
     		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
     				HttpStatus.BAD_REQUEST);
     	}
@@ -317,17 +322,13 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     }
     
     @RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
-    public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1, 
-    		@RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
+    public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs, 
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-    	if (outputSpaceID == null) {
-			outputSpaceID = inputSpaceID1;
-		}
     	try {
-    		designSpaceService.orDesignSpaces(inputSpaceID1, inputSpaceID2, outputSpaceID);
+    		designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID);
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully disjoined.\"}", 
     				HttpStatus.NO_CONTENT);
-    	} catch (DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+    	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
     		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
     				HttpStatus.BAD_REQUEST);
     	}

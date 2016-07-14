@@ -10,6 +10,7 @@ function knoxCtrl($scope) {
     $scope.isSBOLMode = false;
 
     $scope.searchSpaceID = "";
+    $scope.inputSpaceIDs = "";
     $scope.inputSpaceID1 = "";
     $scope.inputSpaceID2 = "";
     $scope.outputSpaceID = "";
@@ -26,6 +27,7 @@ function knoxCtrl($scope) {
     $scope.deleteNodeID2 = "";
 
     $scope.branchID = "";
+    $scope.inputBranchIDs = "";
     $scope.inputBranchID1 = "";
     $scope.inputBranchID2 = "";
     $scope.outputBranchID = "";
@@ -305,14 +307,11 @@ function knoxCtrl($scope) {
         }
     };
 
-    $scope.joinDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
+    $scope.joinDesignSpaces = function(inputSpaceIDs, outputSpaceID) {
         var query = "?";
 
-        if (inputSpaceID1) {
-            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
-        }
-        if (inputSpaceID2) {
-            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        if (inputSpaceIDs) {
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -329,14 +328,11 @@ function knoxCtrl($scope) {
         });
     };
 
-    $scope.orDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
+    $scope.orDesignSpaces = function(inputSpaceIDs, outputSpaceID) {
         var query = "?";
 
-        if (inputSpaceID1) {
-            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
-        }
-        if (inputSpaceID2) {
-            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        if (inputSpaceIDs) {
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -353,11 +349,11 @@ function knoxCtrl($scope) {
         });
     };
 
-    $scope.andDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID) {
+    $scope.andDesignSpaces = function(inputSpaceIDs, outputSpaceID) {
         var query = "?";
 
-        if (inputSpaceID1 && inputSpaceID2) {
-            query += $scope.encodeQueryParameter("inputSpaceIDs", [inputSpaceID1, inputSpaceID2], query);
+        if (inputSpaceIDs) {
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -374,11 +370,11 @@ function knoxCtrl($scope) {
         });
     };
 
-    $scope.mergeDesignSpaces = function(inputSpaceID1, inputSpaceID2, outputSpaceID, isStrong) {
+    $scope.mergeDesignSpaces = function(inputSpaceIDs, outputSpaceID, isStrong) {
         var query = "?";
 
-        if (inputSpaceID1 && inputSpaceID2) {
-            query += $scope.encodeQueryParameter("inputSpaceIDs", [inputSpaceID1, inputSpaceID2], query);
+        if (inputSpaceIDs) {
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -559,14 +555,14 @@ function knoxCtrl($scope) {
         });
     };
 
-    $scope.insertDesignSpace = function(inputSpaceID1, inputSpaceID2, targetNodeID, outputSpaceID) {
+    $scope.insertDesignSpace = function(inputSpaceIDs, targetNodeID, outputSpaceID) {
         var query = "?";
 
-        if (inputSpaceID1) {
-            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceID1, query);
+        if (inputSpaceIDs.length > 0) {
+            query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceIDs[0], query);
         }
-        if (inputSpaceID2) {
-            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceID2, query);
+        if (inputSpaceIDs.length > 1) {
+            query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceIDs[1], query);
         }
         if (targetNodeID) {
             query += $scope.encodeQueryParameter("targetNodeID", targetNodeID, query);
@@ -670,17 +666,14 @@ function knoxCtrl($scope) {
         });
     };
 
-    $scope.joinBranches = function(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID) {
+    $scope.joinBranches = function(targetSpaceID, inputBranchIDs, outputBranchID) {
         var query = "?";
 
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
-        if (inputBranchID1) {
-            query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
-        }
-        if (inputBranchID2) {
-            query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
+        if (inputBranchIDs) {
+            query += $scope.encodeQueryParameter("inputBranchIDs", inputBranchIDs.split(","), query);
         }
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
@@ -695,17 +688,14 @@ function knoxCtrl($scope) {
         });
     };
 
-    $scope.orBranches = function(targetSpaceID, inputBranchID1, inputBranchID2, outputBranchID) {
+    $scope.orBranches = function(targetSpaceID, inputBranchIDs, outputBranchID) {
         var query = "?";
 
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
-        if (inputBranchID1) {
-            query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
-        }
-        if (inputBranchID2) {
-            query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
+        if (inputBranchIDs) {
+            query += $scope.encodeQueryParameter("inputBranchIDs", inputBranchIDs.split(","), query);
         }
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
