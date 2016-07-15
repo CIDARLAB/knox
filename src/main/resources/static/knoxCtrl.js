@@ -11,8 +11,6 @@ function knoxCtrl($scope) {
 
     $scope.searchSpaceID = "";
     $scope.inputSpaceIDs = "";
-    $scope.inputSpaceID1 = "";
-    $scope.inputSpaceID2 = "";
     $scope.outputSpaceID = "";
     $scope.insertNodeID1 = "";
 
@@ -311,7 +309,9 @@ function knoxCtrl($scope) {
         var query = "?";
 
         if (inputSpaceIDs) {
-            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
+            inputSpaceIDs = inputSpaceIDs.split(",");
+            
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs, query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -321,7 +321,7 @@ function knoxCtrl($scope) {
             if (error) {
                 sweetAlert("Error", JSON.parse(error.response).message, "error");
             } else if (!outputSpaceID) {
-                $scope.graphDesignSpace(inputSpaceID1);
+                $scope.graphDesignSpace(inputSpaceIDs[0]);
             } else {
                 $scope.graphDesignSpace(outputSpaceID);
             }
@@ -332,7 +332,9 @@ function knoxCtrl($scope) {
         var query = "?";
 
         if (inputSpaceIDs) {
-            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
+            inputSpaceIDs = inputSpaceIDs.split(",");
+            
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs, query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -342,7 +344,7 @@ function knoxCtrl($scope) {
             if (error) {
                 sweetAlert("Error", JSON.parse(error.response).message, "error");
             } else if (!outputSpaceID) {
-                $scope.graphDesignSpace(inputSpaceID1);
+                $scope.graphDesignSpace(inputSpaceIDs[0]);
             } else {
                 $scope.graphDesignSpace(outputSpaceID);
             }
@@ -353,7 +355,9 @@ function knoxCtrl($scope) {
         var query = "?";
 
         if (inputSpaceIDs) {
-            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
+            inputSpaceIDs = inputSpaceIDs.split(",");
+            
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs, query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -363,7 +367,7 @@ function knoxCtrl($scope) {
             if (error) {
                 sweetAlert("Error", error.responseText, "error");
             } else if (!outputSpaceID) {
-                $scope.graphDesignSpace(inputSpaceID1);
+                $scope.graphDesignSpace(inputSpaceIDs[0]);
             } else {
                 $scope.graphDesignSpace(outputSpaceID);
             }
@@ -374,7 +378,9 @@ function knoxCtrl($scope) {
         var query = "?";
 
         if (inputSpaceIDs) {
-            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
+            inputSpaceIDs = inputSpaceIDs.split(",");
+            
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs, query);
         }
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
@@ -387,7 +393,7 @@ function knoxCtrl($scope) {
             if (error) {
                 sweetAlert("Error", JSON.parse(error.response).message, "error");
             } else if (!outputSpaceID) {
-                $scope.graphDesignSpace(inputSpaceID1);
+                $scope.graphDesignSpace(inputSpaceIDs[0]);
             } else {
                 $scope.graphDesignSpace(outputSpaceID);
             }
@@ -575,7 +581,7 @@ function knoxCtrl($scope) {
             if (error) {
                 sweetAlert("Error", JSON.parse(error.response).message, "error");
             } else if (!outputSpaceID) {
-                $scope.graphDesignSpace(inputSpaceID1);
+                $scope.graphDesignSpace(inputSpaceIDs[0]);
             } else {
                 $scope.graphDesignSpace(outputSpaceID);
             }

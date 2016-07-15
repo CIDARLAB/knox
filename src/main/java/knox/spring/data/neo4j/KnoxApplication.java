@@ -80,6 +80,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> deleteBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "targetBranchID", required = true) String targetBranchID) {
     	designSpaceService.deleteBranch(targetSpaceID, targetBranchID);
+    	
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
@@ -165,11 +166,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> mergeBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-    		@RequestParam(value = "isStrong", required = false) String isStrong) {
-    	if (outputBranchID == null) {
-    		outputBranchID = inputBranchIDs.get(0);
-		}
-    	
+    		@RequestParam(value = "isStrong", required = false) String isStrong) { 	
     	boolean parsedIsStrong;
     	if (isStrong == null) {
     		parsedIsStrong = true;
@@ -177,8 +174,12 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		parsedIsStrong = Boolean.parseBoolean(isStrong);
     	}
     	
-    	designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
-    			false, parsedIsStrong);
+    	if (outputBranchID == null) {
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, false, parsedIsStrong); 
+    	} else {
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
+    				false, parsedIsStrong);
+    	}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
@@ -275,7 +276,12 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
     	try {
-    		designSpaceService.joinDesignSpaces(inputSpaceIDs, outputSpaceID);
+    		if (outputSpaceID == null) {
+    			designSpaceService.joinDesignSpaces(inputSpaceIDs);
+    		} else {
+    			designSpaceService.joinDesignSpaces(inputSpaceIDs, outputSpaceID);
+    		}
+    		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully joined.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
@@ -288,11 +294,8 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
     		@RequestParam(value = "isStrong", required = false) String isStrong) {
-    	if (outputSpaceID == null) {
-			outputSpaceID = inputSpaceIDs.get(0);
-		}
-    	
     	boolean parsedIsStrong;
+    	
     	if (isStrong == null) {
     		parsedIsStrong = false;
     	} else {
@@ -300,7 +303,12 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	}
   
     	try {
-    		designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, false, parsedIsStrong);
+    		if (outputSpaceID == null) {
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, false, parsedIsStrong);
+    		} else {
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, false, parsedIsStrong);
+    		}
+    		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
@@ -313,6 +321,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> minimizeDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
     	try {
     		designSpaceService.minimizeDesignSpace(targetSpaceID);
+    		
     		return new ResponseEntity<String>("{\"message\": \"Design space was successfully minimized.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (DesignSpaceNotFoundException ex) {
@@ -325,7 +334,12 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs, 
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
     	try {
-    		designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID);
+    		if (outputSpaceID == null) {
+    			designSpaceService.orDesignSpaces(inputSpaceIDs);
+    		} else {
+    			designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID);
+    		}
+    		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully disjoined.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
@@ -341,6 +355,7 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     		@RequestParam(value = "targetTailID", required = true) String targetTailID,
     		@RequestParam(value = "targetHeadID", required = true) String targetHeadID) {
     	designSpaceService.deleteEdge(targetSpaceID, targetTailID, targetHeadID);
+    	
     	return new ResponseEntity<String>("Edge was deleted successfully.", HttpStatus.NO_CONTENT);
     }
     

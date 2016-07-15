@@ -551,6 +551,10 @@ public class DesignSpaceService {
     	}
     }
     
+//    public void queryDesignSpace(String targetSpaceID, List<String> inputSpaceIDs, String outputSpaceID) {
+//    	
+//    }
+    
     public void resetHeadBranch(String targetSpaceID, String targetCommitID) {
     	validateDesignSpaceOperator(targetSpaceID);
     	designSpaceRepository.resetHeadBranch(targetSpaceID, targetCommitID);
@@ -667,6 +671,14 @@ public class DesignSpaceService {
     	if (!outputSpaceID.equals(inputSpaceID1) && !outputSpaceID.equals(inputSpaceID2)) {
     		selectHeadBranch(outputSpaceID, headBranchID1);
     	}
+    }
+    
+    public void joinDesignSpaces(List<String> inputSpaceIDs) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
+    		DesignSpaceBranchesConflictException {
+    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
+    	
+    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
     }
     
     public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
@@ -857,6 +869,14 @@ public class DesignSpaceService {
 //    		selectHeadBranch(outputSpaceID, headBranchID1);
 //    	}
 //    }
+    
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, boolean isIntersection, boolean isStrong) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
+    		DesignSpaceBranchesConflictException {
+    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
+    	
+    	mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), isIntersection, isStrong);
+    }
     
     public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, boolean isIntersection, boolean isStrong) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
@@ -1198,6 +1218,15 @@ public class DesignSpaceService {
     	
     	nodeRepository.delete(deletedNodes);
     }
+    
+    public void orDesignSpaces(List<String> inputSpaceIDs) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
+    		DesignSpaceBranchesConflictException {
+    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
+    	
+    	orDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
+    }
+    
     
     public void orDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
@@ -1661,6 +1690,13 @@ public class DesignSpaceService {
     		throws NodeNotFoundException {
     	if (!hasNode(targetSpaceID, targetNodeID)) {
     		throw new NodeNotFoundException(targetSpaceID, targetNodeID);
+    	}
+    }
+    
+    private void validateListParameter(String parameterName, List<String> parameter)
+    		throws ParameterEmptyException {
+    	if (parameter.size() == 0) {
+    		throw new ParameterEmptyException(parameterName);
     	}
     }
     
