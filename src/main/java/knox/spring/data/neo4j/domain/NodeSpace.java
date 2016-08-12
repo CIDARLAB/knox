@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import knox.spring.data.neo4j.domain.Node.NodeType;
+
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -44,6 +46,18 @@ public class NodeSpace {
 		return removedNodes;
 	}
 	
+	public Node copyNodeWithEdges(Node node) {
+		Node nodeCopy = copyNode(node);
+		
+		if (node.hasEdges()) {
+			for (Edge edge : node.getEdges()) {
+				nodeCopy.copyEdge(edge);
+			}
+		}
+		
+		return nodeCopy;
+	}
+	
 	public Node copyNode(Node node) {
 		if (node.hasNodeType()) {
 			return createNode(node.getNodeType());
@@ -64,9 +78,30 @@ public class NodeSpace {
 		return node;
 	}
 	
-	public boolean deleteNodes(Set<Node> nodes) {
+	public Node createAcceptNode() {
+		return createNode(NodeType.ACCEPT.getValue());
+	}
+	
+	public Node createStartNode() {
+		return createNode(NodeType.START.getValue());
+	}
+	
+	public boolean deleteNodes(Set<Node> deletedNodes) {	
 		if (hasNodes()) {
-    		return this.nodes.removeAll(nodes);
+			for (Node node : nodes) {
+				if (node.hasEdges() && !deletedNodes.contains(node)) {
+					Set<Edge> deletedEdges = new HashSet<Edge>();
+					
+					for (Edge edge : node.getEdges()) {
+						if (deletedNodes.contains(edge.getHead())) {
+							deletedEdges.add(edge);
+						}
+					}
+					
+					node.deleteEdges(deletedEdges);
+				}
+			}
+    		return nodes.removeAll(deletedNodes);
     	} else {
     		return false;
     	}
@@ -117,9 +152,30 @@ public class NodeSpace {
 	public int getIdIndex() {
 		return idIndex;
 	}
+	
+	public Node getNode(String nodeID) {
+		if (hasNodes()) {
+			for (Node node : nodes) {
+				if (node.getNodeID().equals(nodeID)) {
+					return node;
+				}
+			}
+			return null;
+		} else {
+			return null;
+		}
+	}
     
     public Set<Node> getNodes() {
     	return nodes;
+    }
+    
+    public int getSize() {
+    	if (hasNodes()) {
+    		return nodes.size();
+    	} else {
+    		return 0;
+    	}
     }
     
     public Node getStartNode() {
@@ -133,6 +189,34 @@ public class NodeSpace {
     	} else {
     		return null;
     	}
+    }
+    
+    public Set<Node> getStartNodes() {
+    	Set<Node> startNodes = new HashSet<Node>();
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+        		if (node.isStartNode()) {
+        			startNodes.add(node);
+        		}
+        	}
+    	} 
+    	
+    	return startNodes;
+    }
+    
+    public Set<Node> getTypedNodes() {
+    	Set<Node> typedNodes = new HashSet<Node>();
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+        		if (node.hasNodeType()) {
+        			typedNodes.add(node);
+        		}
+        	}
+    	} 
+    	
+    	return typedNodes;
     }
     
     public boolean hasNodes() {
@@ -171,6 +255,22 @@ public class NodeSpace {
     	}
  
     	return nodeIDToNode;
+    }
+    
+    public Set<Node> retainNodes(Set<Node> retainedNodes) {
+    	Set<Node> diffNodes = new HashSet<Node>();
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			if (!retainedNodes.contains(node)) {
+    				diffNodes.add(node);
+    			}
+    		}
+    		
+    		deleteNodes(diffNodes);
+    	}
+    	
+    	return diffNodes;
     }
     
     public void setIDIndex(int idIndex) {

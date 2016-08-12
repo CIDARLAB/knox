@@ -151,7 +151,10 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "REMOVE c.copyIndex")
 	void deleteCommitCopyIndices(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID);
 
-	@Query("MATCH (n:Node)<-[:CONTAINS]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot)-[:CONTAINS]->(sn:Node) "
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
+			+ "OPTIONAL MATCH (target)-[:CONTAINS]->(n:Node) "
+			+ "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) "
+			+ "OPTIONAL MATCH (s)-[:CONTAINS]->(sn:Node) "
 			+ "DETACH DELETE target "
 			+ "DETACH DELETE n "
 			+ "DETACH DELETE b "
@@ -254,6 +257,10 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "RETURN n")
 	Set<Node> getNodesByType(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID, @Param("nodeType") String nodeType);
 
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node) "
+			+ "RETURN n.nodeID")
+	Set<String> getNodeIDs(@Param("targetSpaceID") String targetSpaceID);
+	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node {nodeType: {nodeType}}) "
 			+ "RETURN n.nodeID")
 	Set<String> getNodeIDsByType(@Param("targetSpaceID") String targetSpaceID, @Param("nodeType") String nodeType);

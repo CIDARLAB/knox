@@ -8,6 +8,7 @@ function knoxCtrl($scope) {
     $scope.isCreationMode = false;
     $scope.isDeletionMode = false;
     $scope.isSBOLMode = false;
+    $scope.isCSVMode = false;
 
     $scope.searchSpaceID = "";
     $scope.inputSpaceIDs = "";
@@ -54,30 +55,42 @@ function knoxCtrl($scope) {
             $scope.isCreationMode = false;
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = false;
+            $scope.isCSVMode = false;
         } else if (graphType === "ds1") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = true;
             $scope.isCreationMode = false;
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = false;
+            $scope.isCSVMode = false;
         } else if (graphType === "ds2") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
             $scope.isCreationMode = true;
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = false;
+            $scope.isCSVMode = false;
         } else if (graphType === "ds3") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
             $scope.isCreationMode = false;
             $scope.isDeletionMode = true;
             $scope.isSBOLMode = false;
+            $scope.isCSVMode = false;
         } else if (graphType === "ds4") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
             $scope.isCreationMode = false;
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = true;
+            $scope.isCSVMode = false;
+        } else if (graphType === "ds5") {
+            $scope.isDSGraph = true;
+            $scope.isCombinationMode = false;
+            $scope.isCreationMode = false;
+            $scope.isDeletionMode = false;
+            $scope.isSBOLMode = false;
+            $scope.isCSVMode = true;
         }
     };
 
@@ -313,6 +326,7 @@ function knoxCtrl($scope) {
             
             query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs, query);
         }
+
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
         }
@@ -336,6 +350,7 @@ function knoxCtrl($scope) {
             
             query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs, query);
         }
+
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
         }
@@ -359,6 +374,7 @@ function knoxCtrl($scope) {
             
             query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs, query);
         }
+
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
         }
@@ -374,7 +390,85 @@ function knoxCtrl($scope) {
         });
     };
 
-    $scope.mergeDesignSpaces = function(inputSpaceIDs, outputSpaceID, isStrong) {
+    $scope.matchDesignSpace = function(inputSpaceIDs, outputSpacePrefix) {
+        var query = "?";
+
+        if (inputSpaceIDs) {
+            inputSpaceIDs = inputSpaceIDs.split(",");
+
+            if (inputSpaceIDs.length > 0) {
+                query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceIDs[0], query);
+
+                query += $scope.encodeQueryParameter("inputSpaceIDs2", inputSpaceIDs.slice(1, inputSpaceIDs.length), query);
+            }
+        }
+
+        if (outputSpacePrefix) {
+            query += $scope.encodeQueryParameter("outputSpacePrefix", outputSpacePrefix, query);
+        }
+
+        d3.xhr("/designSpace/match" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else if (outputSpacePrefix && inputSpaceIDs.length > 1) {
+                $scope.graphDesignSpace(outputSpacePrefix + 0);
+            }
+        });
+    };
+
+    $scope.partitionDesignSpace = function(inputSpaceIDs, outputSpacePrefix) {
+        var query = "?";
+
+        if (inputSpaceIDs) {
+            inputSpaceIDs = inputSpaceIDs.split(",");
+
+            if (inputSpaceIDs.length > 0) {
+                query += $scope.encodeQueryParameter("inputSpaceID", inputSpaceIDs[0], query);
+            }
+        }
+
+        if (outputSpacePrefix) {
+            query += $scope.encodeQueryParameter("outputSpacePrefix", outputSpacePrefix, query);
+        }
+
+        d3.xhr("/designSpace/partition" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else if (!outputSpaceID) {
+                $scope.graphDesignSpace(outputSpacePrefix + "0");
+            } else {
+                $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
+    };
+
+    $scope.mergeDesignSpaces = function(inputSpaceIDs, outputSpaceID, strength) {
+        var query = "?";
+
+        if (inputSpaceIDs) {
+            query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs.split(","), query);
+        }
+
+        if (outputSpaceID) {
+            query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
+        }
+
+        if (strength) {
+            query += $scope.encodeQueryParameter("strength", strength, query);
+        }
+
+        d3.xhr("/designSpace/merge" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else if (!outputSpaceID) {
+                $scope.graphDesignSpace(inputSpaceIDs[0]);
+            } else {
+                $scope.graphDesignSpace(outputSpaceID);
+            }
+        });
+    };
+
+    $scope.unionDesignSpaces = function(inputSpaceIDs, outputSpaceID) {
         var query = "?";
 
         if (inputSpaceIDs) {
@@ -382,16 +476,14 @@ function knoxCtrl($scope) {
             
             query += $scope.encodeQueryParameter("inputSpaceIDs", inputSpaceIDs, query);
         }
+
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
         }
-        if (isStrong) {
-            query += $scope.encodeQueryParameter("isStrong", isStrong, query);
-        }
 
-        d3.xhr("/designSpace/merge" + query).post(function(error, request) {
+        d3.xhr("/designSpace/union" + query).post(function(error, request) {
             if (error) {
-                sweetAlert("Error", JSON.parse(error.response).message, "error");
+                sweetAlert("Error", error.responseText, "error");
             } else if (!outputSpaceID) {
                 $scope.graphDesignSpace(inputSpaceIDs[0]);
             } else {
@@ -422,6 +514,7 @@ function knoxCtrl($scope) {
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
         }
+
         if (compIDs && compRoles) {
             query += $scope.encodeQueryParameter("componentIDs", compIDs.split(","), query);
             query += $scope.encodeQueryParameter("componentRoles", compRoles.split(","), query);
@@ -500,12 +593,15 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
         if (targetTailID) {
             query += $scope.encodeQueryParameter("targetTailID", targetTailID, query);
         }
+
         if (targetHeadID) {
             query += $scope.encodeQueryParameter("targetHeadID", targetHeadID, query);
         }
+
         if (compIDs && compRoles) {
             query += $scope.encodeQueryParameter("componentIDs", compIDs.split(","), query);
             query += $scope.encodeQueryParameter("componentRoles", compRoles.split(","), query);
@@ -526,9 +622,11 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
         if (targetTailID) {
             query += $scope.encodeQueryParameter("targetTailID", targetTailID, query);
         }
+
         if (targetHeadID) {
             query += $scope.encodeQueryParameter("targetHeadID", targetHeadID, query);
         }
@@ -548,6 +646,7 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
         if (targetNodeID) {
             query += $scope.encodeQueryParameter("targetNodeID", targetNodeID, query);
         }
@@ -567,12 +666,15 @@ function knoxCtrl($scope) {
         if (inputSpaceIDs.length > 0) {
             query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceIDs[0], query);
         }
+
         if (inputSpaceIDs.length > 1) {
             query += $scope.encodeQueryParameter("inputSpaceID2", inputSpaceIDs[1], query);
         }
+
         if (targetNodeID) {
             query += $scope.encodeQueryParameter("targetNodeID", targetNodeID, query);
         }
+
         if (outputSpaceID) {
             query += $scope.encodeQueryParameter("outputSpaceID", outputSpaceID, query);
         }
@@ -650,15 +752,19 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
         if (inputBranchID1) {
             query += $scope.encodeQueryParameter("inputBranchID1", inputBranchID1, query);
         }
+
         if (inputBranchID2) {
             query += $scope.encodeQueryParameter("inputBranchID2", inputBranchID2, query);
         }
+
         if (targetNodeID) {
             query += $scope.encodeQueryParameter("targetNodeID", targetNodeID, query);
         }
+
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
         }
@@ -678,9 +784,11 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
         if (inputBranchIDs) {
             query += $scope.encodeQueryParameter("inputBranchIDs", inputBranchIDs.split(","), query);
         }
+
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
         }
@@ -700,9 +808,11 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
         if (inputBranchIDs) {
             query += $scope.encodeQueryParameter("inputBranchIDs", inputBranchIDs.split(","), query);
         }
+
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
         }
@@ -722,9 +832,11 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
         if (inputBranchID1 && inputBranchID2) {
             query += $scope.encodeQueryParameter("inputBranchIDs", [inputBranchID1, inputBranchID2], query);
         }
+
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
         }
@@ -744,9 +856,11 @@ function knoxCtrl($scope) {
         if (targetSpaceID) {
             query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
         if (inputBranchID1 && inputBranchID2) {
             query += $scope.encodeQueryParameter("inputBranchIDs", [inputBranchID1, inputBranchID2], query);
         }
+
         if (outputBranchID) {
             query += $scope.encodeQueryParameter("outputBranchID", outputBranchID, query);
         }

@@ -44,13 +44,36 @@ public class Node {
     }
     
     public Edge copyEdge(Edge edge) {
-    	return createEdge(edge.getHead(), edge.getComponentIDs(), edge.getComponentRoles());
+    	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
+    		return createEdge(edge.getHead(), edge.getComponentIDs(), edge.getComponentRoles());
+    	} else {
+    		return createEdge(edge.getHead());
+    	}
+    	
+    }
+    
+    public Edge copyEdge(Edge edge, Node head) {
+    	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
+    		return createEdge(head, edge.getComponentIDs(), edge.getComponentRoles());
+    	} else {
+    		return createEdge(head);
+    	}
+    }
+    
+    public Edge createEdge(Node head) {
+    	Edge edge = new Edge(this, head);
+    	addEdge(edge);
+    	return edge;
     }
     
     public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
     	Edge edge = new Edge(this, head, compIDs, compRoles);
     	addEdge(edge);
     	return edge;
+    }
+    
+    public Long getGraphID() {
+    	return id;
     }
     
     public String getNodeID() {
