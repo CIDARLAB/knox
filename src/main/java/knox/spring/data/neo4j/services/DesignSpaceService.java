@@ -548,9 +548,15 @@ public class DesignSpaceService {
     		boolean isIntersection, boolean isCompleteMatch, int strength, int degree) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
     	
-    	Set<String> prunedBranchIDs = new HashSet<String>(inputBranchIDs);
+    	List<String> prunedBranchIDs = new LinkedList<String>(inputBranchIDs);
     	
-    	Set<Commit> inputCommits = new HashSet<Commit>();
+    	for (String inputBranchID : inputBranchIDs) {
+    		if (!prunedBranchIDs.contains(inputBranchID)) {
+    			prunedBranchIDs.add(inputBranchID);
+    		}
+    	}
+    	
+    	List<Commit> inputCommits = new LinkedList<Commit>();
     	
     	int maxIDIndex = 0;
     	
@@ -947,15 +953,7 @@ public class DesignSpaceService {
     }
     
     public void matchDesignSpace(String inputSpaceID1, List<String> inputSpaceIDs2, String outputSpacePrefix) {
-    	System.out.println("inputSpaceID1");
-    	
-    	System.out.println(inputSpaceID1);
-    	
-    	System.out.println("inputSpaceIDs2");
-    	
-    	for (String id : inputSpaceIDs2) {
-    		System.out.println(id);
-    	}
+    	System.out.println("matching");
     	
     	for (int i = 0; i < inputSpaceIDs2.size(); i++) {
         	List<String> inputSpaceIDs = new ArrayList<String>(1);
@@ -991,9 +989,15 @@ public class DesignSpaceService {
     		DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
 
-    	Set<String> prunedSpaceIDs = new HashSet<String>(inputSpaceIDs);
+    	List<String> prunedSpaceIDs = new LinkedList<String>();
     	
-    	Set<DesignSpace> prunedSpaces = new HashSet<DesignSpace>();
+    	for (String inputSpaceID : inputSpaceIDs) {
+    		if (!prunedSpaceIDs.contains(inputSpaceID)) {
+    			prunedSpaceIDs.add(inputSpaceID);
+    		}
+    	}
+    	
+    	List<DesignSpace> prunedSpaces = new LinkedList<DesignSpace>();
     	
     	DesignSpace outputSpace;
     	
@@ -1087,7 +1091,7 @@ public class DesignSpaceService {
     	saveDesignSpace(outputSpace);
     	
     	if (inputSpaceIDs.contains(outputSpaceID)) {
-    		prunedSpaces.add(outputSpace);
+    		prunedSpaces.add(0, outputSpace);
     	}
     	
     	List<String> headBranchIDs = new LinkedList<String>();
@@ -1149,6 +1153,16 @@ public class DesignSpaceService {
     	
     	System.out.println("size " + outputSpace.getSize());
     	
+//    	if (outputSpace.hasNodes()) {
+//    		for (Node temp : outputSpace.getNodes()) {
+//    			String none = (temp.getGraphID() != null ? "" + temp.getGraphID() : "none");
+//
+//    			if (none.equals("none")) {
+//    				System.out.println(temp.getNodeID() + " " + none);
+//    			}
+//    		}
+//    	}
+    	
     	System.out.println("idIndex " + outputSpace.getIdIndex());
     	
     	HashMap<String, Set<Node>> inputIDToOutputNodes = new HashMap<String, Set<Node>>();
@@ -1156,6 +1170,8 @@ public class DesignSpaceService {
     	HashMap<String, Node> mergedIDToOutputNode = new HashMap<String, Node>();
     	
     	Set<Node> matchingNodes = new HashSet<Node>();
+    	
+    	Set<Edge> duplicateEdges = new HashSet<Edge>();
     	
     	for (Node inputStart : inputStarts) {
     		Stack<Node> inputNodeStack = new Stack<Node>();
@@ -1207,7 +1223,7 @@ public class DesignSpaceService {
     	    								inputNodeStack, outputNodeStack, mergedIDToOutputNode, inputIDToOutputNodes);
 
     	    						if (outputSuccessor != outputEdge.getHead()) {
-    	    							outputEdge.setHead(outputSuccessor);
+    	    							duplicateEdges.add(outputEdge.copy(outputNode, outputSuccessor));
     	    						}
     	    							
     	    						if (isIntersection) {
@@ -1225,6 +1241,10 @@ public class DesignSpaceService {
     	    		matchingNodes.addAll(matchingOutputs);
     	    	}
     		}
+    	}
+    	
+    	for (Edge duplicateEdge : duplicateEdges) {
+    		duplicateEdge.getTail().addEdge(duplicateEdge);
     	}
     	
     	for (Node typedInput : inputSpace.getTypedNodes()) {
@@ -1313,32 +1333,36 @@ public class DesignSpaceService {
     		mergedNodes.retainAll(matchingNodes);
     	}
     	
-    	Set<String> testNodeIDs = new HashSet<String>();
-    	boolean trap = false;
-    	
     	System.out.println("postMerge");
     	
     	System.out.println("size " + outputSpace.getSize());
     	
-    	for (Node outputNode : outputSpace.getNodes()) {
-    		if (testNodeIDs.contains(outputNode.getNodeID())) {
-    			trap = true;
-    			System.out.println("trapped!");
-    		} else {
-    			testNodeIDs.add(outputNode.getNodeID());
-    		}
-    	}
+//    	if (outputSpace.hasNodes()) {
+//    		for (Node temp : outputSpace.getNodes()) {
+//    			String none = (temp.getGraphID() != null ? "" + temp.getGraphID() : "none");
+//
+//    			if (none.equals("none")) {
+//    				System.out.println(temp.getNodeID() + " " + none);
+//    			}
+//    		}
+//    	}
     	
-    	if (!trap && inputStarts.size() > 0 && outputStarts.size() > 0) {
+    	if (inputStarts.size() > 0 && outputStarts.size() > 0) {
     		Set<Node> diffNodes = outputSpace.retainNodes(mergedNodes);
     		
     		System.out.println("postDiff");
     		
     		System.out.println("size " + outputSpace.getSize());
     		
-    		for (Node temp : outputSpace.getNodes()) {
-    			System.out.println(temp.getNodeID() + " " + (temp.getGraphID() != null ? temp.getGraphID() : "none"));
-    		}
+//    		if (outputSpace.hasNodes()) {
+//        		for (Node temp : outputSpace.getNodes()) {
+//        			String none = (temp.getGraphID() != null ? "" + temp.getGraphID() : "none");
+//
+//        			if (none.equals("none")) {
+//        				System.out.println(temp.getNodeID() + " " + none);
+//        			}
+//        		}
+//        	}
     		
     		return diffNodes;
     	} else {
