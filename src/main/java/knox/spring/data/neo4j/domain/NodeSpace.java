@@ -86,7 +86,15 @@ public class NodeSpace {
 		return createNode(NodeType.START.getValue());
 	}
 	
-	public boolean deleteNodes(Set<Node> deletedNodes) {	
+	public boolean deleteNodes(Set<Node> deletedNodes) {
+		if (hasNodes()) {
+    		return nodes.removeAll(deletedNodes);
+    	} else {
+    		return false;
+    	}
+	}
+	
+	public boolean detachDeleteNodes(Set<Node> deletedNodes) {	
 		if (hasNodes()) {
 			for (Node node : nodes) {
 				if (node.hasEdges() && !deletedNodes.contains(node)) {
@@ -101,7 +109,7 @@ public class NodeSpace {
 					node.deleteEdges(deletedEdges);
 				}
 			}
-    		return nodes.removeAll(deletedNodes);
+    		return deleteNodes(deletedNodes);
     	} else {
     		return false;
     	}
@@ -271,6 +279,30 @@ public class NodeSpace {
     	}
     	
     	return diffNodes;
+    }
+    
+    public Set<Edge> retainEdges(Set<Edge> retainedEdges) {
+    	Set<Edge> diffEdges = new HashSet<Edge>();
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			Set<Edge> localDiffEdges = new HashSet<Edge>();
+    			
+    			if (node.hasEdges()) {
+    				for (Edge edge : node.getEdges()) {
+    					if (!retainedEdges.contains(edge)) {
+    						localDiffEdges.add(edge);
+    					}
+    				}
+    				
+    				node.deleteEdges(localDiffEdges);
+    				
+    				diffEdges.addAll(localDiffEdges);
+    			}
+    		}
+    	}
+    	
+    	return diffEdges;
     }
     
     public void setIDIndex(int idIndex) {

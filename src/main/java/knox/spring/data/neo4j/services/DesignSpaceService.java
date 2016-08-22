@@ -12,6 +12,7 @@ import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.NodeNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
+import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.NodeRepository;
 
 import org.sbolstandard.core2.SBOLConversionException;
@@ -48,6 +49,7 @@ import java.util.Stack;
 public class DesignSpaceService {
 
     @Autowired DesignSpaceRepository designSpaceRepository;
+    @Autowired EdgeRepository edgeRepository;
     @Autowired NodeRepository nodeRepository;
     
     public static final String RESERVED_ID = "knox";
@@ -352,7 +354,7 @@ public class DesignSpaceService {
     }
     
     public void checkoutBranch(String targetSpaceID, String targetBranchID) {
-    	deleteNodes(targetSpaceID);
+    	deleteAllNodes(targetSpaceID);
     	designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
     	deleteNodeCopyIndices(targetSpaceID);
     }
@@ -605,8 +607,6 @@ public class DesignSpaceService {
     				
     				outputStarts.addAll(outputCommit.getSnapshot().getStartNodes());
     			}
-    			
-    			System.out.println("mergeBranches");
     			
     			mergeNodeSpaces(inputStarts, outputStarts, inputCommit.getSnapshot(),
     					outputCommit.getSnapshot(), isIntersection, isCompleteMatch, strength);
@@ -953,8 +953,6 @@ public class DesignSpaceService {
     }
     
     public void matchDesignSpace(String inputSpaceID1, List<String> inputSpaceIDs2, String outputSpacePrefix) {
-    	System.out.println("matching");
-    	
     	for (int i = 0; i < inputSpaceIDs2.size(); i++) {
         	List<String> inputSpaceIDs = new ArrayList<String>(1);
         	
@@ -1024,7 +1022,7 @@ public class DesignSpaceService {
     	}
     	
     	if (isIntersection) {
-    		boolean areRepoDiffNodesDeleted = false;
+    		boolean isDiffDeleted = false;
 
     		for (DesignSpace inputSpace : prunedSpaces) {
     			List<Node> inputStarts = new LinkedList<Node>();
@@ -1049,15 +1047,15 @@ public class DesignSpaceService {
     				outputStarts.addAll(outputSpace.getStartNodes());
     			}
     			
-    			System.out.println("mergeDesignSpaces");
-    			
-    			Set<Node> diffNodes = mergeNodeSpaces(inputStarts, outputStarts, inputSpace, outputSpace, 
+    			SpaceDiff diff = mergeNodeSpaces(inputStarts, outputStarts, inputSpace, outputSpace, 
     					isIntersection, isCompleteMatch, strength);
     			
-    			if (!areRepoDiffNodesDeleted && inputSpaceIDs.contains(outputSpaceID)) {
-    				deleteNodes(diffNodes);
-
-    				areRepoDiffNodesDeleted = true;
+    			if (!isDiffDeleted && inputSpaceIDs.contains(outputSpaceID)) {
+    				deleteEdges(diff.getEdges());
+    				
+    				deleteNodes(diff.getNodes());
+    				
+    				isDiffDeleted = true;
     			}
     		}
     	} else {
@@ -1147,29 +1145,13 @@ public class DesignSpaceService {
 		}
     }
     
-    private Set<Node> mergeNodeSpaces(List<Node> inputStarts, List<Node> outputStarts, NodeSpace inputSpace, 
-    		NodeSpace outputSpace, boolean isIntersection, boolean isCompleteMatch, int strength) {
-    	System.out.println("preMerge");
-    	
-    	System.out.println("size " + outputSpace.getSize());
-    	
-//    	if (outputSpace.hasNodes()) {
-//    		for (Node temp : outputSpace.getNodes()) {
-//    			String none = (temp.getGraphID() != null ? "" + temp.getGraphID() : "none");
-//
-//    			if (none.equals("none")) {
-//    				System.out.println(temp.getNodeID() + " " + none);
-//    			}
-//    		}
-//    	}
-    	
-    	System.out.println("idIndex " + outputSpace.getIdIndex());
-    	
+    private SpaceDiff mergeNodeSpaces(List<Node> inputStarts, List<Node> outputStarts, NodeSpace inputSpace, 
+    		NodeSpace outputSpace, boolean isIntersection, boolean isCompleteMatch, int strength) {    	
     	HashMap<String, Set<Node>> inputIDToOutputNodes = new HashMap<String, Set<Node>>();
     	
     	HashMap<String, Node> mergedIDToOutputNode = new HashMap<String, Node>();
     	
-    	Set<Node> matchingNodes = new HashSet<Node>();
+    	Set<Edge> mergedEdges = new HashSet<Edge>();
     	
     	Set<Edge> duplicateEdges = new HashSet<Edge>();
     	
@@ -1178,17 +1160,19 @@ public class DesignSpaceService {
     		
     		inputNodeStack.push(inputStart);
 			
-			Set<Node> inputNodes = new HashSet<Node>();
+			Set<Node> reachableInputs = new HashSet<Node>();
 			
-			while (inputNodeStack.size() > 0) {
-				Node inputNode = inputNodeStack.pop();
-				
-				inputNodes.add(inputNode);
-				
-				if (inputNode.hasEdges()) {
-					for (Edge inputEdge : inputNode.getEdges()) {
-						if (!inputNodes.contains(inputEdge.getHead())) {
-							inputNodeStack.push(inputEdge.getHead());
+			if (isCompleteMatch) {
+				while (inputNodeStack.size() > 0) {
+					Node inputNode = inputNodeStack.pop();
+
+					reachableInputs.add(inputNode);
+
+					if (inputNode.hasEdges()) {
+						for (Edge inputEdge : inputNode.getEdges()) {
+							if (!reachableInputs.contains(inputEdge.getHead())) {
+								inputNodeStack.push(inputEdge.getHead());
+							}
 						}
 					}
 				}
@@ -1202,14 +1186,16 @@ public class DesignSpaceService {
     						mergedIDToOutputNode, inputIDToOutputNodes);
     			}
     			
-    			Set<Node> matchingOutputs = new HashSet<Node>();
+    			Set<Edge> matchingEdges = new HashSet<Edge>();
+    			
+    			Set<Node> matchingInputs = new HashSet<Node>();
 
     	    	while (inputNodeStack.size() > 0 && outputNodeStack.size() > 0) {
     	    		Node inputNode = inputNodeStack.pop();
     	    		
-    	    		Node outputNode = outputNodeStack.pop();
+    	    		matchingInputs.add(inputNode);
     	    		
-    	    		matchingOutputs.add(outputNode);
+    	    		Node outputNode = outputNodeStack.pop();
     	    		
     	    		if (inputNode.hasEdges() && outputNode.hasEdges()) {
     	    			for (Edge outputEdge : outputNode.getEdges()) {
@@ -1223,7 +1209,8 @@ public class DesignSpaceService {
     	    								inputNodeStack, outputNodeStack, mergedIDToOutputNode, inputIDToOutputNodes);
 
     	    						if (outputSuccessor != outputEdge.getHead()) {
-    	    							duplicateEdges.add(outputEdge.copy(outputNode, outputSuccessor));
+    	    							outputEdge = outputEdge.copy(outputNode, outputSuccessor);
+    	    							duplicateEdges.add(outputEdge);
     	    						}
     	    							
     	    						if (isIntersection) {
@@ -1231,15 +1218,22 @@ public class DesignSpaceService {
     	    						} else {
     	    							outputEdge.unionWithEdge(inputEdge);
     	    						}
+    	    						
+    	    						matchingEdges.add(outputEdge);
     	    					}
     	    				}
     	    			}
     	    		} 
     	    	}
     	    	
-    	    	if (matchingOutputs.size() >= inputNodes.size()) {
-    	    		matchingNodes.addAll(matchingOutputs);
+    	    	if (isCompleteMatch) {
+    	    		if (matchingInputs.equals(reachableInputs)) {
+        	    		mergedEdges.addAll(matchingEdges);
+        	    	}
+    	    	} else {
+    	    		mergedEdges.addAll(matchingEdges);
     	    	}
+    	    	
     		}
     	}
     	
@@ -1254,8 +1248,6 @@ public class DesignSpaceService {
     			}
     		}
     	}
-    	
-    	Set<Node> mergedNodes = new HashSet<Node>(mergedIDToOutputNode.values());
     	
     	if (inputStarts.size() > 0 && (!isIntersection || outputStarts.size() == 0)) {
     		HashMap<String, Node> inputIDToSurplusOutput = new HashMap<String, Node>();
@@ -1316,8 +1308,9 @@ public class DesignSpaceService {
         							|| !inputIDToOutputNodes.containsKey(inputSuccessor.getNodeID())) {
         						for (Node outputNode : outputNodes) {
         							for (Node outputSuccessor : outputSuccessors) { 
-        								outputNode.createEdge(outputSuccessor, inputEdge.getComponentIDs(), 
-        										inputEdge.getComponentRoles());
+        								mergedEdges.add(outputNode.createEdge(outputSuccessor, 
+        										inputEdge.getComponentIDs(), 
+        										inputEdge.getComponentRoles()));
         							}
         						}
         					}
@@ -1325,48 +1318,21 @@ public class DesignSpaceService {
         			}
         		}
     		}
-    		
-    		mergedNodes.addAll(inputIDToSurplusOutput.values());
     	}
-    	
-    	if (isCompleteMatch) {
-    		mergedNodes.retainAll(matchingNodes);
-    	}
-    	
-    	System.out.println("postMerge");
-    	
-    	System.out.println("size " + outputSpace.getSize());
-    	
-//    	if (outputSpace.hasNodes()) {
-//    		for (Node temp : outputSpace.getNodes()) {
-//    			String none = (temp.getGraphID() != null ? "" + temp.getGraphID() : "none");
-//
-//    			if (none.equals("none")) {
-//    				System.out.println(temp.getNodeID() + " " + none);
-//    			}
-//    		}
-//    	}
     	
     	if (inputStarts.size() > 0 && outputStarts.size() > 0) {
-    		Set<Node> diffNodes = outputSpace.retainNodes(mergedNodes);
-    		
-    		System.out.println("postDiff");
-    		
-    		System.out.println("size " + outputSpace.getSize());
-    		
-//    		if (outputSpace.hasNodes()) {
-//        		for (Node temp : outputSpace.getNodes()) {
-//        			String none = (temp.getGraphID() != null ? "" + temp.getGraphID() : "none");
-//
-//        			if (none.equals("none")) {
-//        				System.out.println(temp.getNodeID() + " " + none);
-//        			}
-//        		}
-//        	}
-    		
-    		return diffNodes;
+    		Set<Node> mergedNodes = new HashSet<Node>();
+        	
+        	for (Edge mergedEdge : mergedEdges) {
+        		mergedNodes.add(mergedEdge.getTail());
+        		
+        		mergedNodes.add(mergedEdge.getHead());
+        	}
+        	
+        	return new SpaceDiff(outputSpace.retainEdges(mergedEdges), 
+        			outputSpace.retainNodes(mergedNodes));
     	} else {
-    		return new HashSet<Node>();
+    		return new SpaceDiff(new HashSet<Edge>(), new HashSet<Node>());
     	}
     }
     
@@ -1640,6 +1606,10 @@ public class DesignSpaceService {
 		designSpaceRepository.deleteEdge(targetSpaceID, targetTailID, targetHeadID);
 	}
 	
+	public void deleteEdges(Set<Edge> targetEdges) {
+		edgeRepository.delete(targetEdges);
+	}
+	
 	public void deleteNode(String targetSpaceID, String targetNodeID) {
 		designSpaceRepository.deleteNode(targetSpaceID, targetNodeID);
 	}
@@ -1656,8 +1626,8 @@ public class DesignSpaceService {
 		designSpaceRepository.deleteNodeCopyIndices(targetSpaceID, targetBranchID);
 	}
 
-	private void deleteNodes(String targetSpaceID) {
-		designSpaceRepository.deleteNodes(targetSpaceID);
+	private void deleteAllNodes(String targetSpaceID) {
+		designSpaceRepository.deleteAllNodes(targetSpaceID);
 	}
 
 	private void deleteNodeType(String targetSpaceID, String targetNodeID) {

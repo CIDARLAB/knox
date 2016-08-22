@@ -167,8 +167,11 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "DELETE e")
 	void deleteEdge(@Param("targetSpaceID") String targetSpaceID, @Param("targetTailID") String targetTailID, @Param("targetHeadID") String targetHeadID);
 
+	@Query("MATCH (tail:Node {nodeID: {targetTailID}})<-[:CONTAINS]-(:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(head:Node {nodeID: {targetHeadID}}), (tail)-[e:PRECEDES]->(head) "
+			+ "DELETE e")
+	void deleteEdges(@Param("targetSpaceID") String targetSpaceID, @Param("targetTailID") String targetTailID, @Param("targetHeadID") String targetHeadID);
+	
 	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(target:Node {nodeID: {targetNodeID}}) "
-			+ "WHERE NOT has(target.nodeType) OR NOT target.nodeType = 'start' "
 			+ "DETACH DELETE target")
 	void deleteNode(@Param("targetSpaceID") String targetSpaceID, @Param("targetNodeID") String targetNodeID);
 	
@@ -182,7 +185,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node) "
 			+ "DETACH DELETE n")
-	void deleteNodes(@Param("targetSpaceID") String targetSpaceID);
+	void deleteAllNodes(@Param("targetSpaceID") String targetSpaceID);
 
 	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node {nodeID: {targetNodeID}}) "
 			+ "REMOVE n.nodeType")
