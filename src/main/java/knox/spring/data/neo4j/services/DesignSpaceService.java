@@ -6,14 +6,17 @@ import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
+import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.NodeNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
+import knox.spring.data.neo4j.repositories.CommitRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.NodeRepository;
+import knox.spring.data.neo4j.repositories.SnapshotRepository;
 
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLReader;
@@ -48,9 +51,11 @@ import java.util.Stack;
 @Transactional
 public class DesignSpaceService {
 
+    @Autowired CommitRepository commitRepository;
     @Autowired DesignSpaceRepository designSpaceRepository;
     @Autowired EdgeRepository edgeRepository;
     @Autowired NodeRepository nodeRepository;
+    @Autowired SnapshotRepository snapshotRepository;
     
     public static final String RESERVED_ID = "knox";
     
@@ -370,6 +375,91 @@ public class DesignSpaceService {
     	copyDesignSpaceToSnapshot(targetSpaceID, headBranchID);
     }
     
+    public void resetBranch(DesignSpace targetSpace, Branch targetBranch, List<String> commitPath) {
+    	if (targetBranch != null && targetBranch.hasCommits()) {
+    		Commit targetCommit = targetBranch.getLatestCommit();
+
+    		int i = 0;
+
+    		if (targetCommit.getCommitID().equals(commitPath.get(i))) {
+    			while (targetCommit != null && i + 1 < commitPath.size()) {
+    				targetCommit = targetCommit.findPredecessor(commitPath.get(i));
+    				i++;
+    			}
+    			
+    			if (targetCommit != null) {
+    				targetBranch.setLatestCommit(targetCommit);
+    				
+        			Set<Commit> diffCommits = targetBranch.retainCommits(targetCommit.getHistory());
+        			
+        			Set<Commit> deletedCommits = new HashSet<Commit>();
+        			
+        			for (Commit diffCommit : diffCommits) {
+        				if (!targetSpace.containsCommit(diffCommit)) {
+        					deletedCommits.add(diffCommit);
+        				}
+        			}
+        			
+        			deleteCommits(deletedCommits);
+        		}
+    		}
+    		
+    		saveDesignSpace(targetSpace);
+    	}
+    }
+    
+    public void resetBranch(String targetSpaceID, String targetBranchID, List<String> commitPath) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+    	
+    	Branch targetBranch = targetSpace.findBranch(targetBranchID);
+    	
+    	resetBranch(targetSpace, targetBranch, commitPath);
+    }
+    
+    public void resetHeadBranch(String targetSpaceID, List<String> commitPath) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+    	
+    	resetBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
+    }
+    
+    public void revertBranch(DesignSpace targetSpace, Branch targetBranch, List<String> commitPath) {
+    	if (targetBranch != null && targetBranch.hasCommits()) {
+    		Commit targetCommit = targetBranch.getLatestCommit();
+
+    		int i = 0;
+
+    		while (targetCommit != null && i + 1 < commitPath.size()) {
+    			targetCommit = targetCommit.findPredecessor(commitPath.get(i + 1));
+    		
+    			i++;
+    		}
+
+    		if (targetCommit != null) {
+    			Commit commitCopy = targetBranch.copyCommit(targetCommit);
+    			
+    			commitCopy.addPredecessor(targetBranch.getLatestCommit());
+    			
+    			targetBranch.setLatestCommit(commitCopy);
+    		}
+    		
+    		saveDesignSpace(targetSpace);
+    	}
+    }
+    
+    public void revertBranch(String targetSpaceID, String targetBranchID, List<String> commitPath) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+    	
+    	Branch targetBranch = targetSpace.findBranch(targetBranchID);
+    	
+    	revertBranch(targetSpace, targetBranch, commitPath);
+    }
+    
+    public void revertHeadBranch(String targetSpaceID, List<String> commitPath) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+    	
+    	revertBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
+    }
+    
     public Map<String, Object> d3GraphBranches(String targetSpaceID) {
     	return mapBranchesToD3Format(designSpaceRepository.mapBranches(targetSpaceID));
     }
@@ -577,6 +667,8 @@ public class DesignSpaceService {
     	Branch outputBranch = targetSpace.createBranch(outputBranchID, maxIDIndex);
     	
     	Commit outputCommit = outputBranch.createCommit();
+    	
+    	outputBranch.setLatestCommit(outputCommit);
     	
     	outputCommit.createSnapshot();
     	
@@ -1597,6 +1689,18 @@ public class DesignSpaceService {
 
 		return csvArray;
 	}
+	
+	private void deleteCommits(Set<Commit> deletedCommits) {
+		Set<Snapshot> deletedSnapshots = new HashSet<Snapshot>();
+		
+		for (Commit deletedCommit : deletedCommits) {
+			deletedSnapshots.add(deletedCommit.getSnapshot());
+		}
+		
+		deleteSnapshots(deletedSnapshots);
+		
+		commitRepository.delete(deletedCommits);
+	}
 
 	private void deleteCommitCopyIndices(String targetSpaceID, String targetBranchID) {
 		designSpaceRepository.deleteCommitCopyIndices(targetSpaceID, targetBranchID);
@@ -1606,16 +1710,16 @@ public class DesignSpaceService {
 		designSpaceRepository.deleteEdge(targetSpaceID, targetTailID, targetHeadID);
 	}
 	
-	public void deleteEdges(Set<Edge> targetEdges) {
-		edgeRepository.delete(targetEdges);
+	private void deleteEdges(Set<Edge> deletedEdges) {
+		edgeRepository.delete(deletedEdges);
 	}
 	
 	public void deleteNode(String targetSpaceID, String targetNodeID) {
 		designSpaceRepository.deleteNode(targetSpaceID, targetNodeID);
 	}
 	
-	public void deleteNodes(Set<Node> targetNodes) {
-		nodeRepository.delete(targetNodes);
+	private void deleteNodes(Set<Node> deletedNodes) {
+		nodeRepository.delete(deletedNodes);
 	}
 
 	private void deleteNodeCopyIndices(String targetSpaceID) {
@@ -1636,6 +1740,18 @@ public class DesignSpaceService {
 
 	private void deleteNodeType(String targetSpaceID, String targetBranchID, String targetNodeID) {
 		designSpaceRepository.deleteNodeType(targetSpaceID, targetBranchID, targetNodeID);
+	}
+	
+	private void deleteSnapshots(Set<Snapshot> deletedSnapshots) {
+		Set<Node> deletedNodes = new HashSet<Node>();
+		
+		for (Snapshot deletedSnapshot : deletedSnapshots) {
+			deletedNodes.addAll(deletedSnapshot.getNodes());
+		}
+		
+		deleteNodes(deletedNodes);
+		
+		snapshotRepository.delete(deletedSnapshots);
 	}
 
 	private void fastForwardBranch(String targetSpaceID, String targetBranchID1, String targetBranchID2) {

@@ -58,9 +58,17 @@ public class NodeSpace {
 		return nodeCopy;
 	}
 	
+	public Node copyNodeWithID(Node node) {
+		if (node.hasNodeType()) {
+			return createTypedNode(node.getNodeID(), node.getNodeType());
+		} else {
+			return createNode(node.getNodeID());
+		} 
+	}
+	
 	public Node copyNode(Node node) {
 		if (node.hasNodeType()) {
-			return createNode(node.getNodeType());
+			return createTypedNode(node.getNodeType());
 		} else {
 			return createNode();
 		}
@@ -72,18 +80,30 @@ public class NodeSpace {
 		return node;
 	}
 	
-	public Node createNode(String nodeType) {
+	public Node createNode(String nodeID) {
+		Node node = new Node(nodeID);
+		addNode(node);
+		return node;
+	}
+	
+	public Node createTypedNode(String nodeType) {
 		Node node = new Node("n" + idIndex++, nodeType);
 		addNode(node);
 		return node;
 	}
 	
+	public Node createTypedNode(String nodeID, String nodeType) {
+		Node node = new Node(nodeID, nodeType);
+		addNode(node);
+		return node;
+	}
+	
 	public Node createAcceptNode() {
-		return createNode(NodeType.ACCEPT.getValue());
+		return createTypedNode(NodeType.ACCEPT.getValue());
 	}
 	
 	public Node createStartNode() {
-		return createNode(NodeType.START.getValue());
+		return createTypedNode(NodeType.START.getValue());
 	}
 	
 	public boolean deleteNodes(Set<Node> deletedNodes) {

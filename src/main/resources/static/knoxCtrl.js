@@ -26,6 +26,7 @@ function knoxCtrl($scope) {
     $scope.deleteNodeID2 = "";
 
     $scope.branchID = "";
+    $scope.commitPath = "";
     $scope.inputBranchIDs = "";
     $scope.inputBranchID1 = "";
     $scope.inputBranchID2 = "";
@@ -704,18 +705,24 @@ function knoxCtrl($scope) {
         }
     };
 
-    $scope.commitToHead = function(targetSpaceID) {
-        if (targetSpaceID) {
-            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
+    $scope.commitToBranch = function(targetSpaceID, targetBranchID) {
+        var query = "?";
 
-            d3.xhr("/branch/commitToHead" + query).post(function(error, request) {
-                if (error) {
-                    sweetAlert("Error", error.responseText, "error");
-                } else {
-                    $scope.graphDesignSpace(targetSpaceID);
-                }
-            });
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
         }
+
+        if (targetBranchID) {
+            query += $scope.encodeQueryParameter("targetBranchID", targetBranchID, query);
+        }
+        
+        d3.xhr("/branch/commitTo" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", error.responseText, "error");
+            } else {
+                $scope.graphDesignSpace(targetSpaceID);
+            }
+        });
     };
 
     $scope.createBranch = function(targetSpaceID, outputBranchID) {
@@ -730,6 +737,58 @@ function knoxCtrl($scope) {
                 }
             });
         }
+    };
+
+    $scope.revertBranch = function(targetSpaceID, targetBranchID, commitPath) {
+        var query = "?";
+
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
+        }
+
+        if (targetBranchID) {
+            query += $scope.encodeQueryParameter("targetBranchID", targetBranchID, query);
+        }
+
+        if (commitPath) {
+            commitPath = commitPath.split(",");
+
+            query += $scope.encodeQueryParameter("commitPath", commitPath, query);
+        }
+
+        d3.xhr("/branch/revert" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else {
+                $scope.graphDesignSpace(targetSpaceID);
+            }
+        });
+    };
+
+    $scope.resetBranch = function(targetSpaceID, targetBranchID, commitPath) {
+        var query = "?";
+
+        if (targetSpaceID) {
+            query += $scope.encodeQueryParameter("targetSpaceID", targetSpaceID, query);
+        }
+
+        if (targetBranchID) {
+            query += $scope.encodeQueryParameter("targetBranchID", targetBranchID, query);
+        }
+
+        if (commitPath) {
+            commitPath = commitPath.split(",");
+
+            query += $scope.encodeQueryParameter("commitPath", commitPath, query);
+        }
+
+        d3.xhr("/branch/reset" + query).post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            } else {
+                $scope.graphDesignSpace(targetSpaceID);
+            }
+        });
     };
 
     $scope.deleteBranch = function(targetSpaceID, targetBranchID) {

@@ -110,21 +110,21 @@
                     <form class="navbar-form navbar-left" ng-hide="isDSGraph">
                         <div class="input-group">
                             <div class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="commitToHead(graphs[0].spaceID)">Commit</button>
-                            </div><!-- /btn-group -->
-                        </div><!-- /input-group -->
-                    </form>
-                    <form class="navbar-form navbar-left" ng-hide="isDSGraph">
-                        <div class="input-group">
-                            <div class="input-group-btn">
                                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Control <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
+                                    <li><a href="#" ng-click="commitToBranch(graphs[0].spaceID, branchID)">Commit</a></li>
                                     <li><a href="#" ng-click="checkoutBranch(graphs[0].spaceID, branchID)">Checkout</a></li>
                                     <li><a href="#" ng-click="createBranch(graphs[0].spaceID, branchID)">Branch</a></li>
                                     <li><a href="#" ng-click="deleteBranch(graphs[0].spaceID, branchID)">Delete</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" ng-click="revertBranch(graphs[0].spaceID, branchID, commitPath)">Revert</a></li>
+                                    <li><a href="#" ng-click="resetBranch(graphs[0].spaceID, branchID, commitPath)">Reset</a></li>
                                 </ul>
                             </div><!-- /btn-group -->
-                            <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." size="8" ng-model="branchID">
+                            <div class="btn-group">
+                                <input type="text" placeholder="Branch ID" class="form-control" aria-label="..." size="8" ng-model="branchID">
+                                <input type="text" placeholder="Commit IDs" class="form-control" aria-label="..." size="8" ng-model="commitPath">
+                            </div>
                         </div><!-- /input-group -->
                     </form>
                     <form class="navbar-form navbar-left" ng-hide="isDSGraph">

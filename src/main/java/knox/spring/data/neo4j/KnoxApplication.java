@@ -135,17 +135,32 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
-    @RequestMapping(value = "/branch/resetHead", method = RequestMethod.POST)
-    public ResponseEntity<String> resetHeadBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-    		@RequestParam(value = "targetCommitID", required = true) String targetCommitID) {
-    	try {
-    		designSpaceService.resetHeadBranch(targetSpaceID, targetCommitID);
-    		return new ResponseEntity<String>("{\"message\": \"Head branch was successfully reset.\"}", 
-    				HttpStatus.NO_CONTENT);
-    	} catch (DesignSpaceNotFoundException ex) {
-    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
-    				HttpStatus.BAD_REQUEST);
+    @RequestMapping(value = "/branch/reset", method = RequestMethod.POST)
+    public ResponseEntity<String> resetBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "targetBranchID", required = false) String targetBranchID,
+    		@RequestParam(value = "commitPath", required = true) List<String> commitPath) {
+    	if (targetBranchID == null) {
+    		designSpaceService.resetHeadBranch(targetSpaceID, commitPath);
+    	} else {
+    		designSpaceService.resetBranch(targetSpaceID, targetBranchID, commitPath);
     	}
+    	
+    	return new ResponseEntity<String>("{\"message\": \"Branch was successfully reset.\"}", 
+    				HttpStatus.NO_CONTENT);
+    }
+    
+    @RequestMapping(value = "/branch/revert", method = RequestMethod.POST)
+    public ResponseEntity<String> revertBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "targetBranchID", required = false) String targetBranchID,
+    		@RequestParam(value = "commitPath", required = true) List<String> commitPath) {
+    	if (targetBranchID == null) {
+    		designSpaceService.revertHeadBranch(targetSpaceID, commitPath);
+    	} else {
+    		designSpaceService.revertBranch(targetSpaceID, targetBranchID, commitPath);
+    	}
+    	
+    	return new ResponseEntity<String>("{\"message\": \"Branch was successfully reverted.\"}", 
+    				HttpStatus.NO_CONTENT);
     }
     
     @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
@@ -153,10 +168,15 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return designSpaceService.d3GraphBranches(targetSpaceID);
     }
     
-    @RequestMapping(value = "/branch/commitToHead", method = RequestMethod.POST)
-    public ResponseEntity<String> commitToHeadBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-    	designSpaceService.commitToHeadBranch(targetSpaceID);
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    @RequestMapping(value = "/branch/commitTo", method = RequestMethod.POST)
+    public ResponseEntity<String> commitToBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "targetBranchID", required = false) String targetBranchID) {
+    	if (targetBranchID == null) {
+    		designSpaceService.commitToHeadBranch(targetSpaceID);
+    	} else {
+    		designSpaceService.commitToBranch(targetSpaceID, targetBranchID);
+    	}
+        return new ResponseEntity<String>("Changes to design space were successfully committed.", HttpStatus.NO_CONTENT);
     }
     
     @RequestMapping(value = "/branch/insert", method = RequestMethod.POST)

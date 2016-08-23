@@ -44,6 +44,18 @@ public class DesignSpace extends NodeSpace {
     	branches.add(branch);
     }
     
+    public boolean containsCommit(Commit commit) {
+    	if (hasBranches()) {
+    		for (Branch branch : branches) {
+    			if (branch.containsCommit(commit)) {
+    				return true;
+    			}
+    		}
+    	}
+    	
+    	return false;
+	}
+    
     public Branch createBranch(String branchID, int idIndex) {
     	Branch branch = new Branch(branchID, idIndex);
     	addBranch(branch);
