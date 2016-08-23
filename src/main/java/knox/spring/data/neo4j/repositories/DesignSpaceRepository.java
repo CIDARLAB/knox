@@ -371,11 +371,11 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "RETURN n")
 	Set<Node> getNodes(@Param("targetSpaceID") String targetSpaceID);
 	
-	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(tc:Commit {commitID: {targetCommitID}}), (target)-[:ARCHIVES]->(hb) "
-			+ "MATCH (hb)-[:CONTAINS]->(c:Commmit)-[:SUCCEEDS*]->(tc)"
-			+ "DETACH DELETE c "
-			+ "CREATE UNIQUE (hb)-[:LATEST]->(tc)")
-	void resetHeadBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetCommitID") String targetCommitID);
+//	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(tc:Commit {commitID: {targetCommitID}}), (target)-[:ARCHIVES]->(hb) "
+//			+ "MATCH (hb)-[:CONTAINS]->(c:Commmit)-[:SUCCEEDS*]->(tc)"
+//			+ "DETACH DELETE c "
+//			+ "CREATE UNIQUE (hb)-[:LATEST]->(tc)")
+//	void resetHeadBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetCommitID") String targetCommitID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(tc:Commit {commitID: {targetCommitID}}), (target)-[:ARCHIVES]->(hb) "
 			+ "DETACH DELETE lc")

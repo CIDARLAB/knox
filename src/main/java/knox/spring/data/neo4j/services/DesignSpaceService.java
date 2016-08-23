@@ -383,7 +383,7 @@ public class DesignSpaceService {
 
     		if (targetCommit.getCommitID().equals(commitPath.get(i))) {
     			while (targetCommit != null && i + 1 < commitPath.size()) {
-    				targetCommit = targetCommit.findPredecessor(commitPath.get(i));
+    				targetCommit = targetCommit.findPredecessor(commitPath.get(i + 1));
     				i++;
     			}
     			
@@ -400,7 +400,9 @@ public class DesignSpaceService {
         				}
         			}
         			
-        			deleteCommits(deletedCommits);
+        			if (deletedCommits.size() > 0) {
+        				deleteCommits(deletedCommits);
+        			}
         		}
     		}
     		
@@ -799,10 +801,10 @@ public class DesignSpaceService {
     	}
     }
     
-    public void resetHeadBranch(String targetSpaceID, String targetCommitID) {
-    	validateDesignSpaceOperator(targetSpaceID);
-    	designSpaceRepository.resetHeadBranch(targetSpaceID, targetCommitID);
-    }
+//    public void resetHeadBranch(String targetSpaceID, String targetCommitID) {
+//    	validateDesignSpaceOperator(targetSpaceID);
+//    	designSpaceRepository.resetHeadBranch(targetSpaceID, targetCommitID);
+//    }
    
     public void deleteDesignSpace(String targetSpaceID) {
     	validateDesignSpaceOperator(targetSpaceID);

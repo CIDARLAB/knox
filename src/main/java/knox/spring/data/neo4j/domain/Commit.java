@@ -85,20 +85,18 @@ public class Commit {
     public Set<Commit> getHistory() {
     	Set<Commit> history = new HashSet<Commit>();
     	
-    	if (hasPredecessors()) {
-    		Stack<Commit> commitStack = new Stack<Commit>();
-    		
-    		commitStack.push(this);
-    		
-    		while (commitStack.size() > 0) {
-    			Commit commit = commitStack.pop();
-    			
-    			history.add(commit);
-    			
-    			if (commit.hasPredecessors()) {
-    				for (Commit predecessor : commit.getPredecessors()) {
-    					commitStack.push(predecessor);
-    				}
+    	Stack<Commit> commitStack = new Stack<Commit>();
+
+    	commitStack.push(this);
+
+    	while (commitStack.size() > 0) {
+    		Commit commit = commitStack.pop();
+
+    		history.add(commit);
+
+    		if (commit.hasPredecessors()) {
+    			for (Commit predecessor : commit.getPredecessors()) {
+    				commitStack.push(predecessor);
     			}
     		}
     	}
