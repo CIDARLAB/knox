@@ -42,11 +42,43 @@ public class Edge {
     	this.componentRoles = componentRoles;
     }
     
+    public void addComponent(String compID, String compRole) {
+    	if (!hasComponentIDs()) {
+    		componentIDs = new ArrayList<String>();
+    		
+    		componentRoles = new ArrayList<String>();
+    	}
+    	
+    	if (!componentIDs.contains(compID)) {
+    		componentIDs.add(compID);
+    	}
+    	
+    	if (!componentRoles.contains(compRole)) {
+    		componentRoles.add(compRole);
+    	}
+    }
+    
     public Edge copy(Node tail, Node head) {
     	if (hasComponentIDs() && hasComponentRoles()) {
     		return new Edge(tail, head, new ArrayList<String>(componentIDs), new ArrayList<String>(componentRoles));
     	} else {
     		return new Edge(tail, head);
+    	}
+    }
+    
+    public boolean deleteComponent(String compID) {
+    	if (hasComponentIDs()) {
+    		boolean result = componentIDs.remove(compID);
+    		
+    		if (componentIDs.size() == 0) {
+    			componentIDs = null;
+    			
+    			componentRoles = null;
+    		}
+    		
+    		return result;
+    	} else {
+    		return false;
     	}
     }
 
@@ -115,6 +147,10 @@ public class Edge {
     		componentIDs = null;
     		componentRoles = null;
     	}
+    }
+    
+    public boolean isComponentEdge() {
+    	return hasComponentIDs() && hasComponentRoles();
     }
     
     public boolean isIdenticalTo(Edge edge) {

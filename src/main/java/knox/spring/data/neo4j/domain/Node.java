@@ -45,7 +45,7 @@ public class Node {
     
     public Edge copyEdge(Edge edge) {
     	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
-    		return createEdge(edge.getHead(), edge.getComponentIDs(), edge.getComponentRoles());
+    		return createEdge(edge.getHead(), new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
     	} else {
     		return createEdge(edge.getHead());
     	}
@@ -54,7 +54,7 @@ public class Node {
     
     public Edge copyEdge(Edge edge, Node head) {
     	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
-    		return createEdge(head, edge.getComponentIDs(), edge.getComponentRoles());
+    		return createEdge(head, new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
     	} else {
     		return createEdge(head);
     	}
@@ -121,6 +121,20 @@ public class Node {
     		return false;
     	} else {
     		return edges.size() > 0;
+    	}
+    }
+    
+    public boolean hasEdge(Node head) {
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.getHead().equals(head)) {
+    				return true;
+    			}
+    		}
+    		
+    		return false;
+    	} else {
+    		return false;
     	}
     }
     

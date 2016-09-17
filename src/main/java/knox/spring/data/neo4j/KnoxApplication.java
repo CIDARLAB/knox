@@ -65,6 +65,13 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
+    @RequestMapping(value = "/import/eugene", method = RequestMethod.POST)
+    public ResponseEntity<String> importEugene(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputEugeneFiles) {
+		designSpaceService.importEugene();
+    		
+        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    }
+    
     @RequestMapping(value = "/merge/sbol", method = RequestMethod.POST)
     public ResponseEntity<String> mergeSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
     		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,

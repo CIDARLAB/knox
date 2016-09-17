@@ -8,6 +8,7 @@ function knoxCtrl($scope) {
     $scope.isCreationMode = false;
     $scope.isDeletionMode = false;
     $scope.isSBOLMode = false;
+    $scope.isEugeneMode = false;
     $scope.isCSVMode = false;
 
     $scope.searchSpaceID = "";
@@ -57,6 +58,7 @@ function knoxCtrl($scope) {
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
+            $scope.isEugeneMode = false;
         } else if (graphType === "ds1") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = true;
@@ -64,6 +66,7 @@ function knoxCtrl($scope) {
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
+            $scope.isEugeneMode = false;
         } else if (graphType === "ds2") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -71,6 +74,7 @@ function knoxCtrl($scope) {
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
+            $scope.isEugeneMode = false;
         } else if (graphType === "ds3") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -78,6 +82,7 @@ function knoxCtrl($scope) {
             $scope.isDeletionMode = true;
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
+            $scope.isEugeneMode = false;
         } else if (graphType === "ds4") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -85,6 +90,7 @@ function knoxCtrl($scope) {
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = true;
             $scope.isCSVMode = false;
+            $scope.isEugeneMode = false;
         } else if (graphType === "ds5") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -92,6 +98,15 @@ function knoxCtrl($scope) {
             $scope.isDeletionMode = false;
             $scope.isSBOLMode = false;
             $scope.isCSVMode = true;
+            $scope.isEugeneMode = false;
+        } else if (graphType === "ds6") {
+            $scope.isDSGraph = true;
+            $scope.isCombinationMode = false;
+            $scope.isCreationMode = false;
+            $scope.isDeletionMode = false;
+            $scope.isSBOLMode = false;
+            $scope.isCSVMode = false;
+            $scope.isEugeneMode = true;
         }
     };
 

@@ -96,6 +96,10 @@
                             </div>
                         </div><!-- /input-group -->
                     </form>
+                    <form method="POST" enctype="multipart/form-data" action="import/eugene" class="navbar-form navbar-left" ng-show="isEugeneMode">
+                        <input type="file" name="inputEugeneFiles[]" multiple>
+                        <input type="submit" value="Import">
+                    </form>
                     <form method="POST" enctype="multipart/form-data" action="merge/sbol" class="navbar-form navbar-left" ng-show="isSBOLMode">
                         <input type="file" name="inputSBOLFiles[]" multiple>
                         <input type="text" name="outputSpaceID" placeholder="Space ID" class="form-control" aria-label="..." size="10">
@@ -153,8 +157,9 @@
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds1'" ng-change="switchToGraphType(graphType)">Combine</label>
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds2'" ng-change="switchToGraphType(graphType)">Create</label>
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds3'" ng-change="switchToGraphType(graphType)">Delete</label>
-                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds4'" ng-change="switchToGraphType(graphType)">SBOL</label>
+                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds6'" ng-change="switchToGraphType(graphType)">Eugene</label>
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds5'" ng-change="switchToGraphType(graphType)">CSV</label>
+                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds4'" ng-change="switchToGraphType(graphType)">SBOL</label>
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'vc'" ng-change="switchToGraphType(graphType)">Version</label>
                         </div>
                     </form>
