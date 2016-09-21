@@ -187,24 +187,11 @@ public class DesignSpaceService {
     			rulesetIndices[i]++;
     		}
     		
-//    		System.out.println("--------------------");
-    		
     		boolean backtrack = false;
 
     		if (rulesetIndices[i] < precedenceRulesets.size()) {
-//    			String fls = "rulesetIndices ";
-//        		for (int c = 0; c < rulesetIndices.length; c++) {
-//        			fls = fls + rulesetIndices[c] + " ";
-//        		}
-//        		System.out.println(fls);
-    			
     			appliedRules.addAll(precedenceRulesets.get(rulesetIndices[i]));
     			
-//    			System.out.println("appliedRules");
-//    			for (Rule rule : appliedRules) {
-//    				System.out.println(rule.getSubjectPart().getID() + " before " + rule.getObjectPart().getID());
-//    			}
-
     			for (Rule rule : precedenceRulesets.get(rulesetIndices[i])) {
     				if (forbiddenPartFreqs.containsKey(rule.getSubjectPart().getID())) {
     					forbiddenPartFreqs.put(rule.getSubjectPart().getID(), 
@@ -229,27 +216,12 @@ public class DesignSpaceService {
     			subSpace.connectToSubSpace(nextSubSpace, precedenceRulesets.get(rulesetIndices[i]));
 
     			subSpace = nextSubSpace;
-    			
-//    			System.out.println("nextSpace");
-//    			for (Node node : subSpace.getNodes()) {
-//					if (node.hasEdges()) {
-//						for (Edge edge : node.getEdges()) {
-//							System.out.println(edge.getTail().getNodeID() + " -"  + edge.getComponentIDs().size() + "-" + edge.getComponentRoles().iterator().next() + "-> " + edge.getHead().getNodeID());
-//						}
-//					}
-//				}
     		} else {
     			rulesetIndices[i] = -1;
 
     			i--;
     			
     			backtrack = (i >= 0);
-    			
-//    			String fls = "backIndices ";
-//        		for (int c = 0; c < rulesetIndices.length; c++) {
-//        			fls = fls + rulesetIndices[c] + " ";
-//        		}
-//        		System.out.println(fls);
     		}
     		
     		if (i == precedenceRulesets.size() - 1 || backtrack) {	
@@ -265,20 +237,6 @@ public class DesignSpaceService {
     			}
 
     			subSpace = subSpaces.get(appliedRules);
-
-//    			System.out.println("backAppliedRules");
-//    			for (Rule rule : appliedRules) {
-//    				System.out.println(rule.getSubjectPart().getID() + " before " + rule.getObjectPart().getID());
-//    			}
-//    			
-//    			System.out.println("backSpace");
-//    			for (Node node : subSpace.getNodes()) {
-//					if (node.hasEdges()) {
-//						for (Edge edge : node.getEdges()) {
-//							System.out.println(edge.getTail().getNodeID() + " -"  + edge.getComponentIDs().size() + "-" + edge.getComponentRoles().iterator().next() + "-> " + edge.getHead().getNodeID());
-//						}
-//					}
-//				}
     		} else if (i >= 0) {
     			i++;
     		}
@@ -1406,7 +1364,7 @@ public class DesignSpaceService {
     				outputStarts.addAll(outputSpace.getStartNodes());
     			}
     			
-    			mergeNodeSpaces(inputStarts, outputStarts, inputSpace, outputSpace, isIntersection, isCompleteMatch, strength);	
+    			mergeNodeSpaces(inputStarts, outputStarts, inputSpace, outputSpace, isIntersection, isCompleteMatch, strength);
     		}
     	}
   
@@ -1482,11 +1440,11 @@ public class DesignSpaceService {
     	for (Node inputStart : inputStarts) {
     		Stack<Node> inputNodeStack = new Stack<Node>();
     		
-    		inputNodeStack.push(inputStart);
-			
 			Set<Node> reachableInputs = new HashSet<Node>();
 			
-			if (isCompleteMatch) {
+			if (isCompleteMatch && outputStarts.size() > 0) {
+				inputNodeStack.push(inputStart);
+				
 				while (inputNodeStack.size() > 0) {
 					Node inputNode = inputNodeStack.pop();
 
@@ -1505,7 +1463,7 @@ public class DesignSpaceService {
     		for (Node outputStart : outputStarts) {
     	    	Stack<Node> outputNodeStack = new Stack<Node>();
     	    	
-    			if (isInputStartMatching(inputStart, outputStart, strength)) {
+    			if (!isIntersection || isInputStartMatching(inputStart, outputStart, strength)) {
     				mergeNodes(inputStart, outputStart, outputSpace, inputNodeStack, outputNodeStack, 
     						mergedIDToOutputNode, inputIDToOutputNodes);
     			}
@@ -1557,7 +1515,6 @@ public class DesignSpaceService {
     	    	} else {
     	    		mergedEdges.addAll(matchingEdges);
     	    	}
-    	    	
     		}
     	}
     	
@@ -1632,9 +1589,7 @@ public class DesignSpaceService {
         							|| !inputIDToOutputNodes.containsKey(inputSuccessor.getNodeID())) {
         						for (Node outputNode : outputNodes) {
         							for (Node outputSuccessor : outputSuccessors) { 
-        								mergedEdges.add(outputNode.createEdge(outputSuccessor, 
-        										inputEdge.getComponentIDs(), 
-        										inputEdge.getComponentRoles()));
+        								mergedEdges.add(outputNode.copyEdge(inputEdge, outputSuccessor));
         							}
         						}
         					}
@@ -1653,8 +1608,21 @@ public class DesignSpaceService {
         		mergedNodes.add(mergedEdge.getHead());
         	}
         	
-        	return new SpaceDiff(outputSpace.retainEdges(mergedEdges), 
-        			outputSpace.retainNodes(mergedNodes));
+        	Set<Edge> diffEdges;
+        	
+        	Set<Node> diffNodes;
+        	
+        	if (isIntersection) {
+        		diffEdges = outputSpace.retainEdges(mergedEdges);
+        		
+        		diffNodes = outputSpace.retainNodes(mergedNodes);
+        	} else {
+        		diffEdges = outputSpace.getOtherEdges(mergedEdges);
+        		
+        		diffNodes = outputSpace.getOtherNodes(mergedNodes);
+        	}
+        	
+        	return new SpaceDiff(diffEdges, diffNodes);
     	} else {
     		return new SpaceDiff(new HashSet<Edge>(), new HashSet<Node>());
     	}

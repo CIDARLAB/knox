@@ -181,6 +181,14 @@ public class NodeSpace {
 		return idIndex;
 	}
 	
+	public int getNumNodes() {
+		if (hasNodes()) {
+			return nodes.size();
+		} else {
+			return 0;
+		}
+	}
+	
 	public Node getNode(String nodeID) {
 		if (hasNodes()) {
 			for (Node node : nodes) {
@@ -285,20 +293,54 @@ public class NodeSpace {
     	return nodeIDToNode;
     }
     
-    public Set<Node> retainNodes(Set<Node> retainedNodes) {
+    public Set<Node> getOtherNodes(Set<Node> nodes) {
     	Set<Node> diffNodes = new HashSet<Node>();
-    	
+
     	if (hasNodes()) {
-    		for (Node node : nodes) {
-    			if (!retainedNodes.contains(node)) {
+    		for (Node node : this.nodes) {
+    			if (!nodes.contains(node)) {
     				diffNodes.add(node);
     			}
     		}
-    		
+    	}
+
+    	return diffNodes;
+    }
+    
+    public Set<Node> retainNodes(Set<Node> retainedNodes) {
+    	Set<Node> diffNodes = getOtherNodes(retainedNodes);
+    	
+    	if (diffNodes.size() > 0) {
     		deleteNodes(diffNodes);
     	}
     	
     	return diffNodes;
+    }
+    
+    public Set<Edge> getOtherEdges(Set<Edge> edges) {
+    	Set<Edge> diffEdges = new HashSet<Edge>();
+
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			diffEdges.addAll(getOtherEdges(node, edges));
+    		}
+    	}
+
+    	return diffEdges;
+    }
+    
+    private Set<Edge> getOtherEdges(Node node, Set<Edge> edges) {
+    	Set<Edge> diffEdges = new HashSet<Edge>();
+
+    	if (node.hasEdges()) {
+    		for (Edge edge : node.getEdges()) {
+    			if (!edges.contains(edge)) {
+    				diffEdges.add(edge);
+    			}
+    		}
+    	}
+    	
+    	return diffEdges;
     }
     
     public Set<Edge> retainEdges(Set<Edge> retainedEdges) {
@@ -306,17 +348,11 @@ public class NodeSpace {
     	
     	if (hasNodes()) {
     		for (Node node : nodes) {
-    			Set<Edge> localDiffEdges = new HashSet<Edge>();
+    			Set<Edge> localDiffEdges = getOtherEdges(node, retainedEdges);
     			
-    			if (node.hasEdges()) {
-    				for (Edge edge : node.getEdges()) {
-    					if (!retainedEdges.contains(edge)) {
-    						localDiffEdges.add(edge);
-    					}
-    				}
-    				
+    			if (localDiffEdges.size() > 0) {
     				node.deleteEdges(localDiffEdges);
-    				
+
     				diffEdges.addAll(localDiffEdges);
     			}
     		}
