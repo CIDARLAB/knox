@@ -68,6 +68,62 @@ public class Rule {
 		return objectPart;
 	}
 	
+//	public Set<Part> getImplicantParts() {
+//		Set<Part> implcParts = new HashSet<Part>();
+//		
+//		if (isAdjacencyRule()) {
+//			implcParts.add(subjectPart);
+//			implcParts.add(objectPart);
+//		} else if (isPrecedenceRule()) {
+//			implcParts.add(getImplicantPart());
+//		}
+//		
+//		return implcParts;
+//	}
+	
+//	public Set<Part> getImpliedParts() {
+//		Set<Part> impldParts = new HashSet<Part>();
+//		
+//		if (isAdjacencyRule()) {
+//			impldParts.add(subjectPart);
+//			impldParts.add(objectPart);
+//		} else if (isPrecedenceRule()) {
+//			impldParts.add(getImpliedPart());
+//		}
+//		
+//		return impldParts;
+//	}
+	
+	public Part getImplicantPart() {
+		if (type.equals(RuleType.BEFORE)
+				|| type.equals(RuleType.ALL_BEFORE)
+				|| type.equals(RuleType.SOME_BEFORE)) {
+			return objectPart;
+		} else if (type.equals(RuleType.AFTER)
+				|| type.equals(RuleType.ALL_AFTER)
+				|| type.equals(RuleType.SOME_AFTER)
+				|| isAdjacencyRule()) {
+			return subjectPart;
+		} else {
+			return null;
+		}
+	}
+	
+	public Part getImpliedPart() {
+		if (type.equals(RuleType.BEFORE)
+				|| type.equals(RuleType.ALL_BEFORE)
+				|| type.equals(RuleType.SOME_BEFORE)) {
+			return subjectPart;
+		} else if (type.equals(RuleType.AFTER)
+				|| type.equals(RuleType.ALL_AFTER)
+				|| type.equals(RuleType.SOME_AFTER)
+				|| isAdjacencyRule()) {
+			return objectPart;
+		} else {
+			return null;
+		}
+	}
+	
 	public int getSubjectIndex() {
 		return subjectIndex;
 	}
@@ -80,8 +136,42 @@ public class Rule {
 		return count;
 	}
 	
+	public boolean isAdjacencyRule() {
+		return type.equals(RuleType.NEXTTO)
+				|| type.equals(RuleType.ALL_NEXTTO)
+				|| type.equals(RuleType.SOME_NEXTTO);
+	}
+	
+	public boolean isPrecedenceRule() {
+		return isStrictPrecedenceRule()
+				|| isNonStrictPrecedenceRule();
+	}
+	
+	public boolean isStrictPrecedenceRule() {
+		return type.equals(RuleType.BEFORE)
+				|| type.equals(RuleType.ALL_BEFORE)
+				|| type.equals(RuleType.AFTER)
+				|| type.equals(RuleType.ALL_AFTER)
+				|| type.equals(RuleType.NEXTTO)
+				|| type.equals(RuleType.ALL_NEXTTO);
+	}
+	
+	public boolean isNonStrictPrecedenceRule() {
+		return type.equals(RuleType.SOME_BEFORE)
+				|| type.equals(RuleType.SOME_AFTER)
+				|| type.equals(RuleType.SOME_NEXTTO);
+	}
+	
 	public enum RuleType {
-    	BEFORE ("BEFORE");
+		ALL_BEFORE ("ALL_BEFORE"),
+		ALL_AFTER ("ALL_AFTER"),
+		ALL_NEXTTO ("ALL_NEXTTO"),
+    	BEFORE ("BEFORE"),
+    	AFTER ("AFTER"),
+    	NEXTTO ("NEXTTO"),
+    	SOME_BEFORE ("SOME_BEFORE"),
+    	SOME_AFTER ("SOME_AFTER"),
+    	SOME_NEXTTO ("SOME_NEXTTO");
     	
     	private final String value;
     	

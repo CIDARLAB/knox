@@ -32,6 +32,10 @@ public class Part {
 		}
 	}
 	
+	public boolean isIdenticalTo(Part part) {
+		return hasID() && part.hasID() && id.equals(part.getID());
+	}
+	
 	public enum PartType {
     	PROMOTER ("promoter"),
     	RBS ("ribosome_entry_site"),

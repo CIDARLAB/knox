@@ -7,12 +7,11 @@ import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
+import knox.spring.data.neo4j.eugene.Conversion;
 import knox.spring.data.neo4j.eugene.Device;
 import knox.spring.data.neo4j.eugene.Part;
 import knox.spring.data.neo4j.eugene.Part.PartType;
 import knox.spring.data.neo4j.eugene.Rule;
-import knox.spring.data.neo4j.eugene.Rule.RuleType;
-import knox.spring.data.neo4j.eugene.SubSpace;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
@@ -114,9 +113,8 @@ public class DesignSpaceService {
     	architecture.add(new Part(Part.PartType.TERMINATOR));
     	
     	Set<Rule> rules = new HashSet<Rule>();
-    	rules.add(new Rule(Rule.RuleType.BEFORE, pLac, tetR));
     	rules.add(new Rule(Rule.RuleType.BEFORE, tetR, pTet));
-    	rules.add(new Rule(Rule.RuleType.BEFORE, pTet, lacI));
+    	rules.add(new Rule(Rule.RuleType.BEFORE, lacI, pLac));
     	
     	Device device = new Device("toggleSwitch", architecture, rules);
     	
@@ -125,124 +123,14 @@ public class DesignSpaceService {
     	saveDesignSpace(space);
     }
     
-    private List<Set<Rule>> composePrecedenceRulesets(Set<Rule> rules) {
-    	HashMap<String, Integer> partIDToRuleIndex = new HashMap<String, Integer>();
-    	
-    	int i = 0;
-    	
-    	List<Set<Rule>> precedenceRules = new LinkedList<Set<Rule>>();
-
-    	for (Rule rule : rules) {
-    		if (rule.getType().equals(RuleType.BEFORE)) {
-    			if (!partIDToRuleIndex.containsKey(rule.getObjectPart().getID())) {
-    				partIDToRuleIndex.put(rule.getObjectPart().getID(), new Integer(i));
-    				
-    				precedenceRules.add(new HashSet<Rule>());
-    				
-    				i++;
-    			}
-    			
-    			int ruleIndex = partIDToRuleIndex.get(rule.getObjectPart().getID()).intValue();
-    			
-    			precedenceRules.get(ruleIndex).add(rule);
-    		}
-    	}
-    	
-    	return precedenceRules;
-    }
-    
     public DesignSpace convertDeviceToDesignSpace(Device device, HashMap<PartType, Set<Part>> partsLibrary) {
-    	DesignSpace space = new DesignSpace(device.getID());
-
-    	HashMap<Set<Rule>, SubSpace> subSpaces = new HashMap<Set<Rule>, SubSpace>();
+    	Conversion eugeneConversion = new Conversion(device, partsLibrary);
     	
-    	HashMap<String, Integer> forbiddenPartFreqs = new HashMap<String, Integer>();
+    	do {
+    		eugeneConversion.convertNext();
+    	} while (!eugeneConversion.isFinished());
     	
-    	SubSpace subSpace = new SubSpace(space, device, partsLibrary);
-    	
-    	subSpaces.put(new HashSet<Rule>(), subSpace);
-    	
-    	List<Set<Rule>> precedenceRulesets = composePrecedenceRulesets(device.getRules());
-    	
-    	for (Set<Rule> ruleset : precedenceRulesets) {
-    		subSpace.setPrecedenceRules(ruleset);
-    	}
-    	
-    	int[] rulesetIndices = new int[precedenceRulesets.size()];
-
-    	for (int i = 0; i < rulesetIndices.length; i++) {
-    		rulesetIndices[i] = -1;
-    	}
-    	
-    	Set<Rule> appliedRules = new HashSet<Rule>();
-    	
-    	int i = 0;
-    	
-    	while (i >= 0) {
-    		rulesetIndices[i]++;
-
-    		while (rulesetIndices[i] < precedenceRulesets.size()
-    				&& (appliedRules.containsAll(precedenceRulesets.get(rulesetIndices[i]))
-    						|| forbiddenPartFreqs.containsKey(precedenceRulesets.get(rulesetIndices[i]).iterator().next().getObjectPart().getID()))) {
-    			rulesetIndices[i]++;
-    		}
-    		
-    		boolean backtrack = false;
-
-    		if (rulesetIndices[i] < precedenceRulesets.size()) {
-    			appliedRules.addAll(precedenceRulesets.get(rulesetIndices[i]));
-    			
-    			for (Rule rule : precedenceRulesets.get(rulesetIndices[i])) {
-    				if (forbiddenPartFreqs.containsKey(rule.getSubjectPart().getID())) {
-    					forbiddenPartFreqs.put(rule.getSubjectPart().getID(), 
-    							new Integer(forbiddenPartFreqs.get(rule.getSubjectPart().getID()).intValue() + 1));
-    				} else {
-    					forbiddenPartFreqs.put(rule.getSubjectPart().getID(), new Integer(1));
-    				}
-    			}
-    			
-        		SubSpace nextSubSpace;
-
-    			if (subSpaces.containsKey(appliedRules)) {
-    				nextSubSpace = subSpaces.get(appliedRules);
-    			} else {
-    				nextSubSpace = subSpace.copyByRuleset(precedenceRulesets.get(rulesetIndices[i]));
-
-    				nextSubSpace.applyPrecedenceRules(precedenceRulesets.get(rulesetIndices[i]));
-    				
-    				subSpaces.put(new HashSet<Rule>(appliedRules), nextSubSpace);
-    			}
-
-    			subSpace.connectToSubSpace(nextSubSpace, precedenceRulesets.get(rulesetIndices[i]));
-
-    			subSpace = nextSubSpace;
-    		} else {
-    			rulesetIndices[i] = -1;
-
-    			i--;
-    			
-    			backtrack = (i >= 0);
-    		}
-    		
-    		if (i == precedenceRulesets.size() - 1 || backtrack) {	
-    			appliedRules.removeAll(precedenceRulesets.get(rulesetIndices[i]));
-
-    			for (Rule rule : precedenceRulesets.get(rulesetIndices[i])) {
-    				if (forbiddenPartFreqs.get(rule.getSubjectPart().getID()).intValue() > 1) {
-    					forbiddenPartFreqs.put(rule.getSubjectPart().getID(), 
-    							new Integer(forbiddenPartFreqs.get(rule.getSubjectPart().getID()).intValue() - 1));
-    				} else {
-    					forbiddenPartFreqs.remove(rule.getSubjectPart().getID());
-    				}
-    			}
-
-    			subSpace = subSpaces.get(appliedRules);
-    		} else if (i >= 0) {
-    			i++;
-    		}
-    	}
-
-    	return space;
+    	return eugeneConversion.getSpace();
     }
     
     public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix) {

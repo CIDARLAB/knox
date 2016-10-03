@@ -11,7 +11,6 @@ import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.eugene.Part.PartType;
-import knox.spring.data.neo4j.eugene.Rule.RuleType;
 
 public class SubSpace {
 	
@@ -56,82 +55,72 @@ public class SubSpace {
     	}
 	}
 	
-	public List<Node> getNodes() {
-		return nodes;
-	}
-	
-	public HashMap<PartType, List<Integer>> getPartTypeToNodeIndices() {
-		return partTypeToNodeIndices;
-	}
-	
-	public void setPrecedenceRules(Set<Rule> ruleset) {
-		for (Rule rule : ruleset) {
-			if (rule.getType().equals(RuleType.BEFORE)) {
-				Part objPart = rule.getObjectPart();
-
-				if (partTypeToNodeIndices.containsKey(objPart.getType())) {
-					for (Integer nodeIndex : partTypeToNodeIndices.get(objPart.getType())) {
-						for (Edge edge : nodes.get(nodeIndex).getEdges()) {
-							if (!outgoingEdges.contains(edge)) {
-								edge.deleteComponent(objPart.getID());
-							}
-						}
-					}
-				}
-			}
-		}
-    }
-	
-	public void applyPrecedenceRules(Set<Rule> ruleset) {
-		for (Rule rule : ruleset) {
-			if (rule.getType().equals(RuleType.BEFORE)) {
-				Part subjPart = rule.getSubjectPart();
-
-				if (partTypeToNodeIndices.containsKey(subjPart.getType())) {
-					for (Integer nodeIndex : partTypeToNodeIndices.get(subjPart.getType())) {
-						for (Edge edge : nodes.get(nodeIndex).getEdges()) {
-							if (!outgoingEdges.contains(edge)) {
-								edge.deleteComponent(subjPart.getID());
-							}
-						}
-					}
-				}
-				
-				Part objPart = rule.getObjectPart();
-				
-				if (partTypeToNodeIndices.containsKey(objPart.getType())) {
-					for (Integer nodeIndex : partTypeToNodeIndices.get(objPart.getType())) {
-						for (Edge edge : nodes.get(nodeIndex).getEdges()) {
-							if (!outgoingEdges.contains(edge)) {
-								edge.addComponent(objPart.getID(), objPart.getType().getValue());
-							}
-						}
+	public void addPart(Part part) {
+		if (partTypeToNodeIndices.containsKey(part.getType())) {
+			for (Integer nodeIndex : partTypeToNodeIndices.get(part.getType())) {
+				for (Edge edge : nodes.get(nodeIndex).getEdges()) {
+					if (!outgoingEdges.contains(edge)) {
+						edge.addComponent(part.getID(), part.getType().getValue());
 					}
 				}
 			}
 		}
 	}
 	
-	public void connectToSubSpace(SubSpace nextSubSpace, Set<Rule> ruleset) {
-		Part objPart = ruleset.iterator().next().getObjectPart();
+	public void applyRule(Rule rule, Part implicantPart) {
+		if (rule.isAdjacencyRule()) {
+			if (implicantPart.isIdenticalTo(rule.getImplicantPart())) {
+				addPart(rule.getImplicantPart());
+			} else if (implicantPart.isIdenticalTo(rule.getImpliedPart())) {
+				addPart(rule.getImpliedPart());
+			}
+		} else if (rule.isNonStrictPrecedenceRule()) {
+			if (implicantPart.isIdenticalTo(rule.getImplicantPart())) {
+				addPart(rule.getImplicantPart());
+			} else if (implicantPart.isIdenticalTo(rule.getImpliedPart())) {
+				addPart(rule.getImplicantPart());
+				
+				addPart(rule.getImpliedPart());
+			}
+		} else if (rule.isStrictPrecedenceRule()) {
+			addPart(rule.getImplicantPart());
+			
+			deletePart(rule.getImpliedPart());
+		}
+	}
+	
+	public boolean beginsWithPartType(Part part) {
+		return hasPartType(part, 1);
+	}
+	
+	public void connectToSubSpace(SubSpace nextSubSpace, Part part, int connectionIndex) {
+		int[] connectionIndices = new int[1];
 		
-		List<Integer> connectionIndices = partTypeToNodeIndices.get(objPart.getType());
+		connectionIndices[0] = connectionIndex;
 		
-		for (Integer connectionIndex : connectionIndices) {
-			int shiftedIndex = connectionIndex.intValue() - connectionIndices.get(0).intValue();
+		connectToSubSpace(nextSubSpace, part, connectionIndices);
+	}
+	
+	public void connectToSubSpace(SubSpace nextSubSpace, Part part) {
+		connectToSubSpace(nextSubSpace, part, inferConnectionIndices(part));
+	}
+	
+	private void connectToSubSpace(SubSpace nextSubSpace, Part part, int[] connectionIndices) {
+		for (int i = 0; i < connectionIndices.length; i++) {
+			int shiftedIndex = connectionIndices[i] - connectionIndices[0];
 			
 			if (shiftedIndex < nextSubSpace.getNumNodes()) {
-				Node node = nodes.get(connectionIndex.intValue());
+				Node node = nodes.get(connectionIndices[i]);
 
 				Node nextNode = nextSubSpace.getNode(shiftedIndex);
 				
 				ArrayList<String> compIDs = new ArrayList<String>(1);
 				
-				compIDs.add(objPart.getID());
+				compIDs.add(part.getID());
 				
 				ArrayList<String> compRoles = new ArrayList<String>(1);
 				
-				compRoles.add(objPart.getType().getValue());
+				compRoles.add(part.getType().getValue());
 				
 				if (!node.hasEdge(nextNode)) {
 					outgoingEdges.add(node.createEdge(nextNode, compIDs, compRoles));
@@ -173,10 +162,8 @@ public class SubSpace {
 		return copyFromIndex(0);
     }
 	
-	public SubSpace copyByRuleset(Set<Rule> ruleset) {
-		Part objPart = ruleset.iterator().next().getObjectPart();
-		
-		List<Integer> copyIndices = partTypeToNodeIndices.get(objPart.getType());
+	public SubSpace copyFromPart(Part part) {
+		List<Integer> copyIndices = partTypeToNodeIndices.get(part.getType());
 		
 		if (copyIndices.size() > 0) {
 			return copyFromIndex(copyIndices.get(0) + 1);
@@ -206,16 +193,6 @@ public class SubSpace {
 			}
 		}
 		
-//		for (Node nodeCopy : nodeCopies) {
-//			System.out.println(nodeCopy.getNodeID());
-//			
-//			if (nodeCopy.hasEdges()) {
-//				System.out.println(nodeCopy.getNumEdges());
-//			} else {
-//				System.out.println(0);
-//			}
-//		}
-		
 		HashMap<PartType, List<Integer>> partTypeToNodeIndicesCopy = new HashMap<PartType, List<Integer>>();
 		
 		for (PartType type : partTypeToNodeIndices.keySet()) {
@@ -233,11 +210,62 @@ public class SubSpace {
 		return new SubSpace(space, nodeCopies, partTypeToNodeIndicesCopy);
     }
 	
+	public void deletePart(Part part) {
+		if (partTypeToNodeIndices.containsKey(part.getType())) {
+			for (Integer nodeIndex : partTypeToNodeIndices.get(part.getType())) {
+				for (Edge edge : nodes.get(nodeIndex).getEdges()) {
+					if (!outgoingEdges.contains(edge)) {
+						edge.deleteComponent(part.getID());
+					}
+				}
+			}
+		}
+	}
+	
 	public Node getNode(int nodeIndex) {
 		return nodes.get(nodeIndex);
 	}
 	
+	public List<Node> getNodes() {
+		return nodes;
+	}
+	
 	public int getNumNodes() {
 		return nodes.size();
+	}
+	
+	public HashMap<PartType, List<Integer>> getPartTypeToNodeIndices() {
+		return partTypeToNodeIndices;
+	}
+	
+	public boolean hasPartType(Part part) {
+		return hasPartType(part, nodes.size());
+	}
+	
+	private boolean hasPartType(Part part, int bound) {
+		for (int i = 0; i < bound; i++) {
+			if (nodes.get(i).hasEdges()) {
+				for (Edge edge : nodes.get(i).getEdges()) {
+					if (!outgoingEdges.contains(edge)
+							&& edge.hasComponentRole(part.getType().getValue())) {
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	public int[] inferConnectionIndices(Part part) {
+		List<Integer> tempConnectionIndices = partTypeToNodeIndices.get(part.getType());
+		
+		int[] connectionIndices = new int[tempConnectionIndices.size()];
+		
+		for (int i = 0; i < tempConnectionIndices.size(); i++) {
+			connectionIndices[i] = tempConnectionIndices.get(i).intValue();
+		}
+		
+		return connectionIndices;
 	}
 }
