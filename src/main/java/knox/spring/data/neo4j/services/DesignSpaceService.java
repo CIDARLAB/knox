@@ -93,8 +93,12 @@ public class DesignSpaceService {
     	cdsLibrary.add(tetR);
     	cdsLibrary.add(cI);
     	
+    	Part doubleT = new Part("B0014", Part.PartType.TERMINATOR);
+    	
     	Set<Part> terminatorLibrary = new HashSet<Part>();
-    	terminatorLibrary.add(new Part("B0014", Part.PartType.TERMINATOR));
+    	terminatorLibrary.add(doubleT);
+    	terminatorLibrary.add(new Part("B0010", Part.PartType.TERMINATOR));
+    	terminatorLibrary.add(new Part("B0011", Part.PartType.TERMINATOR));
     	
     	HashMap<PartType, Set<Part>> partLibrary = new HashMap<PartType, Set<Part>>();
     	partLibrary.put(Part.PartType.PROMOTER, promoterLibrary);
@@ -115,6 +119,7 @@ public class DesignSpaceService {
     	Set<Rule> rules = new HashSet<Rule>();
     	rules.add(new Rule(Rule.RuleType.BEFORE, tetR, pTet));
     	rules.add(new Rule(Rule.RuleType.BEFORE, lacI, pLac));
+    	rules.add(new Rule(Rule.RuleType.SOME_BEFORE, doubleT, pTet));
     	
     	Device device = new Device("toggleSwitch", architecture, rules);
     	

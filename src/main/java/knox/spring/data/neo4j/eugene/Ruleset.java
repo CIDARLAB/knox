@@ -71,7 +71,7 @@ public class Ruleset {
 		for (Rule rule : rules) {
 			if (!rule.isNonStrictPrecedenceRule() 
 					|| rule.isAdjacencyRule()
-					|| implicant.contains(rule.getImpliedPart())) {
+					|| !implicant.contains(rule.getImpliedPart())) {
 				applicableRules.add(rule);
 			}
 		}

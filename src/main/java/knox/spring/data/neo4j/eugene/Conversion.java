@@ -46,13 +46,6 @@ public class Conversion {
     	
     	composeRulesets(device.getRules());
     	
-    	for (String implicantPartID : implicantPartIDToRuleset.keySet()) {
-    		System.out.println(implicantPartID);
-    		for (Rule rule : implicantPartIDToRuleset.get(implicantPartID).getRules()) {
-    			System.out.println(rule.getSubjectPart().getID() + " " + rule.getType().getValue() + " " + rule.getObjectPart().getID());
-    		}
-    	}
-    	
     	for (Ruleset ruleset : implicantPartIDToRuleset.values()) {
     		for (Part implicantPart : ruleset.getImplicantParts()) {
     			rootSubSpace.deletePart(implicantPart);
@@ -149,7 +142,7 @@ public class Conversion {
 			Set<String> forbiddenPartIDs = implicantToForbiddenPartIDs.get(implicant);
 
 			Set<String> successorPartIDs = implicantToSuccessorPartIDs.get(implicant);
-
+			
 			for (Part implicantPart : implicantParts) {
 				if (!forbiddenPartIDs.contains(implicantPart.getID())
 						&& subSpace.hasPartType(implicantPart)
