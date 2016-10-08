@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.clothocad</groupId>
-    <artifactId>Knox</artifactId>
-    <name>Knox</name>
+    <artifactId>PoolDesigner</artifactId>
+    <name>PoolDesigner</name>
 
 
     <!-- tag::dependencies[] -->
@@ -13,7 +13,7 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <start-class>knox.spring.data.neo4j.KnoxApplication</start-class>
+        <start-class>poolDesigner.spring.data.neo4j.PoolDesignerApplication</start-class>
         <!--<spring-data-commons.version>1.11.0.RELEASE</spring-data-commons.version>
         <spring-data-rest.version>2.4.0.RELEASE</spring-data-rest.version>-->
         <spring-data-neo4j.version>4.0.0.RELEASE</spring-data-neo4j.version>

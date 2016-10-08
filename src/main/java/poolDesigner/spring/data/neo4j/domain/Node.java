@@ -1,4 +1,4 @@
-package knox.spring.data.neo4j.domain;
+package poolDesigner.spring.data.neo4j.domain;
 
 import org.neo4j.ogm.annotation.*;
 

@@ -1,9 +1,9 @@
-package knox.spring.data.neo4j.services;
+package poolDesigner.spring.data.neo4j.services;
 
 import java.util.Set;
 
-import knox.spring.data.neo4j.domain.Edge;
-import knox.spring.data.neo4j.domain.Node;
+import poolDesigner.spring.data.neo4j.domain.Edge;
+import poolDesigner.spring.data.neo4j.domain.Node;
 
 public class SpaceDiff {
     Set<Edge> diffEdges;

@@ -1,4 +1,4 @@
-package knox.spring.data.neo4j.exception;
+package poolDesigner.spring.data.neo4j.exception;
 
 public class ParameterEmptyException extends RuntimeException {
 

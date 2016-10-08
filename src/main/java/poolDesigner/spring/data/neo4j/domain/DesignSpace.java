@@ -1,4 +1,4 @@
-package knox.spring.data.neo4j.domain;
+package poolDesigner.spring.data.neo4j.domain;
 
 import org.neo4j.ogm.annotation.*;
 
@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import knox.spring.data.neo4j.domain.Node.NodeType;
+import poolDesigner.spring.data.neo4j.domain.Node.NodeType;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;

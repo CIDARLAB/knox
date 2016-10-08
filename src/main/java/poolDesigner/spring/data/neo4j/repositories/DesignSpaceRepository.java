@@ -1,6 +1,6 @@
-package knox.spring.data.neo4j.repositories;
+package poolDesigner.spring.data.neo4j.repositories;
 
-import knox.spring.data.neo4j.domain.DesignSpace;
+import poolDesigner.spring.data.neo4j.domain.DesignSpace;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.GraphRepository;
@@ -16,7 +16,7 @@ import java.util.Set;
  * @author nicholas roehner
  * @since 12.14.15
  */
-@RepositoryRestResource(collectionResourceRel = "knox", path = "knox")
+@RepositoryRestResource(collectionResourceRel = "poolDesigner", path = "poolDesigner")
 public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	@Query("MATCH (tail:Node {nodeID: {targetTailID}})<-[:CONTAINS]-(:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(head:Node {nodeID: {targetHeadID}}) "
 			+ "CREATE (tail)-[:PRECEDES {componentIDs: {componentIDs}, componentRoles: {componentRoles}}]->(head)")
@@ -48,6 +48,15 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
 			+ "RETURN ID(target) as graphID")
 	Set<Integer> getGraphID(@Param("targetSpaceID") String targetSpaceID);
+	
+	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node) "
+			+ "RETURN n.nodeID")
+	Set<String> getNodeIDs(@Param("targetSpaceID") String targetSpaceID);
+	
+	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(n:Node)-[e:PRECEDES]->(m:Node)<-[:CONTAINS]-(target:DesignSpace)"
+			+ "WHERE target.spaceID = {targetSpaceID} AND has(e.componentIDs) "
+			+ "RETURN e.componentIDs")
+	Set<String> getComponentIDs(@Param("targetSpaceID") String targetSpaceID);
 	
 	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(target:DesignSpace) "
 			+ "WHERE target.spaceID = {targetSpaceID} "

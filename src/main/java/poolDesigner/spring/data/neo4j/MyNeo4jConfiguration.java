@@ -1,4 +1,4 @@
-package knox.spring.data.neo4j;
+package poolDesigner.spring.data.neo4j;
 
 import org.neo4j.ogm.session.SessionFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -17,9 +17,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Import(RepositoryRestMvcConfiguration.class)
 @EnableScheduling
 @EnableAutoConfiguration
-@ComponentScan(basePackages = {"knox.spring.data.neo4j.services"})
+@ComponentScan(basePackages = {"poolDesigner.spring.data.neo4j.services"})
 @Configuration
-@EnableNeo4jRepositories(basePackages = "knox.spring.data.neo4j.repositories")
+@EnableNeo4jRepositories(basePackages = "poolDesigner.spring.data.neo4j.repositories")
 public class MyNeo4jConfiguration extends Neo4jConfiguration {
 
     public static final String URL = System.getenv("NEO4J_URL") != null ? System.getenv("NEO4J_URL") : "http://localhost:7474";
@@ -31,6 +31,6 @@ public class MyNeo4jConfiguration extends Neo4jConfiguration {
 
     @Override
     public SessionFactory getSessionFactory() {
-        return new SessionFactory("knox.spring.data.neo4j.domain");
+        return new SessionFactory("poolDesigner.spring.data.neo4j.domain");
     }
 }
