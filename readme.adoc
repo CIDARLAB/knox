@@ -3,10 +3,14 @@
 == Quickstart
 
 . Clone this project from GitHub.
-. http://neo4j.com/download[Download, install and start Neo4j Server.].
-. Open the Neo4j web interface in browser at http://localhost:7474.
-. Configure "*kn0x*" as password.
-. Run this project from the command line with `mvn spring-boot:run`.
-. Open Pool Designer web interface in browser at http://localhost:8080.
+. http://neo4j.com/download[Download, install, and start a Neo4j server.].
+. Open the Neo4j web interface in your browser at http://localhost:7474.
+. Configure "*kn0x*" as the Neo4j password.
+. https://maven.apache.org/download.cgi[Download and install Maven.]
+. Build and run this project from the command line with `mvn spring-boot:run`.
+. Open the Pool Designer web interface in your browser at http://localhost:8080.
 . Quick demo: 
-. To reset the data in the Neo4j server, copy and paste "MATCH (n) DETACH DELETE n" into the Neo4j web interface and click the Play arrow.
+. Click Choose Files and select construct_library.xml from the directory poolDesigner/src/main/resources/static/sbol/.
+. Click Import SBOL to load the construct library into Neo4j (this may take a minute or two).
+. Click New Structure to create a new pool structure and change 'CDS' to 'nifY'.
+. Click Extract Pools to automatically design a new pool based on your structure.

@@ -45,7 +45,7 @@ public class DesignSpaceService {
     @Autowired EdgeRepository edgeRepository;
     @Autowired NodeRepository nodeRepository;
     
-    private Pattern poolPattern = Pattern.compile("\\{(?:\\w|\\s)+(?:,(?:\\w|\\s)+)*\\}");
+    private Pattern poolPattern = Pattern.compile("\\[(?:\\w|\\s)+(?:,(?:\\w|\\s)+)*\\]");
 	
     private Pattern subPoolPattern = Pattern.compile("(?:\\w|\\s)+");
     
@@ -53,58 +53,17 @@ public class DesignSpaceService {
     
     public static final String REVERSE_PREFIX = "r__";
     
-    public List<String> designPools(List<String> poolSpecs, Set<SBOLDocument> sbolDocs) {
-    	List<String> constructIDs = new ArrayList<String>();
-    	
-    	HashMap<String, Set<ComponentDefinition>> nameToPart = new HashMap<String, Set<ComponentDefinition>>();
-    	
-    	HashMap<String, Set<ComponentDefinition>> roleToPart = new HashMap<String, Set<ComponentDefinition>>();
-    	
-    	for (SBOLDocument sbolDoc : sbolDocs) {
-        	for (ComponentDefinition compDef : getDNAComponentDefinitions(sbolDoc)) {
-        		if (compDef.getComponents().size() > 0) {
-        			if (!hasDesignSpace(compDef.getIdentity().toString())) {
-        				saveDesignSpace(convertComponentDefinitionToDesignSpace(compDef));
-        				
-        				constructIDs.add(compDef.getIdentity().toString());
-        			}
-        		} else {
-        			if (compDef.getDisplayId() != null) {
-            			if (!nameToPart.containsKey(compDef.getDisplayId())) {
-            				nameToPart.put(compDef.getDisplayId(), new HashSet<ComponentDefinition>());
-            			}
-
-            			nameToPart.get(compDef.getDisplayId()).add(compDef);
-            		}
-
-            		if (compDef.getName() != null) {
-            			if (!nameToPart.containsKey(compDef.getName())) {
-            				nameToPart.put(compDef.getName(), new HashSet<ComponentDefinition>());
-            			}
-
-            			nameToPart.get(compDef.getName()).add(compDef);
-            		}
-            		
-            		for (String role : convertSOIdentifiersToNames(compDef.getRoles())) {
-            			if (!roleToPart.containsKey(role)) {
-            				roleToPart.put(role, new HashSet<ComponentDefinition>());
-            			}
-            			
-            			roleToPart.get(role).add(compDef);
-            		}
-        		}
-        	}
-    	}
-    	
+    public List<String> designPools(List<String> poolSpecs) throws DesignSpaceNotFoundException {
     	List<String> pools = new ArrayList<String>(poolSpecs.size());
     	
     	for (String poolSpec : poolSpecs) {
-    		DesignSpace inputSpace = convertPoolToDesignSpace(poolSpec, RESERVED_ID,
-    				nameToPart, roleToPart);
+    		DesignSpace specSpace = convertPoolToDesignSpace(poolSpec, RESERVED_ID);
     		
-    		saveDesignSpace(inputSpace);
+    		saveDesignSpace(specSpace);
     		
-    		Set<String> matchIDs = matchDesignSpace(inputSpace.getSpaceID(), constructIDs, RESERVED_ID);
+    		List<String> constructIDs = new LinkedList<String>(getDesignSpaceIDsBySize(specSpace.getNumNodes()));
+    		
+    		Set<String> matchIDs = matchDesignSpace(specSpace.getSpaceID(), constructIDs, RESERVED_ID);
     		
     		deleteDesignSpace(RESERVED_ID);
     		
@@ -136,6 +95,62 @@ public class DesignSpaceService {
     	}
     	
     	return pools;
+    }
+    
+    public void deleteAll() {
+    	designSpaceRepository.deleteAll();
+    }
+    
+    public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
+        return mapDesignSpaceToD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
+    }
+    
+    public void importSBOL(Set<SBOLDocument> sbolDocs) {
+    	Set<String> spaceIDs = getDesignSpaceIDs();
+    	
+    	for (SBOLDocument sbolDoc : sbolDocs) {
+    		int i = 1;
+    		
+        	for (ComponentDefinition compDef : getDNAComponentDefinitions(sbolDoc)) {
+        		String compID = compDef.getIdentity().toString();
+        		
+        		if (compDef.getComponents().size() > 0) {;
+        			if (!spaceIDs.contains(compID)) {
+        				convertComponentDefinitionToDesignSpace(compDef);
+        				
+        				spaceIDs.add(compID);
+        			}
+        		} else {
+        			ArrayList<String> compRoles = convertSOIdentifiersToNames(compDef.getRoles());
+        			
+        			if (compDef.getDisplayId() != null) {
+            			createPartSpace(compDef.getDisplayId(), compID, compRoles, spaceIDs);
+            			
+            			spaceIDs.add(compDef.getDisplayId());
+            		}
+
+            		if (compDef.getName() != null) {
+            			createPartSpace(compDef.getName(), compID, compRoles, spaceIDs);
+            			
+            			spaceIDs.add(compDef.getName());
+            		}
+            		
+            		for (String compRole : compRoles) {
+            			createPartSpace(compRole, compID, compRoles, spaceIDs);
+            			
+            			spaceIDs.add(compRole);
+            		}
+        		}
+        		
+        		System.out.println(i);
+				
+				i++;
+        	}
+    	}
+    }
+    
+    private void deleteDesignSpace(String targetSpaceID) {
+    	designSpaceRepository.deleteDesignSpace(targetSpaceID);
     }
     
     private void reverseDesignSpace(String inputSpaceID) {
@@ -184,7 +199,7 @@ public class DesignSpaceService {
     	nextNodes.addAll(space.getStartNodes());
     	
     	while (nextNodes.size() > 0) {
-    		pool += "{";
+    		pool += "[";
     		
     		nodeStack.addAll(nextNodes);
     		
@@ -212,15 +227,16 @@ public class DesignSpaceService {
     		
     		pool = pool.substring(0, pool.length() - 1);
     		
-    		pool += "}";
+    		pool += "],";
     	}
+    	
+    	pool = pool.substring(0, pool.length() - 1);
     	
     	return pool;
     }
     
-    private DesignSpace convertPoolToDesignSpace(String poolSpec, String outputSpaceID,
-    		HashMap<String, Set<ComponentDefinition>> nameToPart,
-    		HashMap<String, Set<ComponentDefinition>> roleToPart) {
+    private DesignSpace convertPoolToDesignSpace(String poolSpec, String outputSpaceID)
+    		throws DesignSpaceNotFoundException {
     	DesignSpace space = new DesignSpace(outputSpaceID);
     	
     	Node currentNode = space.createStartNode();
@@ -231,34 +247,19 @@ public class DesignSpaceService {
 			Matcher partMatcher = subPoolPattern.matcher(subPoolMatcher.group(0));
 			
 			while (partMatcher.find()) {
-				Set<String> compIDs = new HashSet<String>();
+				String partID = partMatcher.group(0);
+				
+				if (hasDesignSpace(partID)) {
+					Node nextNode = space.createNode();
 
-				Set<String> compRoles = new HashSet<String>();
-				
-				String part = partMatcher.group(0);
-				
-				Set<ComponentDefinition> compDefs;
-				
-				if (roleToPart.containsKey(part)) {
-					compDefs = roleToPart.get(part);
-				} else if (nameToPart.containsKey(part)) {
-					compDefs = nameToPart.get(part);
+					currentNode.createEdge(nextNode, 
+							new ArrayList<String>(getComponentIDs(partID)), 
+							new ArrayList<String>(getComponentRoles(partID)));
+
+					currentNode = nextNode;
 				} else {
-					compDefs = new HashSet<ComponentDefinition>();
+					throw new DesignSpaceNotFoundException(partID);
 				}
-				
-				for (ComponentDefinition compDef :compDefs) {
-					compIDs.add(compDef.getIdentity().toString());
-					
-					compRoles.addAll(convertSOIdentifiersToNames(compDef.getRoles()));
-				}
-				
-				Node nextNode = space.createNode();
-
-				currentNode.createEdge(nextNode, new ArrayList<String>(compIDs), 
-						new ArrayList<String>(compRoles));
-
-				currentNode = nextNode;
 			}
 			
 			currentNode.setNodeType(NodeType.ACCEPT.getValue());
@@ -267,16 +268,16 @@ public class DesignSpaceService {
 		return space;
     }
     
-    private DesignSpace convertComponentDefinitionToDesignSpace(ComponentDefinition compDef) {
-    	DesignSpace space = new DesignSpace(compDef.getIdentity().toString());
-    	
-		Node currentNode = space.createStartNode();
-		
+    private void convertComponentDefinitionToDesignSpace(ComponentDefinition compDef) {
 		List<ComponentDefinition> leafDefs = new LinkedList<ComponentDefinition>();
 		
 		List<Boolean> areLeavesForward = new LinkedList<Boolean>();
 		
 		flattenRootComponentDefinition(compDef, leafDefs, areLeavesForward);
+		
+		ArrayList<ArrayList<String>> allCompIDs = new ArrayList<ArrayList<String>>();
+		
+		ArrayList<ArrayList<String>> allCompRoles = new ArrayList<ArrayList<String>>();
 
 		for (int i = 0; i < leafDefs.size(); i++) {
 			ArrayList<String> compIDs = new ArrayList<String>();
@@ -289,16 +290,57 @@ public class DesignSpaceService {
 
 			ArrayList<String> compRoles = new ArrayList<String>(convertSOIdentifiersToNames(leafDefs.get(i).getRoles()));
 
-			Node nextNode = space.createNode();
-
-			currentNode.createEdge(nextNode, compIDs, compRoles);
-
-			currentNode = nextNode;
+			allCompIDs.add(compIDs);
+			
+			allCompRoles.add(compRoles);
 		}
 		
-		currentNode.setNodeType(NodeType.ACCEPT.getValue());
-		
-		return space;
+		createDesignSpace(compDef.getIdentity().toString(), allCompIDs, allCompRoles);
+    }
+    
+    private void createPartSpace(String partID, String compID, ArrayList<String> compRoles,
+    		Set<String> spaceIDs) {
+    	if (spaceIDs.contains(partID)) {
+			DesignSpace partSpace = loadDesignSpace(partID, 2);
+			
+			if (partSpace.hasNodes()) {
+				for (Node startNode : partSpace.getStartNodes()) {
+					if (startNode.hasEdges()) {
+						for (Edge edge : startNode.getEdges()) {
+							edge.addComponent(compID, compRoles);
+						}
+					}
+				}
+				
+				saveDesignSpace(partSpace);
+			}
+		} else {
+			ArrayList<String> compIDs = new ArrayList<String>();
+			
+			compIDs.add(compID);
+			
+			ArrayList<ArrayList<String>> allCompIDs = new ArrayList<ArrayList<String>>();
+			
+			allCompIDs.add(compIDs);
+			
+			ArrayList<ArrayList<String>> allCompRoles = new ArrayList<ArrayList<String>>();
+			
+			allCompRoles.add(compRoles);
+			
+			createDesignSpace(partID, allCompIDs, allCompRoles);
+		}
+    }
+    
+//    private void createComponentEdge(String targetSpaceID, ArrayList<String> compIDs, ArrayList<String> compRoles) {
+//    	designSpaceRepository.createComponentEdge(targetSpaceID, compIDs, compRoles);
+//    }
+//    
+//    private void createDesignSpace(String outputSpaceID) {
+//    	designSpaceRepository.createDesignSpace(outputSpaceID);
+//    }
+    
+    private void createDesignSpace(String outputSpaceID, ArrayList<ArrayList<String>> compIDs, ArrayList<ArrayList<String>> compRoles) {
+    	designSpaceRepository.createDesignSpace(outputSpaceID, compIDs, compRoles);
     }
     
     private void flattenComponentDefinition(ComponentDefinition compDef, List<ComponentDefinition> leafDefs,
@@ -315,10 +357,8 @@ public class DesignSpaceService {
 			HashMap<String, SequenceAnnotation> compIDToSeqAnno = new HashMap<String, SequenceAnnotation>();
 			
 			for (SequenceAnnotation seqAnno : seqAnnos) {
-				if (seqAnno.getComponent() != null) {
-					int start = getStartOfSequenceAnnotation(seqAnno);
-					
-					if (start >= 0) {
+				if (seqAnno.getComponentURI() != null) {
+					if (getStartOfSequenceAnnotation(seqAnno) > 0) {
 						compIDToSeqAnno.put(seqAnno.getComponentURI().toString(), seqAnno);
 					}
 				}
@@ -334,7 +374,7 @@ public class DesignSpaceService {
 
 					while (i < sortedSubComps.size() 
 							&& getStartOfSequenceAnnotation(seqAnno)
-									< getStartOfSequenceAnnotation(
+									> getStartOfSequenceAnnotation(
 											compIDToSeqAnno.get(sortedSubComps.get(i).getIdentity().toString()))) {
 						i++;
 					}
@@ -360,6 +400,22 @@ public class DesignSpaceService {
     	flattenComponentDefinition(rootDef, leafDefs, areLeavesForward, true);
     }
     
+    private Set<String> getComponentIDs(String targetSpaceID) {
+    	return designSpaceRepository.getComponentIDs(targetSpaceID);
+    }
+    
+    private Set<String> getComponentRoles(String targetSpaceID) {
+    	return designSpaceRepository.getComponentRoles(targetSpaceID);
+    }
+    
+    private Set<String> getDesignSpaceIDs() {
+    	return designSpaceRepository.getDesignSpaceIDs();
+    }
+    
+    private Set<String> getDesignSpaceIDsBySize(int size) {
+    	return designSpaceRepository.getDesignSpaceIDsBySize(size);
+    }
+    
     private Set<ComponentDefinition> getDNAComponentDefinitions(SBOLDocument sbolDoc) {
     	Set<ComponentDefinition> dnaCompDefs = new HashSet<ComponentDefinition>();
     	
@@ -382,8 +438,8 @@ public class DesignSpaceService {
     	}
     }
     
-    private Set<String> convertSOIdentifiersToNames(Set<URI> soIdentifiers) {
-    	Set<String> roleNames= new HashSet<String>();
+    private ArrayList<String> convertSOIdentifiersToNames(Set<URI> soIdentifiers) {
+    	ArrayList<String> roleNames= new ArrayList<String>();
 		if (soIdentifiers.size() == 0) {
 			roleNames.add("sequence_feature");
 		} else {
@@ -400,6 +456,12 @@ public class DesignSpaceService {
 		    		roleNames.add("CDS");
 		    	} else if (soIdentifier.equals(SequenceOntology.TERMINATOR)) {
 		    		roleNames.add("terminator");
+		    	} else if (soIdentifier.equals(SequenceOntology.type("SO:0001953"))) {
+		    		roleNames.add("restriction_enzyme_assembly_scar");
+		    	} else if (soIdentifier.equals(SequenceOntology.RESTRICTION_ENZYME_RECOGNITION_SITE)) {
+		    		roleNames.add("restriction_enzyme_recognition_site");
+		    	} else if (soIdentifier.equals(SequenceOntology.PRIMER_BINDING_SITE)) {
+		    		roleNames.add("primer_binding_site");
 		    	} else {
 		    		roleNames.add("sequence_feature");
 		    	}
@@ -410,6 +472,7 @@ public class DesignSpaceService {
     
     private int getStartOfSequenceAnnotation(SequenceAnnotation seqAnno) {
     	int start = -1;
+    	
     	for (Location location : seqAnno.getLocations()) {
     		if (location instanceof Range) {
     			Range range = (Range) location;
@@ -425,6 +488,7 @@ public class DesignSpaceService {
     			}
     		}
     	}
+    	
     	return start;
     }
     
@@ -436,16 +500,6 @@ public class DesignSpaceService {
     	}
     	
     	return true;
-    }
-    
-    public void deleteDesignSpace(String targetSpaceID) {
-    	validateDesignSpaceOperator(targetSpaceID);
-    	
-    	designSpaceRepository.deleteDesignSpace(targetSpaceID);
-    }
-    
-    public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
-        return mapDesignSpaceToD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
     }
     
     private Set<String> matchDesignSpace(String inputSpaceID1, List<String> inputSpaceIDs2, String outputSpacePrefix) {
@@ -820,78 +874,6 @@ public class DesignSpaceService {
     	}
     }
     
-//    private void partitionDesignSpace(String inputSpaceID, String outputSpacePrefix) {
-//    	DesignSpace inputSpace = loadDesignSpace(inputSpaceID, 2);
-//    	
-//    	int i = 0;
-//    	
-//    	for (Node inputStart : inputSpace.getStartNodes()) {
-//    		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + i);
-//    		
-//    		HashMap<String, Node> inputIDToOutputNode = new HashMap<String, Node>();
-//    		
-//    		inputIDToOutputNode.put(inputStart.getNodeID(), outputSpace.copyNode(inputStart));
-//    		
-//    		Stack<Node> inputNodeStack = new Stack<Node>();
-//    		
-//    		inputNodeStack.push(inputStart);
-//    		
-//    		while (inputNodeStack.size() > 0) {
-//    			Node inputNode = inputNodeStack.pop();
-//    			
-//    			Node outputNode;
-//    			
-//    			if (inputIDToOutputNode.containsKey(inputNode.getNodeID())) {
-//    				outputNode = inputIDToOutputNode.get(inputNode.getNodeID());
-//    			} else {
-//    				outputNode = outputSpace.copyNode(inputNode);
-//    				
-//    				inputIDToOutputNode.put(inputNode.getNodeID(), outputNode);
-//    			}
-//    			
-//    			if (inputNode.hasEdges()) {
-//    				for (Edge inputEdge : inputNode.getEdges()) {
-//    					Node inputSuccessor = inputEdge.getHead();
-//
-//    					Node outputSuccessor;
-//
-//    					if (inputIDToOutputNode.containsKey(inputSuccessor.getNodeID())) {
-//    						outputSuccessor = inputIDToOutputNode.get(inputSuccessor.getNodeID());
-//    					} else {
-//    						outputSuccessor = outputSpace.copyNode(inputSuccessor);
-//
-//    						inputIDToOutputNode.put(inputSuccessor.getNodeID(), outputSuccessor);
-//    					}
-//
-//    					outputNode.copyEdge(inputEdge, outputSuccessor);
-//
-//    					inputNodeStack.push(inputSuccessor);
-//    				}
-//    			}
-//    		}
-//    		
-//    		saveDesignSpace(outputSpace);
-//    		
-//    		i++;
-//    	}
-//    }
-	
-//	// Utility which converts CSV to ArrayList using split operation
-//	private static ArrayList<String> csvToArrayList(String csvLine) {
-//		ArrayList<String> csvArray = new ArrayList<String>();
-//
-//		if (csvLine != null) {
-//			String[] splitData = csvLine.split("\\s*,\\s*");
-//			for (int i = 0; i < splitData.length; i++) {
-//				if (!(splitData[i] == null) || !(splitData[i].length() == 0)) {
-//					csvArray.add(splitData[i].trim());
-//				}
-//			}
-//		}
-//
-//		return csvArray;
-//	}
-	
 	private void deleteEdges(Set<Edge> deletedEdges) {
 		edgeRepository.delete(deletedEdges);
 	}
@@ -996,6 +978,10 @@ public class DesignSpaceService {
 	private void saveDesignSpace(DesignSpace space) {
 		designSpaceRepository.save(space);
 	}
+	
+//	private void setNodeType(String targetSpaceID, String targetNodeID, String nodeType) {
+//		designSpaceRepository.setNodeType(targetSpaceID, targetNodeID, nodeType);
+//	}
 
 	private void unionDesignSpace(String inputSpaceID, String outputSpaceID) {
         designSpaceRepository.unionDesignSpace(inputSpaceID, outputSpaceID);
@@ -1021,12 +1007,6 @@ public class DesignSpaceService {
     		throws ParameterEmptyException {
     	if (parameter.size() == 0) {
     		throw new ParameterEmptyException(parameterName);
-    	}
-    }
-    
-    private void validateDesignSpaceOperator(String targetSpaceID) {
-    	if (!hasDesignSpace(targetSpaceID)) {
-    		throw new DesignSpaceNotFoundException(targetSpaceID);
     	}
     }
     

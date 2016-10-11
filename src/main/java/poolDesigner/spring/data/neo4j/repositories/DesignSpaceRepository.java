@@ -18,26 +18,42 @@ import java.util.Set;
  */
 @RepositoryRestResource(collectionResourceRel = "poolDesigner", path = "poolDesigner")
 public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
-	@Query("MATCH (tail:Node {nodeID: {targetTailID}})<-[:CONTAINS]-(:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(head:Node {nodeID: {targetHeadID}}) "
-			+ "CREATE (tail)-[:PRECEDES {componentIDs: {componentIDs}, componentRoles: {componentRoles}}]->(head)")
-	void createComponentEdge(@Param("targetSpaceID") String targetSpaceID, @Param("targetTailID") String targetTailID, @Param("targetHeadID") String targetHeadID, 
-			@Param("componentIDs") ArrayList<String> componentIDs, @Param("componentRoles") ArrayList<String> componentRoles);
+//	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(tail:Node {nodeID: 'n' + (target.idIndex - 1)}) "
+//			+ "CREATE (tail)-[:PRECEDES {componentIDs: {componentIDs}, componentRoles: {componentRoles}}]->(:Node {nodeID: 'n' + target.idIndex})<-[:CONTAINS]-(target) "
+//			+ "SET target.idIndex = target.idIndex + 1")
+//	void createComponentEdge(@Param("targetSpaceID") String targetSpaceID, @Param("componentIDs") ArrayList<String> componentIDs, @Param("componentRoles") ArrayList<String> componentRoles);
+	
+//	@Query("CREATE (:DesignSpace {spaceID: {outputSpaceID}, idIndex: 1})-[:CONTAINS]->(:Node {nodeID: 'n0', nodeType: 'start'})")
+//	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
+	
+//	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 2}) "
+//			+ "CREATE (output)-[:CONTAINS]->(m:Node {nodeID: 'n0', nodeType: 'start'}) "
+//			+ "CREATE (output)-[:CONTAINS]->(n:Node {nodeID: 'n1', nodeType: 'accept'}) "
+//			+ "CREATE (m)-[:PRECEDES {componentIDs: {componentIDs}, componentRoles: {componentRoles}}]->(n)")
+//	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID, @Param("componentIDs") ArrayList<String> componentIDs, @Param("componentRoles") ArrayList<String> componentRoles);
 
-	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: 0, mergeIndex: 0})-[:ARCHIVES]->(b:Branch {branchID: {outputSpaceID}, idIndex: 0}) "
-			+ "CREATE (output)-[:SELECTS]->(b)")
-	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID);
-
+	@Query("CREATE (output:DesignSpace {spaceID: {outputSpaceID}, idIndex: size({allCompIDs}) + 1}) "
+			+ "WITH output "
+			+ "UNWIND range(0, size({allCompIDs})) AS i "
+			+ "CREATE (output)-[:CONTAINS]->(n:Node {nodeID: 'n' + i}) "
+			+ "WITH COLLECT(n) AS ns "
+			+ "UNWIND range(0, size(ns) - 1) AS i "
+			+ "WITH ns[0] as nStart, ns[size(ns) - 1] as nAccept, ns[i] AS n1, ns[i + 1] AS n2, {allCompIDs}[i] AS compIDs, {allCompRoles}[i] AS compRoles "
+			+ "MERGE (n1)-[:PRECEDES {componentIDs: compIDs, componentRoles: compRoles}]->(n2) "
+			+ "SET nStart.nodeType = 'start' "
+			+ "SET nAccept.nodeType = 'accept'")
+	void createDesignSpace(@Param("outputSpaceID") String outputSpaceID, 
+			@Param("allCompIDs") ArrayList<ArrayList<String>> allCompIDs, 
+			@Param("allCompRoles") ArrayList<ArrayList<String>> allCompRoles);
+	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
 			+ "OPTIONAL MATCH (target)-[:CONTAINS]->(n:Node) "
-			+ "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) "
-			+ "OPTIONAL MATCH (s)-[:CONTAINS]->(sn:Node) "
 			+ "DETACH DELETE target "
-			+ "DETACH DELETE n "
-			+ "DETACH DELETE b "
-			+ "DETACH DELETE c "
-			+ "DETACH DELETE s "
-			+ "DETACH DELETE sn")
+			+ "DETACH DELETE n ")
 	void deleteDesignSpace(@Param("targetSpaceID") String targetSpaceID);
+	
+	@Query("MATCH (n) DETACH DELETE n")
+	void deleteAll();
 
 	@Query("MATCH (:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node) "
 			+ "REMOVE n.copyIndex")
@@ -53,10 +69,24 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "RETURN n.nodeID")
 	Set<String> getNodeIDs(@Param("targetSpaceID") String targetSpaceID);
 	
+	@Query("MATCH (d:DesignSpace) "
+			+ "RETURN d.spaceID")
+	Set<String> getDesignSpaceIDs();
+	
+	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(n:Node) "
+			+ "WHERE count(n) >= size "
+			+ "RETURN target.spaceID")
+	Set<String> getDesignSpaceIDsBySize(@Param("size") int size);
+	
 	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(n:Node)-[e:PRECEDES]->(m:Node)<-[:CONTAINS]-(target:DesignSpace)"
 			+ "WHERE target.spaceID = {targetSpaceID} AND has(e.componentIDs) "
 			+ "RETURN e.componentIDs")
 	Set<String> getComponentIDs(@Param("targetSpaceID") String targetSpaceID);
+	
+	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(n:Node)-[e:PRECEDES]->(m:Node)<-[:CONTAINS]-(target:DesignSpace)"
+			+ "WHERE target.spaceID = {targetSpaceID} AND has(e.componentRoles) "
+			+ "RETURN e.componentRoles")
+	Set<String> getComponentRoles(@Param("targetSpaceID") String targetSpaceID);
 	
 	@Query("MATCH (target:DesignSpace)-[:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(target:DesignSpace) "
 			+ "WHERE target.spaceID = {targetSpaceID} "
@@ -68,13 +98,16 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "SET target.spaceID = {outputSpaceID}")
 	void renameDesignSpace(@Param("targetSpaceID") String targetSpaceID, @Param("outputSpaceID") String outputSpaceID);
 
+//	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(n:Node {nodeID: {targetNodeID}}) "
+//			+ "SET n.nodeType = {nodeType}")
+//	void setNodeType(@Param("targetSpaceID") String targetSpaceID, @Param("targetNodeID") String targetNodeID,
+//			@Param("nodeType") String nodeType);
+	
 	@Query("MATCH (input:DesignSpace {spaceID: {inputSpaceID}})-[:CONTAINS]->(n:Node) "
 			+ "WITH input, collect(n) as nodes "
 			+ "MERGE (output:DesignSpace {spaceID: {outputSpaceID}}) "
-			+ "ON CREATE SET output.idIndex = size(nodes), output.mergeIndex = input.mergeIndex "
+			+ "ON CREATE SET output.idIndex = size(nodes) "
 			+ "ON MATCH SET output.idIndex = output.idIndex + size(nodes) "
-			+ "FOREACH(ignoreMe IN CASE WHEN output.mergeIndex < input.mergeIndex THEN [1] ELSE [] END | "
-			+ "SET output.mergeIndex = input.mergeIndex) "
 			+ "WITH input, nodes, output "
 			+ "UNWIND range(0, size(nodes) - 1) as nodeIndex "
 			+ "WITH input, nodeIndex, nodes[nodeIndex] as n, output "

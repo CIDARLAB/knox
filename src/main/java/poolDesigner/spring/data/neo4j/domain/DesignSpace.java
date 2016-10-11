@@ -42,6 +42,42 @@ public class DesignSpace {
     	return spaceID;
     }
     
+    public Set<String> getComponentIDs() {
+    	Set<String> compIDs = new HashSet<String>();
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			if (node.hasEdges()) {
+    				for (Edge edge : node.getEdges()) {
+    					if (edge.hasComponentIDs()) {
+    						compIDs.addAll(edge.getComponentIDs());
+    					}
+    				}
+    			}
+    		}
+    	}
+    	
+    	return compIDs;
+    }
+    
+    public Set<String> getComponentRoles() {
+    	Set<String> compRoles = new HashSet<String>();
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			if (node.hasEdges()) {
+    				for (Edge edge : node.getEdges()) {
+    					if (edge.hasComponentRoles()) {
+    						compRoles.addAll(edge.getComponentRoles());
+    					}
+    				}
+    			}
+    		}
+    	}
+    	
+    	return compRoles;
+    }
+    
     public void addNode(Node node) {
 		if (nodes == null) {
 			nodes = new HashSet<Node>();

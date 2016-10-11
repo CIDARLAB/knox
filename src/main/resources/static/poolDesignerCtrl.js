@@ -1,88 +1,82 @@
 function poolDesignerCtrl($scope) {
-
-    $scope.graphs = [];
-    $scope.graphType = "ds1";
-    $scope.prevGraphType = "ds1";
-    $scope.isDSGraph = true;
-
     $scope.searchSpaceID = "";
     $scope.deleteSpaceID = "";
 
     $scope.specNodes = [];
     $scope.poolNodes = [];
 
-    $scope.specNode = function(poolSpec) {
-        this.poolSpec = poolSpec;
+    $scope.specNode = function(pool) {
+        this.pool = pool;
         this.labelColor = "";
         this.backgroundColor = "";
     };
 
-    $scope.poolNode = function(poolSpec) {
-        this.poolSpec = poolSpec;
+    $scope.poolNode = function(pool) {
+        this.pool = pool;
         this.labelColor = "color:#ffffff";
         this.backgroundColor = "background-color:#787878";
     };
 
-    $scope.moveSpecNodeToTop = function(specNode) {
-        $scope.lNodes.splice($scope.specNodes.indexOf(specNode), 1);
+    $scope.moveSpecNodeToTop = function(node) {
+        if (node.labelcolor.length > 0) {
+            $scope.poolNodes.splice($scope.specNodes.indexOf(node), 1);
 
-        $scope.lNodes.unshift(specNode);
+            $scope.poolNodes.unshift(node);
+        } else {
+            $scope.specNodes.splice($scope.specNodes.indexOf(node), 1);
+
+            $scope.specNodes.unshift(node);
+        }
     };
 
-    $scope.addSpecNode = function() {
-         $scope.specNodes.push(new $scope.specNode("{promoter}{ribozyme}{ribosome_entry_site}{CDS}{terminator}"));
+    $scope.createSpecNode = function() {
+         $scope.specNodes.push(new $scope.specNode("[promoter][ribozyme][ribosome_entry_site][CDS][terminator]"));
     }
 
-    $scope.removeSpecNode = function(specNode) {
-        specNode.remove();
+    $scope.removeNode = function(node) {
+        node.remove();
     };
 
-    $scope.deleteDesignSpace = function(targetSpaceID) {
-        if (targetSpaceID) {
-            var query = "?targetSpaceID=" + encodeURIComponent(targetSpaceID);
+    $scope.designPools = function() {
+        var poolSpecs = [];
 
-            d3.xhr("/designSpace" + query).send("DELETE", function(error, request) {
+        var i;
+
+        for (i = 0; i < $scope.specNodes.length; i++) {
+            poolSpecs[i] = $scope.specNodes[i].pool;
+
+            console.log(poolSpecs[i]);
+        }
+
+        d3.json("/design/pool").post(JSON.stringify(poolSpecs),
+            function(error, result) {
                 if (error) {
-
-                    sweetAlert("Error", error.responseText, "error");
-
+                    sweetAlert("Error", JSON.parse(error.response).message, "error");
                 } else {
+                    var pool;
 
-                    if ($scope.graphs.length > 1) {
-                        $scope.removeGraphSVG(1);
-                    }
-                    if ($scope.graphs.length > 0 && $scope.graphs[0].spaceID === targetSpaceID) {
-                        $scope.removeGraphSVG(0);
-                        if ($scope.graphs.length > 1) { 
-                            if ($scope.graphs[1].spaceID === targetSpaceID) {
-                                $scope.graphs = [];
-                            } else {
-                                if ($scope.isDSGraph) {
-                                    $scope.appendDSGraphSVG($scope.graphs[1].ds, 0, 1110, 300);
-                                } else {
-                                    $scope.appendVCGraphSVG($scope.graphs[1].vc, 0, 1110, 300);
-                                }
-                                $scope.graphs[0] = $scope.graphs[1];
-                                $scope.graphs = $scope.graphs.slice(0, 1);
-                            }
-                        } else {
-                            $scope.graphs = [];
-                        }
-                    } else if ($scope.graphs.length > 1 && $scope.graphs[1].spaceID === targetSpaceID) {
-                        $scope.graphs = $scope.graphs.slice(0, 1);
-                    }
+                    var i, j;
 
+                    for (i = 0; i < result.length; i++) {
+                        pool = JSON.stringify(result[i]);
+
+                        console.log(pool);
+
+                        $scope.poolNodes[i] = new $scope.poolNode(pool.substring(1, pool.length - 1).replace(/\"/g, ""));
+
+                        console.log($scope.poolNodes[i].pool);
+                    }
                 }
-            });
-        }
-    };
+            }
+        );
+    }
 
-    $scope.encodeQueryParameter = function(parameterName, parameterValue, query) {
-        if (query.length > 1) {
-            return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
-        } else {
-            return parameterName + "=" + encodeURIComponent(parameterValue);
-        }
+    $scope.deleteAll = function() {
+        d3.xhr("/delete/all").post(function(error, request) {
+            if (error) {
+                sweetAlert("Error", JSON.parse(error.response).message, "error");
+            }
+        });
     };
 
 }

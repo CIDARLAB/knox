@@ -42,7 +42,7 @@ public class Edge {
     	this.componentRoles = componentRoles;
     }
     
-    public void addComponent(String compID, String compRole) {
+    public void addComponent(String compID, ArrayList<String> compRoles) {
     	if (!hasComponentIDs()) {
     		componentIDs = new ArrayList<String>();
     		
@@ -53,8 +53,10 @@ public class Edge {
     		componentIDs.add(compID);
     	}
     	
-    	if (!componentRoles.contains(compRole)) {
-    		componentRoles.add(compRole);
+    	for (String compRole : compRoles) {
+    		if (!componentRoles.contains(compRole)) {
+    			componentRoles.add(compRole);
+    		}
     	}
     }
     
