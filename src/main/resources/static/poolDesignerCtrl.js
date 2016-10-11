@@ -30,7 +30,7 @@ function poolDesignerCtrl($scope) {
     };
 
     $scope.createSpecNode = function() {
-         $scope.specNodes.push(new $scope.specNode("[promoter][ribozyme][ribosome_entry_site][CDS][terminator]"));
+         $scope.specNodes.push(new $scope.specNode("[promoter][ribosome_entry_site][CDS][terminator]"));
     }
 
     $scope.removeNode = function(node) {
@@ -55,7 +55,7 @@ function poolDesignerCtrl($scope) {
                 } else {
                     var pool;
 
-                    var i, j;
+                    var i;
 
                     for (i = 0; i < result.length; i++) {
                         pool = JSON.stringify(result[i]);
@@ -65,6 +65,8 @@ function poolDesignerCtrl($scope) {
                         $scope.poolNodes[i] = new $scope.poolNode(pool.substring(1, pool.length - 1).replace(/\"/g, ""));
 
                         console.log($scope.poolNodes[i].pool);
+
+                        console.log("------");
                     }
                 }
             }
