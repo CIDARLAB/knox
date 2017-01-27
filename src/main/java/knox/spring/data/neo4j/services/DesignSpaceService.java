@@ -7,7 +7,7 @@ import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
-import knox.spring.data.neo4j.eugene.Conversion;
+import knox.spring.data.neo4j.eugene.EugeneConverter;
 import knox.spring.data.neo4j.eugene.Device;
 import knox.spring.data.neo4j.eugene.Part;
 import knox.spring.data.neo4j.eugene.Part.PartType;
@@ -72,39 +72,30 @@ public class DesignSpaceService {
 //    		}
 //    	}
     	
-    	Part pLac = new Part("R0010", Part.PartType.PROMOTER);
-    	Part pTet = new Part("R0040", Part.PartType.PROMOTER);
-    	Part pR = new Part("R0051", Part.PartType.PROMOTER);
+    	Part pLac = new Part("pLac", Part.PartType.PROMOTER);
+    	Part pTet = new Part("pTet", Part.PartType.PROMOTER);
+    	Part pR = new Part("pR", Part.PartType.PROMOTER);
     	
-    	Set<Part> promoterLibrary = new HashSet<Part>();
-    	promoterLibrary.add(pLac);
-    	promoterLibrary.add(pTet);
-    	promoterLibrary.add(pR);
+    	Set<Part> parts = new HashSet<Part>();
+    	parts.add(pLac);
+    	parts.add(pTet);
+    	parts.add(pR);
     	
-    	Set<Part> rbsLibrary = new HashSet<Part>();
-    	rbsLibrary.add(new Part("B0034", Part.PartType.RBS));
+    	parts.add(new Part("r1", Part.PartType.RBS));
     	
-    	Part lacI = new Part("C0012", Part.PartType.CDS);
-    	Part tetR = new Part("C0040", Part.PartType.CDS);
-    	Part cI = new Part("C0051", Part.PartType.CDS);
+    	Part lacI = new Part("lacI", Part.PartType.CDS);
+    	Part tetR = new Part("tetR", Part.PartType.CDS);
+    	Part cI = new Part("cI", Part.PartType.CDS);
     	
-    	Set<Part> cdsLibrary = new HashSet<Part>();
-    	cdsLibrary.add(lacI);
-    	cdsLibrary.add(tetR);
-    	cdsLibrary.add(cI);
+    	parts.add(lacI);
+    	parts.add(tetR);
+    	parts.add(cI);
     	
-    	Part doubleT = new Part("B0014", Part.PartType.TERMINATOR);
+    	Part doubleT = new Part("tDouble", Part.PartType.TERMINATOR);
     	
-    	Set<Part> terminatorLibrary = new HashSet<Part>();
-    	terminatorLibrary.add(doubleT);
-    	terminatorLibrary.add(new Part("B0010", Part.PartType.TERMINATOR));
-    	terminatorLibrary.add(new Part("B0011", Part.PartType.TERMINATOR));
-    	
-    	HashMap<PartType, Set<Part>> partLibrary = new HashMap<PartType, Set<Part>>();
-    	partLibrary.put(Part.PartType.PROMOTER, promoterLibrary);
-    	partLibrary.put(Part.PartType.RBS, rbsLibrary);
-    	partLibrary.put(Part.PartType.CDS, cdsLibrary);
-    	partLibrary.put(Part.PartType.TERMINATOR, terminatorLibrary);
+    	parts.add(doubleT);
+    	parts.add(new Part("t1", Part.PartType.TERMINATOR));
+    	parts.add(new Part("t2", Part.PartType.TERMINATOR));
     	
     	List<Part> architecture = new ArrayList<Part>(8);
     	architecture.add(new Part(Part.PartType.PROMOTER));
@@ -123,19 +114,15 @@ public class DesignSpaceService {
     	
     	Device device = new Device("toggleSwitch", architecture, rules);
     	
-    	DesignSpace space = convertDeviceToDesignSpace(device, partLibrary);
+    	DesignSpace space = convertDeviceToDesignSpace(device, parts);
     	
     	saveDesignSpace(space);
     }
     
-    public DesignSpace convertDeviceToDesignSpace(Device device, HashMap<PartType, Set<Part>> partsLibrary) {
-    	Conversion eugeneConversion = new Conversion(device, partsLibrary);
+    public DesignSpace convertDeviceToDesignSpace(Device device, Set<Part> parts) {
+    	EugeneConverter converter = new EugeneConverter(parts);
     	
-    	do {
-    		eugeneConversion.convertNext();
-    	} while (!eugeneConversion.isFinished());
-    	
-    	return eugeneConversion.getSpace();
+    	return converter.convertDevice(device);
     }
     
     public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix) {

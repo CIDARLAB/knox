@@ -1,10 +1,14 @@
 package knox.spring.data.neo4j.eugene;
 
+import java.util.Comparator;
+
 public class Part {
 	
 	private String id;
 	
 	private PartType type;
+	
+	private int index;
 	
 	public Part(PartType type) {
 		this.type = type;

@@ -4,9 +4,9 @@ public class Rule {
 	
 	private RuleType type;
 	
-	private Part subjectPart;
+	private Part subject;
 	
-	private Part objectPart;
+	private Part object;
 	
 	private int subjectIndex;
 	
@@ -18,24 +18,24 @@ public class Rule {
 		this.type = type;
 	}
 	
-	public Rule(RuleType type, Part subjectPart) {
+	public Rule(RuleType type, Part subject) {
 		this.type = type;
 		
-		this.subjectPart = subjectPart;
+		this.subject = subject;
 	}
 	
-	public Rule(RuleType type, int subjectIndex, Part objectPart) {
+	public Rule(RuleType type, int subjectIndex, Part object) {
 		this.type = type;
 		
 		this.subjectIndex = subjectIndex;
 		
-		this.objectPart = objectPart;
+		this.object = object;
 	}
 	
-	public Rule(RuleType type, Part subjectPart, int count) {
+	public Rule(RuleType type, Part subject, int count) {
 		this.type = type;
 		
-		this.subjectPart = subjectPart;
+		this.subject = subject;
 		
 		this.count = count;
 	}
@@ -48,77 +48,43 @@ public class Rule {
 		this.objectIndex = objectIndex;
 	}
 	
-	public Rule(RuleType type, Part subjectPart, Part objectPart) {
+	public Rule(RuleType type, Part subject, Part object) {
 		this.type = type;
 		
-		this.subjectPart = subjectPart;
+		this.subject = subject;
 		
-		this.objectPart = objectPart;
+		this.object = object;
 	}
 	
 	public RuleType getType() {
 		return type;
 	}
 	
-	public Part getSubjectPart() {
-		return subjectPart;
+	public Part getSubject() {
+		return subject;
 	}
 	
-	public Part getObjectPart() {
-		return objectPart;
+	public Part getObject() {
+		return object;
 	}
 	
-//	public Set<Part> getImplicantParts() {
-//		Set<Part> implcParts = new HashSet<Part>();
-//		
-//		if (isAdjacencyRule()) {
-//			implcParts.add(subjectPart);
-//			implcParts.add(objectPart);
-//		} else if (isPrecedenceRule()) {
-//			implcParts.add(getImplicantPart());
-//		}
-//		
-//		return implcParts;
-//	}
-	
-//	public Set<Part> getImpliedParts() {
-//		Set<Part> impldParts = new HashSet<Part>();
-//		
-//		if (isAdjacencyRule()) {
-//			impldParts.add(subjectPart);
-//			impldParts.add(objectPart);
-//		} else if (isPrecedenceRule()) {
-//			impldParts.add(getImpliedPart());
-//		}
-//		
-//		return impldParts;
-//	}
-	
-	public Part getImplicantPart() {
-		if (type.equals(RuleType.BEFORE)
-				|| type.equals(RuleType.ALL_BEFORE)
-				|| type.equals(RuleType.SOME_BEFORE)) {
-			return objectPart;
-		} else if (type.equals(RuleType.AFTER)
-				|| type.equals(RuleType.ALL_AFTER)
-				|| type.equals(RuleType.SOME_AFTER)
+	public Part getImplicant() {
+		if (isBeforeRule()) {
+			return object;
+		} else if (isAfterRule()
 				|| isAdjacencyRule()) {
-			return subjectPart;
+			return subject;
 		} else {
 			return null;
 		}
 	}
 	
-	public Part getImpliedPart() {
-		if (type.equals(RuleType.BEFORE)
-				|| type.equals(RuleType.ALL_BEFORE)
-				|| type.equals(RuleType.SOME_BEFORE)) {
-			return subjectPart;
-		} else if (type.equals(RuleType.AFTER)
-				|| type.equals(RuleType.ALL_AFTER)
-				|| type.equals(RuleType.SOME_AFTER)
+	public Part getImplied() {
+		if (isBeforeRule()) {
+			return subject;
+		} else if (isAfterRule()
 				|| isAdjacencyRule()) {
-			return objectPart;
+			return object;
 		} else {
 			return null;
 		}
@@ -140,6 +106,18 @@ public class Rule {
 		return type.equals(RuleType.NEXTTO)
 				|| type.equals(RuleType.ALL_NEXTTO)
 				|| type.equals(RuleType.SOME_NEXTTO);
+	}
+	
+	public boolean isAfterRule() {
+		return type.equals(RuleType.AFTER)
+				|| type.equals(RuleType.ALL_AFTER)
+				|| type.equals(RuleType.SOME_AFTER);
+	}
+	
+	public boolean isBeforeRule() {
+		return type.equals(RuleType.BEFORE)
+				|| type.equals(RuleType.ALL_BEFORE)
+				|| type.equals(RuleType.SOME_BEFORE);
 	}
 	
 	public boolean isPrecedenceRule() {

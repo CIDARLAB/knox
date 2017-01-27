@@ -20,7 +20,7 @@ public class SubSpace {
 	
 	private HashMap<PartType, List<Integer>> partTypeToNodeIndices;
 	
-	private Set<Edge> outgoingEdges = new HashSet<Edge>();
+	public Set<Edge> outgoingEdges = new HashSet<Edge>();
 	
 	private SubSpace(DesignSpace space, List<Node> nodes, HashMap<PartType, List<Integer>> partTypeToNodeIndices) {
 		this.space = space;
@@ -39,15 +39,13 @@ public class SubSpace {
 		
 		if (device.getNumParts() > 0) {
     		nodes.add(space.createStartNode());
-    	}
 
-    	for (int i = 1; i < device.getNumParts(); i++) {
-    		nodes.add(space.createNode());
+    		for (int i = 1; i < device.getNumParts(); i++) {
+    			nodes.add(space.createNode());
 
-    		connectNodes(i - 1, i, device.getPart(i - 1), partsLibrary);
-    	}
-    	
-    	if (device.getNumParts() > 0) {
+    			connectNodes(i - 1, i, device.getPart(i - 1), partsLibrary);
+    		}
+    		
     		nodes.add(space.createAcceptNode());
     		
     		connectNodes(device.getNumParts() - 1, device.getNumParts(), 
@@ -67,50 +65,30 @@ public class SubSpace {
 		}
 	}
 	
-	public void applyRule(Rule rule, Part implicantPart) {
-		if (rule.isAdjacencyRule()) {
-			if (implicantPart.isIdenticalTo(rule.getImplicantPart())) {
-				addPart(rule.getImplicantPart());
-			} else if (implicantPart.isIdenticalTo(rule.getImpliedPart())) {
-				addPart(rule.getImpliedPart());
-			}
-		} else if (rule.isNonStrictPrecedenceRule()) {
-			if (implicantPart.isIdenticalTo(rule.getImplicantPart())) {
-				addPart(rule.getImplicantPart());
-			} else if (implicantPart.isIdenticalTo(rule.getImpliedPart())) {
-				addPart(rule.getImplicantPart());
-				
-				addPart(rule.getImpliedPart());
-			}
-		} else if (rule.isStrictPrecedenceRule()) {
-			addPart(rule.getImplicantPart());
-			
-			deletePart(rule.getImpliedPart());
-		}
-	}
-	
 	public boolean beginsWithPartType(Part part) {
 		return hasPartType(part, 1);
 	}
 	
 	public void connectToSubSpace(SubSpace nextSubSpace, Part part, int connectionIndex) {
-		int[] connectionIndices = new int[1];
+		List<Integer> connectionIndices = new ArrayList<Integer>(1);
 		
-		connectionIndices[0] = connectionIndex;
+		connectionIndices.set(0, new Integer(connectionIndex));
 		
 		connectToSubSpace(nextSubSpace, part, connectionIndices);
 	}
 	
 	public void connectToSubSpace(SubSpace nextSubSpace, Part part) {
-		connectToSubSpace(nextSubSpace, part, inferConnectionIndices(part));
+		connectToSubSpace(nextSubSpace, part, partTypeToNodeIndices.get(part.getType()));
 	}
 	
-	private void connectToSubSpace(SubSpace nextSubSpace, Part part, int[] connectionIndices) {
-		for (int i = 0; i < connectionIndices.length; i++) {
-			int shiftedIndex = connectionIndices[i] - connectionIndices[0];
+	private void connectToSubSpace(SubSpace nextSubSpace, Part part, List<Integer> nodeIndices) {
+		int shift = nextSubSpace.getNumNodes() - nodes.size() + 1;
+		
+		for (int i = 0; i < nodeIndices.size(); i++) {
+			int shiftedIndex = nodeIndices.get(i).intValue() + shift;
 			
 			if (shiftedIndex < nextSubSpace.getNumNodes()) {
-				Node node = nodes.get(connectionIndices[i]);
+				Node node = nodes.get(nodeIndices.get(i).intValue());
 
 				Node nextNode = nextSubSpace.getNode(shiftedIndex);
 				
@@ -163,10 +141,10 @@ public class SubSpace {
     }
 	
 	public SubSpace copyFromPart(Part part) {
-		List<Integer> copyIndices = partTypeToNodeIndices.get(part.getType());
+		List<Integer> nodeIndices = partTypeToNodeIndices.get(part.getType());
 		
-		if (copyIndices.size() > 0) {
-			return copyFromIndex(copyIndices.get(0) + 1);
+		if (nodeIndices.size() > 0) {
+			return copyFromIndex(nodeIndices.get(0) + 1);
 		} else {
 			return copy();
 		}
@@ -226,6 +204,10 @@ public class SubSpace {
 		return nodes.get(nodeIndex);
 	}
 	
+	public List<Integer> getNodeIndices(PartType type) {
+		return partTypeToNodeIndices.get(type);
+	}
+	
 	public List<Node> getNodes() {
 		return nodes;
 	}
@@ -255,17 +237,5 @@ public class SubSpace {
 		}
 		
 		return false;
-	}
-	
-	public int[] inferConnectionIndices(Part part) {
-		List<Integer> tempConnectionIndices = partTypeToNodeIndices.get(part.getType());
-		
-		int[] connectionIndices = new int[tempConnectionIndices.size()];
-		
-		for (int i = 0; i < tempConnectionIndices.size(); i++) {
-			connectionIndices[i] = tempConnectionIndices.get(i).intValue();
-		}
-		
-		return connectionIndices;
 	}
 }

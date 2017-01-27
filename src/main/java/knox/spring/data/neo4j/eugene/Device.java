@@ -33,18 +33,6 @@ public class Device {
 		return id;
 	}
 	
-	public Part getPart(int index) {
-		if (hasParts() && index >= 0 && index < parts.size()) {
-			return parts.get(index);
-		} else {
-			return null;
-		}
-	}
-	
-	public List<Part> getParts() {
-		return parts;
-	}
-	
 	public Part getLastPart() {
 		if (hasParts()) {
 			return parts.get(getNumParts() - 1);
@@ -57,11 +45,23 @@ public class Device {
 		return parts.size();
 	}
 	
+	public Part getPart(int index) {
+		if (hasParts() && index >= 0 && index < parts.size()) {
+			return parts.get(index);
+		} else {
+			return null;
+		}
+	}
+	
+	public List<Part> getParts() {
+		return parts;
+	}
+	
 	public Set<Rule> getRules() {
 		return rules;
 	}
-	
+
 	public boolean hasParts() {
-		return parts != null && getNumParts() > 0;
+		return parts != null && parts.size() > 0;
 	}
 }
