@@ -53,6 +53,12 @@ public class SubSpace {
     	}
 	}
 	
+	public void addParts(Set<Part> parts) {
+		for (Part part : parts) {
+			addPart(part);
+		}
+	}
+	
 	public void addPart(Part part) {
 		if (partTypeToNodeIndices.containsKey(part.getType())) {
 			for (Integer nodeIndex : partTypeToNodeIndices.get(part.getType())) {
@@ -187,6 +193,12 @@ public class SubSpace {
 		
 		return new SubSpace(space, nodeCopies, partTypeToNodeIndicesCopy);
     }
+	
+	public void deleteParts(Set<Part> parts) {
+		for (Part part : parts) {
+			deletePart(part);
+		}
+	}
 	
 	public void deletePart(Part part) {
 		if (partTypeToNodeIndices.containsKey(part.getType())) {

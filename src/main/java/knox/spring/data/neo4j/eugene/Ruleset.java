@@ -8,6 +8,8 @@ public class Ruleset implements Comparator<Ruleset> {
 	
 	private Part implicant;
 	
+	private Set<Part> adjacent;
+	
 	private Set<Part> coImplicants;
 	
 	private Set<Part> implied;
@@ -17,7 +19,7 @@ public class Ruleset implements Comparator<Ruleset> {
 	private int rank = -1;
 	
 	public Ruleset() {
-		
+		this.adjacent = new HashSet<Part>();
 	}
 	
 	public Ruleset(Part implicant) {
@@ -28,15 +30,21 @@ public class Ruleset implements Comparator<Ruleset> {
 		this.implied = new HashSet<Part>();
 		
 		this.weaklyImplied = new HashSet<Part>();
+		
+		this.adjacent = new HashSet<Part>();
 	}
 	
 	public void addRule(Rule rule) {
 		if (rule.isAdjacencyRule()) {
-
+			if (implicant.isIdenticalTo(rule.getImplicant())) {
+				adjacent.add(rule.getImplied());
+			} else if (implicant.isIdenticalTo(rule.getImplied())) {
+				adjacent.add(rule.getImplicant());
+			}
 		} else if (rule.isNonStrictPrecedenceRule()) {
 			if (implicant.isIdenticalTo(rule.getImplicant())) {
 				weaklyImplied.add(rule.getImplied());
-			} else {
+			} else if (implicant.isIdenticalTo(rule.getImplied())) {
 				coImplicants.add(rule.getImplicant());
 			}
 		} else if (rule.isStrictPrecedenceRule()) {
@@ -50,6 +58,10 @@ public class Ruleset implements Comparator<Ruleset> {
 
 	public int compare(Ruleset r1, Ruleset r2) {
 		return r1.rank - r2.rank;
+	}
+	
+	public Set<Part> getAdjacent() {
+		return adjacent;
 	}
 	
 	public Set<Part> getImplied() {
@@ -66,6 +78,10 @@ public class Ruleset implements Comparator<Ruleset> {
 	
 	public Set<Part> getWeaklyImplied() {
 		return weaklyImplied;
+	}
+	
+	public int getRank() {
+		return rank;
 	}
 	
 	public boolean hasRank() {

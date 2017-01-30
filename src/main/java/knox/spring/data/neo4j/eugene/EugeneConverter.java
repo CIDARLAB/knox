@@ -40,14 +40,14 @@ public class EugeneConverter {
 			rootSpace.deletePart(ruleset.getImplicant());
 		}
 		
-		Set<Part> implicants = new HashSet<Part>();
-		
-		for (Ruleset ruleset : rulesets) {
-			implicants.add(ruleset.getImplicant());
-		}
+//		Set<Part> implicants = new HashSet<Part>();
+//		
+//		for (Ruleset ruleset : rulesets) {
+//			implicants.add(ruleset.getImplicant());
+//		}
 		
 		branch(rootSpace, rulesets, new HashSet<String>(), new HashMap<Set<String>, SubSpace>(), 
-				implicants);
+				new HashSet<Part>(), new HashSet<Part>(), new Ruleset());
 		
 		return space;
 	}
@@ -62,65 +62,171 @@ public class EugeneConverter {
 		return idCopies;
 	}
 	
+//	private Set<Part> collectAdjacent(Ruleset ruleset, Set<Part> implicants) {
+//		Set<Part> adjacent = new HashSet<Part>();
+//		
+//		for (Part part : ruleset.getAdjacent()) {
+//			if (implicants.contains(part)) {
+//				adjacent.add(part);
+//			}
+//		}
+//		
+//		return adjacent;
+//	}
+	
+	private Set<Part> collectImplicants(Ruleset ruleset, Set<Part> implicated, Set<Part> forbidden) {
+		Set<Part> implicants = new HashSet<Part>();
+		
+		implicants.add(ruleset.getImplicant());
+		
+		for (Part part : ruleset.getCoImplicants()) {
+			if (implicated.contains(part) && !forbidden.contains(part)) {
+				implicants.add(part);
+			}
+		}
+		
+		return implicants;
+	}
+	
+	private Set<Part> collectImplied(Ruleset ruleset, Set<Part> implicated) {
+		Set<Part> implied = new HashSet<Part>();
+		
+		implied.addAll(ruleset.getImplied());
+		
+		for (Part part : ruleset.getWeaklyImplied()) {
+			if (!implicated.contains(part)) {
+				implied.add(part);
+			}
+		}
+		
+		return implied;
+	}
+	
 	public void branch(SubSpace subSpace, List<Ruleset> rulesets, Set<String> implicatedIDs, 
-			HashMap<Set<String>, SubSpace> implicatedIDsToSubSpaces, Set<Part> implicants) {
+			HashMap<Set<String>, SubSpace> implicatedIDsToSubSpaces, Set<Part> implicated,
+			Set<Part> forbidden, Ruleset priorRuleset) {
 		for (int i = 0; i < rulesets.size(); i++) {
-			if (implicants.contains(rulesets.get(i).getImplicant())) {
-				implicatedIDs.add(rulesets.get(i).getImplicant().getID());
+			if (!forbidden.contains(rulesets.get(i).getImplicant())) {
+				if (rulesets.get(i).getAdjacent().size() > 0) {
+					implicatedIDs.add(rulesets.get(i).getImplicant().getID() 
+							+ "@" + rulesets.get(i).getRank());
+				} else {
+					implicatedIDs.add(rulesets.get(i).getImplicant().getID());
+				}
 				
 				if (!implicatedIDsToSubSpaces.containsKey(implicatedIDs)) {
 					Ruleset ruleset = rulesets.remove(i);
 					
 					SubSpace branchSpace = subSpace.copyFromPart(ruleset.getImplicant());
-					
+
 					implicatedIDsToSubSpaces.put(copyIDs(implicatedIDs), branchSpace);
 					
-					branchSpace.addPart(ruleset.getImplicant());
+					Set<Part> implicants = collectImplicants(ruleset, implicated, forbidden);
 					
-					implicants.remove(ruleset.getImplicant());
+					Set<Part> implied = collectImplied(ruleset, implicated);
 					
-					for (Part part : ruleset.getCoImplicants()) {
-						if (!implicants.contains(part)) {
-							branchSpace.addPart(part);
-						}
+					branchSpace.addParts(implicants);
+					
+					branchSpace.deleteParts(implied);
+					
+					if (ruleset.getAdjacent().contains(priorRuleset.getImplicant())) {
+						branchSpace.deletePart(priorRuleset.getImplicant());
+						
+						branchSpace.deletePart(ruleset.getImplicant());
+						
+						implicated.remove(priorRuleset.getImplicant());
+					} else {
+						implicated.add(ruleset.getImplicant());
 					}
+
+					forbidden.addAll(implied);
+						
+					branch(branchSpace, rulesets, implicatedIDs, implicatedIDsToSubSpaces, 
+							implicants, forbidden, ruleset);
+
+					forbidden.removeAll(implied);
 					
-					for (Part part : ruleset.getImplied()) {
-						branchSpace.deletePart(part);
+					if (ruleset.getAdjacent().contains(priorRuleset.getImplicant())) {
+						implicated.add(priorRuleset.getImplicant());
+					} else {
+						implicated.remove(ruleset.getImplicant());
 					}
-					
-					implicants.removeAll(ruleset.getImplied());
-					
-					Set<Part> weaklyImplied = new HashSet<Part>();
-					
-					for (Part part : ruleset.getWeaklyImplied()) {
-						if (implicants.contains(part)) {
-							branchSpace.deletePart(part);
-							
-							implicants.remove(part);
-							
-							weaklyImplied.add(part);
-						}
-					}
-					
-					branch(branchSpace, rulesets, implicatedIDs, implicatedIDsToSubSpaces, implicants);
-					
-					implicants.add(ruleset.getImplicant());
-					
-					implicants.addAll(ruleset.getImplied());
-					
-					implicants.addAll(weaklyImplied);
 					
 					rulesets.add(i, ruleset);
 				}
-				
+
 				subSpace.connectToSubSpace(implicatedIDsToSubSpaces.get(implicatedIDs), 
 						rulesets.get(i).getImplicant());
 				
-				implicatedIDs.remove(rulesets.get(i).getImplicant().getID());
+				if (rulesets.get(i).getAdjacent().size() > 0) {
+					implicatedIDs.remove(rulesets.get(i).getImplicant().getID() 
+							+ "@" + rulesets.get(i).getRank());
+				} else {
+					implicatedIDs.remove(rulesets.get(i).getImplicant().getID());
+				}
 			}
 		}
 	}
+	
+//	public void branch(SubSpace subSpace, List<Ruleset> rulesets, Set<String> implicatedIDs, 
+//			HashMap<Set<String>, SubSpace> implicatedIDsToSubSpaces, Set<Part> implicants) {
+//		for (int i = 0; i < rulesets.size(); i++) {
+//			if (implicants.contains(rulesets.get(i).getImplicant())) {
+//				implicatedIDs.add(rulesets.get(i).getImplicant().getID());
+//				
+//				if (!implicatedIDsToSubSpaces.containsKey(implicatedIDs)) {
+//					Ruleset ruleset = rulesets.remove(i);
+//					
+//					SubSpace branchSpace = subSpace.copyFromPart(ruleset.getImplicant());
+//					
+//					implicatedIDsToSubSpaces.put(copyIDs(implicatedIDs), branchSpace);
+//					
+//					branchSpace.addPart(ruleset.getImplicant());
+//					
+//					implicants.remove(ruleset.getImplicant());
+//					
+//					for (Part part : ruleset.getCoImplicants()) {
+//						if (!implicants.contains(part)) {
+//							branchSpace.addPart(part);
+//						}
+//					}
+//					
+//					for (Part part : ruleset.getImplied()) {
+//						branchSpace.deletePart(part);
+//					}
+//					
+//					implicants.removeAll(ruleset.getImplied());
+//					
+//					Set<Part> weaklyImplied = new HashSet<Part>();
+//					
+//					for (Part part : ruleset.getWeaklyImplied()) {
+//						if (implicants.contains(part)) {
+//							branchSpace.deletePart(part);
+//							
+//							implicants.remove(part);
+//							
+//							weaklyImplied.add(part);
+//						}
+//					}
+//					
+//					branch(branchSpace, rulesets, implicatedIDs, implicatedIDsToSubSpaces, implicants);
+//					
+//					implicants.add(ruleset.getImplicant());
+//					
+//					implicants.addAll(ruleset.getImplied());
+//					
+//					implicants.addAll(weaklyImplied);
+//					
+//					rulesets.add(i, ruleset);
+//				}
+//				
+//				subSpace.connectToSubSpace(implicatedIDsToSubSpaces.get(implicatedIDs), 
+//						rulesets.get(i).getImplicant());
+//				
+//				implicatedIDs.remove(rulesets.get(i).getImplicant().getID());
+//			}
+//		}
+//	}
 	
 	public List<Ruleset> composeRulesets(Set<Rule> rules) {
 		HashMap<Part, Ruleset> implicantToRuleset = new HashMap<Part, Ruleset>();
