@@ -8,30 +8,43 @@ public class Ruleset implements Comparator<Ruleset> {
 	
 	private Part implicant;
 	
-	private Set<Part> adjacent;
+	private Set<Part> adjacent = new HashSet<Part>();
 	
-	private Set<Part> coImplicants;
+	private Set<Part> coImplicants = new HashSet<Part>();
 	
-	private Set<Part> implied;
+	private Set<Part> implied = new HashSet<Part>();
 	
-	private Set<Part> weaklyImplied;
+	private Set<Part> weaklyImplied = new HashSet<Part>();
 	
 	private int rank = -1;
 	
 	public Ruleset() {
-		this.adjacent = new HashSet<Part>();
+		adjacent = new HashSet<Part>();
 	}
 	
 	public Ruleset(Part implicant) {
 		this.implicant = implicant;
 		
-		this.coImplicants = new HashSet<Part>();
+		adjacent = new HashSet<Part>();
 		
-		this.implied = new HashSet<Part>();
+		coImplicants = new HashSet<Part>();
 		
-		this.weaklyImplied = new HashSet<Part>();
+		implied = new HashSet<Part>();
 		
-		this.adjacent = new HashSet<Part>();
+		weaklyImplied = new HashSet<Part>();
+	}
+	
+	public Ruleset(Part implicant, Set<Part> coImplicants, Set<Part> implied, Set<Part> weaklyImplied, 
+			Set<Part> adjacent) {
+		this.implicant = implicant;
+		
+		this.coImplicants = coImplicants;
+		
+		this.implied = implied;
+		
+		this.weaklyImplied = weaklyImplied;
+		
+		this.adjacent = adjacent;
 	}
 	
 	public void addRule(Rule rule) {
@@ -58,6 +71,26 @@ public class Ruleset implements Comparator<Ruleset> {
 
 	public int compare(Ruleset r1, Ruleset r2) {
 		return r1.rank - r2.rank;
+	}
+	
+	public Ruleset copy() {
+		Set<Part> adjacent = new HashSet<Part>();
+		
+		adjacent.addAll(this.adjacent);
+		
+		Set<Part> coImplicants = new HashSet<Part>();
+		
+		coImplicants.addAll(this.coImplicants);
+		
+		Set<Part> implied = new HashSet<Part>();
+		
+		implied.addAll(this.implied);
+		
+		Set<Part> weaklyImplied = new HashSet<Part>();
+		
+		weaklyImplied.addAll(this.weaklyImplied);
+		
+		return new Ruleset(implicant, coImplicants, implied, weaklyImplied, adjacent);
 	}
 	
 	public Set<Part> getAdjacent() {

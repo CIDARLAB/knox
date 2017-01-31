@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -129,15 +130,16 @@ public class EugeneConverter {
 					
 					branchSpace.deleteParts(implied);
 					
-					if (ruleset.getAdjacent().contains(priorRuleset.getImplicant())) {
+					if (ruleset.getAdjacent().contains(priorRuleset.getImplicant())
+							&& !ruleset.getImplicant().equals(priorRuleset.getImplicant())) {
 						branchSpace.deletePart(priorRuleset.getImplicant());
 						
 						branchSpace.deletePart(ruleset.getImplicant());
-						
-						implicated.remove(priorRuleset.getImplicant());
 					} else {
-						implicated.add(ruleset.getImplicant());
+						forbidden.add(ruleset.getImplicant());
 					}
+						
+					implicated.add(ruleset.getImplicant());
 
 					forbidden.addAll(implied);
 						
@@ -145,12 +147,8 @@ public class EugeneConverter {
 							implicants, forbidden, ruleset);
 
 					forbidden.removeAll(implied);
-					
-					if (ruleset.getAdjacent().contains(priorRuleset.getImplicant())) {
-						implicated.add(priorRuleset.getImplicant());
-					} else {
-						implicated.remove(ruleset.getImplicant());
-					}
+						
+					implicated.remove(ruleset.getImplicant());
 					
 					rulesets.add(i, ruleset);
 				}
@@ -257,19 +255,47 @@ public class EugeneConverter {
 	}
 	
 	public void sortRulesets(List<Ruleset> rulesets, SubSpace subSpace) {
+		List<Ruleset> rulesetCopies = new LinkedList<Ruleset>();
+		
 		for (Ruleset ruleset : rulesets) {
 			List<Integer> nodeIndices = subSpace.getNodeIndices(ruleset.getImplicant().getType());
 
 			int i = 0;
 
-			while (i < nodeIndices.size() && !ruleset.hasRank()) {
-				for (Edge edge : subSpace.getNode(nodeIndices.get(i)).getEdges()) {
-					if (edge.hasComponentID(ruleset.getImplicant().getID())) {
-						ruleset.setRank(nodeIndices.get(i).intValue());
+			if (ruleset.getAdjacent().size() > 0) {
+				if (nodeIndices.size() > 0) {
+					for (Edge edge : subSpace.getNode(nodeIndices.get(0)).getEdges()) {
+						if (edge.hasComponentID(ruleset.getImplicant().getID())) {
+							ruleset.setRank(nodeIndices.get(0).intValue());
+						}
 					}
+					
+					while (i + 1 < nodeIndices.size()) {
+						i++;
+						
+						rulesetCopies.add(0, ruleset.copy());
+						
+						for (Edge edge : subSpace.getNode(nodeIndices.get(i)).getEdges()) {
+							if (edge.hasComponentID(ruleset.getImplicant().getID())) {
+								rulesetCopies.get(0).setRank(nodeIndices.get(i).intValue());
+							}
+						}
+					}
+				}
+			} else {
+				while (i < nodeIndices.size() && !ruleset.hasRank()) {
+					for (Edge edge : subSpace.getNode(nodeIndices.get(i)).getEdges()) {
+						if (edge.hasComponentID(ruleset.getImplicant().getID())) {
+							ruleset.setRank(nodeIndices.get(i).intValue());
+						}
+					}
+					
+					i++;
 				}
 			}
 		}
+		
+		rulesetCopies.addAll(rulesetCopies);
 		
 		Collections.sort(rulesets, new Ruleset());
 	}
