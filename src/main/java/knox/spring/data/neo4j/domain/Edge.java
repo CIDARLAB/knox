@@ -90,8 +90,20 @@ public class Edge {
         return head;
     }
     
+    public String getComponentID(int i) {
+    	if (i >= 0 && i < componentIDs.size()) {
+    		return componentIDs.get(i);
+    	} else {
+    		return null;
+    	}
+    }
+    
     public ArrayList<String> getComponentIDs() {
     	return componentIDs;
+    }
+    
+    public int getNumComponentIDs() {
+    	return componentIDs.size();
     }
     
     public ArrayList<String> getComponentRoles() {

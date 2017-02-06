@@ -16,6 +16,8 @@ public class Ruleset implements Comparator<Ruleset> {
 	
 	private Set<Part> weaklyImplied = new HashSet<Part>();
 	
+	private int index = -1;
+	
 	private int rank = -1;
 	
 	public Ruleset() {
@@ -70,7 +72,7 @@ public class Ruleset implements Comparator<Ruleset> {
 	}
 
 	public int compare(Ruleset r1, Ruleset r2) {
-		return r1.rank - r2.rank;
+		return r1.index - r2.index;
 	}
 	
 	public Ruleset copy() {
@@ -109,19 +111,42 @@ public class Ruleset implements Comparator<Ruleset> {
 		return implicant;
 	}
 	
+	public boolean isAdjacency() {
+		return adjacent.size() > 0;
+	}
+	
+	public boolean isOverlapWith(Ruleset ruleset) {
+		return adjacent.contains(ruleset.getImplicant())
+				&& ruleset.getAdjacent().contains(implicant);
+	}
+	
+	public boolean isAdjacentTo(Ruleset ruleset) {
+		return adjacent.contains(ruleset.getImplicant())
+				&& ruleset.getAdjacent().contains(implicant)
+				&& (ruleset.getIndex() == index + 1 || ruleset.getIndex() + 1 == index);
+	}
+	
 	public Set<Part> getWeaklyImplied() {
 		return weaklyImplied;
 	}
 	
-	public int getRank() {
-		return rank;
+	public int getIndex() {
+		return index;
 	}
 	
-	public boolean hasRank() {
-		return rank >= 0;
+	public boolean hasIndex() {
+		return index >= 0;
 	}
 	
-	public void setRank(int rank) {
-		this.rank = rank;
+	public void setIndex(int index) {
+		this.index = index;
 	}
+	
+//	public int getRank() {
+//		return rank;
+//	}
+//	
+//	public void setRank(int rank) {
+//		this.rank = rank;
+//	}
 }

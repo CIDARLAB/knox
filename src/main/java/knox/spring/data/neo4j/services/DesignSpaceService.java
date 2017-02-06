@@ -10,7 +10,6 @@ import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.eugene.EugeneConverter;
 import knox.spring.data.neo4j.eugene.Device;
 import knox.spring.data.neo4j.eugene.Part;
-import knox.spring.data.neo4j.eugene.Part.PartType;
 import knox.spring.data.neo4j.eugene.Rule;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
@@ -22,6 +21,7 @@ import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.NodeRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
+import knox.spring.data.neo4j.sample.DesignSampler;
 
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLReader;
@@ -72,16 +72,48 @@ public class DesignSpaceService {
 //    		}
 //    	}
     	
+    	Set<Part> parts = new HashSet<Part>();
+    	
     	Part pLac = new Part("pLac", Part.PartType.PROMOTER);
     	Part pTet = new Part("pTet", Part.PartType.PROMOTER);
     	Part pR = new Part("pR", Part.PartType.PROMOTER);
     	
-    	Set<Part> parts = new HashSet<Part>();
     	parts.add(pLac);
     	parts.add(pTet);
     	parts.add(pR);
     	
+//    	parts.add(new Part("p1", Part.PartType.PROMOTER));
+//    	parts.add(new Part("p2", Part.PartType.PROMOTER));
+//    	parts.add(new Part("p3", Part.PartType.PROMOTER));
+    	
+//    	parts.add(new Part("z1", Part.PartType.RIBOZYME));
+    	
     	parts.add(new Part("r1", Part.PartType.RBS));
+//    	parts.add(new Part("r2", Part.PartType.RBS));
+    	
+//    	Part gene1 = new Part("gene1", Part.PartType.CDS);
+//    	Part gene2 = new Part("gene2", Part.PartType.CDS);
+//    	Part gene3 = new Part("gene3", Part.PartType.CDS);
+//    	Part gene4 = new Part("gene4", Part.PartType.CDS);
+//    	Part gene5 = new Part("gene5", Part.PartType.CDS);
+//    	Part gene6 = new Part("gene6", Part.PartType.CDS);
+//    	Part gene7 = new Part("gene7", Part.PartType.CDS);
+//    	Part gene8 = new Part("gene8", Part.PartType.CDS);
+//    	Part gene9 = new Part("gene9", Part.PartType.CDS);
+//    	Part gene10 = new Part("gene10", Part.PartType.CDS);
+//    	Part gene11 = new Part("gene11", Part.PartType.CDS);
+    	
+//    	parts.add(gene1);
+//    	parts.add(gene2);
+//    	parts.add(gene3);
+//    	parts.add(gene4);
+//    	parts.add(gene5);
+//    	parts.add(gene6);
+//    	parts.add(gene7);
+//    	parts.add(gene8);
+//    	parts.add(gene9);
+//    	parts.add(gene10);
+//    	parts.add(gene11);
     	
     	Part lacI = new Part("lacI", Part.PartType.CDS);
     	Part tetR = new Part("tetR", Part.PartType.CDS);
@@ -107,15 +139,86 @@ public class DesignSpaceService {
     	architecture.add(new Part(Part.PartType.CDS));
     	architecture.add(new Part(Part.PartType.TERMINATOR));
     	
+//    	List<Part> architecture = new ArrayList<Part>(25);
+//    	architecture.add(new Part(Part.PartType.PROMOTER));
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene1);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene2);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene3);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene4);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene5);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene6);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene7);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene8);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene9);
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene10);
+//    	architecture.add(new Part(Part.PartType.PROMOTER));
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene11);
+//    	architecture.add(new Part(Part.PartType.TERMINATOR));
+    	
+//    	List<Part> architecture = new ArrayList<Part>(25);
+//    	architecture.add(new Part(Part.PartType.PROMOTER));
+//    	architecture.add(new Part(Part.PartType.RIBOZYME));
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene1);
+//    	architecture.add(new Part(Part.PartType.TERMINATOR));
+//    	architecture.add(new Part(Part.PartType.PROMOTER));
+//    	architecture.add(new Part(Part.PartType.RIBOZYME));
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene2);
+//    	architecture.add(new Part(Part.PartType.TERMINATOR));
+//    	architecture.add(new Part(Part.PartType.PROMOTER));
+//    	architecture.add(new Part(Part.PartType.RIBOZYME));
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene3);
+//    	architecture.add(new Part(Part.PartType.TERMINATOR));
+//    	architecture.add(new Part(Part.PartType.PROMOTER));
+//    	architecture.add(new Part(Part.PartType.RIBOZYME));
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(gene4);
+//    	architecture.add(new Part(Part.PartType.TERMINATOR));
+    	
     	Set<Rule> rules = new HashSet<Rule>();
     	rules.add(new Rule(Rule.RuleType.BEFORE, tetR, pTet));
-    	rules.add(new Rule(Rule.RuleType.NEXTTO, lacI, pTet));
+    	rules.add(new Rule(Rule.RuleType.NEXTTO, doubleT, pTet));
 //    	rules.add(new Rule(Rule.RuleType.BEFORE, lacI, pLac));
 //    	rules.add(new Rule(Rule.RuleType.SOME_BEFORE, doubleT, pTet));
     	
     	Device device = new Device("toggleSwitch", architecture, rules);
     	
     	DesignSpace space = convertDeviceToDesignSpace(device, parts);
+    	
+//    	DesignSampler sampler = new DesignSampler(space);
+//    	
+//    	long total = 0;
+    	
+//    	Set<List<String>> samples = sampler.sample(3);
+    	
+//    	for (int i = 0; i < 50; i++) {
+//    	long startTime = System.nanoTime();
+//    	Set<List<String>> samples = sampler.enumerate();
+//    	total += System.nanoTime() - startTime;
+//    	}
+//    	
+//    	System.out.println(total/50.00);
+    	
+//    	for (List<String> sample : samples) {
+//    		System.out.println("------------------");
+//    		System.out.println(samples.iterator().next().toString());
+//    		System.out.println();
+//    	}
+    	
+//    	System.out.println(samples.size());
     	
     	saveDesignSpace(space);
     }

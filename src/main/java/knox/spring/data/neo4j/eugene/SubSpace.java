@@ -75,12 +75,41 @@ public class SubSpace {
 		return hasPartType(part, 1);
 	}
 	
-	public void connectToSubSpace(SubSpace nextSubSpace, Part part, int connectionIndex) {
-		List<Integer> connectionIndices = new ArrayList<Integer>(1);
+	public void connectToFirst(SubSpace nextSubSpace, Part part) {
+		List<Integer> nodeIndices = partTypeToNodeIndices.get(part.getType());
 		
-		connectionIndices.set(0, new Integer(connectionIndex));
+		if (nodeIndices.size() > 0) {
+			int shift = nextSubSpace.getNumNodes() - nodes.size() + 1;
+			
+			if (shift >= 0) {
+				connectToSubSpace(nextSubSpace, part, nodeIndices.get(0).intValue(), shift);
+			} else {
+//				System.out.println("bada bing" + part.getID() + " " + nextSubSpace.getNumNodes() + " " + nodes.size());
+			}
+		}
+	}
+	
+	private void connectToSubSpace(SubSpace nextSubSpace, Part part, int nodeIndex, int shift) {
+		System.out.println("connect " + part.getID() + " " + nodeIndex + " of " + nodes.size()
+				+ " to " + (nodeIndex + shift) + " of " + nextSubSpace.getNumNodes());
 		
-		connectToSubSpace(nextSubSpace, part, connectionIndices);
+		if (nodeIndex + shift < nextSubSpace.getNumNodes()) {
+			Node node = nodes.get(nodeIndex);
+
+			Node nextNode = nextSubSpace.getNode(nodeIndex + shift);
+			
+			ArrayList<String> compIDs = new ArrayList<String>(1);
+			
+			compIDs.add(part.getID());
+			
+			ArrayList<String> compRoles = new ArrayList<String>(1);
+			
+			compRoles.add(part.getType().getValue());
+			
+			if (!node.hasEdge(nextNode)) {
+				outgoingEdges.add(node.createEdge(nextNode, compIDs, compRoles));
+			}
+		}
 	}
 	
 	public void connectToSubSpace(SubSpace nextSubSpace, Part part) {
@@ -90,27 +119,14 @@ public class SubSpace {
 	private void connectToSubSpace(SubSpace nextSubSpace, Part part, List<Integer> nodeIndices) {
 		int shift = nextSubSpace.getNumNodes() - nodes.size() + 1;
 		
-		for (int i = 0; i < nodeIndices.size(); i++) {
-			int shiftedIndex = nodeIndices.get(i).intValue() + shift;
-			
-			if (shiftedIndex < nextSubSpace.getNumNodes()) {
-				Node node = nodes.get(nodeIndices.get(i).intValue());
-
-				Node nextNode = nextSubSpace.getNode(shiftedIndex);
-				
-				ArrayList<String> compIDs = new ArrayList<String>(1);
-				
-				compIDs.add(part.getID());
-				
-				ArrayList<String> compRoles = new ArrayList<String>(1);
-				
-				compRoles.add(part.getType().getValue());
-				
-				if (!node.hasEdge(nextNode)) {
-					outgoingEdges.add(node.createEdge(nextNode, compIDs, compRoles));
-				}
+		if (shift >= 0) {
+			for (int i = 0; i < nodeIndices.size(); i++) {
+				connectToSubSpace(nextSubSpace, part, nodeIndices.get(i).intValue(), shift);
 			}
+		} else {
+//			System.out.println("bada bing " + part.getID() + " " + nextSubSpace.getNumNodes() + " " + nodes.size());
 		}
+		
 	}
 	
 	private void connectNodes(int index1, int index2, Part part, 
@@ -149,12 +165,26 @@ public class SubSpace {
 	public SubSpace copyFromPart(Part part) {
 		List<Integer> nodeIndices = partTypeToNodeIndices.get(part.getType());
 		
+		System.out.println("copy 0 of " + nodeIndices.size());
+		
 		if (nodeIndices.size() > 0) {
-			return copyFromIndex(nodeIndices.get(0) + 1);
+			return copyFromIndex(nodeIndices.get(0).intValue() + 1);
 		} else {
 			return copy();
 		}
 	}
+	
+//	public SubSpace copyFromNthPart(int rank) {
+//		List<Integer> nodeIndices = partTypeToNodeIndices.get(part.getType());
+//		
+//		System.out.println("copy " + rank + " of " + nodeIndices.size());
+//		
+//		if (nodeIndices.size() > 0) {
+//			return copyFromIndex(rank + 1);
+//		} else {
+//			return copy();
+//		}
+//	}
 	
 	public SubSpace copyFromIndex(int copyIndex) {
 		List<Node> nodeCopies = new ArrayList<Node>(nodes.size() - copyIndex);

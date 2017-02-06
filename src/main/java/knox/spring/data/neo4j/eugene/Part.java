@@ -42,6 +42,7 @@ public class Part {
 	
 	public enum PartType {
     	PROMOTER ("promoter"),
+    	RIBOZYME ("ribozyme"),
     	RBS ("ribosome_entry_site"),
     	CDS ("CDS"),
     	TERMINATOR ("terminator");
