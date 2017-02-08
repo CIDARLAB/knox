@@ -18,16 +18,21 @@ public class SubSpace {
 	
 	private List<Node> nodes;
 	
-	private HashMap<PartType, List<Integer>> partTypeToNodeIndices;
+	private HashMap<Part, List<Integer>> partToNodeIndices;
 	
-	public Set<Edge> outgoingEdges = new HashSet<Edge>();
+	private Set<Edge> outgoingEdges = new HashSet<Edge>();
 	
-	private SubSpace(DesignSpace space, List<Node> nodes, HashMap<PartType, List<Integer>> partTypeToNodeIndices) {
+	private int numRootNodes = -1;
+	
+	private SubSpace(DesignSpace space, List<Node> nodes, HashMap<Part, List<Integer>> partToNodeIndices,
+			int numRootNodes) {
 		this.space = space;
 		
 		this.nodes = nodes;
 		
-		this.partTypeToNodeIndices = partTypeToNodeIndices;
+		this.partToNodeIndices = partToNodeIndices;
+		
+		this.numRootNodes = numRootNodes;
 	}
 	
 	public SubSpace(DesignSpace space, Device device, HashMap<PartType, Set<Part>> partsLibrary) {
@@ -35,7 +40,7 @@ public class SubSpace {
 		
 		this.nodes = new ArrayList<Node>(device.getNumParts()); 
 		
-		this.partTypeToNodeIndices = new HashMap<PartType, List<Integer>>();
+		this.partToNodeIndices = new HashMap<Part, List<Integer>>();
 		
 		if (device.getNumParts() > 0) {
     		nodes.add(space.createStartNode());
@@ -51,6 +56,8 @@ public class SubSpace {
     		connectNodes(device.getNumParts() - 1, device.getNumParts(), 
     				device.getLastPart(), partsLibrary);
     	}
+		
+		this.numRootNodes = nodes.size();
 	}
 	
 	public void addParts(Set<Part> parts) {
@@ -60,8 +67,8 @@ public class SubSpace {
 	}
 	
 	public void addPart(Part part) {
-		if (partTypeToNodeIndices.containsKey(part.getType())) {
-			for (Integer nodeIndex : partTypeToNodeIndices.get(part.getType())) {
+		if (partToNodeIndices.containsKey(part)) {
+			for (Integer nodeIndex : partToNodeIndices.get(part)) {
 				for (Edge edge : nodes.get(nodeIndex).getEdges()) {
 					if (!outgoingEdges.contains(edge)) {
 						edge.addComponent(part.getID(), part.getType().getValue());
@@ -71,65 +78,37 @@ public class SubSpace {
 		}
 	}
 	
-	public boolean beginsWithPartType(Part part) {
-		return hasPartType(part, 1);
-	}
-	
-	public void connectToFirst(SubSpace nextSubSpace, Part part) {
-		List<Integer> nodeIndices = partTypeToNodeIndices.get(part.getType());
-		
-		if (nodeIndices.size() > 0) {
-			int shift = nextSubSpace.getNumNodes() - nodes.size() + 1;
-			
-			if (shift >= 0) {
-				connectToSubSpace(nextSubSpace, part, nodeIndices.get(0).intValue(), shift);
-			} else {
-//				System.out.println("bada bing" + part.getID() + " " + nextSubSpace.getNumNodes() + " " + nodes.size());
-			}
+	public void connectByPart(SubSpace subSpace, Part part) {
+		for (Integer fromIndex : getNodeIndices(part)) {
+			connectToSubSpace(subSpace, part, fromIndex.intValue(), 
+					fromIndex.intValue() - nodes.size() + subSpace.getNumNodes() + 1);
 		}
 	}
 	
-	private void connectToSubSpace(SubSpace nextSubSpace, Part part, int nodeIndex, int shift) {
-		System.out.println("connect " + part.getID() + " " + nodeIndex + " of " + nodes.size()
-				+ " to " + (nodeIndex + shift) + " of " + nextSubSpace.getNumNodes());
+	public void connectByRuleset(SubSpace subSpace, Ruleset ruleset) {
+		int fromIndex = ruleset.getIndex() - numRootNodes + nodes.size();
 		
-		if (nodeIndex + shift < nextSubSpace.getNumNodes()) {
-			Node node = nodes.get(nodeIndex);
+		int toIndex = ruleset.getIndex() - numRootNodes + subSpace.getNumNodes() + 1;
 
-			Node nextNode = nextSubSpace.getNode(nodeIndex + shift);
-			
-			ArrayList<String> compIDs = new ArrayList<String>(1);
-			
-			compIDs.add(part.getID());
-			
-			ArrayList<String> compRoles = new ArrayList<String>(1);
-			
-			compRoles.add(part.getType().getValue());
-			
-			if (!node.hasEdge(nextNode)) {
-				outgoingEdges.add(node.createEdge(nextNode, compIDs, compRoles));
-			}
-		}
+		connectToSubSpace(subSpace, ruleset.getImplicant(), fromIndex, toIndex);
 	}
 	
-	public void connectToSubSpace(SubSpace nextSubSpace, Part part) {
-		connectToSubSpace(nextSubSpace, part, partTypeToNodeIndices.get(part.getType()));
+	public void connectToSubSpace(SubSpace subSpace, Part part, int fromIndex, int toIndex) {
+		ArrayList<String> compIDs = new ArrayList<String>(1);
+
+		compIDs.add(part.getID());
+
+		ArrayList<String> compRoles = new ArrayList<String>(1);
+
+		compRoles.add(part.getType().getValue());
+
+		outgoingEdges.add(nodes.get(fromIndex).createEdge(subSpace.getNode(toIndex), compIDs, compRoles));
+
+		System.out.println("connect " + part.getID() + " " + fromIndex + " of " + nodes.size()
+				+ " to " + toIndex + " of " + subSpace.getNumNodes());
 	}
 	
-	private void connectToSubSpace(SubSpace nextSubSpace, Part part, List<Integer> nodeIndices) {
-		int shift = nextSubSpace.getNumNodes() - nodes.size() + 1;
-		
-		if (shift >= 0) {
-			for (int i = 0; i < nodeIndices.size(); i++) {
-				connectToSubSpace(nextSubSpace, part, nodeIndices.get(i).intValue(), shift);
-			}
-		} else {
-//			System.out.println("bada bing " + part.getID() + " " + nextSubSpace.getNumNodes() + " " + nodes.size());
-		}
-		
-	}
-	
-	private void connectNodes(int index1, int index2, Part part, 
+	private void connectNodes(int fromIndex, int toIndex, Part part, 
 			HashMap<PartType, Set<Part>> partsLibrary) {
 		ArrayList<String> compIDs;
 
@@ -137,11 +116,23 @@ public class SubSpace {
 			compIDs = new ArrayList<String>(1);
 
 			compIDs.add(part.getID());
+			
+			if (!partToNodeIndices.containsKey(part)) {
+				partToNodeIndices.put(part, new LinkedList<Integer>());
+			}
+			
+			partToNodeIndices.get(part).add(new Integer(fromIndex));
 		} else {
 			compIDs = new ArrayList<String>(partsLibrary.size());
 
 			for (Part p : partsLibrary.get(part.getType())) {
 				compIDs.add(p.getID());
+				
+				if (!partToNodeIndices.containsKey(p)) {
+					partToNodeIndices.put(p, new LinkedList<Integer>());
+				}
+				
+				partToNodeIndices.get(p).add(new Integer(fromIndex));
 			}
 		}
 
@@ -149,13 +140,7 @@ public class SubSpace {
 
 		compRoles.add(part.getType().getValue());
 		
-		nodes.get(index1).createEdge(nodes.get(index2), compIDs, compRoles);
-
-		if (!partTypeToNodeIndices.containsKey(part.getType())) {
-			partTypeToNodeIndices.put(part.getType(), new LinkedList<Integer>());
-		}
-		
-		partTypeToNodeIndices.get(part.getType()).add(new Integer(index1));
+		nodes.get(fromIndex).createEdge(nodes.get(toIndex), compIDs, compRoles);
 	}
 	
 	public SubSpace copy() {
@@ -163,9 +148,7 @@ public class SubSpace {
     }
 	
 	public SubSpace copyFromPart(Part part) {
-		List<Integer> nodeIndices = partTypeToNodeIndices.get(part.getType());
-		
-		System.out.println("copy 0 of " + nodeIndices.size());
+		List<Integer> nodeIndices = getNodeIndices(part);
 		
 		if (nodeIndices.size() > 0) {
 			return copyFromIndex(nodeIndices.get(0).intValue() + 1);
@@ -174,17 +157,13 @@ public class SubSpace {
 		}
 	}
 	
-//	public SubSpace copyFromNthPart(int rank) {
-//		List<Integer> nodeIndices = partTypeToNodeIndices.get(part.getType());
-//		
-//		System.out.println("copy " + rank + " of " + nodeIndices.size());
-//		
-//		if (nodeIndices.size() > 0) {
-//			return copyFromIndex(rank + 1);
-//		} else {
-//			return copy();
-//		}
-//	}
+	public SubSpace copyByRuleset(Ruleset ruleset) {
+		if (ruleset.hasIndex()) {
+			return copyFromIndex(ruleset.getIndex() - numRootNodes + nodes.size() + 1);
+		} else {
+			return copy();
+		}
+	}
 	
 	public SubSpace copyFromIndex(int copyIndex) {
 		List<Node> nodeCopies = new ArrayList<Node>(nodes.size() - copyIndex);
@@ -207,21 +186,21 @@ public class SubSpace {
 			}
 		}
 		
-		HashMap<PartType, List<Integer>> partTypeToNodeIndicesCopy = new HashMap<PartType, List<Integer>>();
+		HashMap<Part, List<Integer>> partToNodeIndicesCopy = new HashMap<Part, List<Integer>>();
 		
-		for (PartType type : partTypeToNodeIndices.keySet()) {
+		for (Part part : partToNodeIndices.keySet()) {
 			List<Integer> nodeIndicesCopy = new LinkedList<Integer>();
 			
-			for (Integer nodeIndex : partTypeToNodeIndices.get(type)) {
+			for (Integer nodeIndex : partToNodeIndices.get(part)) {
 				if (nodeIndex.intValue() >= copyIndex) {
 					nodeIndicesCopy.add(new Integer(nodeIndex.intValue() - copyIndex));
 				}
 			}
 			
-			partTypeToNodeIndicesCopy.put(type, nodeIndicesCopy);
+			partToNodeIndicesCopy.put(part, nodeIndicesCopy);
 		}
 		
-		return new SubSpace(space, nodeCopies, partTypeToNodeIndicesCopy);
+		return new SubSpace(space, nodeCopies, partToNodeIndicesCopy, numRootNodes);
     }
 	
 	public void deleteParts(Set<Part> parts) {
@@ -231,8 +210,8 @@ public class SubSpace {
 	}
 	
 	public void deletePart(Part part) {
-		if (partTypeToNodeIndices.containsKey(part.getType())) {
-			for (Integer nodeIndex : partTypeToNodeIndices.get(part.getType())) {
+		if (partToNodeIndices.containsKey(part)) {
+			for (Integer nodeIndex : partToNodeIndices.get(part)) {
 				for (Edge edge : nodes.get(nodeIndex).getEdges()) {
 					if (!outgoingEdges.contains(edge)) {
 						edge.deleteComponent(part.getID());
@@ -246,8 +225,8 @@ public class SubSpace {
 		return nodes.get(nodeIndex);
 	}
 	
-	public List<Integer> getNodeIndices(PartType type) {
-		return partTypeToNodeIndices.get(type);
+	public List<Integer> getNodeIndices(Part part) {
+		return partToNodeIndices.get(part);
 	}
 	
 	public List<Node> getNodes() {
@@ -258,26 +237,7 @@ public class SubSpace {
 		return nodes.size();
 	}
 	
-	public HashMap<PartType, List<Integer>> getPartTypeToNodeIndices() {
-		return partTypeToNodeIndices;
-	}
-	
-	public boolean hasPartType(Part part) {
-		return hasPartType(part, nodes.size());
-	}
-	
-	private boolean hasPartType(Part part, int bound) {
-		for (int i = 0; i < bound; i++) {
-			if (nodes.get(i).hasEdges()) {
-				for (Edge edge : nodes.get(i).getEdges()) {
-					if (!outgoingEdges.contains(edge)
-							&& edge.hasComponentRole(part.getType().getValue())) {
-						return true;
-					}
-				}
-			}
-		}
-		
-		return false;
+	public int getNumRootNodes() {
+		return numRootNodes;
 	}
 }

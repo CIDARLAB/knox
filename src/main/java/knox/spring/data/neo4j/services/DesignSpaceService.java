@@ -190,9 +190,9 @@ public class DesignSpaceService {
     	
     	Set<Rule> rules = new HashSet<Rule>();
     	rules.add(new Rule(Rule.RuleType.BEFORE, tetR, pTet));
-    	rules.add(new Rule(Rule.RuleType.NEXTTO, doubleT, pTet));
-//    	rules.add(new Rule(Rule.RuleType.BEFORE, lacI, pLac));
-//    	rules.add(new Rule(Rule.RuleType.SOME_BEFORE, doubleT, pTet));
+//    	rules.add(new Rule(Rule.RuleType.NEXTTO, doubleT, pTet));
+    	rules.add(new Rule(Rule.RuleType.BEFORE, lacI, pLac));
+    	rules.add(new Rule(Rule.RuleType.SOME_BEFORE, doubleT, pTet));
     	
     	Device device = new Device("toggleSwitch", architecture, rules);
     	

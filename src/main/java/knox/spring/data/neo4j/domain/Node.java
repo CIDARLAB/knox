@@ -116,6 +116,20 @@ public class Node {
 //    	return outgoingEdges;
 //    }
     
+    public boolean hasComponentID(String compID) {
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.hasComponentID(compID)) {
+    				return true;
+    			}
+    		}
+    		
+    		return false;
+    	} else {
+    		return false;
+    	}
+    }
+    
     public boolean hasEdges() {
     	if (edges == null) {
     		return false;

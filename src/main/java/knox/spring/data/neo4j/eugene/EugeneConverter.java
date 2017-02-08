@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.Stack;
 
 import knox.spring.data.neo4j.domain.DesignSpace;
-import knox.spring.data.neo4j.domain.Edge;
-import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.eugene.Part.PartType;
 
 public class EugeneConverter {
@@ -44,10 +42,6 @@ public class EugeneConverter {
 		}
 		
 		HashMap<Set<String>, SubSpace> blah = new HashMap<Set<String>, SubSpace>();
-		
-//		for (Ruleset ruleset : rulesets) {
-//			System.out.println(ruleset.getImplicant().getID() + " " + ruleset.getRank());
-//		}
 		
 		branch(rootSpace, rulesets, new HashSet<String>(), blah, 
 				new HashSet<Part>(), new HashSet<Part>(), new Ruleset());
@@ -104,7 +98,6 @@ public class EugeneConverter {
 			HashMap<Set<String>, SubSpace> implicatedIDsToSubSpaces, Set<Part> implicated,
 			Set<Part> forbidden, Ruleset priorRuleset) {
 		System.out.println("++++++++++");
-//		Set<String> tempIDs = new HashSet<String>(implicatedIDs);
 		System.out.println(implicatedIDs.toString());
 		
 		Stack<Ruleset> adjacencyStack = new Stack<Ruleset>();
@@ -132,26 +125,11 @@ public class EugeneConverter {
 					SubSpace branchSpace;
 					
 					if (ruleset.isAdjacency()) {
-						branchSpace = subSpace.copyFromIndex(ruleset.getIndex() + 1);
+						branchSpace = subSpace.copyByRuleset(ruleset);
 					} else {
 						branchSpace = subSpace.copyFromPart(ruleset.getImplicant());
 					}
 					
-//					System.out.println("-----------");
-//					System.out.println(tempIDs.toString());
-//					String n = "";
-//					for (Node node : subSpace.getNodes()) {
-//						n = n + ", " + node.getNodeID();
-//					}
-//					System.out.println(n);
-//					System.out.println(implicatedIDs.toString());
-//					String m = "";
-//					for (Node node : branchSpace.getNodes()) {
-//						m = m + ", " + node.getNodeID();
-//					}
-//					System.out.println(m);
-//					System.out.println();
-
 					implicatedIDsToSubSpaces.put(copyIDs(implicatedIDs), branchSpace);
 					
 					Set<Part> implicants = collectImplicants(ruleset, implicated, forbidden);
@@ -166,18 +144,16 @@ public class EugeneConverter {
 
 					forbidden.addAll(implied);
 					
-					if (ruleset.isAdjacency()) {
-						forbidden.add(ruleset.getImplicant());
-						
-						forbidden.addAll(ruleset.getAdjacent());
-					}
-					
 					if (ruleset.isAdjacentTo(priorRuleset)) {
 						branchSpace.deletePart(priorRuleset.getImplicant());
 						
 						forbidden.remove(ruleset.getImplicant());
 						
 						forbidden.remove(priorRuleset.getImplicant());
+					} else if (ruleset.isAdjacency()) {
+						forbidden.add(ruleset.getImplicant());
+						
+						forbidden.addAll(ruleset.getAdjacent());
 					}
 					
 					System.out.println("branch");
@@ -189,9 +165,7 @@ public class EugeneConverter {
 						forbidden.add(ruleset.getImplicant());
 						
 						forbidden.add(priorRuleset.getImplicant());
-					}
-					
-					if (ruleset.isAdjacency()) {
+					} else if (ruleset.isAdjacency()) {
 						forbidden.remove(ruleset.getImplicant());
 						
 						forbidden.removeAll(ruleset.getAdjacent());
@@ -201,18 +175,15 @@ public class EugeneConverter {
 						
 					implicated.remove(ruleset.getImplicant());
 				}
-
+				
 				if (ruleset.isAdjacency()) {
-//					System.out.println("sink " + implicatedIDs.toString());
-					subSpace.connectToFirst(implicatedIDsToSubSpaces.get(implicatedIDs), 
-							ruleset.getImplicant());
+					subSpace.connectByRuleset(implicatedIDsToSubSpaces.get(implicatedIDs), 
+							ruleset);
 					
 					implicatedIDs.remove(ruleset.getImplicant().getID() 
 							+ "@" + ruleset.getIndex());
-					
-//					System.out.println("source " + implicatedIDs.toString());
 				} else {
-					subSpace.connectToSubSpace(implicatedIDsToSubSpaces.get(implicatedIDs), 
+					subSpace.connectByPart(implicatedIDsToSubSpaces.get(implicatedIDs), 
 							ruleset.getImplicant());
 					
 					implicatedIDs.remove(ruleset.getImplicant().getID());
@@ -238,66 +209,6 @@ public class EugeneConverter {
 			rulesets.add(indexStack.pop().intValue(), adjacencyStack.pop());
 		}
 	}
-	
-//	public void branch(SubSpace subSpace, List<Ruleset> rulesets, Set<String> implicatedIDs, 
-//			HashMap<Set<String>, SubSpace> implicatedIDsToSubSpaces, Set<Part> implicants) {
-//		for (int i = 0; i < rulesets.size(); i++) {
-//			if (implicants.contains(rulesets.get(i).getImplicant())) {
-//				implicatedIDs.add(rulesets.get(i).getImplicant().getID());
-//				
-//				if (!implicatedIDsToSubSpaces.containsKey(implicatedIDs)) {
-//					Ruleset ruleset = rulesets.remove(i);
-//					
-//					SubSpace branchSpace = subSpace.copyFromPart(ruleset.getImplicant());
-//					
-//					implicatedIDsToSubSpaces.put(copyIDs(implicatedIDs), branchSpace);
-//					
-//					branchSpace.addPart(ruleset.getImplicant());
-//					
-//					implicants.remove(ruleset.getImplicant());
-//					
-//					for (Part part : ruleset.getCoImplicants()) {
-//						if (!implicants.contains(part)) {
-//							branchSpace.addPart(part);
-//						}
-//					}
-//					
-//					for (Part part : ruleset.getImplied()) {
-//						branchSpace.deletePart(part);
-//					}
-//					
-//					implicants.removeAll(ruleset.getImplied());
-//					
-//					Set<Part> weaklyImplied = new HashSet<Part>();
-//					
-//					for (Part part : ruleset.getWeaklyImplied()) {
-//						if (implicants.contains(part)) {
-//							branchSpace.deletePart(part);
-//							
-//							implicants.remove(part);
-//							
-//							weaklyImplied.add(part);
-//						}
-//					}
-//					
-//					branch(branchSpace, rulesets, implicatedIDs, implicatedIDsToSubSpaces, implicants);
-//					
-//					implicants.add(ruleset.getImplicant());
-//					
-//					implicants.addAll(ruleset.getImplied());
-//					
-//					implicants.addAll(weaklyImplied);
-//					
-//					rulesets.add(i, ruleset);
-//				}
-//				
-//				subSpace.connectToSubSpace(implicatedIDsToSubSpaces.get(implicatedIDs), 
-//						rulesets.get(i).getImplicant());
-//				
-//				implicatedIDs.remove(rulesets.get(i).getImplicant().getID());
-//			}
-//		}
-//	}
 	
 	public List<Ruleset> composeRulesets(Set<Rule> rules) {
 		HashMap<Part, Ruleset> implicantToRuleset = new HashMap<Part, Ruleset>();
@@ -331,39 +242,23 @@ public class EugeneConverter {
 		List<Ruleset> rulesetCopies = new LinkedList<Ruleset>();
 		
 		for (Ruleset ruleset : rulesets) {
-			List<Integer> nodeIndices = subSpace.getNodeIndices(ruleset.getImplicant().getType());
-
-			int i = 0;
-			
 			if (ruleset.isAdjacency()) {
-				if (nodeIndices.size() > 0) {
-					for (Edge edge : subSpace.getNode(nodeIndices.get(0)).getEdges()) {
-						if (edge.hasComponentID(ruleset.getImplicant().getID())) {
-							ruleset.setIndex(nodeIndices.get(0).intValue());
-						}
-					}
-					
-					while (i + 1 < nodeIndices.size()) {
-						i++;
-						
-						rulesetCopies.add(ruleset.copy());
-						
-						for (Edge edge : subSpace.getNode(nodeIndices.get(i)).getEdges()) {
-							if (edge.hasComponentID(ruleset.getImplicant().getID())) {
-								rulesetCopies.get(rulesetCopies.size() - 1).setIndex(nodeIndices.get(i).intValue());
-							}
-						}
+				for (Integer nodeIndex : subSpace.getNodeIndices(ruleset.getImplicant())) {
+					if (ruleset.hasIndex()) {
+						Ruleset rulesetCopy = ruleset.copy();
+
+						rulesetCopy.setIndex(nodeIndex);
+
+						rulesetCopies.add(rulesetCopy);
+					} else {
+						ruleset.setIndex(nodeIndex);
 					}
 				}
 			} else {
-				while (i < nodeIndices.size() && !ruleset.hasIndex()) {
-					for (Edge edge : subSpace.getNode(nodeIndices.get(i)).getEdges()) {
-						if (edge.hasComponentID(ruleset.getImplicant().getID())) {
-							ruleset.setIndex(nodeIndices.get(i).intValue());
-						}
-					}
-					
-					i++;
+				List<Integer> nodeIndices = subSpace.getNodeIndices(ruleset.getImplicant());
+				
+				if (nodeIndices.size() > 0) {
+					ruleset.setIndex(nodeIndices.get(0).intValue());
 				}
 			}
 		}
