@@ -145,11 +145,15 @@ public class EugeneConverter {
 					forbidden.addAll(implied);
 					
 					if (ruleset.isAdjacentTo(priorRuleset)) {
-						branchSpace.deletePart(priorRuleset.getImplicant());
-						
-						forbidden.remove(ruleset.getImplicant());
-						
-						forbidden.remove(priorRuleset.getImplicant());
+						if (ruleset.isStrongAdjacency()) {
+							branchSpace.deletePart(priorRuleset.getImplicant());
+							
+							forbidden.remove(ruleset.getImplicant());
+							
+							forbidden.remove(priorRuleset.getImplicant());
+						} else {
+							branchSpace.addPart(ruleset.getImplicant());
+						}
 					} else if (ruleset.isAdjacency()) {
 						forbidden.add(ruleset.getImplicant());
 						
@@ -162,9 +166,11 @@ public class EugeneConverter {
 					System.out.println("back");
 					
 					if (ruleset.isAdjacentTo(priorRuleset)) {
-						forbidden.add(ruleset.getImplicant());
-						
-						forbidden.add(priorRuleset.getImplicant());
+						if (ruleset.isStrongAdjacency()) {
+							forbidden.add(ruleset.getImplicant());
+
+							forbidden.add(priorRuleset.getImplicant());
+						}
 					} else if (ruleset.isAdjacency()) {
 						forbidden.remove(ruleset.getImplicant());
 						

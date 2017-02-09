@@ -18,6 +18,8 @@ public class Ruleset implements Comparator<Ruleset> {
 	
 	private int index;
 	
+	private boolean isStrongAdjacency;
+	
 	public Ruleset() {
 		adjacent = new HashSet<Part>();
 	}
@@ -34,10 +36,12 @@ public class Ruleset implements Comparator<Ruleset> {
 		adjacent = new HashSet<Part>();
 		
 		index = -1;
+		
+		isStrongAdjacency = true;
 	}
 	
 	public Ruleset(Part implicant, Set<Part> coImplicants, Set<Part> implied, Set<Part> weaklyImplied, 
-			Set<Part> adjacent) {
+			Set<Part> adjacent, boolean strongAdjacency) {
 		this.implicant = implicant;
 		
 		this.coImplicants = coImplicants;
@@ -47,6 +51,8 @@ public class Ruleset implements Comparator<Ruleset> {
 		this.weaklyImplied = weaklyImplied;
 		
 		this.adjacent = adjacent;
+		
+		this.isStrongAdjacency = strongAdjacency;
 	}
 	
 	public void addRule(Rule rule) {
@@ -55,6 +61,10 @@ public class Ruleset implements Comparator<Ruleset> {
 				adjacent.add(rule.getImplied());
 			} else if (implicant.isIdenticalTo(rule.getImplied())) {
 				adjacent.add(rule.getImplicant());
+			}
+			
+			if (rule.isNonStrictPrecedenceRule()) {
+				isStrongAdjacency = false;
 			}
 		} else if (rule.isNonStrictPrecedenceRule()) {
 			if (implicant.isIdenticalTo(rule.getImplicant())) {
@@ -92,7 +102,7 @@ public class Ruleset implements Comparator<Ruleset> {
 		
 		weaklyImplied.addAll(this.weaklyImplied);
 		
-		return new Ruleset(implicant, coImplicants, implied, weaklyImplied, adjacent);
+		return new Ruleset(implicant, coImplicants, implied, weaklyImplied, adjacent, isStrongAdjacency);
 	}
 	
 	public Set<Part> getAdjacent() {
@@ -113,6 +123,10 @@ public class Ruleset implements Comparator<Ruleset> {
 	
 	public boolean isAdjacency() {
 		return adjacent.size() > 0;
+	}
+	
+	public boolean isStrongAdjacency() {
+		return adjacent.size() > 0 && isStrongAdjacency;
 	}
 	
 	public boolean isOverlapWith(Ruleset ruleset) {

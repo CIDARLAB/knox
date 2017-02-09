@@ -126,18 +126,18 @@ public class Rule {
 	}
 	
 	public boolean isStrictPrecedenceRule() {
-		return type.equals(RuleType.BEFORE)
+		return type.equals(RuleType.NEXTTO)
+				|| type.equals(RuleType.ALL_NEXTTO)
+				|| type.equals(RuleType.BEFORE)
 				|| type.equals(RuleType.ALL_BEFORE)
 				|| type.equals(RuleType.AFTER)
-				|| type.equals(RuleType.ALL_AFTER)
-				|| type.equals(RuleType.NEXTTO)
-				|| type.equals(RuleType.ALL_NEXTTO);
+				|| type.equals(RuleType.ALL_AFTER);
 	}
 	
 	public boolean isNonStrictPrecedenceRule() {
-		return type.equals(RuleType.SOME_BEFORE)
-				|| type.equals(RuleType.SOME_AFTER)
-				|| type.equals(RuleType.SOME_NEXTTO);
+		return type.equals(RuleType.SOME_NEXTTO)
+				|| type.equals(RuleType.SOME_BEFORE)
+				|| type.equals(RuleType.SOME_AFTER);
 	}
 	
 	public enum RuleType {
