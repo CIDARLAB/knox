@@ -79,7 +79,7 @@ public class SubSpace {
 	}
 	
 	public void connectByPart(SubSpace subSpace, Part part) {
-		for (Integer fromIndex : getNodeIndices(part)) {
+		for (Integer fromIndex : partToNodeIndices.get(part)) {
 			connectToSubSpace(subSpace, part, fromIndex.intValue(), 
 					fromIndex.intValue() - nodes.size() + subSpace.getNumNodes() + 1);
 		}
@@ -91,6 +91,49 @@ public class SubSpace {
 		int toIndex = ruleset.getIndex() - numRootNodes + subSpace.getNumNodes() + 1;
 
 		connectToSubSpace(subSpace, ruleset.getImplicant(), fromIndex, toIndex);
+	}
+	
+	public void connectByRuleset(SubSpace subSpace, Ruleset ruleset, List<Part> adjacentSequence) {
+		int fromIndex = ruleset.getIndex() - numRootNodes + nodes.size();
+		
+		int toIndex = ruleset.getIndex() - numRootNodes + subSpace.getNumNodes() + adjacentSequence.size();
+
+		connectToSubSpace(subSpace, adjacentSequence, fromIndex, toIndex);
+	}
+	
+	public void connectToSubSpace(SubSpace subSpace, List<Part> parts, int fromIndex, int toIndex) {
+		Node fromNode = nodes.get(fromIndex);
+		
+		for (int i = 0; i < parts.size(); i++) {
+			Part part = parts.get(i);
+			
+			ArrayList<String> compIDs = new ArrayList<String>(1);
+
+			compIDs.add(part.getID());
+
+			ArrayList<String> compRoles = new ArrayList<String>(1);
+
+			compRoles.add(part.getType().getValue());
+			
+			Node toNode;
+			
+			if (i == parts.size() - 1) {
+				toNode = subSpace.getNode(toIndex);
+			} else {
+				toNode = subSpace.getDesignSpace().createNode();
+			}
+			
+			if (i == 0) {
+				outgoingEdges.add(fromNode.createEdge(toNode, compIDs, compRoles));
+			} else {
+				fromNode.createEdge(toNode, compIDs, compRoles);
+			}
+			
+			fromNode = toNode;
+			
+			System.out.println("connect " + part.getID() + " " + fromIndex + " of " + nodes.size()
+					+ " to " + toIndex + " of " + subSpace.getNumNodes());
+		}
 	}
 	
 	public void connectToSubSpace(SubSpace subSpace, Part part, int fromIndex, int toIndex) {
@@ -148,10 +191,18 @@ public class SubSpace {
     }
 	
 	public SubSpace copyFromPart(Part part) {
-		List<Integer> nodeIndices = getNodeIndices(part);
+		List<Integer> nodeIndices = partToNodeIndices.get(part);
 		
 		if (nodeIndices.size() > 0) {
 			return copyFromIndex(nodeIndices.get(0).intValue() + 1);
+		} else {
+			return copy();
+		}
+	}
+	
+	public SubSpace copyByRuleset(Ruleset ruleset, int shift) {
+		if (ruleset.hasIndex()) {
+			return copyFromIndex(ruleset.getIndex() - numRootNodes + nodes.size() + shift);
 		} else {
 			return copy();
 		}
@@ -221,6 +272,24 @@ public class SubSpace {
 		}
 	}
 	
+	public void setNextPart(Part part) {
+		if (partToNodeIndices.containsKey(part)) {
+			List<Integer> nodeIndices = partToNodeIndices.get(part);
+			
+			if (nodeIndices.size() > 0) {
+				for (Edge edge : nodes.get(nodeIndices.get(0).intValue()).getEdges()) {
+					if (!outgoingEdges.contains(edge)) {
+						edge.setComponent(part.getID(), part.getType().getValue());
+					}
+				}
+			}
+		}
+	}
+	
+	public DesignSpace getDesignSpace() {
+		return space;
+	}
+	
 	public Node getNode(int nodeIndex) {
 		return nodes.get(nodeIndex);
 	}
@@ -240,4 +309,64 @@ public class SubSpace {
 	public int getNumRootNodes() {
 		return numRootNodes;
 	}
+	
+	public void truncate() {
+		if (nodes.size() > 0) {
+			List<Node> temp = nodes;
+
+			nodes = new ArrayList<Node>(1);
+
+			nodes.add(temp.get(0));
+			
+			nodes.get(0).clearEdges();
+		}
+	}
+	
+//	public boolean isAdjacent(Part part1, Part part2) {
+//		List<Integer> nodeIndices1 = partToNodeIndices.get(part1);
+//		
+//		List<Integer> nodeIndices2 = partToNodeIndices.get(part2);
+//		
+//		int i = 0;
+//		
+//		int j = 0;
+//		
+//		if (nodeIndices1.get(i).intValue() == nodeIndices2.get(j).intValue()) {
+//			if (i + 1 < nodeIndices1.size()
+//					&& j + 1 < nodeIndices2.size()
+//					&& nodeIndices1.get(i + 1).intValue() == nodeIndices2.get(j).intValue() + 1
+//					&& nodeIndices2.get(j + 1).intValue() == nodeIndices1.get(i).intValue() + 1) {
+//				i += 2;
+//				j += 2;
+//			} else {
+//				return false;
+//			}
+//		} else if (nodeIndices1.get(i).intValue() == nodeIndices2.get(j).intValue() + 1
+//				|| nodeIndices2.get(j).intValue() == nodeIndices1.get(i).intValue() + 1) {
+//			i++;
+//			j++;
+//		} else {
+//			return false;
+//		}
+//		
+//		while (i < nodeIndices1.size() && j < nodeIndices2.size()) {
+//			if (nodeIndices1.get(i).intValue() == nodeIndices2.get(j).intValue() + 1
+//					|| nodeIndices2.get(j).intValue() == nodeIndices1.get(i).intValue() + 1) {
+//				i++;
+//				j++;
+//			} else if (nodeIndices1.get(i).intValue() == nodeIndices2.get(j - 1).intValue() + 1) {
+//				i++;
+//			} else if (nodeIndices2.get(j).intValue() == nodeIndices2.get(i - 1).intValue() + 1) {
+//				j++;
+//			} else {
+//				return false;
+//			}
+//		}
+//		
+//		if (i < nodeIndices1.size() || j < nodeIndices2.size()) {
+//			return false;
+//		} else {
+//			return true;
+//		}
+//	}
 }

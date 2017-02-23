@@ -10,6 +10,8 @@ public class Ruleset implements Comparator<Ruleset> {
 	
 	private Set<Part> adjacent = new HashSet<Part>();
 	
+	private Set<Part> weaklyAdjacent = new HashSet<Part>();
+	
 	private Set<Part> coImplicants = new HashSet<Part>();
 	
 	private Set<Part> implied = new HashSet<Part>();
@@ -17,8 +19,6 @@ public class Ruleset implements Comparator<Ruleset> {
 	private Set<Part> weaklyImplied = new HashSet<Part>();
 	
 	private int index;
-	
-	private boolean isStrongAdjacency;
 	
 	public Ruleset() {
 		adjacent = new HashSet<Part>();
@@ -35,13 +35,13 @@ public class Ruleset implements Comparator<Ruleset> {
 		
 		adjacent = new HashSet<Part>();
 		
-		index = -1;
+		weaklyAdjacent = new HashSet<Part>();
 		
-		isStrongAdjacency = true;
+		index = -1;
 	}
 	
 	public Ruleset(Part implicant, Set<Part> coImplicants, Set<Part> implied, Set<Part> weaklyImplied, 
-			Set<Part> adjacent, boolean strongAdjacency) {
+			Set<Part> adjacent, Set<Part> weaklyAdjacent) {
 		this.implicant = implicant;
 		
 		this.coImplicants = coImplicants;
@@ -52,19 +52,23 @@ public class Ruleset implements Comparator<Ruleset> {
 		
 		this.adjacent = adjacent;
 		
-		this.isStrongAdjacency = strongAdjacency;
+		weaklyAdjacent = new HashSet<Part>();
 	}
 	
 	public void addRule(Rule rule) {
 		if (rule.isAdjacencyRule()) {
-			if (implicant.isIdenticalTo(rule.getImplicant())) {
-				adjacent.add(rule.getImplied());
-			} else if (implicant.isIdenticalTo(rule.getImplied())) {
-				adjacent.add(rule.getImplicant());
-			}
-			
-			if (rule.isNonStrictPrecedenceRule()) {
-				isStrongAdjacency = false;
+			if (rule.isStrictPrecedenceRule()) {
+				if (implicant.isIdenticalTo(rule.getImplicant())) {
+					adjacent.add(rule.getImplied());
+				} else if (implicant.isIdenticalTo(rule.getImplied())) {
+					adjacent.add(rule.getImplicant());
+				}
+			} else {
+				if (implicant.isIdenticalTo(rule.getImplicant())) {
+					weaklyAdjacent.add(rule.getImplied());
+				} else if (implicant.isIdenticalTo(rule.getImplied())) {
+					weaklyAdjacent.add(rule.getImplicant());
+				}
 			}
 		} else if (rule.isNonStrictPrecedenceRule()) {
 			if (implicant.isIdenticalTo(rule.getImplicant())) {
@@ -86,27 +90,35 @@ public class Ruleset implements Comparator<Ruleset> {
 	}
 	
 	public Ruleset copy() {
-		Set<Part> adjacent = new HashSet<Part>();
+//		Set<Part> adjacent = new HashSet<Part>();
+//		
+//		adjacent.addAll(this.adjacent);
+//		
+//		Set<Part> weaklyAdjacent = new HashSet<Part>();
+//		
+//		weaklyAdjacent.addAll(this.weaklyAdjacent);
+//		
+//		Set<Part> coImplicants = new HashSet<Part>();
+//		
+//		coImplicants.addAll(this.coImplicants);
+//		
+//		Set<Part> implied = new HashSet<Part>();
+//		
+//		implied.addAll(this.implied);
+//		
+//		Set<Part> weaklyImplied = new HashSet<Part>();
+//		
+//		weaklyImplied.addAll(this.weaklyImplied);
 		
-		adjacent.addAll(this.adjacent);
-		
-		Set<Part> coImplicants = new HashSet<Part>();
-		
-		coImplicants.addAll(this.coImplicants);
-		
-		Set<Part> implied = new HashSet<Part>();
-		
-		implied.addAll(this.implied);
-		
-		Set<Part> weaklyImplied = new HashSet<Part>();
-		
-		weaklyImplied.addAll(this.weaklyImplied);
-		
-		return new Ruleset(implicant, coImplicants, implied, weaklyImplied, adjacent, isStrongAdjacency);
+		return new Ruleset(implicant, coImplicants, implied, weaklyImplied, adjacent, weaklyAdjacent);
 	}
 	
 	public Set<Part> getAdjacent() {
 		return adjacent;
+	}
+	
+	public Set<Part> getWeaklyAdjacent() {
+		return weaklyAdjacent;
 	}
 	
 	public Set<Part> getImplied() {
@@ -121,22 +133,24 @@ public class Ruleset implements Comparator<Ruleset> {
 		return implicant;
 	}
 	
-	public boolean isAdjacency() {
+	public boolean isAdjacencyRuleset() {
+		return adjacent.size() > 0 || weaklyAdjacent.size() > 0;
+	}
+	
+	public boolean isStrongAdjacencyRuleset() {
 		return adjacent.size() > 0;
-	}
-	
-	public boolean isStrongAdjacency() {
-		return adjacent.size() > 0 && isStrongAdjacency;
-	}
-	
-	public boolean isOverlapWith(Ruleset ruleset) {
-		return adjacent.contains(ruleset.getImplicant())
-				&& ruleset.getAdjacent().contains(implicant);
 	}
 	
 	public boolean isAdjacentTo(Ruleset ruleset) {
 		return adjacent.contains(ruleset.getImplicant())
 				&& ruleset.getAdjacent().contains(implicant)
+				&& hasIndex() && ruleset.hasIndex()
+				&& (ruleset.getIndex() == index + 1 || ruleset.getIndex() + 1 == index);
+	}
+	
+	public boolean isWeaklyAdjacentTo(Ruleset ruleset) {
+		return weaklyAdjacent.contains(ruleset.getImplicant())
+				&& ruleset.getWeaklyAdjacent().contains(implicant)
 				&& hasIndex() && ruleset.hasIndex()
 				&& (ruleset.getIndex() == index + 1 || ruleset.getIndex() + 1 == index);
 	}

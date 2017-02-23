@@ -72,6 +72,8 @@ public class Node {
     	return edge;
     }
     
+    
+    
     public Long getGraphID() {
     	return id;
     }
@@ -186,6 +188,12 @@ public class Node {
     		return this.edges.removeAll(edges);
     	} else {
     		return false;
+    	}
+    }
+    
+    public void clearEdges() {
+    	if (hasEdges()) {
+    		edges = null;
     	}
     }
     

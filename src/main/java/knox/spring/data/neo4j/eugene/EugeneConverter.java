@@ -43,8 +43,8 @@ public class EugeneConverter {
 		
 		HashMap<Set<String>, SubSpace> blah = new HashMap<Set<String>, SubSpace>();
 		
-		branch(rootSpace, rulesets, new HashSet<String>(), blah, 
-				new HashSet<Part>(), new HashSet<Part>(), new Ruleset());
+		branch(rootSpace, rulesets, new HashSet<String>(), blah, new HashSet<Part>(), new HashSet<Part>(),
+				new HashMap<Part, Set<Part>>(), new Ruleset());
 		
 		System.out.println("*********");
 		for (Set<String> boo : blah.keySet()) {
@@ -90,13 +90,136 @@ public class EugeneConverter {
 				implied.add(part);
 			}
 		}
-		
+
 		return implied;
 	}
 	
+	private boolean isAdjacencySatisfied(Part part, int partIndex, SubSpace subSpace, 
+			Set<Part> forbidden, HashMap<Part, Set<Part>> adjacencies, Part priorPart) {
+		if (adjacencies.containsKey(part)) {
+			Set<Part> expected = new HashSet<Part>();
+
+			expected.addAll(adjacencies.get(part));
+			
+			expected.remove(priorPart);
+
+			if (expected.size() == 0) {
+				System.out.println("true");
+				
+				return true;
+			} else if (expected.size() == 1) {
+				Part adjacent = expected.iterator().next();
+
+				if (forbidden.contains(adjacent)) {
+					System.out.println("forbiddenx2 " + adjacent.getID());
+					
+					return false;
+				} else {
+					List<Integer> nodeIndices = subSpace.getNodeIndices(adjacent);
+
+					for (Integer nodeIndex : nodeIndices) {
+						if (nodeIndex == partIndex + 1) {
+							return isAdjacencySatisfied(adjacent, nodeIndex, subSpace,
+									forbidden, adjacencies, part);
+						}
+					}
+
+					System.out.println("noAdjacent " + partIndex + ":" + nodeIndices.toString());
+					
+					return false;
+				}
+			} else {
+				System.out.println("expected " + expected.size());
+				
+				return false;
+			}
+		} else {
+			return true;
+		}
+	}
+	
+	private boolean isAdjacencySatisfied(Ruleset ruleset, SubSpace subSpace, Set<Part> forbidden, 
+			HashMap<Part, Set<Part>> adjacencies, Ruleset priorRuleset) {
+		if (adjacencies.containsKey(ruleset.getImplicant())) {
+			if (adjacencies.get(ruleset.getImplicant()).size() > 0) {
+				if (ruleset.getImplicant().equals(priorRuleset.getImplicant())) {
+					return false;
+				} else {
+					Set<Part> expected = new HashSet<Part>();
+
+					expected.addAll(adjacencies.get(ruleset.getImplicant()));
+
+					if (ruleset.isAdjacentTo(priorRuleset)) {
+						expected.remove(priorRuleset.getImplicant());
+					}
+
+					if (expected.size() > 1) {
+						return false;
+					} else {
+						Part adjacent = expected.iterator().next();
+						
+						if (forbidden.contains(adjacent)) {
+							return false;
+						} else {
+							List<Integer> nodeIndices = subSpace.getNodeIndices(adjacent);
+
+							int ruleIndex = ruleset.getIndex() - subSpace.getNumRootNodes() 
+									+ subSpace.getNumNodes();
+
+							for (Integer nodeIndex : nodeIndices) {
+								if (nodeIndex == ruleIndex + 1) {
+									System.out.println("boh");
+									
+									return isAdjacencySatisfied(adjacent, nodeIndex, subSpace,
+											forbidden, adjacencies, ruleset.getImplicant());
+								}
+							}
+							
+							return false;
+						}
+					}
+				}
+			} else {
+				System.out.println("wuh");
+				
+				return ruleset.isAdjacentTo(priorRuleset);
+			}
+		} else {
+			System.out.println("gah");
+			
+			return true;
+		}
+	}
+	
+	private List<Part> getAdjacentSequence(Part part, HashMap<Part, Set<Part>> adjacencies) {
+		List<Part> adjacentSequence = new LinkedList<Part>();
+		
+		adjacentSequence.add(part);
+		
+		boolean isDone = false;
+	
+		while (adjacencies.containsKey(part) && !isDone) {
+			Set<Part> expected = new HashSet<Part>();
+
+			expected.addAll(adjacencies.get(adjacentSequence.get(adjacentSequence.size() - 1)));
+			
+			if (adjacentSequence.size() > 1) {
+				expected.remove(adjacentSequence.get(adjacentSequence.size() - 2));
+			}
+			
+			if (expected.size() > 0) {
+				adjacentSequence.add(expected.iterator().next());
+			} else {
+				isDone = true;
+			}
+		}
+	
+		return adjacentSequence;
+	}
+	
 	public void branch(SubSpace subSpace, List<Ruleset> rulesets, Set<String> implicatedIDs, 
-			HashMap<Set<String>, SubSpace> implicatedIDsToSubSpaces, Set<Part> implicated,
-			Set<Part> forbidden, Ruleset priorRuleset) {
+			HashMap<Set<String>, SubSpace> implicatedIDsToSubSpaces, Set<Part> implicated, 
+			Set<Part> forbidden, HashMap<Part, Set<Part>> adjacencies, Ruleset priorRuleset) {
 		System.out.println("++++++++++");
 		System.out.println(implicatedIDs.toString());
 		
@@ -104,15 +227,35 @@ public class EugeneConverter {
 		
 		Stack<Integer> indexStack = new Stack<Integer>();
 		
+		for (Part a : adjacencies.keySet()) {
+			String temp = a.getID() + ": ";
+			
+			for (Part b : adjacencies.get(a)) {
+				temp = temp + b.getID() + " ";
+			}
+			
+			System.out.println(temp);
+		}
+		
+		String ghost = "implicated: ";
+		
+		for (Part m : implicated) {
+			ghost = ghost + m.getID() + " ";
+		}
+		
+		System.out.println(ghost);
+		
 		for (int i = 0; i < rulesets.size(); i++) {
 			Ruleset ruleset = rulesets.remove(i);
 			
 			System.out.println("---------");
 			System.out.println(ruleset.getImplicant().getID() + " " + ruleset.getIndex());
 			
-			if (!forbidden.contains(ruleset.getImplicant())
-					|| ruleset.isAdjacentTo(priorRuleset)) {
-				if (ruleset.isAdjacency()) {
+			if (ruleset.getIndex() - subSpace.getNumRootNodes() + subSpace.getNumNodes() >= 0
+					&& !forbidden.contains(ruleset.getImplicant())
+					&& (!ruleset.isAdjacencyRuleset() 
+							|| isAdjacencySatisfied(ruleset, subSpace, forbidden, adjacencies, priorRuleset))) {
+				if (ruleset.isAdjacencyRuleset()) {
 					implicatedIDs.add(ruleset.getImplicant().getID() 
 							+ "@" + ruleset.getIndex());
 				} else {
@@ -124,67 +267,142 @@ public class EugeneConverter {
 					
 					SubSpace branchSpace;
 					
-					if (ruleset.isAdjacency()) {
-						branchSpace = subSpace.copyByRuleset(ruleset);
+					if (ruleset.isAdjacencyRuleset()) {
+						if (adjacencies.containsKey(ruleset.getImplicant()) 
+								&& adjacencies.get(ruleset.getImplicant()).size() > 0) {
+							branchSpace = subSpace.copyByRuleset(ruleset, 
+									getAdjacentSequence(ruleset.getImplicant(), adjacencies).size());
+						} else {
+							branchSpace = subSpace.copyByRuleset(ruleset);
+						}
 					} else {
 						branchSpace = subSpace.copyFromPart(ruleset.getImplicant());
 					}
 					
+					Set<Part> recentlyImplicated = new HashSet<Part>();
+					
+					Set<Part> recentlyAdjacent1 = new HashSet<Part>();
+					
+					Set<Part> implied;
+					
+					if (implicated.contains(ruleset.getImplicant())) {
+						implied = new HashSet<Part>();
+					} else {
+						Set<Part> implicants = collectImplicants(ruleset, implicated, forbidden);
+						
+						implied = collectImplied(ruleset, implicated);
+						
+						branchSpace.addParts(implicants);
+						
+						branchSpace.deleteParts(implied);
+
+						forbidden.addAll(implied);
+						
+						implicated.add(ruleset.getImplicant());
+						
+						if (ruleset.isAdjacencyRuleset()) {
+							recentlyImplicated.add(ruleset.getImplicant());
+							
+							if (!adjacencies.containsKey(ruleset.getImplicant())) {
+								adjacencies.put(ruleset.getImplicant(), new HashSet<Part>());
+								
+								recentlyAdjacent1.add(ruleset.getImplicant());
+							}
+						}
+					}
+					
+					Set<Part> recentlyAdjacent2 = new HashSet<Part>();
+					
+					if (ruleset.isAdjacencyRuleset() 
+							&& adjacencies.get(ruleset.getImplicant()).isEmpty()) {
+						if (ruleset.isAdjacentTo(priorRuleset)) {
+							branchSpace.deletePart(ruleset.getImplicant());
+							
+							branchSpace.deletePart(priorRuleset.getImplicant());
+						}
+
+						for (Part adjacent : ruleset.getAdjacent()) {
+							if (!adjacencies.containsKey(adjacent)) {
+								adjacencies.put(adjacent, new HashSet<Part>());
+								
+								recentlyAdjacent1.add(adjacent);
+							}
+
+							adjacencies.get(ruleset.getImplicant()).add(adjacent);
+							
+							recentlyAdjacent2.add(adjacent);
+						}
+					}
+
 					implicatedIDsToSubSpaces.put(copyIDs(implicatedIDs), branchSpace);
 					
-					Set<Part> implicants = collectImplicants(ruleset, implicated, forbidden);
-					
-					Set<Part> implied = collectImplied(ruleset, implicated);
-					
-					branchSpace.addParts(implicants);
-					
-					branchSpace.deleteParts(implied);
-						
-					implicated.add(ruleset.getImplicant());
-
-					forbidden.addAll(implied);
-					
-					if (ruleset.isAdjacentTo(priorRuleset)) {
-						if (ruleset.isStrongAdjacency()) {
-							branchSpace.deletePart(priorRuleset.getImplicant());
-							
-							forbidden.remove(ruleset.getImplicant());
-							
-							forbidden.remove(priorRuleset.getImplicant());
-						} else {
-							branchSpace.addPart(ruleset.getImplicant());
-						}
-					} else if (ruleset.isAdjacency()) {
-						forbidden.add(ruleset.getImplicant());
-						
-						forbidden.addAll(ruleset.getAdjacent());
-					}
-					
 					System.out.println("branch");
-					branch(branchSpace, rulesets, implicatedIDs, implicatedIDsToSubSpaces, 
-							implicants, forbidden, ruleset);
+					branch(branchSpace, rulesets, implicatedIDs, implicatedIDsToSubSpaces, implicated,
+							 forbidden, adjacencies, ruleset);
 					System.out.println("back");
 					
-					if (ruleset.isAdjacentTo(priorRuleset)) {
-						if (ruleset.isStrongAdjacency()) {
-							forbidden.add(ruleset.getImplicant());
-
-							forbidden.add(priorRuleset.getImplicant());
-						}
-					} else if (ruleset.isAdjacency()) {
-						forbidden.remove(ruleset.getImplicant());
+					for (Part a : adjacencies.keySet()) {
+						String temp = a.getID() + ": ";
 						
-						forbidden.removeAll(ruleset.getAdjacent());
+						for (Part b : adjacencies.get(a)) {
+							temp = temp + b.getID() + " ";
+						}
+						
+						System.out.println(temp);
 					}
 					
+					String ghat = "implicated: ";
+					
+					for (Part m : implicated) {
+						ghat = ghat + m.getID() + " ";
+					}
+					
+					System.out.println(ghat);
+					
+					String ghee = "recentlyAdj: ";
+					
+					for (Part m : recentlyAdjacent1) {
+						ghee = ghee + m.getID() + " ";
+					}
+					
+					System.out.println(ghee);
+					
 					forbidden.removeAll(implied);
+					
+					if (ruleset.isAdjacencyRuleset()) {
+						if (recentlyImplicated.contains(ruleset.getImplicant())) {
+							implicated.remove(ruleset.getImplicant());
+						}
 						
-					implicated.remove(ruleset.getImplicant());
+						if (recentlyAdjacent1.contains(ruleset.getImplicant())) {
+							adjacencies.remove(ruleset.getImplicant());
+						} else {
+							for (Part adjacent : ruleset.getAdjacent()) {
+								if (recentlyAdjacent2.contains(adjacent)) {
+									adjacencies.get(ruleset.getImplicant()).remove(adjacent);
+								}
+							}
+						}
+						
+						for (Part adjacent : ruleset.getAdjacent()) {
+							if (recentlyAdjacent1.contains(adjacent)) {
+								adjacencies.remove(adjacent);
+							}
+						}
+					} else {
+						implicated.remove(ruleset.getImplicant());
+					}
 				}
 				
-				if (ruleset.isAdjacency()) {
-					subSpace.connectByRuleset(implicatedIDsToSubSpaces.get(implicatedIDs), 
-							ruleset);
+				if (ruleset.isAdjacencyRuleset()) {
+					if (adjacencies.containsKey(ruleset.getImplicant()) 
+							&& adjacencies.get(ruleset.getImplicant()).size() > 0) {
+						subSpace.connectByRuleset(implicatedIDsToSubSpaces.get(implicatedIDs), 
+								ruleset, getAdjacentSequence(ruleset.getImplicant(), adjacencies));
+					} else {
+						subSpace.connectByRuleset(implicatedIDsToSubSpaces.get(implicatedIDs), 
+								ruleset);
+					}
 					
 					implicatedIDs.remove(ruleset.getImplicant().getID() 
 							+ "@" + ruleset.getIndex());
@@ -200,7 +418,7 @@ public class EugeneConverter {
 				System.out.println("forbidden!");
 			}
 			
-			if (ruleset.isAdjacency()) {
+			if (ruleset.isAdjacencyRuleset()) {
 				adjacencyStack.push(ruleset);
 				
 				indexStack.push(new Integer(i));
@@ -248,16 +466,16 @@ public class EugeneConverter {
 		List<Ruleset> rulesetCopies = new LinkedList<Ruleset>();
 		
 		for (Ruleset ruleset : rulesets) {
-			if (ruleset.isAdjacency()) {
+			if (ruleset.isAdjacencyRuleset()) {
 				for (Integer nodeIndex : subSpace.getNodeIndices(ruleset.getImplicant())) {
 					if (ruleset.hasIndex()) {
 						Ruleset rulesetCopy = ruleset.copy();
 
-						rulesetCopy.setIndex(nodeIndex);
+						rulesetCopy.setIndex(nodeIndex.intValue());
 
 						rulesetCopies.add(rulesetCopy);
 					} else {
-						ruleset.setIndex(nodeIndex);
+						ruleset.setIndex(nodeIndex.intValue());
 					}
 				}
 			} else {

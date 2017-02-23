@@ -88,7 +88,7 @@ public class DesignSpaceService {
     	
 //    	parts.add(new Part("z1", Part.PartType.RIBOZYME));
     	
-    	parts.add(new Part("r1", Part.PartType.RBS));
+//    	parts.add(new Part("r1", Part.PartType.RBS));
 //    	parts.add(new Part("r2", Part.PartType.RBS));
     	
 //    	Part gene1 = new Part("gene1", Part.PartType.CDS);
@@ -129,15 +129,21 @@ public class DesignSpaceService {
     	parts.add(new Part("t1", Part.PartType.TERMINATOR));
     	parts.add(new Part("t2", Part.PartType.TERMINATOR));
     	
-    	List<Part> architecture = new ArrayList<Part>(8);
+    	List<Part> architecture = new ArrayList<Part>(6);
     	architecture.add(new Part(Part.PartType.PROMOTER));
-    	architecture.add(new Part(Part.PartType.RBS));
     	architecture.add(new Part(Part.PartType.CDS));
     	architecture.add(new Part(Part.PartType.TERMINATOR));
     	architecture.add(new Part(Part.PartType.PROMOTER));
-    	architecture.add(new Part(Part.PartType.RBS));
     	architecture.add(new Part(Part.PartType.CDS));
     	architecture.add(new Part(Part.PartType.TERMINATOR));
+//    	architecture.add(new Part(Part.PartType.PROMOTER));
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(new Part(Part.PartType.CDS));
+//    	architecture.add(new Part(Part.PartType.TERMINATOR));
+//    	architecture.add(new Part(Part.PartType.PROMOTER));
+//    	architecture.add(new Part(Part.PartType.RBS));
+//    	architecture.add(new Part(Part.PartType.CDS));
+//    	architecture.add(new Part(Part.PartType.TERMINATOR));
     	
 //    	List<Part> architecture = new ArrayList<Part>(25);
 //    	architecture.add(new Part(Part.PartType.PROMOTER));
@@ -189,8 +195,8 @@ public class DesignSpaceService {
 //    	architecture.add(new Part(Part.PartType.TERMINATOR));
     	
     	Set<Rule> rules = new HashSet<Rule>();
-    	rules.add(new Rule(Rule.RuleType.BEFORE, tetR, pTet));
-    	rules.add(new Rule(Rule.RuleType.SOME_NEXTTO, doubleT, pTet));
+//    	rules.add(new Rule(Rule.RuleType.BEFORE, tetR, pTet));
+    	rules.add(new Rule(Rule.RuleType.NEXTTO, pTet, tetR));
 //    	rules.add(new Rule(Rule.RuleType.BEFORE, lacI, pLac));
 //    	rules.add(new Rule(Rule.RuleType.SOME_BEFORE, doubleT, pTet));
     	
