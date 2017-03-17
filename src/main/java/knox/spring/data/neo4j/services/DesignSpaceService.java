@@ -129,10 +129,13 @@ public class DesignSpaceService {
     	parts.add(new Part("t1", Part.PartType.TERMINATOR));
     	parts.add(new Part("t2", Part.PartType.TERMINATOR));
     	
-    	List<Part> architecture = new ArrayList<Part>(6);
+    	parts.add(new Part("s1", Part.PartType.SCAR));
+    	
+    	List<Part> architecture = new ArrayList<Part>(7);
     	architecture.add(new Part(Part.PartType.PROMOTER));
     	architecture.add(new Part(Part.PartType.CDS));
     	architecture.add(new Part(Part.PartType.TERMINATOR));
+    	architecture.add(new Part(Part.PartType.SCAR));
     	architecture.add(new Part(Part.PartType.PROMOTER));
     	architecture.add(new Part(Part.PartType.CDS));
     	architecture.add(new Part(Part.PartType.TERMINATOR));
@@ -196,7 +199,8 @@ public class DesignSpaceService {
     	
     	Set<Rule> rules = new HashSet<Rule>();
 //    	rules.add(new Rule(Rule.RuleType.BEFORE, tetR, pTet));
-    	rules.add(new Rule(Rule.RuleType.NEXTTO, pTet, tetR));
+    	rules.add(new Rule(Rule.RuleType.NEXTTO, pLac, tetR));
+    	rules.add(new Rule(Rule.RuleType.NEXTTO, tetR, doubleT));
 //    	rules.add(new Rule(Rule.RuleType.BEFORE, lacI, pLac));
 //    	rules.add(new Rule(Rule.RuleType.SOME_BEFORE, doubleT, pTet));
     	

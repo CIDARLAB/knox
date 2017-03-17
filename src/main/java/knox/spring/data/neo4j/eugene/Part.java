@@ -41,7 +41,8 @@ public class Part {
     	RIBOZYME ("ribozyme"),
     	RBS ("ribosome_entry_site"),
     	CDS ("CDS"),
-    	TERMINATOR ("terminator");
+    	TERMINATOR ("terminator"),
+    	SCAR ("restriction_enzyme_assembly_scar");
     	
     	private final String value;
     	

@@ -168,14 +168,16 @@ public class SubSpace {
 		} else {
 			compIDs = new ArrayList<String>(partsLibrary.size());
 
-			for (Part p : partsLibrary.get(part.getType())) {
-				compIDs.add(p.getID());
-				
-				if (!partToNodeIndices.containsKey(p)) {
-					partToNodeIndices.put(p, new LinkedList<Integer>());
+			if (partsLibrary.containsKey(part.getType())) {
+				for (Part p : partsLibrary.get(part.getType())) {
+					compIDs.add(p.getID());
+					
+					if (!partToNodeIndices.containsKey(p)) {
+						partToNodeIndices.put(p, new LinkedList<Integer>());
+					}
+					
+					partToNodeIndices.get(p).add(new Integer(fromIndex));
 				}
-				
-				partToNodeIndices.get(p).add(new Integer(fromIndex));
 			}
 		}
 
