@@ -31,6 +31,15 @@
                             <input type="text" placeholder="Space ID" class="form-control" aria-label="..." size="10" ng-model="searchSpaceID">
                         </div><!-- /input-group -->
                     </form>
+                    <form class="navbar-form navbar-left" ng-show="isQueryMode">
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="matchDesignSpaces(querySpaceIDs, queriedSpaceIDs)">Match</button>
+                            </div><!-- /btn-group -->
+                            <input type="text" placeholder="Query IDs" class="form-control" aria-label="..." size="10" ng-model="querySpaceIDs">
+                            <input type="text" placeholder="Space IDs" class="form-control" aria-label="..." size="10" ng-model="queriedSpaceIDs">
+                        </div><!-- /input-group -->
+                    </form>
                     <form class="navbar-form navbar-left" ng-show="isCombinationMode">
                         <div class="input-group">
                             <div class="input-group-btn">
@@ -44,8 +53,6 @@
                                     <li><a href="#" ng-click="unionDesignSpaces(inputSpaceIDs, outputSpaceID)">Union</a></li>
                                     <li role="separator" class="divider"></li>
                                     <li><a href="#" ng-click="insertDesignSpace(inputSpaceIDs, insertNodeID1, outputSpaceID)">Insert</a></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li><a href="#" ng-click="matchDesignSpace(inputSpaceIDs, outputSpaceID)">Match</a></li>
                                     <li role="separator" class="divider"></li>
                                     <li><a href="#" ng-click="partitionDesignSpace(inputSpaceIDs, outputSpaceID)">Partition</a></li>
                                 </ul>
@@ -154,6 +161,7 @@
                     </form>
                     <form class="navbar-form navbar-right">
                         <div class="btn-group">
+                            <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds7'" ng-change="switchToGraphType(graphType)">Query</label>
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds1'" ng-change="switchToGraphType(graphType)">Combine</label>
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds2'" ng-change="switchToGraphType(graphType)">Create</label>
                             <label class="btn btn-primary" ng-model="graphType" uib-btn-radio="'ds3'" ng-change="switchToGraphType(graphType)">Delete</label>

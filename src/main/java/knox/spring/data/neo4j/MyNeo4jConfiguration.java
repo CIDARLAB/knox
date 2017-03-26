@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableNeo4jRepositories(basePackages = "knox.spring.data.neo4j.repositories")
 public class MyNeo4jConfiguration extends Neo4jConfiguration {
-
     public static final String URL = System.getenv("NEO4J_URL") != null ? System.getenv("NEO4J_URL") : "http://localhost:7474";
 
     @Override

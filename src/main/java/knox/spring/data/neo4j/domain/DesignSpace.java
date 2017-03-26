@@ -2,6 +2,7 @@ package knox.spring.data.neo4j.domain;
 
 import org.neo4j.ogm.annotation.*;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,13 +28,17 @@ public class DesignSpace extends NodeSpace {
     
     public DesignSpace(String spaceID) {
     	super(0);
+    	
     	this.spaceID = spaceID;
+    	
     	this.mergeIndex = 0;
     }
     
     public DesignSpace(String spaceID, int idIndex, int mergeIndex) {
     	super(idIndex);
+    	
     	this.spaceID = spaceID;
+    	
     	this.mergeIndex = mergeIndex;
     }
     
@@ -54,6 +59,30 @@ public class DesignSpace extends NodeSpace {
     	}
     	
     	return false;
+	}
+    
+	public DesignSpace copy(String copyID) {
+		DesignSpace spaceCopy = new DesignSpace(copyID, idIndex, mergeIndex);
+		
+		if (hasNodes()) {
+			HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
+
+			for (Node node : nodes) {
+				idToNodeCopy.put(node.getNodeID(), spaceCopy.copyNodeWithID(node));
+			}
+
+			for (Node node : nodes) {
+				if (node.hasEdges()) {
+					Node nodeCopy = idToNodeCopy.get(node.getNodeID());
+					
+					for (Edge edge : node.getEdges()) {
+						nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+					}
+				} 
+			}
+		}
+		
+		return spaceCopy;
 	}
     
     public Branch createBranch(String branchID, int idIndex) {

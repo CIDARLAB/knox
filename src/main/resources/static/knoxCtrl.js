@@ -1,12 +1,13 @@
 function knoxCtrl($scope) {
 
     $scope.graphs = [];
-    $scope.graphType = "ds1";
-    $scope.prevGraphType = "ds1";
+    $scope.graphType = "ds7";
+    $scope.prevGraphType = "ds7";
     $scope.isDSGraph = true;
-    $scope.isCombinationMode = true;
+    $scope.isCombinationMode = false;
     $scope.isCreationMode = false;
     $scope.isDeletionMode = false;
+    $scope.isQueryMode = true;
     $scope.isSBOLMode = false;
     $scope.isEugeneMode = false;
     $scope.isCSVMode = false;
@@ -25,6 +26,9 @@ function knoxCtrl($scope) {
     $scope.deleteSpaceID = "";
     $scope.deleteNodeID1 = "";
     $scope.deleteNodeID2 = "";
+
+    $scope.querySpaceIDs = "";
+    $scope.queriedSpaceIDs = "";
 
     $scope.branchID = "";
     $scope.commitPath = "";
@@ -59,6 +63,7 @@ function knoxCtrl($scope) {
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
             $scope.isEugeneMode = false;
+            $scope.isQueryMode = false;
         } else if (graphType === "ds1") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = true;
@@ -67,6 +72,7 @@ function knoxCtrl($scope) {
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
             $scope.isEugeneMode = false;
+            $scope.isQueryMode = false;
         } else if (graphType === "ds2") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -75,6 +81,7 @@ function knoxCtrl($scope) {
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
             $scope.isEugeneMode = false;
+            $scope.isQueryMode = false;
         } else if (graphType === "ds3") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -83,6 +90,7 @@ function knoxCtrl($scope) {
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
             $scope.isEugeneMode = false;
+            $scope.isQueryMode = false;
         } else if (graphType === "ds4") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -91,6 +99,7 @@ function knoxCtrl($scope) {
             $scope.isSBOLMode = true;
             $scope.isCSVMode = false;
             $scope.isEugeneMode = false;
+            $scope.isQueryMode = false;
         } else if (graphType === "ds5") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -99,6 +108,7 @@ function knoxCtrl($scope) {
             $scope.isSBOLMode = false;
             $scope.isCSVMode = true;
             $scope.isEugeneMode = false;
+            $scope.isQueryMode = false;
         } else if (graphType === "ds6") {
             $scope.isDSGraph = true;
             $scope.isCombinationMode = false;
@@ -107,6 +117,16 @@ function knoxCtrl($scope) {
             $scope.isSBOLMode = false;
             $scope.isCSVMode = false;
             $scope.isEugeneMode = true;
+            $scope.isQueryMode = false;
+        } else if (graphType === "ds7") {
+            $scope.isDSGraph = true;
+            $scope.isCombinationMode = false;
+            $scope.isCreationMode = false;
+            $scope.isDeletionMode = false;
+            $scope.isSBOLMode = false;
+            $scope.isCSVMode = false;
+            $scope.isEugeneMode = false;
+            $scope.isQueryMode = true;
         }
     };
 
@@ -317,6 +337,7 @@ function knoxCtrl($scope) {
                                 }
 
                                 $scope.graphs.unshift({spaceID: dsGraph.spaceID, ds: dsGraph, vc: vcGraph});
+
                                 $scope.graphs = $scope.graphs.slice(0, 2);
                                
                                 for (i = 0; i < $scope.graphs.length; i++) {
@@ -406,28 +427,22 @@ function knoxCtrl($scope) {
         });
     };
 
-    $scope.matchDesignSpace = function(inputSpaceIDs, outputSpacePrefix) {
+    $scope.matchDesignSpaces = function(querySpaceIDs, queriedSpaceIDs) {
         var query = "?";
 
-        if (inputSpaceIDs) {
-            inputSpaceIDs = inputSpaceIDs.split(",");
-
-            if (inputSpaceIDs.length > 0) {
-                query += $scope.encodeQueryParameter("inputSpaceID1", inputSpaceIDs[0], query);
-
-                query += $scope.encodeQueryParameter("inputSpaceIDs2", inputSpaceIDs.slice(1, inputSpaceIDs.length), query);
-            }
+        if (querySpaceIDs) {
+            query += $scope.encodeQueryParameter("querySpaceIDs", querySpaceIDs.split(","), query);
         }
 
-        if (outputSpacePrefix) {
-            query += $scope.encodeQueryParameter("outputSpacePrefix", outputSpacePrefix, query);
+        if (queriedSpaceIDs) {
+            query += $scope.encodeQueryParameter("queriedSpaceIDs", queriedSpaceIDs.split(","), query);
         }
 
-        d3.xhr("/designSpace/match" + query).post(function(error, request) {
+        d3.json("/designSpace/match" + query, function(error, matches) {
             if (error) {
                 sweetAlert("Error", JSON.parse(error.response).message, "error");
-            } else if (outputSpacePrefix && inputSpaceIDs.length > 1) {
-                $scope.graphDesignSpace(outputSpacePrefix + 0);
+            } else {
+                console.log(JSON.stringify(matches));
             }
         });
     };

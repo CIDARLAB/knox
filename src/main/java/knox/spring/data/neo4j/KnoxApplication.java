@@ -336,19 +336,25 @@ public class KnoxApplication extends WebMvcConfigurerAdapter {
     	}
     }
     
-    @RequestMapping(value = "/designSpace/match", method = RequestMethod.POST)
-    public ResponseEntity<String> matchDesignSpace(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1,
-    		@RequestParam(value = "inputSpaceIDs2", required = true) List<String> inputSpaceIDs2,
-    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
-    	try {
-    		designSpaceService.matchDesignSpace(inputSpaceID1, inputSpaceIDs2, outputSpacePrefix);
-    		
-    		return new ResponseEntity<String>("{\"message\": \"Design space was successfully matched.\"}", 
-    				HttpStatus.NO_CONTENT);
-    	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
-    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
-    				HttpStatus.BAD_REQUEST);
-    	}
+//    @RequestMapping(value = "/designSpace/match", method = RequestMethod.POST)
+//    public ResponseEntity<String> matchDesignSpace(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1,
+//    		@RequestParam(value = "inputSpaceIDs2", required = true) List<String> inputSpaceIDs2,
+//    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
+//    	try {
+//    		designSpaceService.matchDesignSpace(inputSpaceID1, inputSpaceIDs2, outputSpacePrefix);
+//    		
+//    		return new ResponseEntity<String>("{\"message\": \"Design space was successfully matched.\"}", 
+//    				HttpStatus.NO_CONTENT);
+//    	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
+//    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+//    				HttpStatus.BAD_REQUEST);
+//    	}
+//    }
+    
+    @RequestMapping(value = "/designSpace/match", method = RequestMethod.GET)
+    public Map<String, Object> matchDesignSpaces(@RequestParam(value = "querySpaceIDs", required = true) List<String> querySpaceIDs,
+    		@RequestParam(value = "queriedSpaceIDs", required = true) List<String> queriedSpaceIDs) {
+        return designSpaceService.matchDesignSpaces(querySpaceIDs, queriedSpaceIDs);
     }
     
     @RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
