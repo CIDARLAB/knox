@@ -21,7 +21,6 @@ import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.NodeRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
-import knox.spring.data.neo4j.sample.DesignSampler;
 
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLReader;
@@ -35,7 +34,7 @@ import org.sbolstandard.core2.SBOLDocument;
 import org.sbolstandard.core2.SequenceAnnotation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -51,9 +50,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-
 @Service
-@Transactional
+//@Transactional
 public class DesignSpaceService {
 
     @Autowired CommitRepository commitRepository;
@@ -239,7 +237,8 @@ public class DesignSpaceService {
     	return converter.convertDevice(device);
     }
     
-    public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix) {
+    public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix, 
+    		boolean isMerge) {
     	List<BufferedReader> designReaders = new LinkedList<BufferedReader>();
     	
     	List<BufferedReader> compReaders = new LinkedList<BufferedReader>();
@@ -254,10 +253,11 @@ public class DesignSpaceService {
     				ArrayList<String> csvArray = csvToArrayList(csvLine);
     				
     				if (csvArray.size() > 0) {
-    					if (csvArray.get(0).equals("part1")) {
-    						designReaders.add(csvReader);
-    					} else if (csvArray.get(0).equals("part name")) {
+    					if (csvArray.get(0).equals("id") && csvArray.get(1).equals("role")
+    							&& csvArray.get(2).equals("sequence")) {
     						compReaders.add(csvReader);
+    					} else if (csvArray.get(0).equals("design")) {
+    						designReaders.add(csvReader);
     					}
     				}
     			}
@@ -284,9 +284,11 @@ public class DesignSpaceService {
     		}
     	}
     	
+    	List<DesignSpace> csvSpaces = new LinkedList<DesignSpace>();
+    	
     	for (BufferedReader designReader : designReaders) {
     		try {
-    			processCSVDesigns(designReader, outputSpacePrefix, compIDToRole);
+    			csvSpaces.addAll(processCSVDesigns(designReader, outputSpacePrefix, compIDToRole));
     		} catch (IOException e) {
     			e.printStackTrace();
     		} finally {
@@ -299,10 +301,40 @@ public class DesignSpaceService {
     			}
     		}
     	}
+    	
+    	if (isMerge && csvSpaces.size() > 0) {
+    		csvSpaces.get(0).setSpaceID(outputSpacePrefix);
+    		
+    		mergeDesignSpaces(false, false, 0, 0, csvSpaces);
+    		
+    		csvSpaces.get(0).createHeadBranch(csvSpaces.get(0).getSpaceID());
+    		
+    		System.out.println("saving");
+    		
+    		System.out.println("size " + csvSpaces.get(0).getSize());
+    		
+//    		return mapDesignSpaceToD3Format(csvSpaces.get(0));
+    		
+    		saveDesignSpace(csvSpaces.get(0));
+    		
+    		commitToHeadBranch(csvSpaces.get(0).getSpaceID());
+    	} else {
+    		for (DesignSpace csvSpace : csvSpaces) {
+    			csvSpace.createHeadBranch(csvSpace.getSpaceID());
+        		
+        		saveDesignSpace(csvSpace);
+        		
+        		commitToHeadBranch(csvSpace.getSpaceID());
+    		}
+    		
+//    		return new HashMap<String, Object>();
+    	}
     }
     
-    public void processCSVDesigns(BufferedReader csvReader, String outputSpacePrefix, 
-    		HashMap<String, String> compIDToRole) throws IOException { 
+    public List<DesignSpace> processCSVDesigns(BufferedReader csvReader, String outputSpacePrefix, 
+    		HashMap<String, String> compIDToRole) throws IOException {
+    	List<DesignSpace> csvSpaces = new LinkedList<DesignSpace>();
+    	
     	String csvLine;
     	
 		int j = -1;
@@ -314,6 +346,8 @@ public class DesignSpaceService {
 				j++;
 
 				DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + j);
+				
+				System.out.println("loading " + outputSpacePrefix + j);
 
 				Node outputStart = outputSpace.createStartNode();
 
@@ -327,7 +361,12 @@ public class DesignSpaceService {
 
 						ArrayList<String> compRoles = new ArrayList<String>(1);
 
-						compRoles.add(compIDToRole.get(csvArray.get(i)));
+						if (compIDToRole.containsKey(csvArray.get(i))) {
+							compRoles.add(compIDToRole.get(csvArray.get(i)));
+						} else {
+							compRoles.add(Part.PartType.REGION.getValue());
+						}
+						
 
 						Node outputNode;
 
@@ -343,13 +382,11 @@ public class DesignSpaceService {
 					}
 				}
 
-				outputSpace.createHeadBranch(outputSpace.getSpaceID());
-
-				saveDesignSpace(outputSpace);
-
-				commitToHeadBranch(outputSpace.getSpaceID());
+				csvSpaces.add(outputSpace);
 			}
 		}
+		
+		return csvSpaces;
     }
     
     
@@ -363,7 +400,10 @@ public class DesignSpaceService {
 			List<String> csvArray = csvToArrayList(csvLine);
 			
 			if (csvArray.size() >= 3) {
+				System.out.println("loading " + csvArray.get(0));
+				
 				compIDToRole.put(csvArray.get(0), csvArray.get(1));
+				
 				compIDToRole.put("r" + csvArray.get(0), csvArray.get(1));
 			}
 		}
@@ -1267,8 +1307,6 @@ public class DesignSpaceService {
     		allMatchSpaces.add(new ArrayList<DesignSpace>(queriedSpaces.size()));
     		
     		for (int j = 0; j < queriedSpaces.size(); j++) {
-//    			DesignSpace outputSpace = queriedSpaces.get(j).copy(outputSpacePrefix + j);
-
     			List<DesignSpace> inputSpaces = new ArrayList<DesignSpace>(2);
 
     			inputSpaces.add(queriedSpaces.get(j));
@@ -2033,6 +2071,7 @@ public class DesignSpaceService {
 	
 	private DesignSpace loadDesignSpace(String targetSpaceID, int depth) {
 		return designSpaceRepository.findOne(getGraphID(targetSpaceID), depth);
+//		return designSpaceRepository.findBySpaceID(targetSpaceID);
 	}
 	
 	private Node findNode(String targetSpaceID, String targetNodeID) {
@@ -2243,37 +2282,98 @@ public class DesignSpaceService {
 	    	}
 	    	d3Graph.putAll(makeD3("nodes", nodes, "links", links));
 	    }
+	    
 	    return d3Graph;
 	}
 
 	private Map<String, Object> mapDesignSpaceToD3Format(List<Map<String, Object>> spaceMap) {
 		Map<String, Object> d3Graph = new HashMap<String, Object>();
+		
 	    List<Map<String,Object>> nodes = new ArrayList<Map<String,Object>>();
+	    
 	    List<Map<String,Object>> links = new ArrayList<Map<String,Object>>();
+	    
 	    int i = 0;
+	    
 	    for (Map<String, Object> row : spaceMap) {
 	        if (d3Graph.isEmpty()) {
 	        	d3Graph.put("spaceID", row.get("spaceID"));
 	        }
+	        
 	        Map<String, Object> tail = makeD3("nodeID", row.get("tailID"), "nodeType", row.get("tailType"));
+	        
 	        int source = nodes.indexOf(tail);
+	        
 	        if (source == -1) {
 	        	nodes.add(tail);
+	        	
 	        	source = i++;
 	        }
+	        
 	        Map<String, Object> head = makeD3("nodeID", row.get("headID"), "nodeType", row.get("headType"));
+	       
 	        int target = nodes.indexOf(head);
+	        
 	        if (target == -1) {
 	        	nodes.add(head);
+	        	
 	        	target = i++;
 	        }
+	       
 	        Map<String, Object> link = makeD3("source", source, "target", target);
+	        
 	        if (row.containsKey("componentRoles") && row.get("componentRoles") != null) {
 	        	link.put("componentRoles", row.get("componentRoles"));
 	        }
+	        
 	        links.add(link);
 	    }
+	    
 	    d3Graph.putAll(makeD3("nodes", nodes, "links", links));
+	    
+	    return d3Graph;
+	}
+	
+	private Map<String, Object> mapDesignSpaceToD3Format(DesignSpace space) {
+		Map<String, Object> d3Graph = new HashMap<String, Object>();
+		
+		Map<String, Integer> nodeIndices = new HashMap<String, Integer>();
+		
+	    List<Map<String,Object>> nodes = new ArrayList<Map<String,Object>>();
+	    
+	    List<Map<String,Object>> links = new ArrayList<Map<String,Object>>();
+	    
+	    d3Graph.put("spaceID", space.getSpaceID());
+	    
+	    for (Node node : space.getNodes()) {
+	    	nodes.add(makeD3("nodeID", node.getNodeID(), "nodeType", node.getNodeType()));
+	    	
+	    	nodeIndices.put(node.getNodeID(), new Integer(nodes.size()));
+	    }
+	    
+	    for (Node node : space.getNodes()) {
+	    	if (node.hasEdges()) {
+	    		for (Edge edge : node.getEdges()) {
+	    			ArrayList<String> compRoles;
+	    			
+	    			if (edge.hasComponentRoles()) {
+	    				compRoles = edge.getComponentRoles();
+	    			} else {
+	    				compRoles = new ArrayList<String>();
+	    			}
+	    			
+	    			Map<String, Object> link = makeD3("source", nodeIndices.get(edge.getTail().getNodeID()), 
+	    					"target", nodeIndices.get(edge.getHead().getNodeID()));
+	    			
+	    			link.put("componentRoles", compRoles.toArray(new String[compRoles.size()]));
+	    			
+	    			links.add(link);
+	    		}
+	    	}
+	    }
+	    
+	    d3Graph.putAll(makeD3("nodes", nodes, "links", links));
+	    
 	    return d3Graph;
 	}
 
@@ -2344,7 +2444,13 @@ public class DesignSpaceService {
     }
 	
 	private void saveDesignSpace(DesignSpace space) {
-		designSpaceRepository.save(space);
+		designSpaceRepository.save(space, 1);
+		
+		System.out.println("nodes saved");
+		
+		designSpaceRepository.save(space, 2);
+		
+		System.out.println("edges saved");
 	}
 
 	private void selectHeadBranch(String targetSpaceID, String targetBranchID) {

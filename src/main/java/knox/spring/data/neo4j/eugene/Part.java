@@ -42,7 +42,8 @@ public class Part {
     	RBS ("ribosome_entry_site"),
     	CDS ("CDS"),
     	TERMINATOR ("terminator"),
-    	SCAR ("restriction_enzyme_assembly_scar");
+    	SCAR ("restriction_enzyme_assembly_scar"),
+    	REGION ("engineered_region");
     	
     	private final String value;
     	

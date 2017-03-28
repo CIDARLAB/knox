@@ -6,14 +6,20 @@ import java.util.Set;
 
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
+//import org.neo4j.ogm.annotation.GraphId;
+//import org.neo4j.ogm.annotation.NodeEntity;
+//import org.neo4j.ogm.annotation.Relationship;
+//
+//import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+//import com.voodoodyne.jackson.jsog.JSOGGenerator;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.voodoodyne.jackson.jsog.JSOGGenerator;
-
-@JsonIdentityInfo(generator=JSOGGenerator.class)
+//@JsonIdentityInfo(generator=JSOGGenerator.class)
+@JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
 @NodeEntity
 public class NodeSpace {
 	

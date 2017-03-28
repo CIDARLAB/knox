@@ -1,15 +1,19 @@
 package knox.spring.data.neo4j.domain;
 
-import org.neo4j.ogm.annotation.*;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.voodoodyne.jackson.jsog.JSOGGenerator;
+//import org.neo4j.ogm.annotation.*;
 
-@JsonIdentityInfo(generator=JSOGGenerator.class)
+//import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+//import com.voodoodyne.jackson.jsog.JSOGGenerator;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import org.neo4j.ogm.annotation.Relationship;
+
+//@JsonIdentityInfo(generator=JSOGGenerator.class)
+@JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
 public class DesignSpace extends NodeSpace {
     
     String spaceID;
@@ -124,6 +128,10 @@ public class DesignSpace extends NodeSpace {
     
     public String getSpaceID() {
     	return spaceID;
+    }
+    
+    public void setSpaceID(String spaceID) {
+    	this.spaceID = spaceID;
     }
     
     public boolean hasBranches() {

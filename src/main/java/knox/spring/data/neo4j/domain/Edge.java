@@ -4,12 +4,19 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.neo4j.ogm.annotation.*;
-
+//import org.neo4j.ogm.annotation.*;
+//
+//import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+//import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.voodoodyne.jackson.jsog.JSOGGenerator;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import org.neo4j.ogm.annotation.EndNode;
+import org.neo4j.ogm.annotation.GraphId;
+import org.neo4j.ogm.annotation.RelationshipEntity;
+import org.neo4j.ogm.annotation.StartNode;
 
-@JsonIdentityInfo(generator=JSOGGenerator.class)
+//@JsonIdentityInfo(generator=JSOGGenerator.class)
+@JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
 @RelationshipEntity(type = "PRECEDES")
 public class Edge {
 	

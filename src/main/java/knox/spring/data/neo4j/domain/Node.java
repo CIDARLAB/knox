@@ -1,15 +1,21 @@
 package knox.spring.data.neo4j.domain;
 
-import org.neo4j.ogm.annotation.*;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+//import org.neo4j.ogm.annotation.*;
+//
+//import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+//import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.voodoodyne.jackson.jsog.JSOGGenerator;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import org.neo4j.ogm.annotation.GraphId;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
-@JsonIdentityInfo(generator=JSOGGenerator.class)
+//@JsonIdentityInfo(generator=JSOGGenerator.class)
+@JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
 @NodeEntity
 public class Node {
 	

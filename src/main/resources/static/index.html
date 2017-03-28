@@ -118,6 +118,11 @@
                         <input type="text" name="outputSpacePrefix" placeholder="Space ID" class="form-control" aria-label="..." size="10">
                         <input type="submit" value="Import">
                     </form>
+                     <form method="POST" enctype="multipart/form-data" action="merge/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+                        <input type="file" name="inputCSVFiles[]" multiple>
+                        <input type="text" name="outputSpacePrefix" placeholder="Space ID" class="form-control" aria-label="..." size="10">
+                        <input type="submit" value="Merge">
+                    </form>
                     <form class="navbar-form navbar-left" ng-hide="isDSGraph">
                         <div class="input-group">
                             <div class="input-group-btn">
