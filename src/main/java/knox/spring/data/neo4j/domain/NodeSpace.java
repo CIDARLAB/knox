@@ -6,6 +6,7 @@ import java.util.Set;
 
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
+
 //import org.neo4j.ogm.annotation.GraphId;
 //import org.neo4j.ogm.annotation.NodeEntity;
 //import org.neo4j.ogm.annotation.Relationship;
@@ -14,6 +15,7 @@ import knox.spring.data.neo4j.domain.Node.NodeType;
 //import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -371,14 +373,49 @@ public class NodeSpace {
     	this.idIndex = idIndex;
     }
     
+    public void removeNodesWithSameIDs(Set<Node> nodes) {
+    	Set<String> nodeIDs = new HashSet<String>();
+    	
+    	for (Node node : nodes) {
+    		nodeIDs.add(node.getNodeID());
+    	}
+    	
+    	removeNodesByID(nodeIDs);
+    }
+    
     public Set<Node> removeNodesByID(Set<String> nodeIDs) {
     	Set<Node> removedNodes = new HashSet<Node>();
+    	
     	for (Node node : nodes) {
     		if (nodeIDs.contains(node.getNodeID())) {
     			removedNodes.add(node);
     		}
     	}
+    	
     	nodes.removeAll(removedNodes);
+    	
     	return removedNodes;
+    }
+    
+    public void unionNodes(NodeSpace space) {
+    	if (space.hasNodes()) {
+			HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
+
+			for (Node node : space.getNodes()) {
+				idToNodeCopy.put(node.getNodeID(), copyNodeWithID(node));
+			}
+
+			for (Node node : space.getNodes()) {
+				if (node.hasEdges()) {
+					Node nodeCopy = idToNodeCopy.get(node.getNodeID());
+					
+					for (Edge edge : node.getEdges()) {
+						nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+					}
+				} 
+			}
+			
+			idIndex = Math.max(idIndex, space.getIdIndex());
+		}
     }
 }

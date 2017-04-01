@@ -49,6 +49,10 @@ public class Node {
     	edges.add(edge);
     }
     
+    public void clearNodeType() {
+    	nodeType = null;
+    }
+    
     public Edge copyEdge(Edge edge) {
     	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
     		return createEdge(edge.getHead(), new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
@@ -150,6 +154,20 @@ public class Node {
     	if (hasEdges()) {
     		for (Edge edge : edges) {
     			if (edge.getHead().equals(head)) {
+    				return true;
+    			}
+    		}
+    		
+    		return false;
+    	} else {
+    		return false;
+    	}
+    }
+    
+    public boolean hasMatchingEdge(Edge edge) {
+    	if (hasEdges()) {
+    		for (Edge e : edges) {
+    			if (edge.isMatchingTo(e, 0)) {
     				return true;
     			}
     		}
