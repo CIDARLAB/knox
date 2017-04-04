@@ -540,10 +540,12 @@ public class DesignSpaceService {
 		if (soIdentifiers.size() == 0) {
 			roleNames.add("engineered_region");
 		} else {
+			SequenceOntology so = new SequenceOntology();
+			
 			for (URI soIdentifier : soIdentifiers) {
 				if (soIdentifier.equals(SequenceOntology.PROMOTER)) {
 		    		roleNames.add("promoter");
-		    	} else if (soIdentifier.equals(SequenceOntology.type("SO:0000374"))) {
+		    	} else if (soIdentifier.equals(so.getURIbyId("SO:0000374"))) {
 		    		roleNames.add("ribozyme");
 		    	} else if (soIdentifier.equals(SequenceOntology.INSULATOR)) {
 		    		roleNames.add("insulator");
