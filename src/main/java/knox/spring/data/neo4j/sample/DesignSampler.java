@@ -2,6 +2,7 @@ package knox.spring.data.neo4j.sample;
 
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Edge;
+import knox.spring.data.neo4j.domain.EnumerateType;
 import knox.spring.data.neo4j.domain.Node;
 
 import org.sbolstandard.core2.Collection;
@@ -58,12 +59,37 @@ public class DesignSampler {
 		return samples;
 	}
 
-	public Set<List<String>> dfsEnumerate() {
+	public Set<List<String>> enumerate(EnumerateType enumerateType, Integer requestedDesigns) {
+		int numberOfDesigns = requestedDesigns != null ? requestedDesigns : Integer.MAX_VALUE;
+
+		if (enumerateType == EnumerateType.BFS) {
+			return bfsEnumerate(numberOfDesigns);
+		} else {
+			return dfsEnumerate(numberOfDesigns);
+		}
+	}
+
+	private Set<List<String>> dfsEnumerate(int numberOfDesigns) {
 		Set<List<String>> allDesigns = new HashSet<List<String>>();
+		int currentNumberOfDesigns = 0;
 
 		for (Node start : starts) {
 			Set<List<String>> designs = new HashSet<>();
-			allDesigns.addAll(dfsEnumerateRecursive(start, designs));
+			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
+
+			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
+				allDesigns.addAll(generatedDesigns);
+				currentNumberOfDesigns += generatedDesigns.size();
+			} else {
+				int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
+				Iterator<List<String>> generatedDesignsIterator = generatedDesigns.iterator();
+				for (int i = 0; i < neededDesigns; i++) {
+					allDesigns.add(generatedDesignsIterator.next());
+				}
+
+				return allDesigns;
+			}
+
 		}
 
 		return allDesigns;
@@ -74,10 +100,9 @@ public class DesignSampler {
 			return designs;
 		}
 
-		Set<Edge> edges = node.getEdges();
 		Set<List<String>> allVisitedDesigns = new HashSet<>();
 
-		for (Edge edge : edges) {
+		for (Edge edge : node.getEdges()) {
 			Set<List<String>> visitedDesigns = new HashSet<>();
 
 			for (String componentId : edge.getComponentIDs()) {
@@ -92,11 +117,10 @@ public class DesignSampler {
 		}
 
 		return allVisitedDesigns;
-
 	}
 
 
-	public Set<List<String>> bfsEnumerate() {
+	private Set<List<String>> bfsEnumerate(int numberOfDesigns) {
 		Set<List<String>> allDesigns = new HashSet<List<String>>();
 		
 		for (Node start : starts) {
