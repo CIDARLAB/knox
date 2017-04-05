@@ -19,6 +19,17 @@ import org.neo4j.ogm.annotation.StartNode;
 @JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
 @RelationshipEntity(type = "PRECEDES")
 public class Edge {
+
+
+	/*
+	In the future, consider using builder pattern, that way you won't need to have multiple constructors.
+	This could be especially helpful in the future when you will need to have a large amount of
+	properties for each class.
+
+	See here for more info:
+	http://www.javaworld.com/article/2074938/core-java/too-many-parameters-in-java-methods-part-3-builder-pattern.html
+	 */
+
 	
     @GraphId
     Long id;
@@ -30,12 +41,11 @@ public class Edge {
     Node head;
     
     ArrayList<String> componentIDs;
-    
     ArrayList<String> componentRoles;
 
-    public Edge() {
-    	
-    }
+    double probability;
+
+    public Edge() {}
     
     public Edge(Node tail, Node head) {
     	this.tail = tail;
@@ -43,16 +53,23 @@ public class Edge {
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
-    	this.tail = tail;
-    	this.head = head;
-    	this.componentIDs = componentIDs;
-    	this.componentRoles = componentRoles;
-    }
+		this.tail = tail;
+		this.head = head;
+		this.componentIDs = componentIDs;
+		this.componentRoles = componentRoles;
+	}
+
+	public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles, double probability) {
+		this.tail = tail;
+		this.head = head;
+		this.componentIDs = componentIDs;
+		this.componentRoles = componentRoles;
+		this.probability = probability;
+	}
     
     public void addComponent(String compID, String compRole) {
     	if (!hasComponentIDs()) {
     		componentIDs = new ArrayList<String>();
-    		
     		componentRoles = new ArrayList<String>();
     	}
     	
@@ -67,11 +84,9 @@ public class Edge {
     
     public void setComponent(String compID, String compRole) {
     	componentIDs = new ArrayList<String>();
-		
 		componentRoles = new ArrayList<String>();
-		
+
 		componentIDs.add(compID);
-		
 		componentIDs.add(compRole);
     }
     
@@ -89,11 +104,11 @@ public class Edge {
     		
     		if (componentIDs.size() == 0) {
     			componentIDs = null;
-    			
     			componentRoles = null;
     		}
     		
     		return result;
+
     	} else {
     		return false;
     	}
@@ -210,7 +225,9 @@ public class Edge {
     		Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
     		
     		return compIDs1.equals(compIDs2) && compRoles1.equals(compRoles2);
-    	} else if (!hasComponentIDs() && !edge.hasComponentIDs() && !hasComponentRoles() 
+    	} else if (!hasComponentIDs()
+				&& !edge.hasComponentIDs()
+				&& !hasComponentRoles()
     			&& !edge.hasComponentRoles()) {
     		return true;
     	} else {
@@ -219,8 +236,10 @@ public class Edge {
     }
     
     public boolean hasSharedComponents(Edge edge) {
-    	if (hasComponentIDs() && edge.hasComponentIDs() && 
-    			hasComponentRoles() && edge.hasComponentRoles()) {
+    	if (hasComponentIDs()
+				&& edge.hasComponentIDs()
+				&& hasComponentRoles()
+				&& edge.hasComponentRoles()) {
     		Set<String> compIDs1 = new HashSet<String>(componentIDs);
     		Set<String> compIDs2 = new HashSet<String>(edge.getComponentIDs());
     		
@@ -231,8 +250,11 @@ public class Edge {
     		compRoles1.retainAll(compRoles2);
     		
     		return compIDs1.size() > 0 && compRoles1.size() > 0;
-    	} else if (!hasComponentIDs() && !edge.hasComponentIDs() 
-    			&& !hasComponentRoles() && !edge.hasComponentRoles()) {
+    	} else if (!hasComponentIDs()
+				&& !edge.hasComponentIDs()
+    			&& !hasComponentRoles()
+				&& !edge.hasComponentRoles()) {
+
     		return true;
     	} else {
     		return false;
@@ -245,8 +267,8 @@ public class Edge {
     		Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
     		
     		compRoles1.retainAll(compRoles2);
-    		
     		return compRoles1.size() > 0;
+
     	} else if (!hasComponentRoles() && !edge.hasComponentRoles()) {
     		return true;
     	} else {
@@ -268,7 +290,6 @@ public class Edge {
     
     public void unionWithEdge(Edge edge) {
     	Set<String> mergedCompIDs = new HashSet<String>();
-    	
     	Set<String> mergedCompRoles = new HashSet<String>();
     	
     	if (hasComponentIDs() && edge.hasComponentIDs()) {
@@ -277,7 +298,6 @@ public class Edge {
     		for (String compID : edge.getComponentIDs()) {
         		if (!mergedCompIDs.contains(compID)) {
         			componentIDs.add(compID);
-        			
         			mergedCompIDs.add(compID);
         		}
         	}
@@ -289,11 +309,18 @@ public class Edge {
     		for (String compRole : edge.getComponentRoles()) {
         		if (!mergedCompRoles.contains(compRole)) {
         			componentRoles.add(compRole);
-        			
         			mergedCompRoles.add(compRole);
         		}
         	}
     	}
     }
+
+    public void setProbability(double probability) {
+    	this.probability = probability;
+	}
+
+	public double getProbability() {
+    	return this.probability;
+	}
     
 }
