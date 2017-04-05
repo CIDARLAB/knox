@@ -9,13 +9,7 @@ import org.sbolstandard.core2.ComponentDefinition;
 import org.sbolstandard.core2.SBOLDocument;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 public class DesignSampler {
 	
@@ -32,24 +26,20 @@ public class DesignSampler {
 	public Set<List<String>> sample(int numSamples) {
 		
 		Set<List<String>> samples = new HashSet<List<String>>();
-		
 		Random rand = new Random();
 		
 		for (int i = 0; i < numSamples; i++) {
+
 			List<String> sample = new LinkedList<String>();
-			
 			Node node = starts.get(rand.nextInt(starts.size()));
 			
 			while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
 				Iterator<Edge> edgerator = node.getEdges().iterator();
-				
 				int k = rand.nextInt(node.getNumEdges());
-				
 				int j = 0;
 				
 				while (j < k) {
 					edgerator.next();
-					
 					j++;
 				}
 				
@@ -67,15 +57,51 @@ public class DesignSampler {
 		
 		return samples;
 	}
-	
-	public Set<List<String>> enumerate() {
+
+	public Set<List<String>> dfsEnumerate() {
+		Set<List<String>> allDesigns = new HashSet<List<String>>();
+
+		for (Node start : starts) {
+			Set<List<String>> designs = new HashSet<>();
+			allDesigns.addAll(dfsEnumerateRecursive(start, designs));
+		}
+
+		return allDesigns;
+	}
+
+	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
+		if (!node.hasEdges() || node.isAcceptNode()) {
+			return designs;
+		}
+
+		Set<Edge> edges = node.getEdges();
+		Set<List<String>> allVisitedDesigns = new HashSet<>();
+
+		for (Edge edge : edges) {
+			Set<List<String>> visitedDesigns = new HashSet<>();
+
+			for (String componentId : edge.getComponentIDs()) {
+				for (List<String> design : designs) {
+					List<String> copiedDesign = new ArrayList<>(design);
+					design.add(componentId);
+					visitedDesigns.add(copiedDesign);
+				}
+			}
+
+			allVisitedDesigns.addAll(dfsEnumerateRecursive(edge.getHead(), visitedDesigns));
+		}
+
+		return allVisitedDesigns;
+
+	}
+
+
+	public Set<List<String>> bfsEnumerate() {
 		Set<List<String>> allDesigns = new HashSet<List<String>>();
 		
 		for (Node start : starts) {
 			Set<List<String>> designs = new HashSet<List<String>>();
-			
 			Stack<Edge> edgeStack = new Stack<Edge>();
-			
 			Stack<Set<List<String>>> designStack = new Stack<Set<List<String>>>();
 			
 			if (start.hasEdges()) {
@@ -90,24 +116,22 @@ public class DesignSampler {
 			
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
-				
+
 				if (edge.hasComponentIDs()) {
 					Set<List<String>> comboDesigns = new HashSet<List<String>>();
 
 					for (String compID : edge.getComponentIDs()) {
 						if (designs.size() > 0) {
+
 							for (List<String> design : designs) {
 								List<String> comboDesign = new LinkedList<String>(design);
-
 								comboDesign.add(compID);
-
 								comboDesigns.add(comboDesign);
 							}
+
 						} else {
 							List<String> comboDesign = new LinkedList<String>();
-							
 							comboDesign.add(compID);
-							
 							comboDesigns.add(comboDesign);
 						}
 					}
@@ -116,14 +140,15 @@ public class DesignSampler {
 				}
 				
 				Node head = edge.getHead();
-				
 				if (!head.hasEdges() || head.isAcceptNode()) {
 					allDesigns.addAll(designs);
 					
 					if (!designStack.isEmpty()) {
 						designs = designStack.pop();
 					}
+
 				} else {
+
 					for (Edge headEdge : head.getEdges()) {
 						edgeStack.push(headEdge);
 					}
