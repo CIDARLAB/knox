@@ -29,15 +29,15 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "SET target.idIndex = s.idIndex "
 			+ "WITH target, s "
 			+ "MATCH (s)-[:CONTAINS]->(n:Node) "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (target)-[:CONTAINS]->(:Node {nodeID: n.nodeID, copyIndex: ID(n)})) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (target)-[:CONTAINS]->(:Node {nodeID: n.nodeID, copyIndex: ID(n), nodeType: n.nodeType})) "
 			+ "WITH target, s, n as m "
 			+ "MATCH (m)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(s) "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(e.componentIDs) AND NOT has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(e.componentIDs) AND NOT exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (target)-[:CONTAINS]->(:Node {copyIndex: ID(m)})-[:PRECEDES]->(:Node {copyIndex: ID(n)})<-[:CONTAINS]-(target)) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentIDs) AND has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(e.componentIDs) AND exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (target)-[:CONTAINS]->(:Node {copyIndex: ID(m)})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {copyIndex: ID(n)})<-[:CONTAINS]-(target))")
 	void checkoutBranch(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID);
 
@@ -45,15 +45,15 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "SET so.idIndex = input.idIndex "
 			+ "WITH input, so "
 			+ "MATCH (input)-[:CONTAINS]->(n:Node) "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (so)-[:CONTAINS]->(:Node {nodeID: n.nodeID})) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (so)-[:CONTAINS]->(:Node {nodeID: n.nodeID, nodeType: n.nodeType})) "
 			+ "WITH input, so, n as m "
 			+ "MATCH (m)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(target) "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(e.componentIDs) AND NOT has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(e.componentIDs) AND NOT exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (so)-[:CONTAINS]->(:Node {nodeID: m.nodeID})-[:PRECEDES]->(:Node {nodeID: n.nodeID})<-[:CONTAINS]-(so)) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentIDs) AND has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(e.componentIDs) AND exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (so)-[:CONTAINS]->(:Node {nodeID: m.nodeID})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {nodeID: n.nodeID})<-[:CONTAINS]-(so))")
 	void copyDesignSpaceToSnapshot(@Param("inputSpaceID") String inputSpaceID, @Param("outputBranchID") String outputBranchID);
 
@@ -72,15 +72,15 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "SET so.idIndex = si.idIndex "
 			+ "WITH si, so "
 			+ "MATCH (si)-[:CONTAINS]->(n:Node) "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (so)-[:CONTAINS]->(:Node {nodeID: n.nodeID})) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (so)-[:CONTAINS]->(:Node {nodeID: n.nodeID, nodeType: n.nodeType})) "
 			+ "WITH si, so, n as m "
 			+ "MATCH (m)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(si) "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(e.componentIDs) AND NOT has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(e.componentIDs) AND NOT exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (so)-[:CONTAINS]->(:Node {nodeID: m.nodeID})-[:PRECEDES]->(:Node {nodeID: n.nodeID})<-[:CONTAINS]-(so)) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentIDs) AND has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(e.componentIDs) AND exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (so)-[:CONTAINS]->(:Node {nodeID: m.nodeID})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {nodeID: n.nodeID})<-[:CONTAINS]-(so))")
 	void copySnapshots(@Param("inputSpaceID") String inputSpaceID, @Param("inputBranchID") String inputBranchID, @Param("outputSpaceID") String outputSpaceID, @Param("outputBranchID") String outputBranchID);
 	
@@ -237,7 +237,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	Set<Node> findNodeCopy(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID1") String targetBranchID1, @Param("targetNodeID") String targetNodeID, @Param("targetBranchID2") String targetBranchID2);
 
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node), (target)-[:CONTAINS]->(n) "
-			+ "WHERE NOT has(e.componentIDs) AND NOT has(e.componentRoles) "
+			+ "WHERE NOT exists(e.componentIDs) AND NOT exists(e.componentRoles) "
 			+ "RETURN e")
 	Set<Edge> getBlankEdges(@Param("targetSpaceID") String targetSpaceID);
 	
@@ -282,7 +282,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	Set<Edge> getOutgoingEdges(@Param("targetSpaceID") String targetSpaceID, @Param("targetBranchID") String targetBranchID, @Param("targetNodeID") String targetNodeID);
 	
 	@Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(:Branch {branchID: {targetBranchID}})-[:CONTAINS]->(c:Commit) "
-			+ "WHERE NOT has(c.mergeID) "
+			+ "WHERE NOT exists(c.mergeID) "
 			+ "WITH target, collect(distinct c) as cs "
 			+ "SET target.mergeIndex = target.mergeIndex + 1 "
 			+ "FOREACH(c IN cs| "
@@ -291,25 +291,25 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 	
 	@Query("MATCH (b:Branch)<-[:ARCHIVES]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch) "
 			+ "OPTIONAL MATCH (b)-[:LATEST]->(lc:Commit) "
-			+ "WHERE NOT has(lc.mergeID) "
+			+ "WHERE NOT exists(lc.mergeID) "
 			+ "OPTIONAL MATCH (b)-[:CONTAINS]->(c:Commit)-[:SUCCEEDS]->(d:Commit)<-[:CONTAINS]-(b) "
-			+ "WHERE NOT has(c.mergeID) AND NOT has(d.mergeID) "
+			+ "WHERE NOT exists(c.mergeID) AND NOT exists(d.mergeID) "
 			+ "RETURN target.spaceID as spaceID, hb.branchID as headBranchID, lc.commitID as latestCommitID, ID(lc) as latestCopyIndex, b.branchID as branchID, "
 			+ "c.commitID as tailID, ID(c) as tailCopyIndex, d.commitID as headID, ID(d) as headCopyIndex "
 			+ "UNION "
 			+ "MATCH (b:Branch)<-[:ARCHIVES]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch) "
 			+ "OPTIONAL MATCH (b)-[:LATEST]->(lc:Commit) "
-			+ "WHERE has(lc.mergeID) "
+			+ "WHERE exists(lc.mergeID) "
 			+ "OPTIONAL MATCH (b)-[:CONTAINS]->(cm:Commit)-[:SUCCEEDS]->(dm:Commit)<-[:CONTAINS]-(b) "
-			+ "WHERE has(cm.mergeID) AND has(dm.mergeID) "
+			+ "WHERE exists(cm.mergeID) AND exists(dm.mergeID) "
 			+ "RETURN target.spaceID as spaceID, hb.branchID as headBranchID, lc.commitID + lc.mergeID as latestCommitID, ID(lc) as latestCopyIndex, b.branchID as branchID, "
 			+ "cm.commitID + cm.mergeID as tailID, ID(cm) as tailCopyIndex, dm.commitID + dm.mergeID as headID, ID(dm) as headCopyIndex "
 			+ "UNION "
 			+ "MATCH (b:Branch)<-[:ARCHIVES]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch) "
 			+ "OPTIONAL MATCH (b)-[:LATEST]->(lc:Commit) "
-			+ "WHERE NOT has(lc.mergeID) "
+			+ "WHERE NOT exists(lc.mergeID) "
 			+ "OPTIONAL MATCH (b)-[:CONTAINS]->(ch:Commit)-[:SUCCEEDS]->(dh:Commit)<-[:CONTAINS]-(b) "
-			+ "WHERE NOT has(ch.mergeID) AND has(dh.mergeID) "
+			+ "WHERE NOT exists(ch.mergeID) AND exists(dh.mergeID) "
 			+ "RETURN target.spaceID as spaceID, hb.branchID as headBranchID, lc.commitID as latestCommitID, ID(lc) as latestCopyIndex, b.branchID as branchID, "
 			+ "ch.commitID as tailID, ID(ch) as tailCopyIndex, dh.commitID + dh.mergeID as headID, ID(dh) as headCopyIndex")
 	List<Map<String, Object>> mapBranches(@Param("targetSpaceID") String targetSpaceID);
@@ -346,9 +346,9 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "WITH output, bi, bo "
 			+ "OPTIONAL MATCH (bi)-[:CONTAINS]->(c:Commit), (output)-[:ARCHIVES]->(:Branch)-[:CONTAINS]->(co:Commit {copyIndex: ID(c)}) "
 			+ "OPTIONAL MATCH (bi)-[:CONTAINS]->(ci:Commit) "
-			+ "WHERE NOT (output)-[:ARCHIVES]->(:Branch)-[:CONTAINS]->(:Commit {copyIndex: ID(ci)}) AND NOT has(ci.mergeID) "
+			+ "WHERE NOT (output)-[:ARCHIVES]->(:Branch)-[:CONTAINS]->(:Commit {copyIndex: ID(ci)}) AND NOT exists(ci.mergeID) "
 			+ "OPTIONAL MATCH (bi)-[:CONTAINS]->(cim:Commit) "
-			+ "WHERE NOT (output)-[:ARCHIVES]->(:Branch)-[:CONTAINS]->(:Commit {copyIndex: ID(cim)}) AND has(cim.mergeID) "
+			+ "WHERE NOT (output)-[:ARCHIVES]->(:Branch)-[:CONTAINS]->(:Commit {copyIndex: ID(cim)}) AND exists(cim.mergeID) "
 			+ "WITH bi, bo, collect(distinct ci) as cis, collect(distinct cim) as cims, collect(distinct co) as cos "
 			+ "FOREACH(ci IN cis| "
 			+ "CREATE (bo)-[:CONTAINS]->(:Commit {commitID: ci.commitID, copyIndex: ID(ci)})-[:CONTAINS]->(:Snapshot {idIndex: 0})) "
@@ -393,15 +393,15 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "WITH si, nodes, so "
 			+ "UNWIND range(0, size(nodes) - 1) as nodeIndex "
 			+ "WITH si, nodeIndex, nodes[nodeIndex] as n, so "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (so)-[:CONTAINS]->(:Node {nodeID: 'n' + (so.idIndex - nodeIndex - 1), copyIndex: ID(n)})) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (so)-[:CONTAINS]->(:Node {nodeID: 'n' + (so.idIndex - nodeIndex - 1), copyIndex: ID(n), nodeType: n.nodeType})) "
 			+ "WITH si, n as m, so "
 			+ "MATCH (m)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(si) "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(e.componentIDs) AND NOT has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(e.componentIDs) AND NOT exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (so)-[:CONTAINS]->(:Node {copyIndex: ID(m)})-[:PRECEDES]->(:Node {copyIndex: ID(n)})<-[:CONTAINS]-(so)) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentIDs) AND has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(e.componentIDs) AND exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (so)-[:CONTAINS]->(:Node {copyIndex: ID(m)})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {copyIndex: ID(n)})<-[:CONTAINS]-(so))")
 	void unionSnapshot(@Param("targetSpaceID") String targetSpaceID, @Param("inputBranchID") String inputBranchID, @Param("outputBranchID") String outputBranchID);
 
@@ -415,15 +415,15 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 			+ "WITH input, nodes, output "
 			+ "UNWIND range(0, size(nodes) - 1) as nodeIndex "
 			+ "WITH input, nodeIndex, nodes[nodeIndex] as n, output "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + (output.idIndex - nodeIndex - 1), copyIndex: ID(n)})) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(n.nodeType) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(n.nodeType) THEN [1] ELSE [] END | "
 			+ "CREATE (output)-[:CONTAINS]->(:Node {nodeID: 'n' + (output.idIndex - nodeIndex - 1), copyIndex: ID(n), nodeType: n.nodeType})) "
 			+ "WITH input, n as m, output "
 			+ "MATCH (m)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(input) "
-			+ "FOREACH(ignoreMe IN CASE WHEN NOT has(e.componentIDs) AND NOT has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN NOT exists(e.componentIDs) AND NOT exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyIndex: ID(m)})-[:PRECEDES]->(:Node {copyIndex: ID(n)})<-[:CONTAINS]-(output)) "
-			+ "FOREACH(ignoreMe IN CASE WHEN has(e.componentIDs) AND has(e.componentRoles) THEN [1] ELSE [] END | "
+			+ "FOREACH(ignoreMe IN CASE WHEN exists(e.componentIDs) AND exists(e.componentRoles) THEN [1] ELSE [] END | "
 			+ "CREATE UNIQUE (output)-[:CONTAINS]->(:Node {copyIndex: ID(m)})-[:PRECEDES {componentIDs: e.componentIDs, componentRoles: e.componentRoles}]->(:Node {copyIndex: ID(n)})<-[:CONTAINS]-(output))")
 	void unionDesignSpace(@Param("inputSpaceID") String inputSpaceID, @Param("outputSpaceID") String outputSpaceID);
 }
