@@ -21,7 +21,7 @@ public class DesignSampler {
 	public DesignSampler(DesignSpace space) {
 		this.space = space;
 		
-		starts = new LinkedList<Node>(space.getStartNodes());
+		starts = new LinkedList<>(space.getStartNodes());
 	}
 	
 	public Set<List<String>> sample(int numSamples) {
@@ -121,12 +121,13 @@ public class DesignSampler {
 
 
 	private Set<List<String>> bfsEnumerate(int numberOfDesigns) {
-		Set<List<String>> allDesigns = new HashSet<List<String>>();
+		Set<List<String>> allDesigns = new HashSet<>();
+		int currentNumberOfDesigns = 0;
 		
 		for (Node start : starts) {
-			Set<List<String>> designs = new HashSet<List<String>>();
-			Stack<Edge> edgeStack = new Stack<Edge>();
-			Stack<Set<List<String>>> designStack = new Stack<Set<List<String>>>();
+			Set<List<String>> designs = new HashSet<>();
+			Stack<Edge> edgeStack = new Stack<>();
+			Stack<Set<List<String>>> designStack = new Stack<>();
 			
 			if (start.hasEdges()) {
 				for (Edge edge : start.getEdges()) {
@@ -142,13 +143,13 @@ public class DesignSampler {
 				Edge edge = edgeStack.pop();
 
 				if (edge.hasComponentIDs()) {
-					Set<List<String>> comboDesigns = new HashSet<List<String>>();
+					Set<List<String>> comboDesigns = new HashSet<>();
 
 					for (String compID : edge.getComponentIDs()) {
 						if (designs.size() > 0) {
 
 							for (List<String> design : designs) {
-								List<String> comboDesign = new LinkedList<String>(design);
+								List<String> comboDesign = new LinkedList<>(design);
 								comboDesign.add(compID);
 								comboDesigns.add(comboDesign);
 							}
@@ -165,7 +166,19 @@ public class DesignSampler {
 				
 				Node head = edge.getHead();
 				if (!head.hasEdges() || head.isAcceptNode()) {
-					allDesigns.addAll(designs);
+
+					if (designs.size() + currentNumberOfDesigns < numberOfDesigns) {
+						allDesigns.addAll(designs);
+						currentNumberOfDesigns += designs.size();
+					} else {
+						int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
+						Iterator<List<String>> generatedDesignsIterator = designs.iterator();
+						for (int i = 0; i < neededDesigns; i++) {
+							allDesigns.add(generatedDesignsIterator.next());
+						}
+
+						return allDesigns;
+					}
 					
 					if (!designStack.isEmpty()) {
 						designs = designStack.pop();

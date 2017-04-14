@@ -2288,7 +2288,7 @@ public class DesignSpaceService {
 		}
 	}
 
-	private DesignSpace findDesignSpace(String targetSpaceID) {
+	public DesignSpace findDesignSpace(String targetSpaceID) {
     	return designSpaceRepository.findBySpaceID(targetSpaceID);
     }
 	
