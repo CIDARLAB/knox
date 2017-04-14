@@ -2,9 +2,11 @@ package knox.spring.data.neo4j.domain;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import knox.spring.data.neo4j.domain.Node.NodeType;
+
 
 
 //import org.neo4j.ogm.annotation.GraphId;
@@ -299,6 +301,26 @@ public class NodeSpace {
     	}
  
     	return nodeIDToNode;
+    }
+    
+    public void mergeStartNodes() {
+    	if (hasNodes()) {
+    		Iterator<Node> startNodes = getStartNodes().iterator();
+    		
+    		Node primaryStart = startNodes.next();
+    		
+    		while (startNodes.hasNext()) {
+    			Node secondaryStart = startNodes.next();
+    			
+    			if (secondaryStart.hasEdges()) {
+    				for (Edge secondaryEdge : secondaryStart.getEdges()) {
+    					primaryStart.copyEdge(secondaryEdge);
+    				}
+    			}
+    			
+    			nodes.remove(secondaryStart);
+    		}
+    	}
     }
     
     public Set<Node> getOtherNodes(Set<Node> nodes) {

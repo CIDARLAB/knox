@@ -296,9 +296,9 @@ public class KnoxController {
     		@RequestParam(value = "degree", required = false, defaultValue = "0") int degree) {
     	try {
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, true, false, 1, 1);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, true, false, 1, 0);
     		} else {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, true, false, 1, 1);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, true, false, 1, 0);
     		}
 
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 

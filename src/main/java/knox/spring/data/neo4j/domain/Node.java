@@ -164,10 +164,10 @@ public class Node {
     	}
     }
     
-    public boolean hasMatchingEdge(Edge edge) {
+    public boolean hasMatchingEdge(Edge edge, int strength) {
     	if (hasEdges()) {
     		for (Edge e : edges) {
-    			if (edge.isMatchingTo(e, 0)) {
+    			if (edge.isMatchingTo(e, strength)) {
     				return true;
     			}
     		}
