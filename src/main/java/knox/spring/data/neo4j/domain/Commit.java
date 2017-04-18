@@ -5,10 +5,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
-//import org.neo4j.ogm.annotation.*;
+// import org.neo4j.ogm.annotation.*;
 //
-//import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-//import com.voodoodyne.jackson.jsog.JSOGGenerator;
+// import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+// import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
@@ -16,120 +16,110 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
 //@JsonIdentityInfo(generator=JSOGGenerator.class)
-@JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
+                  property = "id")
 @NodeEntity
 public class Commit {
-	
-    @GraphId
-    Long id;
-    
+    @GraphId Long id;
+
     String commitID;
-    
-    @Relationship(type = "SUCCEEDS")
-    Set<Commit> predecessors;
-    
-    @Relationship(type = "CONTAINS") 
-    Snapshot snapshot;
-    
-    public Commit() {
-    	
-    }
- 
-    public Commit(String commitID) {
-    	this.commitID = commitID;
-    }
-    
+
+    @Relationship(type = "SUCCEEDS") Set<Commit> predecessors;
+
+    @Relationship(type = "CONTAINS") Snapshot snapshot;
+
+    public Commit() {}
+
+    public Commit(String commitID) { this.commitID = commitID; }
+
     public Snapshot copySnapshot(Snapshot snapshot) {
-    	createSnapshot(snapshot.getIdIndex());
-    	
-    	HashMap<String, Node> nodeIDToCopy = new HashMap<String, Node>();
-    	
-    	HashMap<String, Set<Edge>> nodeIDToEdges = new HashMap<String, Set<Edge>>();
-    	
-    	for (Node node : snapshot.getNodes()) {
-    		nodeIDToCopy.put(node.getNodeID(), this.snapshot.copyNodeWithID(node));
-    		
-    		if (node.hasEdges()) {
-    			nodeIDToEdges.put(node.getNodeID(), node.getEdges());
-    		}
-    	}
-    	
-    	for (Node nodeCopy : this.snapshot.getNodes()) {
-    		if (nodeIDToEdges.containsKey(nodeCopy.getNodeID())) {
-    			for (Edge edge : nodeIDToEdges.get(nodeCopy.getNodeID())) {
-    				nodeCopy.copyEdge(edge, nodeIDToCopy.get(edge.getHead().getNodeID()));
-    			}
-    		}
-    	}
-    	
-    	return this.snapshot;
+        createSnapshot(snapshot.getIdIndex());
+
+        HashMap<String, Node> nodeIDToCopy = new HashMap<String, Node>();
+
+        HashMap<String, Set<Edge>> nodeIDToEdges =
+            new HashMap<String, Set<Edge>>();
+
+        for (Node node : snapshot.getNodes()) {
+            nodeIDToCopy.put(node.getNodeID(),
+                             this.snapshot.copyNodeWithID(node));
+
+            if (node.hasEdges()) {
+                nodeIDToEdges.put(node.getNodeID(), node.getEdges());
+            }
+        }
+
+        for (Node nodeCopy : this.snapshot.getNodes()) {
+            if (nodeIDToEdges.containsKey(nodeCopy.getNodeID())) {
+                for (Edge edge : nodeIDToEdges.get(nodeCopy.getNodeID())) {
+                    nodeCopy.copyEdge(
+                        edge, nodeIDToCopy.get(edge.getHead().getNodeID()));
+                }
+            }
+        }
+
+        return this.snapshot;
     }
-    
+
     public Snapshot createSnapshot() {
-    	snapshot = new Snapshot(0);
-    	return snapshot;
+        snapshot = new Snapshot(0);
+        return snapshot;
     }
-    
+
     public Snapshot createSnapshot(int idIndex) {
-    	snapshot = new Snapshot(idIndex);
-    	return snapshot;
+        snapshot = new Snapshot(idIndex);
+        return snapshot;
     }
-    
+
     public Commit findPredecessor(String predecessorID) {
- 	   if (hasPredecessors()) {
-    		for (Commit predecessor : predecessors) {
-        		if (predecessor.getCommitID().equals(predecessorID)) {
-        			return predecessor;
-        		}
-        	}
-    		return null;
-    	} else {
-    		return null;
-    	}
+        if (hasPredecessors()) {
+            for (Commit predecessor : predecessors) {
+                if (predecessor.getCommitID().equals(predecessorID)) {
+                    return predecessor;
+                }
+            }
+            return null;
+        } else {
+            return null;
+        }
     }
-    
+
     public Set<Commit> getHistory() {
-    	Set<Commit> history = new HashSet<Commit>();
-    	
-    	Stack<Commit> commitStack = new Stack<Commit>();
+        Set<Commit> history = new HashSet<Commit>();
 
-    	commitStack.push(this);
+        Stack<Commit> commitStack = new Stack<Commit>();
 
-    	while (commitStack.size() > 0) {
-    		Commit commit = commitStack.pop();
+        commitStack.push(this);
 
-    		history.add(commit);
+        while (commitStack.size() > 0) {
+            Commit commit = commitStack.pop();
 
-    		if (commit.hasPredecessors()) {
-    			for (Commit predecessor : commit.getPredecessors()) {
-    				commitStack.push(predecessor);
-    			}
-    		}
-    	}
-    	
-    	return history;
-    }
-    
-    public Set<Commit> getPredecessors() {
-    	return predecessors;
-    }
-    
-    public Snapshot getSnapshot() {
-    	return snapshot;
+            history.add(commit);
+
+            if (commit.hasPredecessors()) {
+                for (Commit predecessor : commit.getPredecessors()) {
+                    commitStack.push(predecessor);
+                }
+            }
+        }
+
+        return history;
     }
 
-    public String getCommitID() {
-    	return commitID;
-    }
-    
+    public Set<Commit> getPredecessors() { return predecessors; }
+
+    public Snapshot getSnapshot() { return snapshot; }
+
+    public String getCommitID() { return commitID; }
+
     public boolean hasPredecessors() {
-    	return predecessors != null && predecessors.size() > 0;
+        return predecessors != null && predecessors.size() > 0;
     }
-    
+
     public void addPredecessor(Commit predecessor) {
-    	if (predecessors == null) {
-    		predecessors = new HashSet<Commit>();
-    	}
-    	predecessors.add(predecessor);
+        if (predecessors == null) {
+            predecessors = new HashSet<Commit>();
+        }
+        predecessors.add(predecessor);
     }
 }

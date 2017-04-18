@@ -3,10 +3,10 @@ package knox.spring.data.neo4j.domain;
 import java.util.HashSet;
 import java.util.Set;
 
-//import org.neo4j.ogm.annotation.*;
+// import org.neo4j.ogm.annotation.*;
 //
-//import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-//import com.voodoodyne.jackson.jsog.JSOGGenerator;
+// import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+// import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
@@ -14,112 +14,97 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
 //@JsonIdentityInfo(generator=JSOGGenerator.class)
-@JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
+                  property = "id")
 @NodeEntity
 public class Branch {
+    @GraphId Long id;
 
-	@GraphId
-	Long id;
+    String branchID;
 
-	String branchID;
+    int idIndex;
 
-	int idIndex;
+    @Relationship(type = "CONTAINS") Set<Commit> commits;
 
-	@Relationship(type = "CONTAINS") 
-	Set<Commit> commits;
+    @Relationship(type = "LATEST") Commit latestCommit;
 
-	@Relationship(type = "LATEST") 
-	Commit latestCommit;
+    public Branch() {}
 
-	public Branch() {
+    public Branch(String branchID, int idIndex) {
+        this.branchID = branchID;
+        this.idIndex = idIndex;
+    }
 
-	}
+    public void addCommit(Commit commit) {
+        if (!hasCommits()) {
+            commits = new HashSet<Commit>();
+        }
+        commits.add(commit);
+    }
 
-	public Branch(String branchID, int idIndex) {
-		this.branchID = branchID;
-		this.idIndex = idIndex;
-	}
+    public boolean containsCommit(Commit commit) {
+        if (hasCommits()) {
+            return commits.contains(commit);
+        } else {
+            return false;
+        }
+    }
 
-	public void addCommit(Commit commit) {
-		if (!hasCommits()) {
-			commits = new HashSet<Commit>();
-		}
-		commits.add(commit);
-	}
-	
-	public boolean containsCommit(Commit commit) {
-		if (hasCommits()) {
-			return commits.contains(commit);
-		} else {
-			return false;
-		}
-	}
+    public Commit copyCommit(Commit commit) {
+        Commit commitCopy = createCommit();
 
-	public Commit copyCommit(Commit commit) {
-		Commit commitCopy = createCommit();
-		
-		commitCopy.copySnapshot(commit.getSnapshot());
-		
-		return commitCopy;
-	}
+        commitCopy.copySnapshot(commit.getSnapshot());
 
-	public Commit createCommit() {
-		Commit commit = new Commit("c" + idIndex++);
-		
-		addCommit(commit);
-		
-		return commit;
-	}
-	
-	public boolean deleteCommits(Set<Commit> deletedCommits) {
-		if (hasCommits()) {
-			return commits.removeAll(deletedCommits);
-		} else {
-			return false;
-		}
-	}
+        return commitCopy;
+    }
 
-	public Set<Commit> getCommits() {
-		return commits;
-	}
+    public Commit createCommit() {
+        Commit commit = new Commit("c" + idIndex++);
 
-	public Commit getLatestCommit() {
-		return latestCommit;
-	}
+        addCommit(commit);
 
-	public String getBranchID() {
-		return branchID;
-	}
+        return commit;
+    }
 
-	public int getIdIndex() {
-		return idIndex;
-	}
+    public boolean deleteCommits(Set<Commit> deletedCommits) {
+        if (hasCommits()) {
+            return commits.removeAll(deletedCommits);
+        } else {
+            return false;
+        }
+    }
 
-	public boolean hasCommits() {
-		if (commits == null) {
-			return false;
-		} else {
-			return commits.size() > 0;
-		}
-	}
-	
-	public Set<Commit> retainCommits(Set<Commit> retainedCommits) {
-		Set<Commit> diffCommits = new HashSet<Commit>();
-		
-		if (hasCommits()) {
-			for (Commit commit : commits) {
-				if (!retainedCommits.contains(commit)) {
-					diffCommits.add(commit);
-				}
-			}
-			
-			deleteCommits(diffCommits);
-		}
-		
-		return diffCommits;
-	}
-	
-	public void setLatestCommit(Commit commit) {
-		latestCommit = commit;
-	}
+    public Set<Commit> getCommits() { return commits; }
+
+    public Commit getLatestCommit() { return latestCommit; }
+
+    public String getBranchID() { return branchID; }
+
+    public int getIdIndex() { return idIndex; }
+
+    public boolean hasCommits() {
+        if (commits == null) {
+            return false;
+        } else {
+            return commits.size() > 0;
+        }
+    }
+
+    public Set<Commit> retainCommits(Set<Commit> retainedCommits) {
+        Set<Commit> diffCommits = new HashSet<Commit>();
+
+        if (hasCommits()) {
+            for (Commit commit : commits) {
+                if (!retainedCommits.contains(commit)) {
+                    diffCommits.add(commit);
+                }
+            }
+
+            deleteCommits(diffCommits);
+        }
+
+        return diffCommits;
+    }
+
+    public void setLatestCommit(Commit commit) { latestCommit = commit; }
 }

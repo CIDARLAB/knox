@@ -2,7 +2,7 @@ package knox.spring.data.neo4j.repositories;
 
 import knox.spring.data.neo4j.domain.Edge;
 
-//import org.springframework.data.neo4j.repository.GraphRepository;
+// import org.springframework.data.neo4j.repository.GraphRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
@@ -12,5 +12,5 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
  */
 @RepositoryRestResource(collectionResourceRel = "knox", path = "knox")
 public interface EdgeRepository extends PagingAndSortingRepository<Edge, Long> {
-	
+
 }
