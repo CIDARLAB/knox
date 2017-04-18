@@ -1,8 +1,22 @@
 function knoxCtrl($scope) {
-
+    $scope.GraphTypeEnum = Object.freeze({
+        VC: 0,
+        DS1: 1,
+        DS2: 2,
+        DS3: 3,
+        DS4: 4,
+        DS5: 5,
+        DS6: 6,
+        DS7: 7,
+    });
+    $scope.SampleModeEnum = Object.freeze({
+        SAMPLE: 0,
+        DFS_ENUMERATE: 1,
+        BFS_ENUMERATE: 2,
+    });
     $scope.graphs = [];
-    $scope.graphType = "ds7";
-    $scope.prevGraphType = "ds7";
+    $scope.graphType = $scope.GraphTypeEnum.DS7;
+    $scope.prevGraphType = $scope.GraphTypeEnum.DS7;
     $scope.isDSGraph = true;
     $scope.isCombinationMode = false;
     $scope.isCreationMode = false;
@@ -38,16 +52,31 @@ function knoxCtrl($scope) {
     $scope.outputBranchID = "";
     $scope.insertNodeID2 = "";
 
-	$scope.removeGraphSVG = function(index) {
-		d3.select("#graph" + index).select("svg").remove();
-	};
+    $scope.sample = function(mode) {
+        switch (mode) {
+        case $scope.SampleModeEnum.SAMPLE:
+            break;
+
+        case $scope.SampleModeEnum.DFS_ENUMERATE:
+            break;
+
+        case $scope.SampleModeEnum.BFS_ENUMERATE:
+            break;
+
+        default:
+            throw "Invalid Enum";
+        }
+    }
+    
+    $scope.removeGraphSVG = function(index) {
+        d3.select("#graph" + index).select("svg").remove();
+    };
 
     $scope.switchToGraphType = function(graphType) {
-        if (graphType.slice(0, 2) !== $scope.prevGraphType.slice(0, 2)) {
-            var i;
-            for (i = 0; i < $scope.graphs.length; i++) {
+        if (graphType !== $scope.prevGraphType) {
+            for (var i = 0; i < $scope.graphs.length; ++i) {
                 $scope.removeGraphSVG(i);
-                if (graphType === "vc") {
+                if (graphType === $scope.GraphTypeEnum.VC) {
                     $scope.appendVCGraphSVG($scope.graphs[i].vc, i, 1110, 300);
                 } else {
                     $scope.appendDSGraphSVG($scope.graphs[i].ds, i, 1110, 300);
@@ -55,146 +84,123 @@ function knoxCtrl($scope) {
             }
             $scope.prevGraphType = graphType;
         }
-        if (graphType === "vc") {
-            $scope.isDSGraph = false;
-            $scope.isCombinationMode = false;
-            $scope.isCreationMode = false;
-            $scope.isDeletionMode = false;
-            $scope.isSBOLMode = false;
-            $scope.isCSVMode = false;
-            $scope.isEugeneMode = false;
-            $scope.isQueryMode = false;
-        } else if (graphType === "ds1") {
+        $scope.isDSGraph = false;
+        $scope.isCombinationMode = false;
+        $scope.isCreationMode = false;
+        $scope.isDeletionMode = false;
+        $scope.isSBOLMode = false;
+        $scope.isCSVMode = false;
+        $scope.isEugeneMode = false;
+        $scope.isQueryMode = false;
+        switch (graphType) {
+        case $scope.GraphTypeEnum.VC:
+            break;
+
+        case $scope.GraphTypeEnum.DS1:
             $scope.isDSGraph = true;
             $scope.isCombinationMode = true;
-            $scope.isCreationMode = false;
-            $scope.isDeletionMode = false;
-            $scope.isSBOLMode = false;
-            $scope.isCSVMode = false;
-            $scope.isEugeneMode = false;
-            $scope.isQueryMode = false;
-        } else if (graphType === "ds2") {
+            break;
+
+        case $scope.GraphTypeEnum.DS2:
             $scope.isDSGraph = true;
-            $scope.isCombinationMode = false;
             $scope.isCreationMode = true;
-            $scope.isDeletionMode = false;
-            $scope.isSBOLMode = false;
-            $scope.isCSVMode = false;
-            $scope.isEugeneMode = false;
-            $scope.isQueryMode = false;
-        } else if (graphType === "ds3") {
+            break;
+
+        case $scope.GraphTypeEnum.DS3:
             $scope.isDSGraph = true;
-            $scope.isCombinationMode = false;
-            $scope.isCreationMode = false;
             $scope.isDeletionMode = true;
-            $scope.isSBOLMode = false;
-            $scope.isCSVMode = false;
-            $scope.isEugeneMode = false;
-            $scope.isQueryMode = false;
-        } else if (graphType === "ds4") {
+            break;
+
+        case $scope.GraphTypeEnum.DS4:
             $scope.isDSGraph = true;
-            $scope.isCombinationMode = false;
-            $scope.isCreationMode = false;
-            $scope.isDeletionMode = false;
             $scope.isSBOLMode = true;
-            $scope.isCSVMode = false;
-            $scope.isEugeneMode = false;
-            $scope.isQueryMode = false;
-        } else if (graphType === "ds5") {
+            break;
+
+        case $scope.GraphTypeEnum.DS5:
             $scope.isDSGraph = true;
-            $scope.isCombinationMode = false;
-            $scope.isCreationMode = false;
-            $scope.isDeletionMode = false;
-            $scope.isSBOLMode = false;
             $scope.isCSVMode = true;
-            $scope.isEugeneMode = false;
-            $scope.isQueryMode = false;
-        } else if (graphType === "ds6") {
+            break;
+
+        case $scope.GraphTypeEnum.DS6:
             $scope.isDSGraph = true;
-            $scope.isCombinationMode = false;
-            $scope.isCreationMode = false;
-            $scope.isDeletionMode = false;
-            $scope.isSBOLMode = false;
-            $scope.isCSVMode = false;
             $scope.isEugeneMode = true;
-            $scope.isQueryMode = false;
-        } else if (graphType === "ds7") {
+            break;
+
+        case $scope.GraphTypeEnum.DS7:
             $scope.isDSGraph = true;
-            $scope.isCombinationMode = false;
-            $scope.isCreationMode = false;
-            $scope.isDeletionMode = false;
-            $scope.isSBOLMode = false;
-            $scope.isCSVMode = false;
-            $scope.isEugeneMode = false;
             $scope.isQueryMode = true;
+            break;
+
+        default:
+            throw "Invalid Enum";
         }
     };
 
-	$scope.appendDSGraphSVG = function(graph, index, width, height) {
-		var force = d3.layout.force()
-	            .charge(-250)
-                .linkDistance(60)
-                .size([width, height]);
+    $scope.appendDSGraphSVG = function(graph, index, width, height) {
+        var force = d3.layout.force()
+            .charge(-250)
+            .linkDistance(60)
+            .size([width, height]);
 
         var drag = force.drag()
-                .on("dragstart", function (d) {
-                    d3.select(this).classed("fixed", d.fixed = true);
-                });
+            .on("dragstart", function (d) {
+                d3.select(this).classed("fixed", d.fixed = true);
+            });
 
-	    var svg = d3.select("#graph" + index).append("svg")
-	            .attr("width", "100%").attr("height", "50%")
-	            .attr("pointer-events", "all");
+        var svg = d3.select("#graph" + index).append("svg")
+            .attr("width", "100%").attr("height", "50%")
+            .attr("pointer-events", "all");
 
-	    svg.append('defs').append('marker')
-	            .attr('id', 'endArrow')
-	            .attr('viewBox', '0 -5 10 10')
-	            .attr('refX', 6)
-	            .attr('markerWidth', 6)
-	            .attr('markerHeight', 6)
-	            .attr('orient', 'auto')
-	        .append('path')
-	            .attr('d', 'M0,-5L10,0L0,5')
-	            .attr('fill', '#000');
+        svg.append('defs').append('marker')
+            .attr('id', 'endArrow')
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 6)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto')
+            .append('path')
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', '#000');
 
         force.nodes(graph.nodes).links(graph.links).start();
 
         var link = svg.selectAll(".link")
-                .data(graph.links).enter()
-                .append("path").attr("class", "link");
+            .data(graph.links).enter()
+            .append("path").attr("class", "link");
 
-       	var componentLinks = [];
+        var componentLinks = [];
         for (i = 0; i < graph.links.length; i++) {
-        	if (graph.links[i].componentRoles && graph.links[i].componentRoles.length > 0) {
-        		componentLinks.push(graph.links[i]);
-        	}
+            if (graph.links[i].componentRoles && graph.links[i].componentRoles.length > 0) {
+                componentLinks.push(graph.links[i]);
+            }
         }
 
         var icon = svg.append("g").selectAll("g")
-                .data(componentLinks).enter().append("g");
+            .data(componentLinks).enter().append("g");
 
         icon.append("image").attr("xlink:href", function (d) {
-                    return "image/" + d.componentRoles[0] + ".png";
-                })
-                .attr("x", -15)
-                .attr("y", -15)
-                .attr("width", 30).attr("height", 30)
-                .attr("class", "type-icon");
+            return "image/" + d.componentRoles[0] + ".png";
+        })
+            .attr("x", -15)
+            .attr("y", -15)
+            .attr("width", 30).attr("height", 30)
+            .attr("class", "type-icon");
 
         var node = svg.selectAll(".node")
-                .data(graph.nodes).enter()
-                .append("circle")
-                .attr("class", function (d) {
-                    return "node " + ((d.nodeType) ? d.nodeType:"inner");
-                })
-                .attr("r", 10)
-                .on("dblclick", function (d) {
-                    d3.select(this).classed("fixed", d.fixed = false);
-                })
-                .call(drag);
+            .data(graph.nodes).enter()
+            .append("circle")
+            .attr("class", function (d) {
+                return "node " + ((d.nodeType) ? d.nodeType:"inner");
+            })
+            .attr("r", 10)
+            .on("dblclick", function (d) {
+                d3.select(this).classed("fixed", d.fixed = false);
+            })
+            .call(drag);
 
         // html title attribute
         node.append("title")
-                .text(function (d) { return d.nodeID; });
+            .text(function (d) { return d.nodeID; });
 
         // force feed algo ticks
         force.on("tick", function() {
@@ -219,61 +225,61 @@ function knoxCtrl($scope) {
             });
 
             node.attr("cx", function(d) { return d.x; })
-                    .attr("cy", function(d) { return d.y; });
+                .attr("cy", function(d) { return d.y; });
 
         });
-	};
+    };
 
     $scope.appendVCGraphSVG = function(graph, index, width, height) {
         var force = d3.layout.force()
-                .charge(-250).linkDistance(60).size([width, height]);
+            .charge(-250).linkDistance(60).size([width, height]);
 
         var drag = force.drag()
-                .on("dragstart", function (d) {
-                    d3.select(this).classed("fixed", d.fixed = true);
-                });
+            .on("dragstart", function (d) {
+                d3.select(this).classed("fixed", d.fixed = true);
+            });
 
         var svg = d3.select("#graph" + index).append("svg")
-                .attr("width", "100%").attr("height", "50%")
-                .attr("pointer-events", "all");
+            .attr("width", "100%").attr("height", "50%")
+            .attr("pointer-events", "all");
 
         svg.append('defs').append('marker')
-                .attr('id', 'endArrow')
-                .attr('viewBox', '0 -5 10 10')
-                .attr('refX', 6)
-                .attr('markerWidth', 6)
-                .attr('markerHeight', 6)
-                .attr('orient', 'auto')
+            .attr('id', 'endArrow')
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 6)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto')
             .append('path')
-                .attr('d', 'M0,-5L10,0L0,5')
-                .attr('fill', '#000');
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', '#000');
 
         force.nodes(graph.nodes).links(graph.links).start();
 
         var link = svg.selectAll(".link")
-                .data(graph.links).enter()
-                .append("path").attr("class", "link");
+            .data(graph.links).enter()
+            .append("path").attr("class", "link");
 
         var node = svg.selectAll(".node")
-                .data(graph.nodes).enter()
-                .append("rect")
-                .attr("class", function (d) {
-                    return "node " + d.knoxClass;
-                })
-                .attr("width", 60)
-                .attr("height", 20)
-                .on("dblclick", function (d) {
-                    d3.select(this).classed("fixed", d.fixed = false);
-                })
-                .call(drag);
+            .data(graph.nodes).enter()
+            .append("rect")
+            .attr("class", function (d) {
+                return "node " + d.knoxClass;
+            })
+            .attr("width", 60)
+            .attr("height", 20)
+            .on("dblclick", function (d) {
+                d3.select(this).classed("fixed", d.fixed = false);
+            })
+            .call(drag);
 
         var text = svg.selectAll("text.label")
-                .data(graph.nodes).enter()
-                .append("text")
-                .attr("class", "label")
-                .attr("text-anchor", "middle")
-                .attr("fill", "black")
-                .text(function(d) { return d.knoxID; });
+            .data(graph.nodes).enter()
+            .append("text")
+            .attr("class", "label")
+            .attr("text-anchor", "middle")
+            .attr("fill", "black")
+            .text(function(d) { return d.knoxID; });
 
         // force feed algo ticks
         force.on("tick", function() {
@@ -288,7 +294,7 @@ function knoxCtrl($scope) {
             });
 
             node.attr("x", function(d) { return d.x - 30; })
-                    .attr("y", function(d) { return d.y - 10 });
+                .attr("y", function(d) { return d.y - 10 });
 
             text.attr("transform", function(d) {
                 return "translate(" + d.x + "," + (d.y + 3) + ")";
@@ -325,7 +331,7 @@ function knoxCtrl($scope) {
                                 $scope.removeGraphSVG(targetI);
                                 
                                 $scope.graphs[targetI] = {spaceID: dsGraph.spaceID, ds: dsGraph, vc: vcGraph};
-                               
+                                
                                 if ($scope.isDSGraph) {
                                     $scope.appendDSGraphSVG($scope.graphs[targetI].ds, targetI, 1110, 300);
                                 } else {
@@ -339,7 +345,7 @@ function knoxCtrl($scope) {
                                 $scope.graphs.unshift({spaceID: dsGraph.spaceID, ds: dsGraph, vc: vcGraph});
 
                                 $scope.graphs = $scope.graphs.slice(0, 2);
-                               
+                                
                                 for (i = 0; i < $scope.graphs.length; i++) {
                                     if ($scope.isDSGraph) {
                                         $scope.appendDSGraphSVG($scope.graphs[i].ds, i, 1110, 300);
@@ -348,7 +354,7 @@ function knoxCtrl($scope) {
                                     }
                                 }
                             }
-                         }
+                        }
                     });
                 }
             });
@@ -972,3 +978,4 @@ function knoxCtrl($scope) {
     };
 
 }
+
