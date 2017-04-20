@@ -98,6 +98,12 @@
             });
         },
 
+        clear: function() {
+            Object.keys(this.layouts).map((key, _) => {
+                delete this.layouts[key];
+            });
+        },
+        
         removeGraph: function(id) {
             delete this.layouts[id];
         },
@@ -131,6 +137,8 @@
                 if (err) {
                     window.alert(err);
                 } else {
+                    targets.search.clear();
+                    d3.select("#search-svg").selectAll("*").remove();
                     targets.search.appendGraph(graphName, data);
                 }
             });
