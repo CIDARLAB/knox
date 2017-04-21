@@ -153,6 +153,14 @@
     window.onload = function() {
         disableScroll();  
     };
+
+    function clearAllPages() {
+        Object.keys(targets).map((key, _) => { targets[key].clear(); });
+        $("#search-tb").val("");
+    }
+    
+    $("#navigation-bar").on("click", "*", clearAllPages);
+    $("#brand").click(clearAllPages);
     
     $("#search-tb").keydown(function(e) {
         const submitKeyCode = 13;
