@@ -57,6 +57,7 @@ public class Edge {
 		this.head = head;
 		this.componentIDs = componentIDs;
 		this.componentRoles = componentRoles;
+        this.probability = 0.0;
 	}
 
 	public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles, double probability) {

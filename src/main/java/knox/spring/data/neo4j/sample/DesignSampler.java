@@ -27,7 +27,6 @@ public class DesignSampler {
 	public Set<List<String>> sample(int numSamples) {
 		
 		Set<List<String>> samples = new HashSet<List<String>>();
-		Random rand = new Random();
 		
 		for (int i = 0; i < numSamples; i++) {
 
@@ -36,15 +35,35 @@ public class DesignSampler {
 			
 			while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
 				Iterator<Edge> edgerator = node.getEdges().iterator();
-				int k = rand.nextInt(node.getNumEdges());
-				int j = 0;
-				
-				while (j < k) {
-					edgerator.next();
-					j++;
+
+				// Get the number of edges w no probability
+				int numZero = 0; 
+				for (Edge e : node.getEdges()) {
+					if (e.probability == 0.0)
+						numZero += 1;
 				}
-				
-				Edge edge = edgerator.next();
+
+				// Add up the total weights
+				double totalWeights = 0.0;
+				for (Edge e: node.getEdges()) {
+					if (e.probability == 0.0)
+						e.probability = 1.0/numZero;
+
+					totalWeights += e.probability;
+				}
+
+				// Choose edge based on weight
+				Random rand = new Random() * totalWeights;
+
+				double countWeights = 0.0;
+				for (Edge e: node.getEdges()) {
+					countWeights += e.probability
+					if (countWeight >= rand) {
+						Edge edge = e;
+						break;
+					}
+				}
+
 				
 				if (edge.hasComponentIDs()) {
 					sample.add(edge.getComponentID(rand.nextInt(edge.getNumComponentIDs())));
@@ -199,4 +218,8 @@ public class DesignSampler {
 		
 		return allDesigns;
 	}
+
+
+
+	private List<String> chooseEdge(Edges)
 }
