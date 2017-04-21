@@ -26,7 +26,7 @@
         if (e.preventDefault) {
             e.preventDefault();
         }
-        e.returnValue = false;  
+        e.returnValue = false;
     }
 
     function preventDefaultForScrollKeys(e) {
@@ -63,21 +63,40 @@
     Target.prototype = {
         appendGraph: function(id, graph) {
             var force = (this.layouts[id] = d3.layout.force());
-            force.charge(-300).linkDistance(70);
+            force.charge(-300).linkDistance(100);
             force.nodes(graph.nodes).links(graph.links).size([
                 $(this.id).parent().width(), $(this.id).parent().height()
             ]).start();
             var svg = d3.select(this.id);
             var link = svg.selectAll(".link")
                 .data(graph.links)
-                .enter().append("line")
-                .attr("class", "link");
+                .enter()
+                .append("g")
+                .attr("class", "link")
+                .append("line")
+                .attr("class", "link-line");
 
+            var linkText = svg.selectAll(".link")
+                .append("text")
+                .attr("class", "link-label")
+                .attr("font-family", "Open Sans")
+                .attr("fill", "Black")
+                .style("font", "normal 12px Arial")
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+                .text(function(d) {
+                    if (d.hasOwnProperty("componentRoles")) {
+                        return d.componentRoles[0];
+                    } else {
+                        return "";
+                    }
+                });
+            
             var node = svg.selectAll(".node")
                 .data(graph.nodes)
                 .enter().append("circle")
                 .attr("class", "node")
-                .attr("r", 12)
+                .attr("r", 5)
                 .call(force.drag);
 
             force.on("tick", function () {
@@ -95,10 +114,16 @@
                 }).attr("cy", function (d) {
                     return d.y;
                 });
+                linkText.attr("x", function(d) {
+                    return ((d.source.x + d.target.x)/2);
+                }).attr("y", function(d) {
+                    return ((d.source.y + d.target.y)/2);
+                });
             });
         },
 
         clear: function() {
+            d3.select(this.id).selectAll("*").remove();
             Object.keys(this.layouts).map((key, _) => {
                 delete this.layouts[key];
             });
@@ -138,7 +163,6 @@
                     window.alert(err);
                 } else {
                     targets.search.clear();
-                    d3.select("#search-svg").selectAll("*").remove();
                     targets.search.appendGraph(graphName, data);
                 }
             });
