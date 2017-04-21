@@ -63,7 +63,7 @@
     Target.prototype = {
         appendGraph: function(id, graph) {
             var force = (this.layouts[id] = d3.layout.force());
-            force.charge(-300).linkDistance(100);
+            force.charge(-400).linkDistance(100);
             force.nodes(graph.nodes).links(graph.links).size([
                 $(this.id).parent().width(), $(this.id).parent().height()
             ]).start();
@@ -81,7 +81,7 @@
                 .attr("class", "link-label")
                 .attr("font-family", "Open Sans")
                 .attr("fill", "Black")
-                .style("font", "normal 12px Arial")
+                .style("font", "normal 14px Open Sans")
                 .attr("dy", ".35em")
                 .attr("text-anchor", "middle")
                 .text(function(d) {
