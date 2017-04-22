@@ -79,20 +79,30 @@
     
     Target.prototype = {
         setGraph: function(graph) {
+            var svg = d3.select(this.id);
+            svg.append("defs").append("marker")
+	        .attr("id", "endArrow")
+	        .attr("viewBox", "0 -5 10 10")
+	        .attr("refX", 6)
+	        .attr("markerWidth", 6)
+	        .attr("markerHeight", 6)
+	        .attr("orient", "auto")
+	        .append("path")
+	        .attr("d", "M0,-5L10,0L0,5")
+	        .attr("fill", "#999")
+                .attr("opacity", "0.5");
             var force = (this.layout = d3.layout.force());
             force.charge(-400).linkDistance(100);
             force.nodes(graph.nodes).links(graph.links).size([
                 $(this.id).parent().width(), $(this.id).parent().height()
             ]).start();
-            var svg = d3.select(this.id);
+            
             var linksEnter = svg.selectAll(".link")
                 .data(graph.links)
                 .enter();
             
-            var links = linksEnter.append("g")
-                .attr("class", "link")
-                .append("line")
-                .attr("class", "link-line");
+            var links = linksEnter.append("path")
+                .attr("class", "link");
             
             var nodesEnter = svg.selectAll(".node")
                 .data(graph.nodes)
@@ -139,6 +149,7 @@
                         case "protease_site":
                             return sbolpath + role + ".svg";
 
+                            // Special Cases:
                         case "ribozyme":
                             return sbolpath + "rna_stability_element.svg";
 
@@ -151,14 +162,19 @@
                 .attr("width", sbolImgSize);
             
             force.on("tick", function () {
-                links.attr("x1", function (d) {
-                    return d.source.x;
-                }).attr("y1", function (d) {
-                    return d.source.y;
-                }).attr("x2", function (d) {
-                    return d.target.x;
-                }).attr("y2", function (d) {
-                    return d.target.y;
+                links.attr('d', function(d) {
+                    var deltaX = d.target.x - d.source.x,
+                    deltaY = d.target.y - d.source.y,
+                    dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+                    normX = deltaX / dist,
+                    normY = deltaY / dist,
+                    sourcePadding = 12,
+                    targetPadding = 12,
+                    sourceX = d.source.x + normX*sourcePadding,
+                    sourceY = d.source.y + normY*sourcePadding,
+                    targetX = d.target.x - normX*targetPadding,
+                    targetY = d.target.y - normY*targetPadding;
+                    return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
                 });
                 circles.attr("cx", function (d) {
                     return d.x;
@@ -207,21 +223,19 @@
     (function() {
         var completionSet;
         
-        function populateAutocompleteList() {
+        function populateAutocompleteList(callback) {
             knox.listDesignSpaces((err, data) => {
                 if (err){
-                    console.log("error");
+                    console.log("Error: unable to populate autocomplete list");
                 } else {
                     completionSet = new Set();
                     data.map((element) => { completionSet.add(element); });
-                    console.log(completionSet);
+                    if (callback) callback();
                 }
             });
         }
 
-        populateAutocompleteList();
-        
-        window.setInterval(populateAutocompleteList, 30000);
+        window.populateAutocompleteList = populateAutocompleteList;
 
         // FIXME: A prefix tree could be more efficient.
         window.suggestCompletions = (phrase) => {
@@ -238,6 +252,7 @@
     function clearAllPages() {
         Object.keys(targets).map((key, _) => { targets[key].clear(); });
         $("#search-tb").val("");
+        $("#search-autocomplete").empty();
         $("#combine-tb-lhs").val("");
         $("#combine-tb-rhs").val("");
     }
@@ -285,15 +300,21 @@
         return div;
     }
 
-    $("#search-tb").keydown(function(e) {
-        const submitKeyCode = 13;
-        if ((e.keyCode || e.which) == submitKeyCode) {
-            onSearchSubmit(this.value);
-            $("#search-autocomplete").hide();
+    $("#search-tb").click(() => {
+        // Currently autocomplete runs when the user clicks on an unfocused
+        // textbox that supports completion. I think that this is reasonable,
+        // but if you find that it is a performance issue you may want to change
+        // the Knox webapp so that it populates the completion list once on
+        // startup, and then only when some event triggers the creation of a new
+        // graph.
+        if (!$(this).is(":focus")) {
+            populateAutocompleteList(() => {
+                refreshCompletions("#search-tb", "#search-autocomplete", onSearchSubmit);
+            });
         }
     });
 
-    function refreshCompletions(textInputId, textCompletionsId) {
+    function refreshCompletions(textInputId, textCompletionsId, onSubmit) {
         var autoCmpl = $(textCompletionsId);
         autoCmpl.empty();
         var val = $(textInputId).val();
@@ -304,7 +325,7 @@
                 div.onclick = () => {
                     $(textInputId).val(elem);
                     refreshCompletions(textInputId, textCompletionsId);
-                    onSearchSubmit(elem);
+                    onSubmit(elem);
                 };
                 autoCmpl.append(div);
             });
@@ -313,7 +334,7 @@
     }
     
     $("#search-tb").on("input", function() {
-        refreshCompletions("#search-tb", "#search-autocomplete");
+        refreshCompletions("#search-tb", "#search-autocomplete", onSearchSubmit);
     });
 
     $("#search-autocomplete").hide();
