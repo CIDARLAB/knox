@@ -70,44 +70,6 @@
 (function($) {
     "use strict";
 
-    var d3Force = {
-        addLinksToSvg: (svg, graph) => {
-            return svg.selectAll(".link")
-                .data(graph.links)
-                .enter()
-                .append("g")
-                .attr("class", "link")
-                .append("line")
-                .attr("class", "link-line");
-        },
-
-        addTextLabelsToLinks: (svg, graph) => {
-            return svg.selectAll(".link")
-                .append("text")
-                .attr("class", "link-label")
-                .attr("font-family", "Open Sans")
-                .attr("fill", "Black")
-                .style("font", "normal 14px Open Sans")
-                .attr("dy", ".35em")
-                .attr("text-anchor", "middle")
-                .text(function(d) {
-                    if (d.hasOwnProperty("componentRoles")) {
-                        return d.componentRoles[0];
-                    } else {
-                        return "";
-                    }
-                });
-        },
-
-        addNodesToSvg: (svg, graph) => {
-            return svg.selectAll(".node")
-                .data(graph.nodes)
-                .enter().append("circle")
-                .attr("class", "node")
-                .attr("r", 5);
-        }
-    };
-
     function Target(id) {
         this.layout = null;
         this.id = id;
@@ -123,9 +85,42 @@
                 $(this.id).parent().width(), $(this.id).parent().height()
             ]).start();
             var svg = d3.select(this.id);
-            var links = d3Force.addLinksToSvg(svg, graph);
-            var linkText = d3Force.addTextLabelsToLinks(svg, graph);
-            var nodes = d3Force.addNodesToSvg(svg, graph).call(force.drag);
+            var linksEnter = svg.selectAll(".link")
+                .data(graph.links)
+                .enter();
+            
+            var links = linksEnter.append("g")
+                .attr("class", "link")
+                .append("line")
+                .attr("class", "link-line");
+            
+            var nodesEnter = svg.selectAll(".node")
+                .data(graph.nodes)
+                .enter();
+
+            var circles = nodesEnter.append("circle")
+                .attr("class", "node")
+                .attr("r", 7).call(force.drag);
+
+            var images = linksEnter.append("svg:image")
+                .attr("xlink:href", (d) => {
+                    if (d.hasOwnProperty("componentRoles")) {
+                        const sbolpath = "./img/sbol/";
+                        switch (d["componentRoles"][0]) {
+                        case "promoter":
+                        case "terminator":
+                        case "ribosome_entry_site":
+                        case "CDS":
+                            return sbolpath + d["componentRoles"][0] + ".svg";
+
+                        default:
+                            return sbolpath + "user_defined" + ".svg";
+                        };
+                    }
+                    return "";
+                }).attr("height", 50)
+                .attr("width", 50);
+            
             force.on("tick", function () {
                 links.attr("x1", function (d) {
                     return d.source.x;
@@ -136,15 +131,15 @@
                 }).attr("y2", function (d) {
                     return d.target.y;
                 });
-                nodes.attr("cx", function (d) {
+                circles.attr("cx", function (d) {
                     return d.x;
                 }).attr("cy", function (d) {
                     return d.y;
                 });
-                linkText.attr("x", function(d) {
-                    return ((d.source.x + d.target.x) / 2);
-                }).attr("y", function(d) {
-                    return ((d.source.y + d.target.y) / 2);
+                images.attr("x", function (d) {
+                    return (d.source.x + d.target.x) / 2 - 5;
+                }).attr("y", function (d) {
+                    return (d.source.y + d.target.y) / 2 - 5;
                 });
             });
         },
