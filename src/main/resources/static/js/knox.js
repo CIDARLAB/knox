@@ -19,9 +19,9 @@
     };
 })();
 
-// Utility for disabling scrolling.
-// Exposes the function disableScroll
-(function() {
+// Utility for disabling navigation features.
+// Exposes the function disableScroll and disableTabs.
+(function($) {
     // left: 37, up: 38, right: 39, down: 40,
     // spacebar: 32, pageup: 33, pagedown: 34, end: 35, home: 36
     var keys = {37: 1, 38: 1, 39: 1, 40: 1};
@@ -52,8 +52,20 @@
         document.onkeydown  = preventDefaultForScrollKeys;
     }
 
+    function disableTabs() {
+        $(document).keydown(function (e) {
+            var keycode1 = (e.keyCode ? e.keyCode : e.which);
+            if (keycode1 == 0 || keycode1 == 9) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    }
+
     window.disableScroll = disableScroll;
-})();
+
+    window.disableTabs = disableTabs;
+})(jQuery);
 
 (function($) {
     "use strict";
@@ -165,6 +177,7 @@
 
     window.onload = function() {
         disableScroll();
+        disableTabs();
     };
 
     (function() {
@@ -208,23 +221,88 @@
     $("#navigation-bar").on("click", "*", clearAllPages);
     $("#brand").click(clearAllPages);
 
-    $("#search-tb").on("input", function() {
-        // console.log(JSON.stringify(suggestCompletions($(this).val())));
-    });
+    function updateAutocompleteVisibility(id) {
+        var autoCmpl = $(id);
+        if (autoCmpl.children().length > 0) {
+            autoCmpl.show();
+        } else {
+            autoCmpl.hide();
+        }
+    }
+
+    function onSearchSubmit(queryString) {
+        knox.getGraph(queryString, (err, data) => {
+            if (err) {
+                window.alert(err);
+            } else {
+                targets.search.clear();
+                targets.search.setGraph(data);
+                $("#search-tb").blur();
+                $("#search-autocomplete").blur();
+            }
+        });
+    }
     
+    function makeAutocompleteRow(text, substr) {
+        var div = document.createElement("div");
+        var textRep = text.replace(substr, "," + substr + ",");
+        var tokens = textRep.split(",");
+        div.className = "autocomplete-entry";
+        tokens.map((token) => {
+            var textNode;
+            if (token === substr) {
+                textNode = document.createElement("strong");
+            } else {
+                textNode = document.createElement("span");
+            }
+            textNode.innerHTML = token;
+            div.appendChild(textNode);
+        });
+        return div;
+    }
+
     $("#search-tb").keydown(function(e) {
         const submitKeyCode = 13;
         if ((e.keyCode || e.which) == submitKeyCode) {
-            knox.getGraph(this.value, (err, data) => {
-                if (err) {
-                    window.alert(err);
-                } else {
-                    targets.search.clear();
-                    targets.search.setGraph(data);
-                }
-            });
+            onSearchSubmit(this.value);
         }
     });
+
+    function refreshCompletions(textInputId, textCompletionsId) {
+        var autoCmpl = $(textCompletionsId);
+        autoCmpl.empty();
+        var val = $(textInputId).val();
+        if (val !== "") {
+            var completions = suggestCompletions(val);
+            completions.map((elem) => {
+                var div = makeAutocompleteRow(elem, val);
+                div.onclick = () => {
+                    $(textInputId).val(elem);
+                    refreshCompletions(textInputId, textCompletionsId);
+                    onSearchSubmit(elem);
+                };
+                autoCmpl.append(div);
+            });
+        }
+        updateAutocompleteVisibility(textCompletionsId);
+    }
+    
+    $("#search-tb").on("input", function() {
+        refreshCompletions("#search-tb", "#search-autocomplete");
+    });
+
+    $("#search-autocomplete").hide();
+    
+    $("#search-tb").focus(function() {
+        updateAutocompleteVisibility("#search-autocomplete");
+    });
+
+    window.onclick = function(event) {
+        if (!event.target.matches("#search-autocomplete")
+            && !event.target.matches("#search-tb")) {
+            $("#search-autocomplete").hide();
+        }
+    };
 
     window.onresize = function(e) {
         var currentHash = window.location.hash.substr(1);
