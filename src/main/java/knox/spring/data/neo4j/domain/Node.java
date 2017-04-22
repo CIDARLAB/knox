@@ -29,6 +29,7 @@ public class Node {
     
     String nodeType;
 
+
     public Node() {
     	
     }
