@@ -99,27 +99,56 @@
                 .enter();
 
             var circles = nodesEnter.append("circle")
-                .attr("class", "node")
+                .attr("class", function(d) {
+                    switch (d.nodeType) {
+                    case "start": return "start-node";
+                    case "accept": return "accept-node";
+                    default: return "node";
+                    }
+                })
                 .attr("r", 7).call(force.drag);
 
+            const sbolImgSize = 50;
+            
             var images = linksEnter.append("svg:image")
                 .attr("xlink:href", (d) => {
                     if (d.hasOwnProperty("componentRoles")) {
                         const sbolpath = "./img/sbol/";
-                        switch (d["componentRoles"][0]) {
+                        var role = d["componentRoles"][0];
+                        switch (role) {
                         case "promoter":
                         case "terminator":
                         case "ribosome_entry_site":
                         case "CDS":
-                            return sbolpath + d["componentRoles"][0] + ".svg";
+                        case "assembly_scar":
+                        case "restriction_enzyme_recognition_site":
+                        case "protein_stability_element":
+                        case "blunt_restriction_site":
+                        case "ribonuclease_site":
+                        case "five_prime_overhang":
+                        case "ribosome_entry_site":
+                        case "five_prime_sticky_restriction_site":
+                        case "rna_stability_element":
+                        case "insulator":
+                        case "signature":
+                        case "operator":
+                        case "origin_of_replication":
+                        case "three_prime_overhang":
+                        case "primer_binding_site":
+                        case "three_prime_sticky_restriction_site":
+                        case "protease_site":
+                            return sbolpath + role + ".svg";
+
+                        case "ribozyme":
+                            return sbolpath + "rna_stability_element.svg";
 
                         default:
                             return sbolpath + "user_defined" + ".svg";
                         };
                     }
                     return "";
-                }).attr("height", 50)
-                .attr("width", 50);
+                }).attr("height", sbolImgSize)
+                .attr("width", sbolImgSize);
             
             force.on("tick", function () {
                 links.attr("x1", function (d) {
@@ -137,9 +166,9 @@
                     return d.y;
                 });
                 images.attr("x", function (d) {
-                    return (d.source.x + d.target.x) / 2 - 5;
+                    return (d.source.x + d.target.x) / 2 - sbolImgSize / 2;
                 }).attr("y", function (d) {
-                    return (d.source.y + d.target.y) / 2 - 5;
+                    return (d.source.y + d.target.y) / 2 - sbolImgSize / 2;
                 });
             });
         },
@@ -260,6 +289,7 @@
         const submitKeyCode = 13;
         if ((e.keyCode || e.which) == submitKeyCode) {
             onSearchSubmit(this.value);
+            $("#search-autocomplete").hide();
         }
     });
 

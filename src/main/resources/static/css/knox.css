@@ -508,6 +508,18 @@ section {
     stroke-width: 2.0px;
 }
 
+.start-node {
+    fill: #fff;
+    stroke: #05A8AA;
+    stroke-width: 2.0px;
+}
+
+.accept-node {
+    fill: #fff;
+    stroke: #E71D36;
+    stroke-width: 2.0px;
+}
+
 #search-card {
     position: absolute;
     margin-top: 95px;
