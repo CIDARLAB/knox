@@ -54,13 +54,23 @@
 
         <section id="search">
             <div id="search-card">
-                <input type="text" id="search-tb">
+                <input type="text" autocomplete="off" class="card" id="search-tb">
             </div>
             <svg id="search-svg"></svg>
         </section>
         
         <section id="combine">
-            
+            <div class="container-fluid" id="combine-head">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <input type="text" class="card" id="combine-tb-lhs">
+                    </div>
+                    <div class="col-sm-6">
+                        <input type="text" class="card" id="combine-tb-rhs">
+                    </div>
+                </div>
+            </div>
+            <svg id="combine-svg"></svg>
         </section>
 
         <section id="create">

@@ -717,6 +717,10 @@ public class DesignSpaceService {
             designSpaceRepository.mapBranches(targetSpaceID));
     }
 
+    public List<String> listDesignSpaces() {
+        return designSpaceRepository.listDesignSpaces();
+    }
+
     public void insertBranch(String targetSpaceID, String inputBranchID1,
                              String inputBranchID2, String targetNodeID,
                              String outputBranchID) {

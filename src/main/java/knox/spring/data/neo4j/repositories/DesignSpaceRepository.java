@@ -562,6 +562,9 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
     //	void resetHeadBranch(@Param("targetSpaceID") String targetSpaceID,
     //@Param("targetCommitID") String targetCommitID);
 
+    @Query("MATCH (n:DesignSpace) RETURN n.spaceID;")
+    List<String> listDesignSpaces();
+    
     @Query(
         "MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(hb:Branch)-[:CONTAINS]->(tc:Commit {commitID: {targetCommitID}}), (target)-[:ARCHIVES]->(hb) "
         + "DETACH DELETE lc")

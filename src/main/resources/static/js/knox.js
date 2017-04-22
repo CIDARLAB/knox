@@ -2,14 +2,19 @@
 // Wrapper JavaScript interface for the Knox API
 (function() {
     const extensions = {
-        D3: "/designSpace/graph/d3"
+        D3: "/designSpace/graph/d3",
+        List: "/list"
     };
     
     window.knox = {
         // callback is of the form: function(err, jsonObj)
-        getGraph: function(id, callback) {
+        getGraph: (id, callback) => {
             var query = "?targetSpaceID=" + encodeURIComponent(id);
             d3.json(extensions.D3 + query, callback);
+        },
+
+        listDesignSpaces: (callback) => {
+            d3.json(extensions.List, callback);
         }
     };
 })();
@@ -53,30 +58,19 @@
 (function($) {
     "use strict";
 
-    function Target(id) {
-        this.layouts = {};
-        this.id = id;
-        $(id).width($(id).parent().width());
-        $(id).height($(id).parent().height());
-    }
-    
-    Target.prototype = {
-        appendGraph: function(id, graph) {
-            var force = (this.layouts[id] = d3.layout.force());
-            force.charge(-400).linkDistance(100);
-            force.nodes(graph.nodes).links(graph.links).size([
-                $(this.id).parent().width(), $(this.id).parent().height()
-            ]).start();
-            var svg = d3.select(this.id);
-            var link = svg.selectAll(".link")
+    var d3Force = {
+        addLinksToSvg: (svg, graph) => {
+            return svg.selectAll(".link")
                 .data(graph.links)
                 .enter()
                 .append("g")
                 .attr("class", "link")
                 .append("line")
                 .attr("class", "link-line");
+        },
 
-            var linkText = svg.selectAll(".link")
+        addTextLabelsToLinks: (svg, graph) => {
+            return svg.selectAll(".link")
                 .append("text")
                 .attr("class", "link-label")
                 .attr("font-family", "Open Sans")
@@ -91,16 +85,37 @@
                         return "";
                     }
                 });
-            
-            var node = svg.selectAll(".node")
+        },
+
+        addNodesToSvg: (svg, graph) => {
+            return svg.selectAll(".node")
                 .data(graph.nodes)
                 .enter().append("circle")
                 .attr("class", "node")
-                .attr("r", 5)
-                .call(force.drag);
+                .attr("r", 5);
+        }
+    };
 
+    function Target(id) {
+        this.layout = null;
+        this.id = id;
+        $(id).width($(id).parent().width());
+        $(id).height($(id).parent().height());
+    }
+    
+    Target.prototype = {
+        setGraph: function(graph) {
+            var force = (this.layout = d3.layout.force());
+            force.charge(-400).linkDistance(100);
+            force.nodes(graph.nodes).links(graph.links).size([
+                $(this.id).parent().width(), $(this.id).parent().height()
+            ]).start();
+            var svg = d3.select(this.id);
+            var links = d3Force.addLinksToSvg(svg, graph);
+            var linkText = d3Force.addTextLabelsToLinks(svg, graph);
+            var nodes = d3Force.addNodesToSvg(svg, graph).call(force.drag);
             force.on("tick", function () {
-                link.attr("x1", function (d) {
+                links.attr("x1", function (d) {
                     return d.source.x;
                 }).attr("y1", function (d) {
                     return d.source.y;
@@ -109,69 +124,103 @@
                 }).attr("y2", function (d) {
                     return d.target.y;
                 });
-                node.attr("cx", function (d) {
+                nodes.attr("cx", function (d) {
                     return d.x;
                 }).attr("cy", function (d) {
                     return d.y;
                 });
                 linkText.attr("x", function(d) {
-                    return ((d.source.x + d.target.x)/2);
+                    return ((d.source.x + d.target.x) / 2);
                 }).attr("y", function(d) {
-                    return ((d.source.y + d.target.y)/2);
+                    return ((d.source.y + d.target.y) / 2);
                 });
             });
         },
 
         clear: function() {
             d3.select(this.id).selectAll("*").remove();
-            Object.keys(this.layouts).map((key, _) => {
-                delete this.layouts[key];
-            });
+            delete this.layout;
         },
         
         removeGraph: function(id) {
-            delete this.layouts[id];
+            delete this.layout;
         },
 
         expandToFillParent() {
-            Object.keys(this.layouts).map((key, _) => {
-                var layout = this.layouts[key];
-                var width = $(this.id).parent().width();
-                var height = $(this.id).parent().height();
-                layout.size([width, height]);
-                layout.start();
-            });
+            var width = $(this.id).parent().width();
+            var height = $(this.id).parent().height();
+            if (this.layout) {
+                this.layout.size([width, height]);
+                this.layout.start();
+            }
             $(this.id).width($(this.id).parent().width());
             $(this.id).height($(this.id).parent().height());
         }
     };
     
     var targets = {
-        search: new Target("#search-svg")
-    };
-    
-    window.onload = function() {
-        disableScroll();  
+        search: new Target("#search-svg"),
+        combine: new Target("#combine-svg")
     };
 
+    window.onload = function() {
+        disableScroll();
+    };
+
+    (function() {
+        var completionSet;
+        
+        function populateAutocompleteList() {
+            knox.listDesignSpaces((err, data) => {
+                if (err){
+                    console.log("error");
+                } else {
+                    completionSet = new Set();
+                    data.map((element) => { completionSet.add(element); });
+                    console.log(completionSet);
+                }
+            });
+        }
+
+        populateAutocompleteList();
+        
+        window.setInterval(populateAutocompleteList, 30000);
+
+        // FIXME: A prefix tree could be more efficient.
+        window.suggestCompletions = (phrase) => {
+            var results = [];
+            completionSet.forEach((element) => {
+                if (element.indexOf(phrase) !== -1) {
+                    results.push(element);
+                }
+            });
+            return results;
+        };
+    })();
+    
     function clearAllPages() {
         Object.keys(targets).map((key, _) => { targets[key].clear(); });
         $("#search-tb").val("");
+        $("#combine-tb-lhs").val("");
+        $("#combine-tb-rhs").val("");
     }
     
     $("#navigation-bar").on("click", "*", clearAllPages);
     $("#brand").click(clearAllPages);
+
+    $("#search-tb").on("input", function() {
+        // console.log(JSON.stringify(suggestCompletions($(this).val())));
+    });
     
     $("#search-tb").keydown(function(e) {
         const submitKeyCode = 13;
         if ((e.keyCode || e.which) == submitKeyCode) {
-            var graphName = this.value;
-            knox.getGraph(graphName, function(err, data) {
+            knox.getGraph(this.value, (err, data) => {
                 if (err) {
                     window.alert(err);
                 } else {
                     targets.search.clear();
-                    targets.search.appendGraph(graphName, data);
+                    targets.search.setGraph(data);
                 }
             });
         }

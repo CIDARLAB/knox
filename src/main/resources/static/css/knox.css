@@ -515,27 +515,39 @@ section {
     text-align: center;
 }
 
+.card {
+    background-color: white;
+    padding: 10px;
+    box-shadow: 0px 2px 5px #EEEEEE;    
+    border: 1px solid #EEEEEE;
+    transition: all ease-in-out .35s;
+}
+
+.card:focus, .card:hover {
+    box-shadow: 0px 4px 5px #CCCCCC;
+}
+
 #search-tb {
     background-image: url("http://i47.tinypic.com/r02vbq.png");
     background-repeat: no-repeat;
     background-position: left center;
     display: inline-block;
-    background-color: white;
     padding-left: 55px;
     padding-top: 10px;
     padding-bottom: 10px;
-    box-shadow: 0px 2px 5px #EEEEEE;
-    border: 1px solid #EEEEEE;
-    transition: all ease-in-out .35s;
     color: #888888;
     width: 400px;
 }
 
 #search-tb:focus, #search-tb:hover {
-    box-shadow: 0px 4px 5px #CCCCCC;
     color: black;
 }
 
 textarea:focus, input:focus{
     outline: none;
+}
+
+#combine-head {
+    margin-top: 96px;
+    position: absolute;
 }

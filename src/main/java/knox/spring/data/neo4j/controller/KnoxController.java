@@ -226,7 +226,7 @@ public class KnoxController {
         value = "targetSpaceID", required = true) String targetSpaceID) {
         return designSpaceService.d3GraphBranches(targetSpaceID);
     }
-
+    
     @RequestMapping(value = "/branch/commitTo", method = RequestMethod.POST)
     public ResponseEntity<String> commitToBranch(
         @RequestParam(value = "targetSpaceID",
@@ -703,6 +703,11 @@ public class KnoxController {
         return designSampler.sample(numberOfSamples);
     }
 
+@RequestMapping(value = "/list", method = RequestMethod.GET)
+public List<String> listDesignSpaces() {
+return designSpaceService.listDesignSpaces();
+}
+
     @RequestMapping(value = "/enumerate", method = RequestMethod.GET)
     public Set<List<String>> enumerate(
         @RequestParam(value = "targetSpaceID",
@@ -724,4 +729,5 @@ public class KnoxController {
         DesignSampler designSampler = new DesignSampler(designSpace);
         return designSampler.enumerate(enumerateType, numberOfDesigns);
     }
+
 }
