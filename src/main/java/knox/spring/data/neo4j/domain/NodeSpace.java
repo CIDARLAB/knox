@@ -147,6 +147,7 @@ public class NodeSpace {
 	
 	public Set<Node> getAcceptNodes() {
     	Set<Node> acceptNodes = new HashSet<Node>();
+    	
     	if (hasNodes()) {
     		for (Node node : nodes) {
         		if (node.isAcceptNode()) {
@@ -154,10 +155,25 @@ public class NodeSpace {
         		}
         	}
     	}
+    	
     	return acceptNodes;
     }
 	
-	 public Set<Edge> getMinimizableEdges(Node node, HashMap<String, Set<Edge>> nodeIDsToIncomingEdges) {
+	public Set<Edge> getEdges() {
+		Set<Edge> edges = new HashSet<Edge>();
+		
+		if (hasNodes()) {
+			for (Node node : nodes) {
+				if (node.hasEdges()) {
+					edges.addAll(node.getEdges());
+				}
+			}
+		}
+		
+		return edges;
+	}
+	
+	public Set<Edge> getMinimizableEdges(Node node, HashMap<String, Set<Edge>> nodeIDsToIncomingEdges) {
 		 Set<Edge> minimizableEdges = new HashSet<Edge>();
 
 		 if (nodeIDsToIncomingEdges.containsKey(node.getNodeID())) {

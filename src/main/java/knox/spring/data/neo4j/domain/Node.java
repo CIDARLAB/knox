@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+
 //import org.neo4j.ogm.annotation.*;
 //
 //import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 //import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -54,16 +56,17 @@ public class Node {
     }
     
     public Edge copyEdge(Edge edge) {
-    	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
-    		return createEdge(edge.getHead(), new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
-    	} else {
-    		return createEdge(edge.getHead());
-    	}
-    	
+    	return copyEdge(edge, edge.getHead());
     }
     
     public Edge copyEdge(Edge edge, Node head) {
-    	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
+    	if (hasEdge(head)) {
+			Edge existingEdge = getEdge(head);
+			
+			existingEdge.unionWithEdge(edge);
+			
+			return existingEdge;
+		} else if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
     		return createEdge(head, new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
     	} else {
     		return createEdge(head);
@@ -150,6 +153,20 @@ public class Node {
     	}
     }
     
+    public Edge getEdge(Node head) {
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.getHead().equals(head)) {
+    				return edge;
+    			}
+    		}
+    		
+    		return null;
+    	} else {
+    		return null;
+    	}
+    }
+    
     public boolean hasEdge(Node head) {
     	if (hasEdges()) {
     		for (Edge edge : edges) {
@@ -164,18 +181,18 @@ public class Node {
     	}
     }
     
-    public boolean hasMatchingEdge(Edge edge, int strength) {
+    public Set<Edge> getMatchingEdges(Edge edge, int strength) {
+    	Set<Edge> matchingEdges = new HashSet<Edge>();
+    	
     	if (hasEdges()) {
     		for (Edge e : edges) {
     			if (edge.isMatchingTo(e, strength)) {
-    				return true;
+    				matchingEdges.add(e);
     			}
     		}
-    		
-    		return false;
-    	} else {
-    		return false;
     	}
+    	
+    	return matchingEdges;
     }
     
     public boolean hasEdge(Edge edge) {

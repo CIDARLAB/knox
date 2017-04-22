@@ -53,7 +53,7 @@ public class KnoxController {
     		}
     	}
     	
-//		return designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false);
     		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
@@ -296,9 +296,9 @@ public class KnoxController {
     		@RequestParam(value = "degree", required = false, defaultValue = "0") int degree) {
     	try {
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, true, false, 1, 0);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, true, false, 1, degree);
     		} else {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, true, false, 1, 0);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, true, false, 1, degree);
     		}
 
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 
@@ -378,9 +378,9 @@ public class KnoxController {
     		@RequestParam(value = "degree", required = false, defaultValue = "0") int degree) {
     	try {
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, false, false, strength, 0);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, false, false, strength, degree);
     		} else {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, false, false, strength, 0);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, false, false, strength, degree);
     		}
     		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
