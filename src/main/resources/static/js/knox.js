@@ -76,14 +76,6 @@
         $(id).width($(id).parent().width());
         $(id).height($(id).parent().height());
     }
-
-    var drag = d3.behavior.drag()
-        .origin(function(d) { return d; })
-        .on("dragstart", dragstarted)
-        .on("drag", dragged)
-        .on("dragend", dragended);
-
-    
     
     Target.prototype = {
         setGraph: function(graph) {
