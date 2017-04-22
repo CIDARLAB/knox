@@ -521,6 +521,10 @@ section {
     stroke-width: 2.0px;
 }
 
+.sbol-gfx {
+    pointer-events: none;
+}
+
 #search-card {
     position: absolute;
     margin-top: 95px;

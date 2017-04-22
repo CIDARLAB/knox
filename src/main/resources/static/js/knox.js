@@ -76,6 +76,14 @@
         $(id).width($(id).parent().width());
         $(id).height($(id).parent().height());
     }
+
+    var drag = d3.behavior.drag()
+        .origin(function(d) { return d; })
+        .on("dragstart", dragstarted)
+        .on("drag", dragged)
+        .on("dragend", dragended);
+
+    
     
     Target.prototype = {
         setGraph: function(graph) {
@@ -130,22 +138,22 @@
                         case "terminator":
                         case "ribosome_entry_site":
                         case "CDS":
-                        case "assembly_scar":
+                        case "restriction_enzyme_assembly_scar":
                         case "restriction_enzyme_recognition_site":
                         case "protein_stability_element":
-                        case "blunt_restriction_site":
+                        case "blunt_end_restriction_enzyme_clevage_site":
                         case "ribonuclease_site":
-                        case "five_prime_overhang":
+                        case "restriction_enzyme_five_prime_single_strand_overhang":
                         case "ribosome_entry_site":
-                        case "five_prime_sticky_restriction_site":
-                        case "rna_stability_element":
+                        case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
+                        case "RNA_stability_element":
                         case "insulator":
                         case "signature":
                         case "operator":
                         case "origin_of_replication":
-                        case "three_prime_overhang":
+                        case "restriction_enzyme_three_prime_single_strand_overhang":
                         case "primer_binding_site":
-                        case "three_prime_sticky_restriction_site":
+                        case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
                         case "protease_site":
                             return sbolpath + role + ".svg";
 
@@ -154,12 +162,13 @@
                             return sbolpath + "rna_stability_element.svg";
 
                         default:
-                            return sbolpath + "user_defined" + ".svg";
+                            return sbolpath + "user_defined.svg";
                         };
                     }
                     return "";
                 }).attr("height", sbolImgSize)
-                .attr("width", sbolImgSize);
+                .attr("width", sbolImgSize)
+                .attr("class", "sbol-gfx");
             
             force.on("tick", function () {
                 links.attr('d', function(d) {
