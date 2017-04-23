@@ -30,8 +30,7 @@
                         <li><a data-toggle="tabs" href="#explore">Explore</a></li>
                         <li><a data-toggle="tabs" href="#combine">Combine</a></li>
                         <li><a data-toggle="tabs" href="#create">Create</a></li>
-                        <li><a data-toggle="tabs" href="#eugene">Eugene</a></li>
-                        <li><a data-toggle="tabs" href="#csv">CSV</a></li>
+                        <li><a data-toggle="tabs" href="#import">Import</a></li>
                         <li><a data-toggle="tabs" href="#version">Version Control</a></li>
                     </ul>
                 </div>
@@ -60,20 +59,19 @@
         </section>
         
         <section id="combine">
+            
         </section>
 
         <section id="create">
+            
         </section>
 
-        <section id="eugene">
+        <section id="import">
             <form method="POST" id="eugene-form" enctype="multipart/form-data" action="import/eugene">
                 <input type="file" name="inputEugeneFiles[]" multiple>
                 <input type="submit" value="Import">
             </form>
             <svg id="eugene-svg"></svg>
-        </section>
-
-        <section id="csv">
         </section>
 
         <section id="version">
