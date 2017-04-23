@@ -213,7 +213,7 @@
     
     var targets = {
         search: new Target("#search-svg"),
-        combine: new Target("#combine-svg")
+        combine: new Target("#eugene-svg")
     };
 
     window.onload = function() {

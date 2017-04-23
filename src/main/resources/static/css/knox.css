@@ -599,3 +599,8 @@ textarea:focus, input:focus{
     background: #6390ff;
     color: white;
 }
+
+#eugene-form {
+    position: absolute;
+    margin-top: 80px;
+}

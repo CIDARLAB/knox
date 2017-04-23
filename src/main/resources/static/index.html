@@ -60,33 +60,23 @@
         </section>
         
         <section id="combine">
-            <div class="container-fluid" id="combine-head">
-                <div class="row">
-                    <div class="col-sm-6">
-                        <input type="text" class="card" id="combine-tb-lhs">
-                    </div>
-                    <div class="col-sm-6">
-                        <input type="text" class="card" id="combine-tb-rhs">
-                    </div>
-                </div>
-            </div>
-            <svg id="combine-svg"></svg>
         </section>
 
         <section id="create">
-            
         </section>
 
         <section id="eugene">
-            
+            <form method="POST" id="eugene-form" enctype="multipart/form-data" action="import/eugene">
+                <input type="file" name="inputEugeneFiles[]" multiple>
+                <input type="submit" value="Import">
+            </form>
+            <svg id="eugene-svg"></svg>
         </section>
 
         <section id="csv">
-            
         </section>
 
         <section id="version">
-            
         </section>
         <footer>
             <script src="vendor/jquery/jquery.min.js"></script>
