@@ -138,7 +138,6 @@
                         switch (role) {
                         case "promoter":
                         case "terminator":
-                        case "ribosome_entry_site":
                         case "CDS":
                         case "restriction_enzyme_assembly_scar":
                         case "restriction_enzyme_recognition_site":
