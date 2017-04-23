@@ -79,7 +79,14 @@
     
     Target.prototype = {
         setGraph: function(graph) {
-            var svg = d3.select(this.id);
+            var zoom = d3.behavior.zoom()
+	        .scaleExtent([1, 10])
+	        .on("zoom", () => {
+                    svg.attr("transform", "translate(" +
+                             d3.event.translate + ")scale(" + d3.event.scale + ")");
+                });
+            
+            var svg = d3.select(this.id).call(zoom).append("svg:g");
             svg.append("defs").append("marker")
 	        .attr("id", "endArrow")
 	        .attr("viewBox", "0 -5 10 10")
@@ -92,10 +99,14 @@
 	        .attr("fill", "#999")
                 .attr("opacity", "0.5");
             var force = (this.layout = d3.layout.force());
+            force.drag().on("dragstart", () => {
+                d3.event.sourceEvent.stopPropagation();
+            });
             force.charge(-400).linkDistance(100);
             force.nodes(graph.nodes).links(graph.links).size([
                 $(this.id).parent().width(), $(this.id).parent().height()
             ]).start();
+
             
             var linksEnter = svg.selectAll(".link")
                 .data(graph.links)
@@ -171,10 +182,10 @@
                     normY = deltaY / dist,
                     sourcePadding = 12,
                     targetPadding = 12,
-                    sourceX = d.source.x + normX*sourcePadding,
-                    sourceY = d.source.y + normY*sourcePadding,
-                    targetX = d.target.x - normX*targetPadding,
-                    targetY = d.target.y - normY*targetPadding;
+                    sourceX = d.source.x + normX * sourcePadding,
+                    sourceY = d.source.y + normY * sourcePadding,
+                    targetX = d.target.x - normX * targetPadding,
+                    targetY = d.target.y - normY * targetPadding;
                     return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
                 });
                 circles.attr("cx", function (d) {
