@@ -236,8 +236,8 @@
         
         function populateAutocompleteList(callback) {
             knox.listDesignSpaces((err, data) => {
-                if (err){
-                    console.log("Error: unable to populate autocomplete list");
+                if (err) {
+                    swal("Unable top populate autocomplete list!", "Are you sure Knox and Neo4j are running?");
                 } else {
                     completionSet = new Set();
                     data.map((element) => { completionSet.add(element); });
@@ -288,7 +288,7 @@
     function onSearchSubmit(spaceid) {
         knox.getGraph(spaceid, (err, data) => {
             if (err) {
-                window.alert(err);
+                swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
             } else {
                 targets.search.clear();
                 targets.search.setGraph(data);
@@ -301,12 +301,32 @@
     }
 
     $("#delete-btn").click(() => {
-        var query = "?targetSpaceID=" + currentSpace;
-        d3.xhr("/designSpace" + query).send("DELETE", (error, request) => {
-            $("#delete-btn").hide();
-            targets.search.clear();
-            if (error) {
-                window.alert("Error: failed to delete design space " + currentSpace);
+        $("#delete-btn").prop('disabled', true);
+        swal({
+            title: "Are you sure?",
+            text: "You will not be able to recover the data!",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#F05F40",
+            confirmButtonText: "Yes!",
+            closeOnConfirm: false
+        }, function(isconfirm) {
+            if (isconfirm) {
+                var query = "?targetSpaceID=" + currentSpace;
+                d3.xhr("/designSpace" + query).send("DELETE", (error, request) => {
+                    $("#delete-btn").prop("disabled", false);
+                    if (error) {
+                        swal("Error:", "Failed to delete design space " + currentSpace + ".");
+                    } else {
+                        swal("Deleted!",
+                             "The design space that you tagged for deletion has been erased.",
+                             "success");
+                        targets.search.clear();
+                        $("#delete-btn").hide();
+                    }
+                });      
+            } else {
+                $("#delete-btn").prop("disabled", false);
             }
         });
     });
