@@ -302,7 +302,7 @@
     $("#delete-btn").click(() => {
         $("#delete-btn").prop('disabled', true);
         swal({
-            title: "Are you sure?",
+            title: "Really delete?",
             text: "You will not be able to recover the data!",
             type: "warning",
             showCancelButton: true,
