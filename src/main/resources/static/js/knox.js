@@ -107,7 +107,6 @@
                 $(this.id).parent().width(), $(this.id).parent().height()
             ]).start();
 
-            
             var linksEnter = svg.selectAll(".link")
                 .data(graph.links)
                 .enter();
@@ -260,6 +259,8 @@
             return results;
         };
     })();
+
+    $("#delete-btn").hide();
     
     function clearAllPages() {
         Object.keys(targets).map((key, _) => { targets[key].clear(); });
@@ -267,11 +268,12 @@
         $("#search-autocomplete").empty();
         $("#combine-tb-lhs").val("");
         $("#combine-tb-rhs").val("");
+        $("#delete-btn").hide();
     }
     
     $("#navigation-bar").on("click", "*", clearAllPages);
     $("#brand").click(clearAllPages);
-
+    
     function updateAutocompleteVisibility(id) {
         var autoCmpl = $(id);
         if (autoCmpl.children().length > 0) {
@@ -281,8 +283,10 @@
         }
     }
 
-    function onSearchSubmit(queryString) {
-        knox.getGraph(queryString, (err, data) => {
+    var currentSpace;
+    
+    function onSearchSubmit(spaceid) {
+        knox.getGraph(spaceid, (err, data) => {
             if (err) {
                 window.alert(err);
             } else {
@@ -290,9 +294,22 @@
                 targets.search.setGraph(data);
                 $("#search-tb").blur();
                 $("#search-autocomplete").blur();
+                $("#delete-btn").show();
+                currentSpace = spaceid;
             }
         });
     }
+
+    $("#delete-btn").click(() => {
+        var query = "?targetSpaceID=" + currentSpace;
+        d3.xhr("/designSpace" + query).send("DELETE", (error, request) => {
+            $("#delete-btn").hide();
+            targets.search.clear();
+            if (error) {
+                window.alert("Error: failed to delete design space " + currentSpace);
+            }
+        });
+    });
     
     function makeAutocompleteRow(text, substr) {
         var div = document.createElement("div");
