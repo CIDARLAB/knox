@@ -622,32 +622,34 @@ textarea:focus, input:focus{
     -moz-transition: box-shadow ease-in-out .35s;
     transition: box-shadow ease-in-out .35s;
     margin: 10px;
+    overflow: hidden;
 }
 
-#delete-btn {
-    background-image: url('../img/ic_delete_transparent.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    -webkit-transition: box-shadow .35s, ease-in-out .35s;
-    -moz-transition: box-shadow .35s, ease-in-out .35s;
-    transition: box-shadow .35s, ease-in-out .35s;
+.btn-img {
+    margin-left: -5px;
+    margin-top: -1px;
 }
 
-#delete-btn:hover {
-    background-image: url('../img/ic_delete.png');    
+#combine-btn img {
+    opacity: 0.5;
+    -webkit-transition: box-shadow .35s, opacity ease-in-out .35s;
+    -moz-transition: box-shadow .35s, opacity ease-in-out .35s;
+    transition: box-shadow .35s, opacity ease-in-out .35s;    
 }
 
-#combine-btn {
-    background-image: url('../img/ic_merge_transparent.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    -webkit-transition: box-shadow .35s, ease-in-out .35s;
-    -moz-transition: box-shadow .35s, ease-in-out .35s;
-    transition: box-shadow .35s, ease-in-out .35s;
+#combine-btn:hover img.btn-img {
+    opacity: 1;
 }
 
-#combine-btn:hover {
-    background-image: url('../img/ic_merge.png');    
+#delete-btn img {
+    opacity: 0.5;
+    -webkit-transition: box-shadow .35s, opacity ease-in-out .35s;
+    -moz-transition: box-shadow .35s, opacity ease-in-out .35s;
+    transition: box-shadow .35s, opacity ease-in-out .35s;    
+}
+
+#delete-btn:hover img.btn-img {
+    opacity: 1;
 }
 
 .circle-float-btn:hover {
@@ -657,15 +659,6 @@ textarea:focus, input:focus{
 .circle-float-btn:active {
     box-shadow: 0px 4px 5px #CCCCCC;
     background-color: #EEEEEE;
-}
-
-.icon-trash {
-    width: 48px;
-    height: 48px;
-    position: relative;
-    overflow: hidden;
-    margin-left: 25px;
-    margin-bottom: 25px;
 }
 
 #import {

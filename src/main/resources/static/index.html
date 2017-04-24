@@ -50,19 +50,17 @@
 
         <section id="explore">
             <div id="search-card">
-                <input type="text" autocomplete="off" class="card" id="search-tb"/>
-                <br/>
+                <input type="text" autocomplete="off" class="card" id="search-tb">
+                <br>
                 <div id="search-autocomplete" class="tb-dropdown"></div>
             </div>
             <div class="btn-holder">
-                <script>
-                 preload1 = (new Image()).src = "../img/ic_delete.png";
-                 preload2 = (new Image()).src = "../img/ic_delete_transparent.png";
-                 preload3 = (new Image()).src = "../img/ic_merge.png";
-                 preload4 = (new Image()).src = "../img/ic_merge_transparent.png";
-                </script>
-                <input type="button" class="circle-float-btn" id="combine-btn"/>
-                <input type="button" class="circle-float-btn" id="delete-btn"/>
+                <span class="circle-float-btn" id="combine-btn">
+                    <img id="combine-img" class="btn-img" src="img/ic_merge.png"/>
+                </span>
+                <span type="button" class="circle-float-btn" id="delete-btn">
+                    <img id="delete-img" class="btn-img" src="img/ic_delete.png"/>
+                </span>
             </div>
             <svg id="search-svg"></svg>
         </section>
