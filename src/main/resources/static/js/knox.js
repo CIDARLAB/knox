@@ -354,12 +354,11 @@ Method: <select id="swal-select">
                     break;
 
                 case "Merge Weak":
-                    query += encodeQueryParameter("strength", "weak", query);
                     request.open("POST", "/designSpace/merge" + query, false);
                     break;
 
                 case "Merge Strong":
-                    query += encodeQueryParameter("strength", "strong", query);
+                    query += encodeQueryParameter("strength", 2, query);
                     request.open("POST", "/designSpace/merge" + query, false);
                     break;
 
