@@ -123,7 +123,7 @@
       opacity: 1;
       -webkit-transform: scale(1);
       transform: scale(1); }
-  .sweet-alert input {
+    .sweet-alert #swalInput {
     width: 100%;
     box-sizing: border-box;
     border-radius: 3px;

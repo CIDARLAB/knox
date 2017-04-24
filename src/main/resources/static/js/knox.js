@@ -273,6 +273,14 @@
     
     $("#navigation-bar").on("click", "*", clearAllPages);
     $("#brand").click(clearAllPages);
+
+     function encodeQueryParameter(parameterName, parameterValue, query) {
+        if (query.length > 1) {
+            return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
+        } else {
+            return parameterName + "=" + encodeURIComponent(parameterValue);
+        }
+    };
     
     function updateAutocompleteVisibility(id) {
         var autoCmpl = $(id);
@@ -305,17 +313,71 @@
         swal({
             title: "Combine",
             html: true,
+            showCancelButton: true,
+            closeOnConfirm: false,
             text: `
 <div>
-<select>
-    <option value="volvo">Volvo</option>
-    <option value="saab">Saab</option>
-    <option value="opel">Opel</option>
-    <option value="audi">Audi</option>
+Combine with: <input id="swal-combine-with"/><br/><br/>
+Output Id: <input id="swal-output"/><br/><br/>
+Method: <select id="swal-select">
+    <option value="Join">Join</option>
+    <option value="OR">OR</option>
+    <option value="AND">AND</option>
+    <option value="Merge Weak">Merge Weak</option>
+    <option value="Merge Strong">Merge Strong</option>
+    <option value="Union">Union</option>
 </select>
+<br/>
 </div>
 `,
             confirmButtonColor: "#F05F40"
+        }, function(isconfirm) {
+            if (isconfirm) {
+                var lhs = currentSpace;
+                var rhs = $("#swal-combine-with").val();
+                var out = $("#swal-output").val();
+                var query = "?";
+                query += encodeQueryParameter("inputSpaceIDs", [lhs, rhs], query);
+                query += encodeQueryParameter("outputSpaceID", out, query);
+                var request = new XMLHttpRequest();
+                switch ($("#swal-select").val()) {
+                case "Join":
+                    request.open("POST", "/designSpace/join" + query, false);
+                    break;
+
+                case "OR":
+                    request.open("POST", "/designSpace/or" + query, false);
+                    break;
+
+                case "AND":
+                    request.open("POST", "/designSpace/and" + query, false);
+                    break;
+
+                case "Merge Weak":
+                    query += encodeQueryParameter("strength", "weak", query);
+                    request.open("POST", "/designSpace/merge" + query, false);
+                    break;
+
+                case "Merge Strong":
+                    query += encodeQueryParameter("strength", "strong", query);
+                    request.open("POST", "/designSpace/merge" + query, false);
+                    break;
+
+                case "Union":
+                    request.open("POST", "/designSpace/union" + query, false);
+                    break;
+                }
+                request.send(null);
+                if (request.status >= 200 && request.status < 300) {
+                    swal({
+                        title: "Success!",
+                        confirmButtonColor: "#F05F40",
+                        type: "success"
+                    });
+                } else {
+                    swal("Error: Operation failed with error: " + request.response);
+                }
+            }
         });
     });
     
@@ -344,7 +406,6 @@
                     $("#delete-btn").hide();
                     $("#combine-btn").hide();
                 } else {
-                    window.alert(request.status);
                     swal("Error: Failed to delete design space " + currentSpace + ".");
                 }
             }
