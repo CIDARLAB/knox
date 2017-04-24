@@ -228,6 +228,8 @@
     window.onload = function() {
         disableScroll();
         disableTabs();
+        $("#delete-btn").hide();
+        $("#combine-btn").hide();
     };
 
     (function() {
@@ -258,8 +260,6 @@
             return results;
         };
     })();
-
-    $("#delete-btn").hide();
     
     function clearAllPages() {
         Object.keys(targets).map((key, _) => { targets[key].clear(); });
@@ -268,6 +268,7 @@
         $("#combine-tb-lhs").val("");
         $("#combine-tb-rhs").val("");
         $("#delete-btn").hide();
+        $("#combine-btn").hide();
     }
     
     $("#navigation-bar").on("click", "*", clearAllPages);
@@ -294,38 +295,58 @@
                 $("#search-tb").blur();
                 $("#search-autocomplete").blur();
                 $("#delete-btn").show();
+                $("#combine-btn").show();
                 currentSpace = spaceid;
             }
         });
     }
 
+    $("#combine-btn").click(() => {
+        swal({
+            title: "Combine",
+            html: true,
+            text: `
+<div>
+<select>
+    <option value="volvo">Volvo</option>
+    <option value="saab">Saab</option>
+    <option value="opel">Opel</option>
+    <option value="audi">Audi</option>
+</select>
+</div>
+`,
+            confirmButtonColor: "#F05F40"
+        });
+    });
+    
     $("#delete-btn").click(() => {
-        $("#delete-btn").prop('disabled', true);
         swal({
             title: "Really delete?",
             text: "You will not be able to recover the data!",
             type: "warning",
             showCancelButton: true,
+            closeOnConfirm: false,
             confirmButtonColor: "#F05F40",
-            confirmButtonText: "Yes!",
-            closeOnConfirm: false
+            confirmButtonText: "OK"
         }, function(isconfirm) {
             if (isconfirm) {
                 var query = "?targetSpaceID=" + currentSpace;
-                d3.xhr("/designSpace" + query).send("DELETE", (error, request) => {
-                    $("#delete-btn").prop("disabled", false);
-                    if (error) {
-                        swal("Error:", "Failed to delete design space " + currentSpace + ".");
-                    } else {
-                        swal("Deleted!",
-                             "The design space that you tagged for deletion has been erased.",
-                             "success");
-                        targets.search.clear();
-                        $("#delete-btn").hide();
-                    }
-                });      
-            } else {
-                $("#delete-btn").prop("disabled", false);
+                var request = new XMLHttpRequest();
+                request.open("DELETE", "/designSpace" + query, false);
+                request.send(null);
+                if (request.status >= 200 && request.status < 300) {
+                    swal({
+                        title: "Deleted!",
+                        confirmButtonColor: "#F05F40",
+                        type: "success"
+                    });
+                    targets.search.clear();
+                    $("#delete-btn").hide();
+                    $("#combine-btn").hide();
+                } else {
+                    window.alert(request.status);
+                    swal("Error: Failed to delete design space " + currentSpace + ".");
+                }
             }
         });
     });
@@ -390,7 +411,7 @@
     $("#search-tb").focus(function() {
         updateAutocompleteVisibility("#search-autocomplete");
     });
-
+    
     window.onclick = function(event) {
         if (!event.target.matches("#search-autocomplete")
             && !event.target.matches("#search-tb")) {

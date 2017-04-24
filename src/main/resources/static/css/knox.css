@@ -596,8 +596,7 @@ textarea:focus, input:focus{
 }
 
 .autocomplete-entry:hover {
-    background: #6390ff;
-    color: white;
+    background: #EEEEEE;
 }
 
 .btn-holder {
@@ -622,6 +621,7 @@ textarea:focus, input:focus{
     -webkit-transition: box-shadow ease-in-out .35s;
     -moz-transition: box-shadow ease-in-out .35s;
     transition: box-shadow ease-in-out .35s;
+    margin: 10px;
 }
 
 #delete-btn {
@@ -635,6 +635,19 @@ textarea:focus, input:focus{
 
 #delete-btn:hover {
     background-image: url('../img/ic_delete.png');    
+}
+
+#combine-btn {
+    background-image: url('../img/ic_merge_transparent.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    -webkit-transition: box-shadow .35s, ease-in-out .35s;
+    -moz-transition: box-shadow .35s, ease-in-out .35s;
+    transition: box-shadow .35s, ease-in-out .35s;
+}
+
+#combine-btn:hover {
+    background-image: url('../img/ic_merge.png');    
 }
 
 .circle-float-btn:hover {
@@ -653,4 +666,34 @@ textarea:focus, input:focus{
     overflow: hidden;
     margin-left: 25px;
     margin-bottom: 25px;
+}
+
+#import {
+    padding: 10px;
+    padding-top: 62px;
+}
+
+.nav>li>a.active,
+.nav>li>a:hover,
+.nav>li>a:focus {
+    color: black;
+}
+
+.nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
+    font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+    color: #fff;
+    background-color: #F05F40;
+}
+
+.nav-pills>li>a {
+    font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+    color: black;
+}
+
+.nav-tabs>li>a:hover {
+    font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.tab-pane {
+    padding: 10px;
 }

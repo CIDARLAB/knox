@@ -29,7 +29,6 @@
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-right" id="navigation-bar">
                         <li><a data-toggle="tabs" href="#explore">Explore</a></li>
-                        <li><a data-toggle="tabs" href="#combine">Combine</a></li>
                         <li><a data-toggle="tabs" href="#import">Import</a></li>
                         <li><a data-toggle="tabs" href="#version">Version Control</a></li>
                     </ul>
@@ -59,24 +58,56 @@
                 <script>
                  preload1 = (new Image()).src = "../img/ic_delete.png";
                  preload2 = (new Image()).src = "../img/ic_delete_transparent.png";
+                 preload3 = (new Image()).src = "../img/ic_merge.png";
+                 preload4 = (new Image()).src = "../img/ic_merge_transparent.png";
                 </script>
+                <input type="button" class="circle-float-btn" id="combine-btn"/>
                 <input type="button" class="circle-float-btn" id="delete-btn"/>
             </div>
             <svg id="search-svg"></svg>
         </section>
         
-        <section id="combine">
-            
-        </section>
-
         <section id="import">
-            <div class="container-fluid">
-                
+            <ul class="nav nav-pills nav-justified">
+                <li class="active"><a data-toggle="pill" href="#CSV">CSV</a></li>
+                <li><a data-toggle="pill" href="#Eugene">Eugene</a></li>
+                <li><a data-toggle="pill" href="#SBOL">SBOL</a></li>
+            </ul>
+            <div class="tab-content">
+                <div id="CSV" class="tab-pane fade in active">
+                    <form method="POST" enctype="multipart/form-data"
+                          action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+                        <input type="file" name="inputCSVFiles[]" multiple>
+                        <input type="text" name="outputSpacePrefix" placeholder="Space ID"
+                               class="form-control" aria-label="..." size="10">
+                        <input type="submit" value="Import">
+                    </form>
+                </div>
+                <div id="Eugene" class="tab-pane fade">
+                    <form method="POST" enctype="multipart/form-data"
+                          action="import/eugene" class="navbar-form navbar-left" ng-show="isEugeneMode">
+                        <input type="file" name="inputEugeneFiles[]" multiple>
+                        <input type="submit" value="Import">
+                    </form>
+                </div>
+                <div id="SBOL" class="tab-pane fade">
+                    <form method="POST" enctype="multipart/form-data"
+                          action="merge/sbol" class="navbar-form navbar-left" ng-show="isSBOLMode">
+                        <input type="file" name="inputSBOLFiles[]" multiple>
+                        <input type="text" name="outputSpaceID" placeholder="Space ID"
+                               class="form-control" aria-label="..." size="10">
+                        <input type="text" name="authority" placeholder="Authority"
+                               class="form-control" aria-label="..." size="10">
+                        <input type="submit" value="Merge">
+                    </form>
+                </div>
             </div>
         </section>
 
         <section id="version">
+            
         </section>
+        
         <footer>
             <script src="vendor/sweet/sweetalert.min.js"></script>
             <script src="vendor/jquery/jquery.min.js"></script>
