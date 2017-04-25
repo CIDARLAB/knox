@@ -3,6 +3,7 @@ package knox.spring.data.neo4j.domain;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 // import org.neo4j.ogm.annotation.*;
@@ -39,8 +40,8 @@ public class Edge {
 
     @EndNode Node head;
 
-    ArrayList<String> componentIDs;
-    ArrayList<String> componentRoles;
+    List<String> componentIDs;
+    List<String> componentRoles;
 
     double probability;
 
@@ -53,8 +54,8 @@ public class Edge {
 
     public Edge(Node tail,
                 Node head,
-                ArrayList<String> componentIDs,
-                ArrayList<String> componentRoles,
+                List<String> componentIDs,
+                List<String> componentRoles,
                 double probability) {
         this.tail = tail;
         this.head = head;
@@ -65,8 +66,8 @@ public class Edge {
     
     public Edge(Node tail,
                 Node head,
-                ArrayList<String> componentIDs,
-                ArrayList<String> componentRoles) {
+                List<String> componentIDs,
+                List<String> componentRoles) {
 		this.tail = tail;
 		this.head = head;
 		this.componentIDs = componentIDs;
@@ -134,11 +135,11 @@ public class Edge {
         }
     }
 
-    public ArrayList<String> getComponentIDs() { return componentIDs; }
+    public List<String> getComponentIDs() { return componentIDs; }
 
     public int getNumComponentIDs() { return componentIDs.size(); }
 
-    public ArrayList<String> getComponentRoles() { return componentRoles; }
+    public List<String> getComponentRoles() { return componentRoles; }
 
     public boolean hasComponentID(String compID) {
         if (hasComponentIDs()) {
