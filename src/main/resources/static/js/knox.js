@@ -230,6 +230,7 @@
         disableTabs();
         $("#delete-btn").hide();
         $("#combine-btn").hide();
+        $("#list-btn").hide();
     };
 
     (function() {
@@ -269,6 +270,7 @@
         $("#combine-tb-rhs").val("");
         $("#delete-btn").hide();
         $("#combine-btn").hide();
+        $("#list-btn").hide();
     }
     
     $("#navigation-bar").on("click", "*", clearAllPages);
@@ -311,6 +313,7 @@
                 $("#search-tb").blur();
                 $("#search-autocomplete").blur();
                 $("#delete-btn").show();
+                $("#list-btn").show();
                 $("#combine-btn").show();
                 currentSpace = spaceid;
             }
@@ -412,6 +415,7 @@ Method: <select id="swal-select">
                     targets.search.clear();
                     $("#delete-btn").hide();
                     $("#combine-btn").hide();
+                    $("#list-btn").hide();
                 } else {
                     swal("Error: Failed to delete design space " + currentSpace + ".");
                 }

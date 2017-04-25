@@ -652,6 +652,17 @@ textarea:focus, input:focus{
     opacity: 1;
 }
 
+#list-btn img {
+    opacity: 0.5;
+    -webkit-transition: box-shadow .35s, opacity ease-in-out .35s;
+    -moz-transition: box-shadow .35s, opacity ease-in-out .35s;
+    transition: box-shadow .35s, opacity ease-in-out .35s;    
+}
+
+#list-btn:hover img.btn-img {
+    opacity: 1;
+}
+
 .circle-float-btn:hover {
     box-shadow: 0px 4px 5px #CCCCCC;
 }
