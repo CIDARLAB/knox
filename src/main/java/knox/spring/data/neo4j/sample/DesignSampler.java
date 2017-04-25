@@ -67,8 +67,8 @@ public class DesignSampler {
 				}
 
 				
-				if (edge.hasComponentIDs()) {
-					sample.add(edge.getComponentID(rand.nextInt(edge.getNumComponentIDs())));
+				if (edge.hasComponentRoles()) {
+					sample.add(edge.getComponentRoles().get(rand.nextInt(edge.getComponentRoles().size())));
 				}
 				
 				node = edge.getHead();
@@ -225,7 +225,7 @@ public class DesignSampler {
 			
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
-				if (edge.hasComponentIDs()) {
+				if (edge.hasComponentRoles()) {
 					Set<List<String>> comboDesigns = new HashSet<>();
 					for (String compRole : edge.getComponentRoles()) {
 						if (designs.size() > 0) {
