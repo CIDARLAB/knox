@@ -21,7 +21,6 @@ public class DesignSampler {
 	
 	public DesignSampler(DesignSpace space) {
 		this.space = space;
-		
 		starts = new LinkedList<>(space.getStartNodes());
 	}
 	
@@ -96,10 +95,10 @@ public class DesignSampler {
 		int currentNumberOfDesigns = 0;
 
 		for (Node start : starts) {
-			LOG.warn(start.getNodeID());
-			LOG.warn("Hey erika");
 			Set<List<String>> designs = new HashSet<>();
 			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
+
+			LOG.warn(String.valueOf(generatedDesigns.size()));
 
 			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
 				allDesigns.addAll(generatedDesigns);
@@ -121,6 +120,7 @@ public class DesignSampler {
 
 	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
 		if (!node.hasEdges() || node.isAcceptNode()) {
+			LOG.warn("no edges or accept node");
 			return designs;
 		}
 
@@ -130,9 +130,11 @@ public class DesignSampler {
 			Set<List<String>> visitedDesigns = new HashSet<>();
 
 			for (String componentId : edge.getComponentIDs()) {
+				LOG.warn("component id {}", componentId);
+
 				for (List<String> design : designs) {
 					List<String> copiedDesign = new ArrayList<>(design);
-					design.add(componentId);
+					copiedDesign.add(componentId);
 					visitedDesigns.add(copiedDesign);
 				}
 			}
