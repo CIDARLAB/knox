@@ -140,9 +140,8 @@ public class DesignSampler {
 
 		for (Node start : starts) {
 			Set<List<String>> designs = new HashSet<>();
+			designs.add(new ArrayList<>());
 			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
-
-			LOG.warn(String.valueOf(generatedDesigns.size()));
 
 			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
 				allDesigns.addAll(generatedDesigns);
@@ -177,8 +176,6 @@ public class DesignSampler {
 	*/
 	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
 		if (!node.hasEdges() || node.isAcceptNode()) {
-			String error = node.isAcceptNode() ? "accept node" : "no edges";
-			LOG.warn(error);
 			return designs;
 		}
 
@@ -188,7 +185,6 @@ public class DesignSampler {
 			Set<List<String>> visitedDesigns = new HashSet<>();
 
 			for (String componentRole : edge.getComponentRoles()) {
-				LOG.warn("component role {}", componentRole);
 
 				for (List<String> design : designs) {
 					List<String> copiedDesign = new ArrayList<>(design);
