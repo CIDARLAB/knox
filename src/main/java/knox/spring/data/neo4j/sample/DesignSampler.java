@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.*;
+import java.lang.*;
 
 public class DesignSampler {
 	private static final Logger LOG = LoggerFactory.getLogger(DesignSampler.class);
@@ -220,8 +221,108 @@ public class DesignSampler {
 	public Set<List<String>> partition() {
 		Set<List<String>> partitions = new HashSet<>();
 
+        ArrayList<ArrayList<Double>> graphadj = new ArrayList<>();
+        // Create adj matrix
+
+        // Normalize adjacency matrix
+        int numCols = graphadj.get(0).size();
+        int sumCols[] = new int[numCols];
+
+        // Get sums of the columns
+        sumCols = calcSumCols(graphadj);
+
+        // Divide elements in column by sum of column
+        double newVal;
+        for (ArrayList<Double> row: graphadj) {
+            for (int i = 0; i < numCols; i++) {
+                if (row.get(i) == 1) {
+                    newVal = row.get(i)/sumCols[i];
+                    row.set(i, newVal);
+                }
+            }
+        }
+
+        ArrayList<ArrayList<Double>> oldAdj = graphadj;
+        int numRows = oldAdj.size();
+        numCols = oldAdj.get(0).size();
+        int inflation_power = 2;
+
+        do {
+
+            oldAdj = graphadj;
+
+            // Expansion and Inflation
+            for (int i = 0; i < numRows; i++) {
+                for (int j = 0; j < numCols; j++) {
+                    if (graphadj.get(i).get(j) == 0)
+                        continue;
+
+                    newVal = Math.pow(graphadj.get(i).get(j) * graphadj.get(i).get(j), inflation_power);
+                    graphadj.get(i).set(j, newVal);
+                }
+            }
+
+            // Get sums of colums
+            sumCols = calcSumCols(graphadj);
+
+            // Divide elements in column by sum of column
+            for (ArrayList<Double> row: graphadj) {
+                for (int i = 0; i < numCols; i++) {
+                    if (row.get(i) == 1) {
+                        newVal = row.get(i) / sumCols[i];
+                        row.set(i,newVal);
+                    }
+                }
+            }
+
+
+        } while(isChanged(graphadj,oldAdj));
+
+
+        // Analyze graphadj to discover the set of clusters
+        Set<List<Integer>> clusters = new HashSet<>();
+        for (ArrayList<Double> row: graphadj) {
+            List<Integer> cluster = new ArrayList<Integer>();
+            for (int i = 0; i < numCols; i++) {
+                if (row.get(i) >= 0.01) {
+                    cluster.add(i);
+                }
+            }
+            clusters.add(cluster);
+        }
+
 
 
 		return partitions;
 	}
+
+	private boolean isChanged(ArrayList<ArrayList<Double>> old, ArrayList<ArrayList<Double>> mod) {
+            int numRows = old.size();
+            int numCols = old.get(0).size();
+
+            boolean change = true;
+            for (int i = 0; i < numRows; i++) {
+                for (int j = 0; j < numCols; j++) {
+                   if (Math.abs(old.get(i).get(j) - mod.get(i).get(j)) <= 0.001)
+                       change = false;
+                }
+            }
+            return change;
+    }
+
+    private int[] calcSumCols(ArrayList<ArrayList<Double>> graphadj) {
+        int numCols = graphadj.get(0).size();
+        int sumCols[] = new int[numCols];
+
+        // Get sums of the columns
+        for (ArrayList<Double> row: graphadj) {
+            for (int i = 0; i < numCols; i++) {
+                if (row.get(i) == 1.0)
+                    sumCols[i]++;
+            }
+        }
+        return sumCols;
+    }
+
+
 }
