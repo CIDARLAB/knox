@@ -40,8 +40,8 @@ public class Edge {
 
     @EndNode Node head;
 
-    ArrayList<String> componentIDs;
-    ArrayList<String> componentRoles;
+    ArrayList<String> componentIDs = new ArrayList<>();
+    ArrayList<String> componentRoles = new ArrayList<>();
 
     double probability;
 
