@@ -15,7 +15,6 @@ import java.util.*;
 public class DesignSampler {
 	
 	private DesignSpace space;
-	
 	private List<Node> starts;
 	
 	public DesignSampler(DesignSpace space) {
@@ -162,32 +161,26 @@ public class DesignSampler {
 			
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
-
 				if (edge.hasComponentIDs()) {
 					Set<List<String>> comboDesigns = new HashSet<>();
-
 					for (String compID : edge.getComponentIDs()) {
 						if (designs.size() > 0) {
-
 							for (List<String> design : designs) {
 								List<String> comboDesign = new LinkedList<>(design);
 								comboDesign.add(compID);
 								comboDesigns.add(comboDesign);
 							}
-
 						} else {
 							List<String> comboDesign = new LinkedList<String>();
 							comboDesign.add(compID);
 							comboDesigns.add(comboDesign);
 						}
 					}
-
 					designs = comboDesigns;
 				}
 				
 				Node head = edge.getHead();
 				if (!head.hasEdges() || head.isAcceptNode()) {
-
 					if (designs.size() + currentNumberOfDesigns < numberOfDesigns) {
 						allDesigns.addAll(designs);
 						currentNumberOfDesigns += designs.size();
@@ -197,20 +190,16 @@ public class DesignSampler {
 						for (int i = 0; i < neededDesigns; i++) {
 							allDesigns.add(generatedDesignsIterator.next());
 						}
-
 						return allDesigns;
 					}
-					
 					if (!designStack.isEmpty()) {
 						designs = designStack.pop();
 					}
 
 				} else {
-
 					for (Edge headEdge : head.getEdges()) {
 						edgeStack.push(headEdge);
 					}
-					
 					for (int i = 0; i < head.getNumEdges() - 1; i++) {
 						designStack.push(designs);
 					}
@@ -223,6 +212,7 @@ public class DesignSampler {
 
 	public Set<List<String>> partition(int numberOfDesigns) {
 		Set<List<String>> partitions = new HashSet<>();
+
 
 
 		return partitions;

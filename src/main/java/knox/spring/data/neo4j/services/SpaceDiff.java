@@ -7,20 +7,16 @@ import knox.spring.data.neo4j.domain.Node;
 
 public class SpaceDiff {
     Set<Edge> diffEdges;
-    
+
     Set<Node> diffNodes;
 
     public SpaceDiff(Set<Edge> diffEdges, Set<Node> diffNodes) {
-    	this.diffEdges = diffEdges;
-    	
-    	this.diffNodes = diffNodes;
+        this.diffEdges = diffEdges;
+
+        this.diffNodes = diffNodes;
     }
-    
-    public Set<Edge> getEdges() {
-    	return diffEdges;
-    }
-    
-    public Set<Node> getNodes() {
-    	return diffNodes;
-    }
+
+    public Set<Edge> getEdges() { return diffEdges; }
+
+    public Set<Node> getNodes() { return diffNodes; }
 }

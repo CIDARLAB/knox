@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-//import org.neo4j.ogm.annotation.*;
+// import org.neo4j.ogm.annotation.*;
 //
-//import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-//import com.voodoodyne.jackson.jsog.JSOGGenerator;
+// import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+// import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
@@ -15,18 +15,16 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
 //@JsonIdentityInfo(generator=JSOGGenerator.class)
-@JsonIdentityInfo(generator=ObjectIdGenerators.PropertyGenerator.class, property="id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
+                  property = "id")
 @NodeEntity
 public class Node {
-	
-    @GraphId 
-    Long id;
-    
+    @GraphId Long id;
+
     String nodeID;
 
-    @Relationship(type = "PRECEDES") 
-    Set<Edge> edges;
-    
+    @Relationship(type = "PRECEDES") Set<Edge> edges;
+
     String nodeType;
 
     //Probably best to make this constructor private
@@ -38,206 +36,189 @@ public class Node {
     }
     
     public Node(String nodeID, String nodeType) {
-    	this.nodeID = nodeID;
-    	this.nodeType = nodeType;
-    	this.edges = new HashSet<>();
-    }
-    
-    public void addEdge(Edge edge) {
-    	if (edges == null) {
-    		edges = new HashSet<Edge>();
-    	}
-    	edges.add(edge);
-    }
-    
-    public void clearNodeType() {
-    	nodeType = null;
-    }
-    
-    public Edge copyEdge(Edge edge) {
-    	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
-    		return createEdge(edge.getHead(), new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
-    	} else {
-    		return createEdge(edge.getHead());
-    	}
-    	
-    }
-    
-    public Edge copyEdge(Edge edge, Node head) {
-    	if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
-    		return createEdge(head, new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
-    	} else {
-    		return createEdge(head);
-    	}
-    }
-    
-    public Edge createEdge(Node head) {
-    	Edge edge = new Edge(this, head);
-    	addEdge(edge);
-    	return edge;
-    }
-    
-    public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
-    	Edge edge = new Edge(this, head, compIDs, compRoles);
-    	addEdge(edge);
-    	return edge;
-    }
-    
-    
-    
-    public Long getGraphID() {
-    	return id;
-    }
-    
-    public String getNodeID() {
-    	return nodeID;
-    }
-    
-    public int getNumEdges() {
-    	return edges.size();
+        this.nodeID = nodeID;
+        this.nodeType = nodeType;
+        this.edges = new HashSet<>();
     }
 
-    public Set<Edge> getEdges() {
-        return edges;
+    public void addEdge(Edge edge) {
+        if (edges == null) {
+            edges = new HashSet<Edge>();
+        }
+        edges.add(edge);
     }
-    
-//    public Set<Edge> getIncomingEdges() {
-//    	Set<Edge> incomingEdges = new HashSet<Edge>();
-//    	
-//    	for (Edge edge : edges) {
-//    		if (edge.getHead().getNodeID().equals(nodeID)) {
-//    			incomingEdges.add(edge);
-//    		}
-//    	}
-//    	
-//    	return incomingEdges;
-//    }
-    
-    public String getNodeType() {
-    	return nodeType;
+
+    public void clearNodeType() { nodeType = null; }
+
+    public Edge copyEdge(Edge edge) {
+        if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
+            return createEdge(edge.getHead(),
+                              new ArrayList<String>(edge.getComponentIDs()),
+                              new ArrayList<String>(edge.getComponentRoles()));
+        } else {
+            return createEdge(edge.getHead());
+        }
     }
-    
-//    public Set<Edge> getOutgoingEdges() {
-//    	Set<Edge> outgoingEdges = new HashSet<Edge>();
-//    	
-//    	for (Edge edge : edges) {
-//    		if (edge.getTail().getNodeID().equals(nodeID)) {
-//    			outgoingEdges.add(edge);
-//    		}
-//    	}
-//    	
-//    	return outgoingEdges;
-//    }
-    
+
+    public Edge copyEdge(Edge edge, Node head) {
+        if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
+            return createEdge(head,
+                              new ArrayList<String>(edge.getComponentIDs()),
+                              new ArrayList<String>(edge.getComponentRoles()));
+        } else {
+            return createEdge(head);
+        }
+    }
+
+    public Edge createEdge(Node head) {
+        Edge edge = new Edge(this, head);
+        addEdge(edge);
+        return edge;
+    }
+
+    public Edge createEdge(Node head, ArrayList<String> compIDs,
+                           ArrayList<String> compRoles) {
+        Edge edge = new Edge(this, head, compIDs, compRoles);
+        addEdge(edge);
+        return edge;
+    }
+
+    public Long getGraphID() { return id; }
+
+    public String getNodeID() { return nodeID; }
+
+    public int getNumEdges() { return edges.size(); }
+
+    public Set<Edge> getEdges() { return edges; }
+
+    //    public Set<Edge> getIncomingEdges() {
+    //    	Set<Edge> incomingEdges = new HashSet<Edge>();
+    //
+    //    	for (Edge edge : edges) {
+    //    		if (edge.getHead().getNodeID().equals(nodeID)) {
+    //    			incomingEdges.add(edge);
+    //    		}
+    //    	}
+    //
+    //    	return incomingEdges;
+    //    }
+
+    public String getNodeType() { return nodeType; }
+
+    //    public Set<Edge> getOutgoingEdges() {
+    //    	Set<Edge> outgoingEdges = new HashSet<Edge>();
+    //
+    //    	for (Edge edge : edges) {
+    //    		if (edge.getTail().getNodeID().equals(nodeID)) {
+    //    			outgoingEdges.add(edge);
+    //    		}
+    //    	}
+    //
+    //    	return outgoingEdges;
+    //    }
+
     public boolean hasComponentID(String compID) {
-    	if (hasEdges()) {
-    		for (Edge edge : edges) {
-    			if (edge.hasComponentID(compID)) {
-    				return true;
-    			}
-    		}
-    		
-    		return false;
-    	} else {
-    		return false;
-    	}
+        if (hasEdges()) {
+            for (Edge edge : edges) {
+                if (edge.hasComponentID(compID)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } else {
+            return false;
+        }
     }
-    
+
     public boolean hasEdges() {
-    	if (edges == null) {
-    		return false;
-    	} else {
-    		return edges.size() > 0;
-    	}
+        if (edges == null) {
+            return false;
+        } else {
+            return edges.size() > 0;
+        }
     }
-    
+
     public boolean hasEdge(Node head) {
-    	if (hasEdges()) {
-    		for (Edge edge : edges) {
-    			if (edge.getHead().equals(head)) {
-    				return true;
-    			}
-    		}
-    		
-    		return false;
-    	} else {
-    		return false;
-    	}
+        if (hasEdges()) {
+            for (Edge edge : edges) {
+                if (edge.getHead().equals(head)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } else {
+            return false;
+        }
     }
-    
+
     public boolean hasMatchingEdge(Edge edge) {
-    	if (hasEdges()) {
-    		for (Edge e : edges) {
-    			if (edge.isMatchingTo(e, 0)) {
-    				return true;
-    			}
-    		}
-    		
-    		return false;
-    	} else {
-    		return false;
-    	}
+        if (hasEdges()) {
+            for (Edge e : edges) {
+                if (edge.isMatchingTo(e, 0)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } else {
+            return false;
+        }
     }
-    
+
     public boolean hasEdge(Edge edge) {
-    	if (hasEdges()) {
-    		for (Edge e : edges) {
-    			if (edge.isIdenticalTo(e)) {
-    				return true;
-    			}
-    		}
-    		return false;
-    	} else {
-    		return false;
-    	}
+        if (hasEdges()) {
+            for (Edge e : edges) {
+                if (edge.isIdenticalTo(e)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return false;
+        }
     }
-    
+
     public boolean hasConflictingNodeType(Node node) {
-    	return hasNodeType() && (!node.hasNodeType() || !nodeType.equals(node.getNodeType()));
+        return hasNodeType() &&
+            (!node.hasNodeType() || !nodeType.equals(node.getNodeType()));
     }
-    
-    public boolean hasNodeType() {
-    	return nodeType != null;
-    }
-    
+
+    public boolean hasNodeType() { return nodeType != null; }
+
     public boolean isAcceptNode() {
-    	return hasNodeType() && nodeType.equals(NodeType.ACCEPT.getValue());
+        return hasNodeType() && nodeType.equals(NodeType.ACCEPT.getValue());
     }
-    
+
     public boolean isStartNode() {
-    	return hasNodeType() && nodeType.equals(NodeType.START.getValue());
+        return hasNodeType() && nodeType.equals(NodeType.START.getValue());
     }
-    
+
     public boolean deleteEdges(Set<Edge> edges) {
-    	if (hasEdges()) {
-    		return this.edges.removeAll(edges);
-    	} else {
-    		return false;
-    	}
+        if (hasEdges()) {
+            return this.edges.removeAll(edges);
+        } else {
+            return false;
+        }
     }
-    
+
     public void clearEdges() {
-    	if (hasEdges()) {
-    		edges = null;
-    	}
+        if (hasEdges()) {
+            edges = null;
+        }
     }
-    
+
     public enum NodeType {
-    	START ("start"),
-    	ACCEPT ("accept");
-    	
-    	private final String value;
-    	
-    	NodeType(String value) {
-    		this.value = value;
-    	}
-    	
-    	public String getValue() {
-    		return value;
-    	}
+        START("start"),
+        ACCEPT("accept");
+
+        private final String value;
+
+        NodeType(String value) { this.value = value; }
+
+        public String getValue() { return value; }
     }
-    
-    public void setNodeType(String nodeType) {
-    	this.nodeType = nodeType;
-    }
+
+    public void setNodeType(String nodeType) { this.nodeType = nodeType; }
 }

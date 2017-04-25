@@ -10,6 +10,5 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
  * @since 12.14.15
  */
 @RepositoryRestResource(collectionResourceRel = "knox", path = "knox")
-public interface SnapshotRepository extends PagingAndSortingRepository<Snapshot, Long> {
-	
-}
+public interface SnapshotRepository
+    extends PagingAndSortingRepository<Snapshot, Long> {}
