@@ -210,7 +210,7 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
-	public Set<List<String>> partition(int numberOfDesigns) {
+	public Set<List<String>> partition() {
 		Set<List<String>> partitions = new HashSet<>();
 
 
