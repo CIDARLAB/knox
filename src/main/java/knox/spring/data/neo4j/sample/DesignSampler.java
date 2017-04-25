@@ -218,6 +218,31 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
+	/*
+		This method is responsible for creating an adjacency matrix from a given graph.
+		It does so by looping over each of the nodes in a design space and assigning them
+		a row/column number and storing this information in a map with the nodeID as the
+		key and the row/column number as the value.
+
+		After that has been completed, the method then iterates through each of the connecting
+		nodes that every node has. If a connection exists, the values for the row and column
+		numbers for each of the nodes will be found in the graph and the adjacency matrix
+		will be updated to 1 for that specific connection.
+
+		Because this is a directed graph, we understand a connection at cell [i][j] as an
+		edge existing from i to j, and not necessarily vice versa.
+
+		This takes O(N + KN) where N is the number of nodes and K is the number of outgoing
+		edges each node has (this number will vary for each node).
+
+		Arguments:
+			- nodeIdsToRowNumber [Map<String, Integer>]: The map that will store the nodeIds to
+			row numbers
+
+		Returns:
+			- double[][]: The adjacency matrix. 0 represents no connection and 1 represents
+			a connection.
+	 */
 	private double[][] createAdjacencyMatrix(Map<String, Integer> nodeIdsToRowNumber) {
 		Set<Node> allNodes = space.getNodes();
 		double[][] adjacencyMatrix = new double[allNodes.size()][allNodes.size()];
