@@ -225,9 +225,9 @@ public class DesignSampler {
 			
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
-				if (edge.hasComponentRoles()) {
+				if (edge.hasComponentIDs()) {
 					Set<List<String>> comboDesigns = new HashSet<>();
-					for (String compRole : edge.getComponentRoles()) {
+					for (String compRole : edge.getComponentIDs()) {
 						if (designs.size() > 0) {
 							for (List<String> design : designs) {
 								List<String> comboDesign = new LinkedList<>(design);
