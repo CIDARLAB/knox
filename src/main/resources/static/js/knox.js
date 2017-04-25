@@ -356,6 +356,16 @@
         });
     }
 
+    function longestListLength(listoflists) {
+        var maxLength = 0;
+        listoflists.map((list) => {
+            if (list.length > maxLength) {
+                maxLength = list.length;
+            }
+        });
+        return maxLength;
+    }
+
     $(exploreBtnIDs.list).click(() => {
         swal({
             title: "Pathways",
@@ -372,8 +382,14 @@
             if (err) {
                 window.alert(err);
             } else {
+                const celHeight = 60;
+                const celWidth = 50;
                 var svg = document.getElementById("swal-svg");
+                var yPitch = (data.length + 1) * celHeight;
+                var xPitch = (longestListLength(data) + 1) * celWidth;
                 svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
+                svg.setAttribute("height", yPitch);
+                svg.setAttribute("width", xPitch);
                 var pen = { x: 0, y: 0 };
                 data.map((list) => {
                     list.map((element) => {
@@ -390,18 +406,18 @@
                         svgimg.setAttribute("x", "" + pen.x);
                         svgimg.setAttribute("y", "" + pen.y);
                         svg.appendChild(svgimg);
-                        pen.x += 50;
+                        pen.x += celWidth;
                     });
                     var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                     line.setAttribute("stroke", "black");
                     line.setAttribute("stroke-width", "4");
                     line.setAttribute("x1", "" + 0);
-                    line.setAttribute("y1", "" + (pen.y + 50));
-                    line.setAttribute("x2", "" + (pen.x + 50));
-                    line.setAttribute("y2", "" + (pen.y + 50));
+                    line.setAttribute("y1", "" + (pen.y + celWidth));
+                    line.setAttribute("x2", "" + (pen.x + celWidth));
+                    line.setAttribute("y2", "" + (pen.y + celWidth));
                     svg.appendChild(line);
 
-                    pen.y += 50;
+                    pen.y += celHeight;
                     pen.x = 0;
                 });
             }
