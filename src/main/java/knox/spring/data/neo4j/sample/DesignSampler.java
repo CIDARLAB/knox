@@ -56,7 +56,7 @@ public class DesignSampler {
 				}
 
 				// Choose edge based on weight
-				double rWeight = rand.nextDouble() * totalWeights;
+				double rWeight = Math.random() * totalWeights;
 
 				double countWeights = 0.0;
 				for (Edge e: node.getEdges()) {
