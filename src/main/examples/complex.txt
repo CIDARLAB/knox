@@ -1,0 +1,48 @@
+CREATE (d5:DesignSpace {spaceID: "test5", idIndex: 10, mergeIndex: 0})
+
+CREATE (n0:Node {nodeID: "n0", nodeType: "start"})
+CREATE (n1:Node {nodeID: "n1"})
+CREATE (n2:Node {nodeID: "n2"})
+CREATE (n3:Node {nodeID: "n3"})
+CREATE (n4:Node {nodeID: "n4"})
+CREATE (n5:Node {nodeID: "n5"})
+CREATE (n6:Node {nodeID: "n6"})
+CREATE (n7:Node {nodeID: "n7"})
+CREATE (n8:Node {nodeID: "n8"})
+CREATE (n10:Node {nodeID: "n10"})
+CREATE (n9:Node {nodeID: "n9", nodeType: "accept"})
+
+CREATE (d5)-[:CONTAINS]->(n0)
+CREATE (d5)-[:CONTAINS]->(n1)
+CREATE (d5)-[:CONTAINS]->(n2)
+CREATE (d5)-[:CONTAINS]->(n3)
+CREATE (d5)-[:CONTAINS]->(n4)
+CREATE (d5)-[:CONTAINS]->(n5)
+CREATE (d5)-[:CONTAINS]->(n6)
+CREATE (d5)-[:CONTAINS]->(n7)
+CREATE (d5)-[:CONTAINS]->(n8)
+CREATE (d5)-[:CONTAINS]->(n9)
+CREATE (d5)-[:CONTAINS]->(n10)
+
+
+CREATE (n0)-[:PRECEDES]->(n1)
+CREATE (n1)-[:PRECEDES]->(n2)
+CREATE (n2)-[:PRECEDES {componentIDs: ["p1"], componentRoles: ["promoter"]}]->(n4)
+CREATE (n4)-[:PRECEDES {componentIDs: ["c1"], componentRoles: ["CDS"]}]->(n8)
+CREATE (n8)-[:PRECEDES]->(n9)
+
+CREATE (n1)-[:PRECEDES]->(n3)
+CREATE (n3)-[:PRECEDES {componentIDs: ["p2"], componentRoles: ["promoter"]}]->(n5)
+CREATE (n5)-[:PRECEDES {componentIDs: ["p3"], componentRoles: ["promoter"]}]->(n7)
+CREATE (n7)-[:PRECEDES {componentIDs: ["c2"], componentRoles: ["CDS"]}]->(n10)
+CREATE (n10)-[:PRECEDES]->(n9)
+
+
+CREATE (n3)-[:PRECEDES {componentIDs: ["p3"], componentRoles: ["promoter"]}]->(n6)
+CREATE (n6)-[:PRECEDES {componentIDs: ["p2"], componentRoles: ["promoter"]}]->(n7)
+
+
+CREATE (d5)-[:ARCHIVES]->(b3:Branch {branchID: "test5", idIndex: 1})-[:CONTAINS]->(c3:Commit {commitID: "c0"})-[:CONTAINS]->(s4:Snapshot {idIndex: 4})
+CREATE (d5)-[:SELECTS]->(b3)-[:LATEST]->(c3)
+
+;

@@ -25,26 +25,47 @@ public class DesignSampler {
 	}
 	
 	public Set<List<String>> sample(int numSamples) {
-		
+
 		Set<List<String>> samples = new HashSet<List<String>>();
 		Random rand = new Random();
-		
+
 		for (int i = 0; i < numSamples; i++) {
 
 			List<String> sample = new LinkedList<String>();
 			Node node = starts.get(rand.nextInt(starts.size()));
-			
-			while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
+            Edge edge = new Edge();
+
+            while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
 				Iterator<Edge> edgerator = node.getEdges().iterator();
-				int k = rand.nextInt(node.getNumEdges());
-				int j = 0;
-				
-				while (j < k) {
-					edgerator.next();
-					j++;
+
+				// Get the number of edges w no probability
+				int numZero = 0; 
+				for (Edge e : node.getEdges()) {
+					if (e.getProbability() == 0.0)
+						numZero += 1;
 				}
-				
-				Edge edge = edgerator.next();
+
+				// Add up the total weights
+				double totalWeights = 0.0;
+				for (Edge e: node.getEdges()) {
+					if (e.getProbability() == 0.0)
+						e.setProbability(1.0/numZero);
+
+					totalWeights += e.getProbability();
+				}
+
+				// Choose edge based on weight
+				double rWeight = rand.nextDouble() * totalWeights;
+
+				double countWeights = 0.0;
+				for (Edge e: node.getEdges()) {
+					countWeights += e.getProbability();
+					if (countWeights >= rWeight) {
+						edge = e;
+						break;
+					}
+				}
+
 				
 				if (edge.hasComponentIDs()) {
 					sample.add(edge.getComponentID(rand.nextInt(edge.getNumComponentIDs())));
