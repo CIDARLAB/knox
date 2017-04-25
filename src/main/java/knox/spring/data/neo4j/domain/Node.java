@@ -134,7 +134,7 @@ public class Node {
         }
     }
 
-    public boolean hasEdge(Node head) {
+    public boolean hasNode(Node head) {
         if (hasEdges()) {
             for (Edge edge : edges) {
                 if (edge.getHead().equals(head)) {

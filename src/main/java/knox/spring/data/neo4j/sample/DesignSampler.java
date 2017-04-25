@@ -120,7 +120,8 @@ public class DesignSampler {
 
 	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
 		if (!node.hasEdges() || node.isAcceptNode()) {
-			LOG.warn("no edges or accept node");
+			String error = node.isAcceptNode() ? "accept node" : "no edges";
+			LOG.warn(error);
 			return designs;
 		}
 
