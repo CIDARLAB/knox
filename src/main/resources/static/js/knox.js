@@ -70,6 +70,9 @@
 (function($) {
     "use strict";
 
+    // The target class observes an SVG element on the page, and
+    // provides methods for setting and clearing graph data. A variable
+    // called 'targets' holds all the svg rendering targets on the page.
     function Target(id) {
         this.layout = null;
         this.id = id;
@@ -221,18 +224,33 @@
     };
     
     var targets = {
-        search: new Target("#search-svg"),
-        combine: new Target("#eugene-svg")
+        search: new Target("#search-svg")
     };
 
+    var layouts = {
+        combineModal: null,
+        listModal: null
+    };
+    
     window.onload = function() {
         disableScroll();
         disableTabs();
-        $("#delete-btn").hide();
-        $("#combine-btn").hide();
-        $("#list-btn").hide();
+        hideExplorePageBtns();
+        $.ajax({
+            url: "/layouts/combine-modal.html",
+            success: (result) => { layouts.combineModal = result; }
+        });
+        $.ajax({
+            url: "/layouts/list-modal.html",
+            success: (result) => { layouts.listModal = result; }
+        });
     };
 
+    // Implementation of autocomplete. The webapp requests a list of
+    // all design spaces from Knox and caches it. The api exposes one
+    // a couple of functions, one to update the list of completions
+    // with the server, and one that takes a phrase and does string
+    // matching to return a list of design spaces with similar names.
     (function() {
         var completionSet;
         
@@ -268,9 +286,7 @@
         $("#search-autocomplete").empty();
         $("#combine-tb-lhs").val("");
         $("#combine-tb-rhs").val("");
-        $("#delete-btn").hide();
-        $("#combine-btn").hide();
-        $("#list-btn").hide();
+        hideExplorePageBtns();
     }
     
     $("#navigation-bar").on("click", "*", clearAllPages);
@@ -293,22 +309,25 @@
         }
     }
 
-    var currentSpace;
+    var exploreBtnIDs = {
+        delete: "#delete-btn",
+        combine: "#combine-btn",
+        list: "#list-btn"
+    };
 
-    {
-        d3.json("/enumerate?targetSpaceID=test2&bfs=false", (err, data) => {
-            if (err) {
-                window.alert(err);
-            } else {
-                window.alert(JSON.stringify(data));
-            }
+    function hideExplorePageBtns() {
+        Object.keys(exploreBtnIDs).map((id, _) => {
+            $(exploreBtnIDs[id]).hide();
         });
-        // var query = "?targetSpaceID=test2&bfs=false";
-        // var request = new XMLHttpRequest();
-        // request.open("GET", "/enumerate" + query, false);
-        // request.send(null);
-        // window.alert(request.response);
     }
+
+    function showExplorePageBtns() {
+        Object.keys(exploreBtnIDs).map((id, _) => {
+            $(exploreBtnIDs[id]).show();
+        });
+    }
+
+    var currentSpace;
     
     function onSearchSubmit(spaceid) {
         knox.getGraph(spaceid, (err, data) => {
@@ -319,35 +338,27 @@
                 targets.search.setGraph(data);
                 $("#search-tb").blur();
                 $("#search-autocomplete").blur();
-                $("#delete-btn").show();
-                $("#list-btn").show();
-                $("#combine-btn").show();
+                showExplorePageBtns();
                 currentSpace = spaceid;
             }
         });
     }
 
-    $("#combine-btn").click(() => {
+    $(exploreBtnIDs.list).click(() => {
+        swal({
+            title: "Pathways",
+            html: true,
+            confirmButtonColor: "#F05F40"
+        });
+    });
+
+    $(exploreBtnIDs.combine).click(() => {
         swal({
             title: "Combine",
             html: true,
             showCancelButton: true,
             closeOnConfirm: false,
-            text: `
-<div>
-Combine with: <input id="swal-combine-with"/><br/><br/>
-Output Id: <input id="swal-output"/><br/><br/>
-Method: <select id="swal-select">
-    <option value="Join">Join</option>
-    <option value="OR">OR</option>
-    <option value="AND">AND</option>
-    <option value="Merge Weak">Merge Weak</option>
-    <option value="Merge Strong">Merge Strong</option>
-    <option value="Union">Union</option>
-</select>
-<br/>
-</div>
-`,
+            text: layouts.combineModal,
             confirmButtonColor: "#F05F40"
         }, function(isconfirm) {
             if (isconfirm) {
@@ -398,7 +409,7 @@ Method: <select id="swal-select">
         });
     });
     
-    $("#delete-btn").click(() => {
+    $(exploreBtnIDs.delete).click(() => {
         swal({
             title: "Really delete?",
             text: "You will not be able to recover the data!",
@@ -420,9 +431,7 @@ Method: <select id="swal-select">
                         type: "success"
                     });
                     targets.search.clear();
-                    $("#delete-btn").hide();
-                    $("#combine-btn").hide();
-                    $("#list-btn").hide();
+                    hideExplorePageBtns();
                 } else {
                     swal("Error: Failed to delete design space " + currentSpace + ".");
                 }
