@@ -377,7 +377,7 @@
             
         });
         var query = "/enumerate?targetSpaceID="
-            + currentSpace + "&bfs=true";
+            + currentSpace + "&bfs=false";
         d3.json(query, (err, data) => {
             if (err) {
                 window.alert(err);
@@ -385,6 +385,8 @@
                 const celHeight = 60;
                 const celWidth = 50;
                 var svg = document.getElementById("swal-svg");
+                var loading = document.getElementById("swal-loading");
+                loading.parentNode.removeChild(loading);
                 var yPitch = (data.length + 1) * celHeight;
                 var xPitch = (longestListLength(data) + 1) * celWidth;
                 svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
