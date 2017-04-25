@@ -701,3 +701,7 @@ textarea:focus, input:focus{
 .tab-pane {
     padding: 10px;
 }
+
+body.modal-open {
+    overflow: visible;
+}

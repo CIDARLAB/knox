@@ -697,7 +697,7 @@ public class KnoxController {
                     required = true) String targetSpaceID,
             @RequestParam(value = "numberOfSamples", required = true,
                     defaultValue = "0") int numberOfSamples) {
-        DesignSpace designSpace = designSpaceService.findDesignSpace(targetSpaceID);
+        DesignSpace designSpace = designSpaceService.loadDesignSpace(targetSpaceID, 5);
         DesignSampler designSampler = new DesignSampler(designSpace);
         return designSampler.sample(numberOfSamples);
     }

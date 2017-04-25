@@ -19,6 +19,14 @@
     };
 })();
 
+// d3.json("/sample?targetSpaceID=test2&numberOfSamples=5", (err, data) => {
+//     if (err) {
+//         window.alert(JSON.stringify(err));
+//     } else {
+//         window.alert(JSON.stringify(data));
+//     }
+// });
+
 // Utility for disabling navigation features.
 // Exposes the function disableScroll and disableTabs.
 (function($) {
@@ -349,31 +357,32 @@
             title: "Pathways",
             html: true,
             text: layouts.listModal,
+            animation: false,
             confirmButtonColor: "#F05F40"
         }, () => {
             
         });
-        var imagesObjects = ["promoter.svg",
-                             "promoter.svg",
-                             "CDS.svg",
-                             "terminator.svg"];
-        d3.select("#swal-svg")
-            .data(imagesObjects)
-            .enter()
-            .append("svg:image")
-            .attr("xlink:href", function(d) {
-                console.log(d);
-                return "./img/sbol/" + d;
-            })
-            .attr("width", 20)
-            .attr("height", 20)
-            .attr("x", function(d, i) {
-                console.log(i);
-                return i * 10;
-            })
-            .attr("y",function(d, i) {
-                return i * 10;
-            });
+        // var imagesObjects = ["promoter.svg",
+        //                      "promoter.svg",
+        //                      "CDS.svg",
+        //                      "terminator.svg"];
+        // d3.select("#swal-svg")
+        //     .data(imagesObjects)
+        //     .enter()
+        //     .append("svg:image")
+        //     .attr("xlink:href", function(d) {
+        //         console.log(d);
+        //         return "./img/sbol/" + d;
+        //     })
+        //     .attr("width", 20)
+        //     .attr("height", 20)
+        //     .attr("x", function(d, i) {
+        //         console.log(i);
+        //         return i * 10;
+        //     })
+        //     .attr("y",function(d, i) {
+        //         return i * 10;
+        //     });
     });
 
     $(exploreBtnIDs.combine).click(() => {
