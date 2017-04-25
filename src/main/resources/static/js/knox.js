@@ -246,6 +246,11 @@
         });
     };
 
+    // Implementation of autocomplete. The webapp requests a list of
+    // all design spaces from Knox and caches it. The api exposes one
+    // a couple of functions, one to update the list of completions
+    // with the server, and one that takes a phrase and does string
+    // matching to return a list of design spaces with similar names.
     (function() {
         var completionSet;
         
@@ -304,16 +309,6 @@
         }
     }
 
-    {
-        var query = "?";
-        query += encodeQueryParameter("targetSpaceID", "test1", query);
-        query += encodeQueryParameter("bfs", false, query);
-        var request = new XMLHttpRequest();
-        request.open("GET", "/enumerate" + query, false);
-        request.send(null);
-        window.alert(request.response);
-    }
-
     var exploreBtnIDs = {
         delete: "#delete-btn",
         combine: "#combine-btn",
@@ -322,13 +317,13 @@
 
     function hideExplorePageBtns() {
         Object.keys(exploreBtnIDs).map((id, _) => {
-            $(id).hide();
+            $(exploreBtnIDs[id]).hide();
         });
     }
 
     function showExplorePageBtns() {
         Object.keys(exploreBtnIDs).map((id, _) => {
-            $(id).show();
+            $(exploreBtnIDs[id]).show();
         });
     }
 
