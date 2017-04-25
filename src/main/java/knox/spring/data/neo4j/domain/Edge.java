@@ -1,5 +1,6 @@
 package knox.spring.data.neo4j.domain;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -50,22 +51,28 @@ public class Edge {
         this.head = head;
     }
 
-    public Edge(Node tail, Node head, ArrayList<String> componentIDs,
-                ArrayList<String> componentRoles) {
-        this.tail = tail;
-        this.head = head;
-        this.componentIDs = componentIDs;
-        this.componentRoles = componentRoles;
-    }
-
-    public Edge(Node tail, Node head, ArrayList<String> componentIDs,
-                ArrayList<String> componentRoles, double probability) {
+    public Edge(Node tail,
+                Node head,
+                ArrayList<String> componentIDs,
+                ArrayList<String> componentRoles,
+                double probability) {
         this.tail = tail;
         this.head = head;
         this.componentIDs = componentIDs;
         this.componentRoles = componentRoles;
         this.probability = probability;
     }
+    
+    public Edge(Node tail,
+                Node head,
+                ArrayList<String> componentIDs,
+                ArrayList<String> componentRoles) {
+		this.tail = tail;
+		this.head = head;
+		this.componentIDs = componentIDs;
+		this.componentRoles = componentRoles;
+        this.probability = 0.0;
+	}
 
     public void addComponent(String compID, String compRole) {
         if (!hasComponentIDs()) {

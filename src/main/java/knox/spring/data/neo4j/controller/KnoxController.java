@@ -730,4 +730,10 @@ return designSpaceService.listDesignSpaces();
         return designSampler.enumerate(enumerateType, numberOfDesigns);
     }
 
+	@RequestMapping(value = "/partition", method = RequestMethod.GET)
+	public Set<List<String>> partition(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+		DesignSpace designSpace = designSpaceService.findDesignSpace(targetSpaceID);
+		DesignSampler designSampler = new DesignSampler(designSpace);
+		return designSampler.partition();
+	}
 }
