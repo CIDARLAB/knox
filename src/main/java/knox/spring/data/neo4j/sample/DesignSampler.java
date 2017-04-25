@@ -218,11 +218,36 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
+	private boolean[][] createAdjacencyMatrix(Map<String, Integer> nodeIdsToRowNumber) {
+		Set<Node> allNodes = space.getNodes();
+		boolean[][] adjacencyMatrix = new boolean[allNodes.size()][allNodes.size()];
+		int counter = 0;
+
+		for (Node node : allNodes) {
+			nodeIdsToRowNumber.put(node.getNodeID(), counter);
+			counter += 1;
+		}
+
+		for (Node node : allNodes) {
+			int rowNumber = nodeIdsToRowNumber.get(node.getNodeID());
+			for (Edge edge : node.getEdges()) {
+				Node connectingNode = edge.getHead();
+				int columnNumber = nodeIdsToRowNumber.get(connectingNode.getNodeID());
+				adjacencyMatrix[rowNumber][columnNumber] = true;
+			}
+		}
+
+		return adjacencyMatrix;
+	}
+
 	public Set<List<String>> partition() {
 		Set<List<String>> partitions = new HashSet<>();
 
         ArrayList<ArrayList<Double>> graphadj = new ArrayList<>();
         // Create adj matrix
+
+		Map<String, Integer> nodeIdsToRowNumber = new HashMap<>();
+		boolean[][] adjacencyMatrix = createAdjacencyMatrix(nodeIdsToRowNumber);
 
         // Normalize adjacency matrix
         int numCols = graphadj.get(0).size();
