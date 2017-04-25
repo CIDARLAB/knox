@@ -80,18 +80,62 @@ public class DesignSampler {
 		return samples;
 	}
 
-	public Set<List<String>> enumerate(EnumerateType enumerateType, Integer requestedDesigns) {
-		int numberOfDesigns = requestedDesigns != null ? requestedDesigns : Integer.MAX_VALUE;
+	/*
+		This method will enumerate the graph: providing all possible paths from the start of the graph
+		to the end of the graph.
 
+		Arguments:
+			- enumerateType [EnumerateType]: Either will perform a breadth-first-depth or a depth-first-search
+			- requestedDesigns [int]: The number of requested designs. 5 is the default.
+
+		Returns:
+			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
+								 the specific component ids.
+	 */
+	public Set<List<String>> enumerate(EnumerateType enumerateType, int requestedDesigns) {
 		if (enumerateType == EnumerateType.BFS) {
-			return bfsEnumerate(numberOfDesigns);
+			return bfsEnumerate(requestedDesigns);
 		} else {
-			return dfsEnumerate(numberOfDesigns);
+			return dfsEnumerate(requestedDesigns);
 		}
 	}
 
+	/*
+		This method will enumerate the graph using a DFS method. If the number of designs requested is
+		less than the total possible number of designs, it will only return the first x designs requested,
+		where x is the number of requested designs. If this is the case, the designs generated each time
+		will be different as the edges are represented as a set, thereby giving a random ordering
+		each time they are looped over.
+
+		Arguments:
+			- requestedDesigns [int]: The number of requested designs. 5 is the default.
+
+		Returns:
+			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
+								 the specific component ids.
+
+		Notes:
+			- This algorithm is based on a permutation algorithm (obviously we have some differences
+			  due to adjacency limitations). Therefore, if we can assume our adjacency matrix is
+			  not not perfect (meaning that every node is connected to every other node), then our runtime
+			  is limited by n!. However, because each edge can have numerous component IDs, this will
+			  actually increase the runtime of our algorithm. Because this is a recursive algorithm, we
+			  also need to account for the callstack for every time the dfsEnumerateRecursive is
+			  called on itself. Presumably, this would simply by O(N) in additional runtime for each path.
+
+			  This algorithm is of course of high complexity, but it is worth noting that this is NP-hard,
+			  and therefore, it should suffice as generally there are no efficient solutions available
+			  without a heuristic.
+
+		Memory:
+			- The memory for this algorithm is similarly high. Luckily, Java garbage collection will remove
+			  unnecessary sets and lists that are created simply for aid of the final algorithm. On each iteration
+			  of the dfsEnumerateRecursive, we must create a new Set for each iteration to ensure that each
+			  copy represents specific information for a single n-1 permutation.
+
+	 */
 	private Set<List<String>> dfsEnumerate(int numberOfDesigns) {
-		Set<List<String>> allDesigns = new HashSet<List<String>>();
+		Set<List<String>> allDesigns = new HashSet<>();
 		int currentNumberOfDesigns = 0;
 
 		for (Node start : starts) {
@@ -118,6 +162,19 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
+	/*
+		This method is a helper method for a DFS algorithm. It is recursive and will call
+		itself repeatedly until a node is either at the end (being an accept node), or a node has no
+		outgoing edges. This algorithm follows a tail recursion approach.
+
+		Arguments:
+			- node [Node] The current node.
+			- designs [Set<List<String>>]: All of the designs that have been generated up until the current node.
+
+		Returns:
+			- Set<List<String>>: The paths that are generated at a single from a single node to the end.
+
+	*/
 	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
 		if (!node.hasEdges() || node.isAcceptNode()) {
 			String error = node.isAcceptNode() ? "accept node" : "no edges";

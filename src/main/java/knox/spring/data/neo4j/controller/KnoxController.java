@@ -712,7 +712,7 @@ public class KnoxController {
             @RequestParam(value = "targetSpaceID",
                     required = true) String targetSpaceID,
             @RequestParam(value = "numberOfDesigns", required = false,
-                    defaultValue = "2147483647") int numberOfDesigns,
+                    defaultValue = "5") int numberOfDesigns,
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
 
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
