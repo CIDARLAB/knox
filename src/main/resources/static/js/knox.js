@@ -252,7 +252,7 @@
     // with the server, and one that takes a phrase and does string
     // matching to return a list of design spaces with similar names.
     (function() {
-        var completionSet;
+        var completionSet = new Set();
         
         function populateAutocompleteList(callback) {
             knox.listDesignSpaces((err, data) => {
@@ -348,14 +348,39 @@
         swal({
             title: "Pathways",
             html: true,
+            text: layouts.listModal,
             confirmButtonColor: "#F05F40"
+        }, () => {
+            
         });
+        var imagesObjects = ["promoter.svg",
+                             "promoter.svg",
+                             "CDS.svg",
+                             "terminator.svg"];
+        d3.select("#swal-svg")
+            .data(imagesObjects)
+            .enter()
+            .append("svg:image")
+            .attr("xlink:href", function(d) {
+                console.log(d);
+                return "./img/sbol/" + d;
+            })
+            .attr("width", 20)
+            .attr("height", 20)
+            .attr("x", function(d, i) {
+                console.log(i);
+                return i * 10;
+            })
+            .attr("y",function(d, i) {
+                return i * 10;
+            });
     });
 
     $(exploreBtnIDs.combine).click(() => {
         swal({
             title: "Combine",
             html: true,
+            animation: false,
             showCancelButton: true,
             closeOnConfirm: false,
             text: layouts.combineModal,
