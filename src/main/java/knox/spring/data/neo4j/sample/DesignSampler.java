@@ -131,7 +131,7 @@ public class DesignSampler {
 		for (Edge edge : node.getEdges()) {
 			Set<List<String>> visitedDesigns = new HashSet<>();
 
-			for (String componentId : edge.getComponentIDs()) {
+			for (String componentId : edge.getComponentRoles()) {
 				LOG.warn("component id {}", componentId);
 
 				for (List<String> design : designs) {
@@ -171,7 +171,7 @@ public class DesignSampler {
 				Edge edge = edgeStack.pop();
 				if (edge.hasComponentIDs()) {
 					Set<List<String>> comboDesigns = new HashSet<>();
-					for (String compID : edge.getComponentIDs()) {
+					for (String compID : edge.getComponentRoles()) {
 						if (designs.size() > 0) {
 							for (List<String> design : designs) {
 								List<String> comboDesign = new LinkedList<>(design);
