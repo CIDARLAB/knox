@@ -199,4 +199,11 @@ public class DesignSampler {
 		
 		return allDesigns;
 	}
+
+	public Set<List<String>> partition(int numberOfDesigns) {
+		Set<List<String>> partitions = new HashSet<>();
+
+
+		return partitions;
+	}
 }

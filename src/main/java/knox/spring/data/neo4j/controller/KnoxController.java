@@ -525,4 +525,12 @@ public class KnoxController {
 		DesignSampler designSampler = new DesignSampler(designSpace);
 		return designSampler.enumerate(enumerateType, numberOfDesigns);
 	}
+
+	@RequestMapping(value = "/partition", method = RequestMethod.GET)
+	public Set<List<String>> partition(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+									   @RequestParam(value = "numberOfPartitions", required = true) int numberOfPartitions) {
+		DesignSpace designSpace = designSpaceService.findDesignSpace(targetSpaceID);
+		DesignSampler designSampler = new DesignSampler(designSpace);
+		return designSampler.partition(numberOfPartitions);
+	}
 }

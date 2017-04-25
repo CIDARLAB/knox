@@ -29,17 +29,18 @@ public class Node {
     
     String nodeType;
 
-    public Node() {
-    	
-    }
+    //Probably best to make this constructor private
+    private Node() {}
     
     public Node(String nodeID) {
     	this.nodeID = nodeID;
+		this.edges = new HashSet<>();
     }
     
     public Node(String nodeID, String nodeType) {
     	this.nodeID = nodeID;
     	this.nodeType = nodeType;
+    	this.edges = new HashSet<>();
     }
     
     public void addEdge(Edge edge) {
