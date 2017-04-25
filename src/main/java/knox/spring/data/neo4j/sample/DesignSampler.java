@@ -8,12 +8,14 @@ import knox.spring.data.neo4j.domain.Node;
 import org.sbolstandard.core2.Collection;
 import org.sbolstandard.core2.ComponentDefinition;
 import org.sbolstandard.core2.SBOLDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.*;
 
 public class DesignSampler {
-	
+	private static final Logger LOG = LoggerFactory.getLogger(DesignSampler.class);
 	private DesignSpace space;
 	private List<Node> starts;
 	
@@ -91,31 +93,28 @@ public class DesignSampler {
 
 	private Set<List<String>> dfsEnumerate(int numberOfDesigns) {
 		Set<List<String>> allDesigns = new HashSet<List<String>>();
-//		int currentNumberOfDesigns = 0;
-//
-//		for (Node start : starts) {
-//			Set<List<String>> designs = new HashSet<>();
-//			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
-//
-//			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
-//				allDesigns.addAll(generatedDesigns);
-//				currentNumberOfDesigns += generatedDesigns.size();
-//			} else {
-//				int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
-//				Iterator<List<String>> generatedDesignsIterator = generatedDesigns.iterator();
-//				for (int i = 0; i < neededDesigns; i++) {
-//					allDesigns.add(generatedDesignsIterator.next());
-//				}
-//
-//				return allDesigns;
-//			}
-//
-//		}
+		int currentNumberOfDesigns = 0;
 
-		List<String> list = new ArrayList<>();
-		list.add("hey");
-		list.add("you");
-		allDesigns.add(list);
+		for (Node start : starts) {
+			LOG.warn(start.getNodeID());
+			LOG.warn("Hey erika");
+			Set<List<String>> designs = new HashSet<>();
+			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
+
+			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
+				allDesigns.addAll(generatedDesigns);
+				currentNumberOfDesigns += generatedDesigns.size();
+			} else {
+				int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
+				Iterator<List<String>> generatedDesignsIterator = generatedDesigns.iterator();
+				for (int i = 0; i < neededDesigns; i++) {
+					allDesigns.add(generatedDesignsIterator.next());
+				}
+
+				return allDesigns;
+			}
+
+		}
 
 		return allDesigns;
 	}
