@@ -296,11 +296,18 @@
     var currentSpace;
 
     {
-        var query = "?targetSpaceID=test2";
-        var request = new XMLHttpRequest();
-        request.open("GET", "/enumerate" + query, false);
-        request.send(null);
-        window.alert(request.response);
+        d3.json("/enumerate?targetSpaceID=test2&bfs=false", (err, data) => {
+            if (err) {
+                window.alert(err);
+            } else {
+                window.alert(JSON.stringify(data));
+            }
+        });
+        // var query = "?targetSpaceID=test2&bfs=false";
+        // var request = new XMLHttpRequest();
+        // request.open("GET", "/enumerate" + query, false);
+        // request.send(null);
+        // window.alert(request.response);
     }
     
     function onSearchSubmit(spaceid) {
