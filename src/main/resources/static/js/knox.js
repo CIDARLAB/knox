@@ -362,6 +362,15 @@
         }, () => {
             
         });
+        d3.json("/enumerate?targetSpaceID=test2&bfs=true", (err, data) => {
+            if (err) {
+                window.alert(err);
+            } else {
+                window.alert(JSON.stringify(data[0]));
+                
+            }
+        });
+        var svg = d3.select("#swal-svg").enter();
         // var imagesObjects = ["promoter.svg",
         //                      "promoter.svg",
         //                      "CDS.svg",
