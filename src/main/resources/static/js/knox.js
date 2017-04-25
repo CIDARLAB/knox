@@ -87,6 +87,14 @@
         $(id).width($(id).parent().width());
         $(id).height($(id).parent().height());
     }
+
+    function translateRole(role) {
+        switch (role) {
+        case "ribozyme":
+            return "rna_stability_element";
+        }
+        return role;
+    }
     
     Target.prototype = {
         setGraph: function(graph) {
@@ -96,7 +104,7 @@
                     svg.attr("transform", "translate(" +
                              d3.event.translate + ")scale(" + d3.event.scale + ")");
                 });
-            
+
             var svg = d3.select(this.id).call(zoom).append("svg:g");
             svg.append("defs").append("marker")
 	        .attr("id", "endArrow")
@@ -146,7 +154,7 @@
                     if (d.hasOwnProperty("componentRoles")) {
                         const sbolpath = "./img/sbol/";
                         var role = d["componentRoles"][0];
-                        switch (role) {
+                        switch (translateRole(role)) {
                         case "promoter":
                         case "terminator":
                         case "CDS":
@@ -168,10 +176,6 @@
                         case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
                         case "protease_site":
                             return sbolpath + role + ".svg";
-
-                            // Special Cases:
-                        case "ribozyme":
-                            return sbolpath + "rna_stability_element.svg";
 
                         default:
                             return sbolpath + "user_defined.svg";
@@ -362,36 +366,46 @@
         }, () => {
             
         });
-        d3.json("/enumerate?targetSpaceID=test2&bfs=true", (err, data) => {
+        var query = "/enumerate?targetSpaceID="
+            + currentSpace + "&bfs=true";
+        d3.json(query, (err, data) => {
             if (err) {
                 window.alert(err);
             } else {
-                window.alert(JSON.stringify(data[0]));
-                
+                var svg = document.getElementById("swal-svg");
+                svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
+                var pen = { x: 0, y: 0 };
+                data.map((list) => {
+                    list.map((element) => {
+                        element = translateRole(element);
+                        var svgimg =
+                            document.createElementNS(
+                                "http://www.w3.org/2000/svg", "image");
+                        svgimg.setAttribute("height", "100");
+                        svgimg.setAttribute("width", "100");
+                        svgimg.setAttribute("id" ,"testimg2");
+                        svgimg.setAttributeNS(
+                            "http://www.w3.org/1999/xlink",
+                            "href", "./img/sbol/" + element + ".svg");
+                        svgimg.setAttribute("x", "" + pen.x);
+                        svgimg.setAttribute("y", "" + pen.y);
+                        svg.appendChild(svgimg);
+                        pen.x += 50;
+                    });
+                    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("stroke", "black");
+                    line.setAttribute("stroke-width", "4");
+                    line.setAttribute("x1", "" + 0);
+                    line.setAttribute("y1", "" + (pen.y + 50));
+                    line.setAttribute("x2", "" + (pen.x + 50));
+                    line.setAttribute("y2", "" + (pen.y + 50));
+                    svg.appendChild(line);
+
+                    pen.y += 50;
+                    pen.x = 0;
+                });
             }
         });
-        var svg = d3.select("#swal-svg").enter();
-        // var imagesObjects = ["promoter.svg",
-        //                      "promoter.svg",
-        //                      "CDS.svg",
-        //                      "terminator.svg"];
-        // d3.select("#swal-svg")
-        //     .data(imagesObjects)
-        //     .enter()
-        //     .append("svg:image")
-        //     .attr("xlink:href", function(d) {
-        //         console.log(d);
-        //         return "./img/sbol/" + d;
-        //     })
-        //     .attr("width", 20)
-        //     .attr("height", 20)
-        //     .attr("x", function(d, i) {
-        //         console.log(i);
-        //         return i * 10;
-        //     })
-        //     .attr("y",function(d, i) {
-        //         return i * 10;
-        //     });
     });
 
     $(exploreBtnIDs.combine).click(() => {
