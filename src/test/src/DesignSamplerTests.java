@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by admin on 4/25/17.
@@ -22,7 +23,6 @@ public class DesignSamplerTests extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(DesignSamplerTests.class);
     private DesignSampler designSampler;
 
-    // assigning the values
     protected void setUp() {
         Node nodeA = new Node("node a", "start");
         Node nodeB = new Node("node b", "");
@@ -54,9 +54,13 @@ public class DesignSamplerTests extends TestCase {
         designSampler = new DesignSampler(designSpace);
     }
 
-    // test method to add two values
     public void testDfs() {
-        designSampler.enumerate(EnumerateType.DFS, 5);
-        LOG.info("done");
+        Set<List<String>> set = designSampler.enumerate(EnumerateType.DFS, Integer.MAX_VALUE);
+        assertEquals(set.size(), 8);
+    }
+
+    public void testBfs() {
+        Set<List<String>> set = designSampler.enumerate(EnumerateType.BFS, Integer.MAX_VALUE);
+        assertEquals(set.size(), 8);
     }
 }
