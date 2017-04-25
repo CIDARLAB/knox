@@ -91,26 +91,31 @@ public class DesignSampler {
 
 	private Set<List<String>> dfsEnumerate(int numberOfDesigns) {
 		Set<List<String>> allDesigns = new HashSet<List<String>>();
-		int currentNumberOfDesigns = 0;
+//		int currentNumberOfDesigns = 0;
+//
+//		for (Node start : starts) {
+//			Set<List<String>> designs = new HashSet<>();
+//			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
+//
+//			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
+//				allDesigns.addAll(generatedDesigns);
+//				currentNumberOfDesigns += generatedDesigns.size();
+//			} else {
+//				int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
+//				Iterator<List<String>> generatedDesignsIterator = generatedDesigns.iterator();
+//				for (int i = 0; i < neededDesigns; i++) {
+//					allDesigns.add(generatedDesignsIterator.next());
+//				}
+//
+//				return allDesigns;
+//			}
+//
+//		}
 
-		for (Node start : starts) {
-			Set<List<String>> designs = new HashSet<>();
-			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
-
-			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
-				allDesigns.addAll(generatedDesigns);
-				currentNumberOfDesigns += generatedDesigns.size();
-			} else {
-				int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
-				Iterator<List<String>> generatedDesignsIterator = generatedDesigns.iterator();
-				for (int i = 0; i < neededDesigns; i++) {
-					allDesigns.add(generatedDesignsIterator.next());
-				}
-
-				return allDesigns;
-			}
-
-		}
+		List<String> list = new ArrayList<>();
+		list.add("hey");
+		list.add("you");
+		allDesigns.add(list);
 
 		return allDesigns;
 	}
