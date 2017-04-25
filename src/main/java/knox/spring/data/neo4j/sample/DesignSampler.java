@@ -243,15 +243,19 @@ public class DesignSampler {
 			- double[][]: The adjacency matrix. 0 represents no connection and 1 represents
 			a connection.
 	 */
-	private double[][] createAdjacencyMatrix(Map<String, Integer> nodeIdsToRowNumber) {
+	private double[][] createAdjacencyMatrix(Map<Integer,String> rowtoNodeIds) {
 		Set<Node> allNodes = space.getNodes();
 		double[][] adjacencyMatrix = new double[allNodes.size()][allNodes.size()];
 		int counter = 0;
 
+        Map<String, Integer> nodeIdsToRowNumber = new HashMap<>();
+
 		for (Node node : allNodes) {
 			nodeIdsToRowNumber.put(node.getNodeID(), counter);
+			rowtoNodeIds.put(counter, node.getNodeID());
 			counter += 1;
 		}
+
 
 		for (Node node : allNodes) {
 			int rowNumber = nodeIdsToRowNumber.get(node.getNodeID());
@@ -262,39 +266,30 @@ public class DesignSampler {
 			}
 		}
 
+
 		return adjacencyMatrix;
 	}
 
+    /*
+    This method implements the Markov Clustering algorithm in order to discover
+    highly connected regions of the design space.
+
+    Arguments:
+        - None
+
+    Returns:
+        - A Set of List<String>: Each List has a string of NodeIds belonging to one cluster. 
+ */
 	public Set<List<String>> partition() {
-		Set<List<String>> partitions = new HashSet<>();
+		Map<Integer,String> rowtoNodeIds = new HashMap<>();
+		double[][] graphadj = createAdjacencyMatrix(rowtoNodeIds);
 
-        ArrayList<ArrayList<Double>> graphadj = new ArrayList<>();
-        // Create adj matrix
+        graphadj = normByCol(graphadj);
 
-		Map<String, Integer> nodeIdsToRowNumber = new HashMap<>();
-		double[][] adjacencyMatrix = createAdjacencyMatrix(nodeIdsToRowNumber);
-
-        // Normalize adjacency matrix
-        int numCols = graphadj.get(0).size();
-        int sumCols[] = new int[numCols];
-
-        // Get sums of the columns
-        sumCols = calcSumCols(graphadj);
-
-        // Divide elements in column by sum of column
+        double[][] oldAdj;
         double newVal;
-        for (ArrayList<Double> row: graphadj) {
-            for (int i = 0; i < numCols; i++) {
-                if (row.get(i) == 1) {
-                    newVal = row.get(i)/sumCols[i];
-                    row.set(i, newVal);
-                }
-            }
-        }
-
-        ArrayList<ArrayList<Double>> oldAdj = graphadj;
-        int numRows = oldAdj.size();
-        numCols = oldAdj.get(0).size();
+        int numRows = graphadj.length;
+        int numCols = graphadj[0].length;
         int inflation_power = 2;
 
         do {
@@ -304,38 +299,28 @@ public class DesignSampler {
             // Expansion and Inflation
             for (int i = 0; i < numRows; i++) {
                 for (int j = 0; j < numCols; j++) {
-                    if (graphadj.get(i).get(j) == 0)
+                    if (graphadj[i][j] == 0)
                         continue;
 
-                    newVal = Math.pow(graphadj.get(i).get(j) * graphadj.get(i).get(j), inflation_power);
-                    graphadj.get(i).set(j, newVal);
+                    newVal = Math.pow(graphadj[i][j] * graphadj[i][j], inflation_power);
+                    graphadj[i][j] =  newVal;
                 }
             }
 
-            // Get sums of colums
-            sumCols = calcSumCols(graphadj);
-
-            // Divide elements in column by sum of column
-            for (ArrayList<Double> row: graphadj) {
-                for (int i = 0; i < numCols; i++) {
-                    if (row.get(i) == 1) {
-                        newVal = row.get(i) / sumCols[i];
-                        row.set(i,newVal);
-                    }
-                }
-            }
+            graphadj = normByCol(graphadj);
 
 
         } while(isChanged(graphadj,oldAdj));
 
 
         // Analyze graphadj to discover the set of clusters
-        Set<List<Integer>> clusters = new HashSet<>();
-        for (ArrayList<Double> row: graphadj) {
-            List<Integer> cluster = new ArrayList<Integer>();
+        Set<List<String>> clusters = new HashSet<>();
+        for (double[] row: graphadj) {
+            List<String> cluster = new ArrayList<>();
             for (int i = 0; i < numCols; i++) {
-                if (row.get(i) >= 0.01) {
-                    cluster.add(i);
+                if (row[i] >= 0.01) {
+                    String nodeID = rowtoNodeIds.get(i);
+                    cluster.add(nodeID);
                 }
             }
             clusters.add(cluster);
@@ -343,35 +328,45 @@ public class DesignSampler {
 
 
 
-		return partitions;
+		return clusters;
 	}
 
-	private boolean isChanged(ArrayList<ArrayList<Double>> old, ArrayList<ArrayList<Double>> mod) {
-            int numRows = old.size();
-            int numCols = old.get(0).size();
+	private boolean isChanged(double[][] old, double[][] mod) {
+            int numRows = old.length;
+            int numCols = old[0].length;
 
             boolean change = true;
             for (int i = 0; i < numRows; i++) {
                 for (int j = 0; j < numCols; j++) {
-                   if (Math.abs(old.get(i).get(j) - mod.get(i).get(j)) <= 0.001)
+                   if (Math.abs(old[i][j] - mod[i][j]) <= 0.001)
                        change = false;
                 }
             }
             return change;
     }
 
-    private int[] calcSumCols(ArrayList<ArrayList<Double>> graphadj) {
-        int numCols = graphadj.get(0).size();
+    private double[][] normByCol(double[][] graphadj) {
+        int numCols = graphadj[0].length;
         int sumCols[] = new int[numCols];
 
         // Get sums of the columns
-        for (ArrayList<Double> row: graphadj) {
+        for (double [] row: graphadj) {
             for (int i = 0; i < numCols; i++) {
-                if (row.get(i) == 1.0)
+                if (row[i] == 1.0)
                     sumCols[i]++;
             }
         }
-        return sumCols;
+
+        // Divide elements in column by sum of column
+        double newVal;
+        for (double[] row: graphadj) {
+            for (int i = 0; i < numCols; i++) {
+                if (row[i] == 1) {
+                    row[i] = row[i]/sumCols[i];
+                }
+            }
+        }
+        return graphadj;
     }
 
 
