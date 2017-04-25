@@ -697,8 +697,7 @@ public class KnoxController {
                       required = true) String targetSpaceID,
         @RequestParam(value = "numberOfSamples", required = true,
                       defaultValue = "0") int numberOfSamples) {
-        DesignSpace designSpace =
-            designSpaceService.findDesignSpace(targetSpaceID);
+        DesignSpace designSpace = designSpaceService.findDesignSpace(targetSpaceID);
         DesignSampler designSampler = new DesignSampler(designSpace);
         return designSampler.sample(numberOfSamples);
     }
@@ -714,18 +713,10 @@ return designSpaceService.listDesignSpaces();
                       required = true) String targetSpaceID,
         @RequestParam(value = "numberOfDesigns", required = false,
                       defaultValue = "2147483647") int numberOfDesigns,
-        @RequestParam(value = "bfs", required = false, defaultValue = "false")
-        boolean bfs, @RequestParam(value = "dfs", required = false,
-                                   defaultValue = "false") boolean dfs) {
-        if (bfs && dfs) {
-            return new HashSet<>();
-            // Need some better way of logging errors
-        }
+        @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
 
-        EnumerateType enumerateType =
-            dfs ? EnumerateType.DFS : EnumerateType.BFS;  // BFS is default
-        DesignSpace designSpace =
-            designSpaceService.findDesignSpace(targetSpaceID);
+        EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
+        DesignSpace designSpace = designSpaceService.findDesignSpace(targetSpaceID);
         DesignSampler designSampler = new DesignSampler(designSpace);
         return designSampler.enumerate(enumerateType, numberOfDesigns);
     }
