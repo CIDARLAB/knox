@@ -187,12 +187,12 @@ public class DesignSampler {
 		for (Edge edge : node.getEdges()) {
 			Set<List<String>> visitedDesigns = new HashSet<>();
 
-			for (String componentId : edge.getComponentIDs()) {
-				LOG.warn("component id {}", componentId);
+			for (String componentRole : edge.getComponentRoles()) {
+				LOG.warn("component role {}", componentRole);
 
 				for (List<String> design : designs) {
 					List<String> copiedDesign = new ArrayList<>(design);
-					copiedDesign.add(componentId);
+					copiedDesign.add(componentRole);
 					visitedDesigns.add(copiedDesign);
 				}
 			}
@@ -227,16 +227,16 @@ public class DesignSampler {
 				Edge edge = edgeStack.pop();
 				if (edge.hasComponentIDs()) {
 					Set<List<String>> comboDesigns = new HashSet<>();
-					for (String compID : edge.getComponentIDs()) {
+					for (String compRole : edge.getComponentRoles()) {
 						if (designs.size() > 0) {
 							for (List<String> design : designs) {
 								List<String> comboDesign = new LinkedList<>(design);
-								comboDesign.add(compID);
+								comboDesign.add(compRole);
 								comboDesigns.add(comboDesign);
 							}
 						} else {
 							List<String> comboDesign = new LinkedList<String>();
-							comboDesign.add(compID);
+							comboDesign.add(compRole);
 							comboDesigns.add(comboDesign);
 						}
 					}
