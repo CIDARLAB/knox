@@ -40,8 +40,8 @@ public class Edge {
 
     @EndNode Node head;
 
-    List<String> componentIDs;
-    List<String> componentRoles;
+    ArrayList<String> componentIDs;
+    ArrayList<String> componentRoles;
 
     double probability;
 
@@ -54,8 +54,8 @@ public class Edge {
 
     public Edge(Node tail,
                 Node head,
-                List<String> componentIDs,
-                List<String> componentRoles,
+                ArrayList<String> componentIDs,
+                ArrayList<String> componentRoles,
                 double probability) {
         this.tail = tail;
         this.head = head;
@@ -66,8 +66,8 @@ public class Edge {
     
     public Edge(Node tail,
                 Node head,
-                List<String> componentIDs,
-                List<String> componentRoles) {
+                ArrayList<String> componentIDs,
+                ArrayList<String> componentRoles) {
 		this.tail = tail;
 		this.head = head;
 		this.componentIDs = componentIDs;
@@ -135,11 +135,11 @@ public class Edge {
         }
     }
 
-    public List<String> getComponentIDs() { return componentIDs; }
+    public ArrayList<String> getComponentIDs() { return componentIDs; }
 
     public int getNumComponentIDs() { return componentIDs.size(); }
 
-    public List<String> getComponentRoles() { return componentRoles; }
+    public ArrayList<String> getComponentRoles() { return componentRoles; }
 
     public boolean hasComponentID(String compID) {
         if (hasComponentIDs()) {

@@ -29,16 +29,16 @@ public class DesignSamplerTests extends TestCase {
         Node nodeC = new Node("node c", "");
         Node nodeD = new Node("node d", "end");
 
-        List<String> edgeAIds = Arrays.asList(new String[] {"id 1", "id 2"});
-        List<String> edgeARoles = Arrays.asList(new String[] {"role 1", "role 2"});
+        ArrayList<String> edgeAIds = (ArrayList) Arrays.asList(new String[] {"id 1", "id 2"});
+        ArrayList<String> edgeARoles = (ArrayList) Arrays.asList(new String[] {"role 1", "role 2"});
         Edge edgeA = new Edge(nodeA, nodeB, edgeAIds, edgeARoles, 0.5);
 
-        List<String> edgeBIds = Arrays.asList(new String[] {"id 3", "id 4"});
-        List<String> edgeBRoles = Arrays.asList(new String[] {"role 3", "role 4"});
+        ArrayList<String> edgeBIds = (ArrayList) Arrays.asList(new String[] {"id 3", "id 4"});
+        ArrayList<String> edgeBRoles = (ArrayList) Arrays.asList(new String[] {"role 3", "role 4"});
         Edge edgeB = new Edge(nodeB, nodeC, edgeBIds, edgeBRoles, 0.5);
 
-        List<String> edgeCIds = Arrays.asList(new String[] {"id 5", "id 6"});
-        List<String> edgeCRoles = Arrays.asList(new String[] {"role 5", "role 6"});
+        ArrayList<String> edgeCIds = (ArrayList) Arrays.asList(new String[] {"id 5", "id 6"});
+        ArrayList<String> edgeCRoles = (ArrayList) Arrays.asList(new String[] {"role 5", "role 6"});
         Edge edgeC = new Edge(nodeC, nodeD, edgeCIds, edgeCRoles, 0.5);
 
         nodeA.addEdge(edgeA);
