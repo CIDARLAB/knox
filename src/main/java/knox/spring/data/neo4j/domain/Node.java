@@ -23,7 +23,7 @@ public class Node {
 
     String nodeID;
 
-    @Relationship(type = "PRECEDES") Set<Edge> edges;
+    @Relationship(type = "PRECEDES") Set<Edge> edges = new HashSet<>();
 
     String nodeType;
 
@@ -32,19 +32,14 @@ public class Node {
     
     public Node(String nodeID) {
     	this.nodeID = nodeID;
-		this.edges = new HashSet<>();
     }
     
     public Node(String nodeID, String nodeType) {
         this.nodeID = nodeID;
         this.nodeType = nodeType;
-        this.edges = new HashSet<>();
     }
 
     public void addEdge(Edge edge) {
-        if (edges == null) {
-            edges = new HashSet<Edge>();
-        }
         edges.add(edge);
     }
 
