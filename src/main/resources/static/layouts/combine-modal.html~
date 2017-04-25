@@ -1,0 +1,13 @@
+<div>
+    Combine with: <input id="swal-combine-with"/><br/><br/>
+    Output Id: <input id="swal-output"/><br/><br/>
+    Method: <select id="swal-select">
+    <option value="Join">Join</option>
+    <option value="OR">OR</option>
+    <option value="AND">AND</option>
+    <option value="Merge Weak">Merge Weak</option>
+    <option value="Merge Strong">Merge Strong</option>
+    <option value="Union">Union</option>
+    </select>
+    <br/>
+</div>
