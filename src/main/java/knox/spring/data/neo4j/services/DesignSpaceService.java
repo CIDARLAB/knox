@@ -2607,7 +2607,7 @@ public class DesignSpaceService {
         return designSpaceRepository.findBySpaceID(targetSpaceID);
     }
 
-    private DesignSpace loadDesignSpace(String targetSpaceID, int depth) {
+    public DesignSpace loadDesignSpace(String targetSpaceID, int depth) {
         return designSpaceRepository.findOne(getGraphID(targetSpaceID), depth);
         //		return designSpaceRepository.findBySpaceID(targetSpaceID);
     }

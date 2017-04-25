@@ -716,7 +716,7 @@ public class KnoxController {
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
 
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
-        DesignSpace designSpace = designSpaceService.findDesignSpace(targetSpaceID);
+        DesignSpace designSpace = designSpaceService.loadDesignSpace(targetSpaceID, 5);
         DesignSampler designSampler = new DesignSampler(designSpace);
         return designSampler.enumerate(enumerateType, numberOfDesigns);
     }
