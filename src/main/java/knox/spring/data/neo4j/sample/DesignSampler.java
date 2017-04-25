@@ -218,9 +218,9 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
-	private boolean[][] createAdjacencyMatrix(Map<String, Integer> nodeIdsToRowNumber) {
+	private double[][] createAdjacencyMatrix(Map<String, Integer> nodeIdsToRowNumber) {
 		Set<Node> allNodes = space.getNodes();
-		boolean[][] adjacencyMatrix = new boolean[allNodes.size()][allNodes.size()];
+		double[][] adjacencyMatrix = new double[allNodes.size()][allNodes.size()];
 		int counter = 0;
 
 		for (Node node : allNodes) {
@@ -233,7 +233,7 @@ public class DesignSampler {
 			for (Edge edge : node.getEdges()) {
 				Node connectingNode = edge.getHead();
 				int columnNumber = nodeIdsToRowNumber.get(connectingNode.getNodeID());
-				adjacencyMatrix[rowNumber][columnNumber] = true;
+				adjacencyMatrix[rowNumber][columnNumber] = 1.0;
 			}
 		}
 
@@ -247,7 +247,7 @@ public class DesignSampler {
         // Create adj matrix
 
 		Map<String, Integer> nodeIdsToRowNumber = new HashMap<>();
-		boolean[][] adjacencyMatrix = createAdjacencyMatrix(nodeIdsToRowNumber);
+		double[][] adjacencyMatrix = createAdjacencyMatrix(nodeIdsToRowNumber);
 
         // Normalize adjacency matrix
         int numCols = graphadj.get(0).size();
