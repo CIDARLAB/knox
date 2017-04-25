@@ -40,7 +40,7 @@
             return false;
         }
         return true;
-    }
+    } 
 
     function disableScroll() {
         if (window.addEventListener) {
@@ -127,7 +127,7 @@
                     }
                 })
                 .attr("r", 7).call(force.drag);
-
+            
             const sbolImgSize = 50;
             
             var images = linksEnter.append("svg:image")
@@ -292,6 +292,14 @@
     }
 
     var currentSpace;
+
+    {
+        var query = "?targetSpaceID=test2";
+        var request = new XMLHttpRequest();
+        request.open("GET", "/enumerate" + query, false);
+        request.send(null);
+        window.alert(request.response);
+    }
     
     function onSearchSubmit(spaceid) {
         knox.getGraph(spaceid, (err, data) => {
