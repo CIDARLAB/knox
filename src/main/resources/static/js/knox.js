@@ -334,7 +334,7 @@
             confirmButtonColor: "#F05F40"
         });
         var query = "/enumerate?targetSpaceID="
-            + currentSpace + "&bfs=false";
+            + currentSpace + "&bfs=true";
         d3.json(query, (err, data) => {
             if (err) {
                 window.alert(err);
