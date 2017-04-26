@@ -236,6 +236,7 @@ public class DesignSampler {
 								comboDesign.add(compRole);
 								comboDesigns.add(comboDesign);
 							}
+							LOG.warn("component role {}", compRole);
 						} else {
 							List<String> comboDesign = new LinkedList<String>();
 							comboDesign.add(compRole);
