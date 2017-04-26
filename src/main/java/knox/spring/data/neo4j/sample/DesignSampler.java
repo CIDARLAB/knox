@@ -23,6 +23,17 @@ public class DesignSampler {
 		this.space = space;
 		starts = new LinkedList<>(space.getStartNodes());
 	}
+
+    /*
+		This method will randomly sample from the graph.
+
+		Arguments:
+			- int numSamples: the number of samples that the user wants returned
+
+		Returns:
+			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
+								 the specific component ids.
+	 */
 	
 	public Set<List<String>> sample(int numSamples) {
 
