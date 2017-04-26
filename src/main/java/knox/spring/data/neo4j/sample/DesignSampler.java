@@ -143,6 +143,7 @@ public class DesignSampler {
 			designs.add(new ArrayList<>());
 			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
 			LOG.warn("generated designs size {}", generatedDesigns.size());
+			LOG.warn("Node start {}", start.getNodeID());
 
 			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
 				allDesigns.addAll(generatedDesigns);
