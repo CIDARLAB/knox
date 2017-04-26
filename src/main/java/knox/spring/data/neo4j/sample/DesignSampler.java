@@ -188,14 +188,18 @@ public class DesignSampler {
 		for (Edge edge : node.getEdges()) {
 			Set<List<String>> visitedDesigns = new HashSet<>();
 
-			for (String componentRole : edge.getComponentRoles()) {
-				LOG.warn("component role {}", componentRole);
+			if (edge.hasComponentRoles()) {
+				for (String componentRole : edge.getComponentRoles()) {
+					LOG.warn("component role {}", componentRole);
 
-				for (List<String> design : designs) {
-					List<String> copiedDesign = new ArrayList<>(design);
-					copiedDesign.add(componentRole);
-					visitedDesigns.add(copiedDesign);
+					for (List<String> design : designs) {
+						List<String> copiedDesign = new ArrayList<>(design);
+						copiedDesign.add(componentRole);
+						visitedDesigns.add(copiedDesign);
+					}
 				}
+			} else {
+				visitedDesigns = designs;
 			}
 
 			allVisitedDesigns.addAll(dfsEnumerateRecursive(edge.getHead(), visitedDesigns));
