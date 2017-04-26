@@ -143,10 +143,10 @@ public class DesignSamplerTests extends TestCase {
     }
 
     public void testDfs() {
-//        Set<List<String>> set = designSampler.enumerate(EnumerateType.DFS, Integer.MAX_VALUE);
-//        assertEquals(set.size(), 8);
+        Set<List<String>> set = designSampler.enumerate(EnumerateType.DFS, Integer.MAX_VALUE);
+        assertEquals(set.size(), 8);
 
-        Set<List<String>> set = complexDesignSampler.enumerate(EnumerateType.DFS, Integer.MAX_VALUE);
+        set = complexDesignSampler.enumerate(EnumerateType.DFS, Integer.MAX_VALUE);
         assertEquals(set.size(), 1);
     }
 
