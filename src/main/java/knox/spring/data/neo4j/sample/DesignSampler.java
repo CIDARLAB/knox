@@ -142,8 +142,8 @@ public class DesignSampler {
 			Set<List<String>> designs = new HashSet<>();
 			designs.add(new ArrayList<>());
 			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
-			LOG.warn("generated designs size {}", generatedDesigns.size());
-			LOG.warn("Node start {}", start.getNodeID());
+			LOG.info("generated designs size {}", generatedDesigns.size());
+			LOG.info("Node start {}", start.getNodeID());
 
 			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
 				allDesigns.addAll(generatedDesigns);
@@ -178,28 +178,32 @@ public class DesignSampler {
 	*/
 	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
 		if (!node.hasEdges() || node.isAcceptNode()) {
-			LOG.warn("node done {}", node.getNodeID());
+			LOG.info("node done {}", node.getNodeID());
 			return designs;
 		}
 
 		Set<List<String>> allVisitedDesigns = new HashSet<>();
-		LOG.warn("node id {}", node.getNodeID());
+		LOG.info("node id {}", node.getNodeID());
 
 		for (Edge edge : node.getEdges()) {
 			Set<List<String>> visitedDesigns = new HashSet<>();
 
-			for (String componentRole : edge.getComponentRoles()) {
-				LOG.warn("component role {}", componentRole);
+			if (edge.hasComponentRoles()) {
+				for (String componentRole : edge.getComponentRoles()) {
+					LOG.info("component role {}", componentRole);
 
-				for (List<String> design : designs) {
-					List<String> copiedDesign = new ArrayList<>(design);
-					copiedDesign.add(componentRole);
-					visitedDesigns.add(copiedDesign);
+					for (List<String> design : designs) {
+						List<String> copiedDesign = new ArrayList<>(design);
+						copiedDesign.add(componentRole);
+						visitedDesigns.add(copiedDesign);
+					}
 				}
+			} else {
+				visitedDesigns = designs;
 			}
 
 			allVisitedDesigns.addAll(dfsEnumerateRecursive(edge.getHead(), visitedDesigns));
-			LOG.warn("visited designs size {}", allVisitedDesigns.size());
+			LOG.info("visited designs size {}", allVisitedDesigns.size());
 		}
 
 		return allVisitedDesigns;
@@ -236,7 +240,7 @@ public class DesignSampler {
 								comboDesign.add(compRole);
 								comboDesigns.add(comboDesign);
 							}
-							LOG.warn("component role {}", compRole);
+							LOG.info("component role {}", compRole);
 						} else {
 							List<String> comboDesign = new LinkedList<String>();
 							comboDesign.add(compRole);
