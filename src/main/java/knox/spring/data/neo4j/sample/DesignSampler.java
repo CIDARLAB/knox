@@ -56,7 +56,7 @@ public class DesignSampler {
 				}
 
 				// Choose edge based on weight
-				double rWeight = rand.nextDouble() * totalWeights;
+				double rWeight = Math.random() * totalWeights;
 
 				double countWeights = 0.0;
 				for (Edge e: node.getEdges()) {
@@ -68,8 +68,8 @@ public class DesignSampler {
 				}
 
 				
-				if (edge.hasComponentIDs()) {
-					sample.add(edge.getComponentID(rand.nextInt(edge.getNumComponentIDs())));
+				if (edge.hasComponentRoles()) {
+					sample.add(edge.getComponentRoles().get(rand.nextInt(edge.getComponentRoles().size())));
 				}
 				
 				node = edge.getHead();
@@ -81,18 +81,62 @@ public class DesignSampler {
 		return samples;
 	}
 
-	public Set<List<String>> enumerate(EnumerateType enumerateType, Integer requestedDesigns) {
-		int numberOfDesigns = requestedDesigns != null ? requestedDesigns : Integer.MAX_VALUE;
+	/*
+		This method will enumerate the graph: providing all possible paths from the start of the graph
+		to the end of the graph.
 
+		Arguments:
+			- enumerateType [EnumerateType]: Either will perform a breadth-first-depth or a depth-first-search
+			- requestedDesigns [int]: The number of requested designs. 5 is the default.
+
+		Returns:
+			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
+								 the specific component ids.
+	 */
+	public Set<List<String>> enumerate(EnumerateType enumerateType, int requestedDesigns) {
 		if (enumerateType == EnumerateType.BFS) {
-			return bfsEnumerate(numberOfDesigns);
+			return bfsEnumerate(requestedDesigns);
 		} else {
-			return dfsEnumerate(numberOfDesigns);
+			return dfsEnumerate(requestedDesigns);
 		}
 	}
 
+	/*
+		This method will enumerate the graph using a DFS method. If the number of designs requested is
+		less than the total possible number of designs, it will only return the first x designs requested,
+		where x is the number of requested designs. If this is the case, the designs generated each time
+		will be different as the edges are represented as a set, thereby giving a random ordering
+		each time they are looped over.
+
+		Arguments:
+			- requestedDesigns [int]: The number of requested designs. 5 is the default.
+
+		Returns:
+			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
+								 the specific component ids.
+
+		Notes:
+			- This algorithm is based on a permutation algorithm (obviously we have some differences
+			  due to adjacency limitations). Therefore, if we can assume our adjacency matrix is
+			  not not perfect (meaning that every node is connected to every other node), then our runtime
+			  is limited by n!. However, because each edge can have numerous component IDs, this will
+			  actually increase the runtime of our algorithm. Because this is a recursive algorithm, we
+			  also need to account for the callstack for every time the dfsEnumerateRecursive is
+			  called on itself. Presumably, this would simply by O(N) in additional runtime for each path.
+
+			  This algorithm is of course of high complexity, but it is worth noting that this is NP-hard,
+			  and therefore, it should suffice as generally there are no efficient solutions available
+			  without a heuristic.
+
+		Memory:
+			- The memory for this algorithm is similarly high. Luckily, Java garbage collection will remove
+			  unnecessary sets and lists that are created simply for aid of the final algorithm. On each iteration
+			  of the dfsEnumerateRecursive, we must create a new Set for each iteration to ensure that each
+			  copy represents specific information for a single n-1 permutation.
+
+	 */
 	private Set<List<String>> dfsEnumerate(int numberOfDesigns) {
-		Set<List<String>> allDesigns = new HashSet<List<String>>();
+		Set<List<String>> allDesigns = new HashSet<>();
 		int currentNumberOfDesigns = 0;
 
 		for (Node start : starts) {
@@ -119,6 +163,19 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
+	/*
+		This method is a helper method for a DFS algorithm. It is recursive and will call
+		itself repeatedly until a node is either at the end (being an accept node), or a node has no
+		outgoing edges. This algorithm follows a tail recursion approach.
+
+		Arguments:
+			- node [Node] The current node.
+			- designs [Set<List<String>>]: All of the designs that have been generated up until the current node.
+
+		Returns:
+			- Set<List<String>>: The paths that are generated at a single from a single node to the end.
+
+	*/
 	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
 		if (!node.hasEdges() || node.isAcceptNode()) {
 			String error = node.isAcceptNode() ? "accept node" : "no edges";
@@ -132,13 +189,13 @@ public class DesignSampler {
 		for (Edge edge : node.getEdges()) {
 			Set<List<String>> visitedDesigns = new HashSet<>();
 
-			for (String componentId : edge.getComponentRoles()) {
-				LOG.warn("component id {}", componentId);
+			for (String componentRole : edge.getComponentRoles()) {
+				LOG.warn("component role {}", componentRole);
 
 				for (List<String> design : designs) {
 					LOG.warn("Design space size {}", design.size());
 					List<String> copiedDesign = new ArrayList<>(design);
-					copiedDesign.add(componentId);
+					copiedDesign.add(componentRole);
 					visitedDesigns.add(copiedDesign);
 				}
 			}
@@ -171,18 +228,19 @@ public class DesignSampler {
 			
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
-				if (edge.hasComponentIDs()) {
+				if (edge.hasComponentRoles()) {
 					Set<List<String>> comboDesigns = new HashSet<>();
-					for (String compID : edge.getComponentRoles()) {
+
+					for (String compRole : edge.getComponentRoles()) {
 						if (designs.size() > 0) {
 							for (List<String> design : designs) {
 								List<String> comboDesign = new LinkedList<>(design);
-								comboDesign.add(compID);
+								comboDesign.add(compRole);
 								comboDesigns.add(comboDesign);
 							}
 						} else {
 							List<String> comboDesign = new LinkedList<String>();
-							comboDesign.add(compID);
+							comboDesign.add(compRole);
 							comboDesigns.add(comboDesign);
 						}
 					}
@@ -245,15 +303,19 @@ public class DesignSampler {
 			- double[][]: The adjacency matrix. 0 represents no connection and 1 represents
 			a connection.
 	 */
-	private double[][] createAdjacencyMatrix(Map<String, Integer> nodeIdsToRowNumber) {
+	private double[][] createAdjacencyMatrix(Map<Integer,String> rowtoNodeIds) {
 		Set<Node> allNodes = space.getNodes();
 		double[][] adjacencyMatrix = new double[allNodes.size()][allNodes.size()];
 		int counter = 0;
 
+        Map<String, Integer> nodeIdsToRowNumber = new HashMap<>();
+
 		for (Node node : allNodes) {
 			nodeIdsToRowNumber.put(node.getNodeID(), counter);
+			rowtoNodeIds.put(counter, node.getNodeID());
 			counter += 1;
 		}
+
 
 		for (Node node : allNodes) {
 			int rowNumber = nodeIdsToRowNumber.get(node.getNodeID());
@@ -264,39 +326,30 @@ public class DesignSampler {
 			}
 		}
 
+
 		return adjacencyMatrix;
 	}
 
+    /*
+    This method implements the Markov Clustering algorithm in order to discover
+    highly connected regions of the design space.
+
+    Arguments:
+        - None
+
+    Returns:
+        - A Set of List<String>: Each List has a string of NodeIds belonging to one cluster. 
+ */
 	public Set<List<String>> partition() {
-		Set<List<String>> partitions = new HashSet<>();
+		Map<Integer,String> rowtoNodeIds = new HashMap<>();
+		double[][] graphadj = createAdjacencyMatrix(rowtoNodeIds);
 
-        ArrayList<ArrayList<Double>> graphadj = new ArrayList<>();
-        // Create adj matrix
+        graphadj = normByCol(graphadj);
 
-		Map<String, Integer> nodeIdsToRowNumber = new HashMap<>();
-		double[][] adjacencyMatrix = createAdjacencyMatrix(nodeIdsToRowNumber);
-
-        // Normalize adjacency matrix
-        int numCols = graphadj.get(0).size();
-        int sumCols[] = new int[numCols];
-
-        // Get sums of the columns
-        sumCols = calcSumCols(graphadj);
-
-        // Divide elements in column by sum of column
+        double[][] oldAdj;
         double newVal;
-        for (ArrayList<Double> row: graphadj) {
-            for (int i = 0; i < numCols; i++) {
-                if (row.get(i) == 1) {
-                    newVal = row.get(i)/sumCols[i];
-                    row.set(i, newVal);
-                }
-            }
-        }
-
-        ArrayList<ArrayList<Double>> oldAdj = graphadj;
-        int numRows = oldAdj.size();
-        numCols = oldAdj.get(0).size();
+        int numRows = graphadj.length;
+        int numCols = graphadj[0].length;
         int inflation_power = 2;
 
         do {
@@ -306,38 +359,28 @@ public class DesignSampler {
             // Expansion and Inflation
             for (int i = 0; i < numRows; i++) {
                 for (int j = 0; j < numCols; j++) {
-                    if (graphadj.get(i).get(j) == 0)
+                    if (graphadj[i][j] == 0)
                         continue;
 
-                    newVal = Math.pow(graphadj.get(i).get(j) * graphadj.get(i).get(j), inflation_power);
-                    graphadj.get(i).set(j, newVal);
+                    newVal = Math.pow(graphadj[i][j] * graphadj[i][j], inflation_power);
+                    graphadj[i][j] =  newVal;
                 }
             }
 
-            // Get sums of colums
-            sumCols = calcSumCols(graphadj);
-
-            // Divide elements in column by sum of column
-            for (ArrayList<Double> row: graphadj) {
-                for (int i = 0; i < numCols; i++) {
-                    if (row.get(i) == 1) {
-                        newVal = row.get(i) / sumCols[i];
-                        row.set(i,newVal);
-                    }
-                }
-            }
+            graphadj = normByCol(graphadj);
 
 
         } while(isChanged(graphadj,oldAdj));
 
 
         // Analyze graphadj to discover the set of clusters
-        Set<List<Integer>> clusters = new HashSet<>();
-        for (ArrayList<Double> row: graphadj) {
-            List<Integer> cluster = new ArrayList<Integer>();
+        Set<List<String>> clusters = new HashSet<>();
+        for (double[] row: graphadj) {
+            List<String> cluster = new ArrayList<>();
             for (int i = 0; i < numCols; i++) {
-                if (row.get(i) >= 0.01) {
-                    cluster.add(i);
+                if (row[i] >= 0.01) {
+                    String nodeID = rowtoNodeIds.get(i);
+                    cluster.add(nodeID);
                 }
             }
             clusters.add(cluster);
@@ -345,35 +388,45 @@ public class DesignSampler {
 
 
 
-		return partitions;
+		return clusters;
 	}
 
-	private boolean isChanged(ArrayList<ArrayList<Double>> old, ArrayList<ArrayList<Double>> mod) {
-            int numRows = old.size();
-            int numCols = old.get(0).size();
+	private boolean isChanged(double[][] old, double[][] mod) {
+            int numRows = old.length;
+            int numCols = old[0].length;
 
             boolean change = true;
             for (int i = 0; i < numRows; i++) {
                 for (int j = 0; j < numCols; j++) {
-                   if (Math.abs(old.get(i).get(j) - mod.get(i).get(j)) <= 0.001)
+                   if (Math.abs(old[i][j] - mod[i][j]) <= 0.001)
                        change = false;
                 }
             }
             return change;
     }
 
-    private int[] calcSumCols(ArrayList<ArrayList<Double>> graphadj) {
-        int numCols = graphadj.get(0).size();
+    private double[][] normByCol(double[][] graphadj) {
+        int numCols = graphadj[0].length;
         int sumCols[] = new int[numCols];
 
         // Get sums of the columns
-        for (ArrayList<Double> row: graphadj) {
+        for (double [] row: graphadj) {
             for (int i = 0; i < numCols; i++) {
-                if (row.get(i) == 1.0)
+                if (row[i] == 1.0)
                     sumCols[i]++;
             }
         }
-        return sumCols;
+
+        // Divide elements in column by sum of column
+        double newVal;
+        for (double[] row: graphadj) {
+            for (int i = 0; i < numCols; i++) {
+                if (row[i] == 1) {
+                    row[i] = row[i]/sumCols[i];
+                }
+            }
+        }
+        return graphadj;
     }
 
 
