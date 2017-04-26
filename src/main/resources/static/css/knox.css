@@ -702,6 +702,6 @@ textarea:focus, input:focus{
     padding: 10px;
 }
 
-body.modal-open {
-    overflow: visible;
+#swal-svg-box {
+    overflow: scroll;
 }

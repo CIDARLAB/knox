@@ -19,47 +19,9 @@
     };
 })();
 
-// d3.json("/sample?targetSpaceID=test2&numberOfSamples=5", (err, data) => {
-//     if (err) {
-//         window.alert(JSON.stringify(err));
-//     } else {
-//         window.alert(JSON.stringify(data));
-//     }
-// });
-
 // Utility for disabling navigation features.
-// Exposes the function disableScroll and disableTabs.
+// Exposes the function disableTabs.
 (function($) {
-    // left: 37, up: 38, right: 39, down: 40,
-    // spacebar: 32, pageup: 33, pagedown: 34, end: 35, home: 36
-    var keys = {37: 1, 38: 1, 39: 1, 40: 1};
-
-    function preventDefault(e) {
-        e = e || window.event;
-        if (e.preventDefault) {
-            e.preventDefault();
-        }
-        e.returnValue = false;
-    }
-
-    function preventDefaultForScrollKeys(e) {
-        if (keys[e.keyCode]) {
-            preventDefault(e);
-            return false;
-        }
-        return true;
-    } 
-
-    function disableScroll() {
-        if (window.addEventListener) {
-            window.addEventListener("DOMMouseScroll", preventDefault, false);
-        }
-        window.onwheel = preventDefault;
-        window.onmousewheel = document.onmousewheel = preventDefault;
-        window.ontouchmove  = preventDefault;
-        document.onkeydown  = preventDefaultForScrollKeys;
-    }
-
     function disableTabs() {
         $(document).keydown(function (e) {
             var keycode1 = (e.keyCode ? e.keyCode : e.which);
@@ -69,8 +31,6 @@
             }
         });
     }
-
-    window.disableScroll = disableScroll;
 
     window.disableTabs = disableTabs;
 })(jQuery);
@@ -245,7 +205,6 @@
     };
     
     window.onload = function() {
-        disableScroll();
         disableTabs();
         hideExplorePageBtns();
         $.ajax({
@@ -373,8 +332,6 @@
             text: layouts.listModal,
             animation: false,
             confirmButtonColor: "#F05F40"
-        }, () => {
-            
         });
         var query = "/enumerate?targetSpaceID="
             + currentSpace + "&bfs=false";
