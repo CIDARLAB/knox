@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.*;
+import java.lang.*;
 
 public class DesignSampler {
 	private static final Logger LOG = LoggerFactory.getLogger(DesignSampler.class);
@@ -292,11 +293,155 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
-	public Set<List<String>> partition() {
-		Set<List<String>> partitions = new HashSet<>();
+    /*
+        This method is responsible for creating an adjacency matrix from a given graph.
+        It does so by looping over each of the nodes in a design space and assigning them
+        a row/column number and storing this information in a map with the nodeID as the
+        key and the row/column number as the value.
+
+        After that has been completed, the method then iterates through each of the connecting
+        nodes that every node has. If a connection exists, the values for the row and column
+        numbers for each of the nodes will be found in the graph and the adjacency matrix
+        will be updated to 1 for that specific connection.
+
+        Because this is a directed graph, we understand a connection at cell [i][j] as an
+        edge existing from i to j, and not necessarily vice versa.
+
+        This takes O(N + KN) where N is the number of nodes and K is the number of outgoing
+        edges each node has (this number will vary for each node).
+
+        Arguments:
+            - nodeIdsToRowNumber [Map<String, Integer>]: The map that will store the nodeIds to
+            row numbers
+
+        Returns:
+            - double[][]: The adjacency matrix. 0 represents no connection and 1 represents
+            a connection.
+     */
+    private double[][] createAdjacencyMatrix(Map<Integer,String> rowtoNodeIds) {
+        Set<Node> allNodes = space.getNodes();
+        double[][] adjacencyMatrix = new double[allNodes.size()][allNodes.size()];
+        int counter = 0;
+
+        Map<String, Integer> nodeIdsToRowNumber = new HashMap<>();
+
+        for (Node node : allNodes) {
+            nodeIdsToRowNumber.put(node.getNodeID(), counter);
+            rowtoNodeIds.put(counter, node.getNodeID());
+            counter += 1;
+        }
+
+
+        for (Node node : allNodes) {
+            int rowNumber = nodeIdsToRowNumber.get(node.getNodeID());
+            for (Edge edge : node.getEdges()) {
+                Node connectingNode = edge.getHead();
+                int columnNumber = nodeIdsToRowNumber.get(connectingNode.getNodeID());
+                adjacencyMatrix[rowNumber][columnNumber] = 1.0;
+            }
+        }
+
+
+        return adjacencyMatrix;
+    }
+
+    /*
+    This method implements the Markov Clustering algorithm in order to discover
+    highly connected regions of the design space.
+
+    Arguments:
+        - None
+
+    Returns:
+        - A Set of List<String>: Each List has a string of NodeIds belonging to one cluster.
+    */
+    public Set<List<String>> partition() {
+        Map<Integer,String> rowtoNodeIds = new HashMap<>();
+        double[][] graphadj = createAdjacencyMatrix(rowtoNodeIds);
+
+        graphadj = normByCol(graphadj);
+
+        double[][] oldAdj;
+        double newVal;
+        int numRows = graphadj.length;
+        int numCols = graphadj[0].length;
+        int inflation_power = 2;
+
+        do {
+
+            oldAdj = graphadj;
+
+            // Expansion and Inflation
+            for (int i = 0; i < numRows; i++) {
+                for (int j = 0; j < numCols; j++) {
+                    if (graphadj[i][j] == 0)
+                        continue;
+
+                    newVal = Math.pow(graphadj[i][j] * graphadj[i][j], inflation_power);
+                    graphadj[i][j] =  newVal;
+                }
+            }
+
+            graphadj = normByCol(graphadj);
+
+
+        } while(isChanged(graphadj,oldAdj));
+
+
+        // Analyze graphadj to discover the set of clusters
+        Set<List<String>> clusters = new HashSet<>();
+        for (double[] row: graphadj) {
+            List<String> cluster = new ArrayList<>();
+            for (int i = 0; i < numCols; i++) {
+                if (row[i] >= 0.01) {
+                    String nodeID = rowtoNodeIds.get(i);
+                    cluster.add(nodeID);
+                }
+            }
+            clusters.add(cluster);
+        }
 
 
 
-		return partitions;
-	}
+        return clusters;
+    }
+
+    private boolean isChanged(double[][] old, double[][] mod) {
+        int numRows = old.length;
+        int numCols = old[0].length;
+
+        boolean change = true;
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                if (Math.abs(old[i][j] - mod[i][j]) <= 0.001)
+                    change = false;
+            }
+        }
+        return change;
+    }
+
+    private double[][] normByCol(double[][] graphadj) {
+        int numCols = graphadj[0].length;
+        int sumCols[] = new int[numCols];
+
+        // Get sums of the columns
+        for (double [] row: graphadj) {
+            for (int i = 0; i < numCols; i++) {
+                if (row[i] == 1.0)
+                    sumCols[i]++;
+            }
+        }
+
+        // Divide elements in column by sum of column
+        double newVal;
+        for (double[] row: graphadj) {
+            for (int i = 0; i < numCols; i++) {
+                if (row[i] == 1) {
+                    row[i] = row[i]/sumCols[i];
+                }
+            }
+        }
+        return graphadj;
+    }
+
 }
