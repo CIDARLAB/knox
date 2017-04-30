@@ -226,7 +226,13 @@ public class Node {
     
     public boolean deleteEdges(Set<Edge> edges) {
     	if (hasEdges()) {
-    		return this.edges.removeAll(edges);
+    		boolean success = this.edges.removeAll(edges);
+    		
+    		if (this.edges.isEmpty()) {
+    			this.edges = null;
+    		}
+    		
+    		return success;
     	} else {
     		return false;
     	}

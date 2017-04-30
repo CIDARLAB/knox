@@ -1,11 +1,25 @@
 package knox.spring.data.neo4j.domain;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 
 import knox.spring.data.neo4j.domain.Node.NodeType;
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -50,11 +64,13 @@ public class NodeSpace {
 		nodes.add(node);
 	}
 	
-	public Set<Node> removeAllNodes() {
-		Set<Node> removedNodes = nodes;
-		nodes.clear();
-		return removedNodes;
-	}
+	public void clearNodes() {
+    	if (hasNodes()) {
+    		nodes = null;
+    		
+    		idIndex = 0;
+    	}
+    }
 	
 	public Node copyNodeWithEdges(Node node) {
 		Node nodeCopy = copyNode(node);
@@ -319,6 +335,36 @@ public class NodeSpace {
     	return nodeIDToNode;
     }
     
+    public void labelAcceptNodes() {
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			if (!node.hasEdges()) {
+    				node.setNodeType(Node.NodeType.ACCEPT.getValue());
+    			}
+    		}
+    	}
+    }
+    
+    public void labelStartNodes() {
+    	if (hasNodes()) {
+    		Set<String> successorIDs = new HashSet<String>();
+
+    		for (Node node : nodes) {
+    			if (node.hasEdges()) {
+    				for (Edge edge : node.getEdges()) {
+    					successorIDs.add(edge.getHead().getNodeID());
+    				}
+    			}
+    		}
+
+    		for (Node node : nodes) {
+    			if (!successorIDs.contains(node.getNodeID())) {
+    				node.setNodeType(Node.NodeType.START.getValue());
+    			}
+    		}
+    	}
+    }
+    
     public void mergeStartNodes() {
     	if (hasNodes()) {
     		Iterator<Node> startNodes = getStartNodes().iterator();
@@ -337,6 +383,88 @@ public class NodeSpace {
     			nodes.remove(secondaryStart);
     		}
     	}
+    }
+    
+//    public HashMap<String, Integer> calculateNodeDepths() {
+//    	Stack<Node> nodeStack = new Stack<Node>();
+//
+//    	Stack<Integer> depthStack = new Stack<Integer>();
+//
+//    	for (Node startNode : getStartNodes()) {
+//    		nodeStack.push(startNode);
+//
+//    		depthStack.push(new Integer(0));
+//    	}
+//
+//    	HashMap<String, Integer> nodeDepths = new HashMap<String, Integer>();
+//
+//    	Set<String> visitedIDs = new HashSet<String>();
+//
+//    	while (!nodeStack.isEmpty()) {
+//    		Node node = nodeStack.pop();
+//
+//    		Integer depth = depthStack.pop();
+//
+//    		if (nodeDepths.containsKey(node.getNodeID())) {
+//    			Integer minDepth = nodeDepths.get(node.getNodeID());
+//
+//    			if (depth.intValue() < minDepth.intValue()) {
+//    				nodeDepths.put(node.getNodeID(), depth);
+//    			}
+//    		} else {
+//    			nodeDepths.put(node.getNodeID(), depth);
+//    		}
+//
+//    		visitedIDs.add(node.getNodeID());
+//
+//    		if (node.hasEdges()) {
+//    			for (Edge edge : node.getEdges()) {
+//    				if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+//    					nodeStack.push(edge.getHead());
+//
+//    					depthStack.push(new Integer(depth.intValue() + 1));
+//    				}
+//    			}
+//    		}
+//    	}
+//
+//    	return nodeDepths;
+//    }
+    
+    public List<Node> orderNodes() {
+    	List<Node> orderedNodes;
+    	
+    	if (hasNodes()) {
+    		orderedNodes = new ArrayList<Node>(nodes.size());
+        	
+        	Stack<Node> nodeStack = new Stack<Node>();
+        	
+        	for (Node startNode : getStartNodes()) {
+        		nodeStack.push(startNode);
+        	}
+        	
+        	Set<String> visitedIDs = new HashSet<String>();
+        	
+        	while (!nodeStack.isEmpty()) {
+        		Node node = nodeStack.pop();
+        		
+        		orderedNodes.add(node);
+        		
+        		visitedIDs.add(node.getNodeID());
+        		
+        		if (node.hasEdges()) {
+        			for (Edge edge : node.getEdges()) {
+        				if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+        					nodeStack.push(edge.getHead());
+        				}
+        			}
+        		}
+        	}
+    	} else {
+    		orderedNodes = new ArrayList<Node>(0);
+    	}
+    	
+    	return orderedNodes;
     }
     
     public Set<Node> getOtherNodes(Set<Node> nodes) {
@@ -411,7 +539,11 @@ public class NodeSpace {
     	this.idIndex = idIndex;
     }
     
-    public void removeNodesWithSameIDs(Set<Node> nodes) {
+    public void deleteUnreachableNodes() {
+    	deleteNodesWithoutSameIDs(orderNodes());
+    }
+    
+    public void deleteNodesWithSameIDs(Collection<Node> nodes) {
     	Set<String> nodeIDs = new HashSet<String>();
     	
     	for (Node node : nodes) {
@@ -432,10 +564,42 @@ public class NodeSpace {
     	
     	nodes.removeAll(removedNodes);
     	
+    	if (nodes.isEmpty()) {
+    		nodes = null;
+    	}
+    	
     	return removedNodes;
     }
     
-    public void unionNodes(NodeSpace space) {
+    public void deleteNodesWithoutSameIDs(Collection<Node> nodes) {
+    	Set<String> nodeIDs = new HashSet<String>();
+    	
+    	for (Node node : nodes) {
+    		nodeIDs.add(node.getNodeID());
+    	}
+    	
+    	retainNodesByID(nodeIDs);
+    }
+    
+    public Set<Node> retainNodesByID(Set<String> nodeIDs) {
+    	Set<Node> removedNodes = new HashSet<Node>();
+    	
+    	for (Node node : nodes) {
+    		if (!nodeIDs.contains(node.getNodeID())) {
+    			removedNodes.add(node);
+    		}
+    	}
+    	
+    	nodes.removeAll(removedNodes);
+    	
+    	if (nodes.isEmpty()) {
+    		nodes = null;
+    	}
+    	
+    	return removedNodes;
+    }
+    
+    public void union(NodeSpace space) {
     	if (space.hasNodes()) {
 			HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
 

@@ -190,10 +190,10 @@ public class Edge {
     	}
     }
     
-    public boolean isMatchingTo(Edge edge, int strength) {
-    	if (strength == 0 && hasSameComponents(edge)
-				|| strength == 1 && hasSharedComponents(edge) 
-				|| strength == 2 && hasSharedRoles(edge)) {
+    public boolean isMatchingTo(Edge edge, int tolerance) {
+    	if (tolerance == 0 && hasSameComponents(edge)
+				|| tolerance == 1 && hasSharedComponents(edge) 
+				|| tolerance == 2 && hasSharedRoles(edge)) {
 			return true;
 		} else {
 			return false;

@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 //import org.springframework.transaction.annotation.Transactional;
 
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -507,7 +508,7 @@ public class DesignSpaceService {
 		return compIDToRole;
     }
     
-    public void mergeSBOL(List<InputStream> inputSBOLStreams, String outputSpaceID, String authority) 
+    public void importSBOL(List<InputStream> inputSBOLStreams, String outputSpaceID, String authority) 
     		throws SBOLValidationException, IOException, SBOLConversionException {
     	
     	List<String> compositeDefIDs = new LinkedList<String>();
@@ -564,7 +565,7 @@ public class DesignSpaceService {
     		}
     	}
     
-    	mergeDesignSpaces(compositeDefIDs, outputSpaceID, false, false, 0, 0);
+    	orDesignSpaces(compositeDefIDs, outputSpaceID);
     }
     
     private List<ComponentDefinition> flattenComponentDefinition(ComponentDefinition rootDef) {
@@ -953,13 +954,14 @@ public class DesignSpaceService {
     	}
     }
     
-    public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, boolean isIntersection, 
-    		boolean isCompleteMatch, int strength, int degree) {
-    	mergeBranches(targetSpaceID, inputBranchIDs, RESERVED_ID, isIntersection, isCompleteMatch, strength, degree);
+    public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
+    		int tolerance, int strength, boolean isIntersection, boolean isConservative) {
+    	mergeBranches(targetSpaceID, inputBranchIDs, RESERVED_ID, tolerance, strength, 
+    			isIntersection, isConservative);
     }
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, String outputBranchID, 
-    		boolean isIntersection, boolean isCompleteMatch, int strength, int degree) {
+    		int tolerance, int strength, boolean isIntersection, boolean isConservative) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
     	
     	List<String> prunedBranchIDs = new LinkedList<String>(inputBranchIDs);
@@ -1004,8 +1006,8 @@ public class DesignSpaceService {
     		outputCommit.addPredecessor(inputCommit);
     	}
    
-    	mergeNodeSpaces(inputSnapshots, outputCommit.getSnapshot(), isIntersection, isCompleteMatch,
-    			strength, degree);
+    	mergeNodeSpaces(inputSnapshots, outputCommit.getSnapshot(), tolerance, strength, 
+    			isIntersection, isConservative);
 
     	saveDesignSpace(targetSpace);
     	
@@ -1385,17 +1387,17 @@ public class DesignSpaceService {
     	return completeMatches;
     }
     
-    public void mergeDesignSpaces(List<String> inputSpaceIDs, boolean isIntersection, boolean isCompleteMatch,
-    		int strength, int degree) 
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, int strength, 
+    		boolean isIntersection, boolean isConservative) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
     		DesignSpaceBranchesConflictException {
     	validateListParameter("inputSpaceIDs", inputSpaceIDs);
     	
-    	mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), isIntersection, isCompleteMatch, strength, degree);
+    	mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, strength, isIntersection, isConservative);
     }
     
-    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, boolean isIntersection, 
-    		boolean isCompleteMatch, int strength, int degree) 
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance, int strength,
+    		boolean isIntersection, boolean isConservative) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
     		DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -1434,8 +1436,8 @@ public class DesignSpaceService {
     		outputSpace = new DesignSpace(outputSpaceID, 0, maxMergeIndex);
     	}
     	
-    	mergeNodeSpaces(prunedSpaces, outputSpace, isIntersection, isCompleteMatch, 
-    			strength, degree);
+    	mergeNodeSpaces(prunedSpaces, outputSpace, tolerance, strength,
+    			isIntersection, isConservative);
   
     	saveDesignSpace((DesignSpace) outputSpace);
     	
@@ -1458,7 +1460,7 @@ public class DesignSpaceService {
     		headBranchIDs.add(headBranchID);
     	}
     	
-    	mergeBranches(outputSpaceID, headBranchIDs, isIntersection, isCompleteMatch, strength, degree);
+    	mergeBranches(outputSpaceID, headBranchIDs, tolerance, strength, isIntersection, isConservative);
     	
     	if (!inputSpaceIDs.contains(outputSpaceID)) {
     		selectHeadBranch(outputSpaceID, headBranchIDs.get(0));
@@ -1469,216 +1471,408 @@ public class DesignSpaceService {
     		int strength, int degree) {
     	if (inputSpaces.size() > 1) {
     		mergeNodeSpaces(inputSpaces.subList(1, inputSpaces.size()), inputSpaces.get(0), 
-    				isIntersection, isCompleteMatch, strength, degree);
+    				 strength, degree, isIntersection, isCompleteMatch);
     	}
     }
     
-    private void mergeNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-    		boolean isIntersection, boolean isCompleteMatch, int strength, int degree) {
-    	int x = 0;
-    	for (NodeSpace inputSpace : inputSpaces) {
-    		System.out.println("merge " + x++);
-    		if (outputSpace.hasNodes()) {
-    			Set<Edge> mergedEdges = new HashSet<Edge>();
-    			
-    			HashMap<String, Node> mergedIDToOutputNode = new HashMap<String, Node>();
-    			
-    			HashMap<String, Set<Node>> inputIDToOutputNodes = new HashMap<String, Set<Node>>();
-    			
-    			HashMap<String, Set<Node>> priorIDToOutputNodes = new HashMap<String, Set<Node>>();
-        		
-        		HashMap<String, Integer> idToInputDepth = calculateNodeDepths(inputSpace);
-        		
-        		HashMap<String, Integer> idToOutputDepth = calculateNodeDepths(outputSpace);
-        		
-        		Set<Node> priorOutputNodes = new HashSet<Node>(outputSpace.getNodes());
-        		
-        		for (Node inputNode : inputSpace.getNodes()) {
-        			for (Node priorOutputNode : priorOutputNodes) {
-        				Integer inputDepth = idToInputDepth.get(inputNode.getNodeID());
-        				
-        				Integer outputDepth = idToOutputDepth.get(priorOutputNode.getNodeID());
-        				
-        				if (inputNode.hasEdges() 
-        						&& priorOutputNode.hasEdges()
-        						&& (degree == 2 
-        								|| (degree == 1 && inputDepth.intValue() <= outputDepth.intValue()) 
-        								|| (degree == 0 && inputDepth.intValue() == outputDepth.intValue()))) {
-        					for (Edge inputEdge : inputNode.getEdges()) {
-        						for (Edge priorOutputEdge : priorOutputNode.getEdges()) {
-        							if (inputEdge.isMatchingTo(priorOutputEdge, strength)) {
-        								String mergedID = inputNode.getNodeID() + priorOutputNode.getNodeID();
-        								
-        								Node outputNode;
-        								
-        								if (mergedIDToOutputNode.containsKey(mergedID)) {
-        									outputNode = mergedIDToOutputNode.get(mergedID);
-        								} else {
-        									if (inputNode.isStartNode() || priorOutputNode.isStartNode()) {
-        										outputNode = outputSpace.createStartNode();
-        									} else if (inputNode.isAcceptNode() || priorOutputNode.isAcceptNode()) {
-        										outputNode = outputSpace.createAcceptNode();
-        									} else {
-        										outputNode = outputSpace.createNode();
-        									}
-        									
-        									mergedIDToOutputNode.put(mergedID, outputNode);
-        									
-        									if (!inputIDToOutputNodes.containsKey(inputNode.getNodeID())) {
-        										inputIDToOutputNodes.put(inputNode.getNodeID(), new HashSet<Node>());
-        									} 
-        									
-        									inputIDToOutputNodes.get(inputNode.getNodeID()).add(outputNode);
-        									
-        									if (!priorIDToOutputNodes.containsKey(priorOutputNode.getNodeID())) {
-        										priorIDToOutputNodes.put(priorOutputNode.getNodeID(), new HashSet<Node>());
-        									}
-        									
-        									priorIDToOutputNodes.get(priorOutputNode.getNodeID()).add(outputNode);
-        								}
-        								
-        								mergedID = inputEdge.getHead().getNodeID() + priorOutputEdge.getHead().getNodeID();
-        								
-        								Node outputSuccessor;
-        								
-        								if (mergedIDToOutputNode.containsKey(mergedID)) {
-        									outputSuccessor = mergedIDToOutputNode.get(mergedID);
-        									
-        									if (outputSuccessor.isStartNode()) {
-        										if (inputEdge.getHead().isAcceptNode() || priorOutputEdge.getHead().isAcceptNode()) {
-        											outputSuccessor.setNodeType(NodeType.ACCEPT.getValue());
-        										} else {
-        											outputSuccessor.clearNodeType();
-        										}
-        									}
-        								} else {
-        									if (inputEdge.getHead().isAcceptNode() || priorOutputEdge.getHead().isAcceptNode()) {
-        										outputSuccessor = outputSpace.createAcceptNode();
-        									} else {
-        										outputSuccessor = outputSpace.createNode();
-        									}
-        									
-        									mergedIDToOutputNode.put(mergedID, outputSuccessor);
-        									
-        									if (!inputIDToOutputNodes.containsKey(inputEdge.getHead().getNodeID())) {
-        										inputIDToOutputNodes.put(inputEdge.getHead().getNodeID(), new HashSet<Node>());
-        									} 
-        									
-        									inputIDToOutputNodes.get(inputEdge.getHead().getNodeID()).add(outputSuccessor);
-        									
-        									if (!priorIDToOutputNodes.containsKey(priorOutputEdge.getHead().getNodeID())) {
-        										priorIDToOutputNodes.put(priorOutputEdge.getHead().getNodeID(), new HashSet<Node>());
-        									}
-        									
-        									priorIDToOutputNodes.get(priorOutputEdge.getHead().getNodeID()).add(outputSuccessor);
-        								}
-        								
-        								Edge outputEdge = outputNode.copyEdge(priorOutputEdge, outputSuccessor);
-        								
-        								if (isIntersection) {
-        									outputEdge.intersectWithEdge(inputEdge);
-        								} else if (strength > 0) {
-        									outputEdge.unionWithEdge(inputEdge);
-        								}
-        								
-        								mergedEdges.add(inputEdge);
-            							
-            							mergedEdges.add(priorOutputEdge);
-        							}
-        						}
-        					}
-        				}
-        			}
-        		}
-        		
-        		if (!isIntersection) {
-        			mergeSurplusNodes(inputSpace.getNodes(), mergedEdges, inputIDToOutputNodes, outputSpace);
-        			
-        			mergeSurplusNodes(priorOutputNodes, mergedEdges, priorIDToOutputNodes, outputSpace);
-        		}
-        		
-        		outputSpace.removeNodesWithSameIDs(priorOutputNodes);
-    		} else {
-    			outputSpace.unionNodes(inputSpace);
+    private int locateNodeFrom(String nodeID, int k, List<Node> nodes) {
+    	for (int i = k; i < nodes.size(); i++) {
+    		if (nodes.get(i).getNodeID().equals(nodeID)) {
+    			return i;
     		}
-    		
-    		Set<String> successorIDs = new HashSet<String>();
-        	
-        	for (Node outputNode : outputSpace.getNodes()) {
-        		if (outputNode.hasEdges()) {
-        			for (Edge outputEdge : outputNode.getEdges()) {
-        				successorIDs.add(outputEdge.getHead().getNodeID());
-        			}
-        		} else if (!outputNode.isAcceptNode()) {
-        			outputNode.setNodeType(Node.NodeType.ACCEPT.getValue());
-        		}
-        	}
-        	
-        	for (Node outputNode : outputSpace.getNodes()) {
-        		if (!successorIDs.contains(outputNode.getNodeID()) && !outputNode.isStartNode()) {
-        			outputNode.setNodeType(Node.NodeType.START.getValue());
-        		}
-        	}
-        	
-        	outputSpace.mergeStartNodes();
     	}
+    	
+    	for (int i = 0; i < k; i++) {
+    		if (nodes.get(i).getNodeID().equals(nodeID)) {
+    			return i;
+    		}
+    	}
+    	
+    	return -1;
     }
     
-    private HashMap<String, Integer> calculateNodeDepths(NodeSpace space) {
-    	int maxDepth = 0;
-    	
-    	String max = "";
-    	
+    private void pruneUnmergedEdges(NodeSpace space, Set<Edge> nsEdges, Set<Edge> ewEdges) {
     	Stack<Node> nodeStack = new Stack<Node>();
     	
-    	Stack<Integer> depthStack = new Stack<Integer>();
+    	Stack<Integer> directionStack = new Stack<Integer>();
     	
     	for (Node startNode : space.getStartNodes()) {
     		nodeStack.push(startNode);
     		
-    		depthStack.push(new Integer(0));
+    		directionStack.push(new Integer(0));
     	}
     	
-    	HashMap<String, Integer> nodeDepths = new HashMap<String, Integer>();
+//    	System.out.println("start " + space.getStartNodes().size());
+//    	
+//    	System.out.println("ns " + nsEdges.size());
+//    	
+//    	System.out.println("ew " + ewEdges.size());
     	
     	Set<String> visitedIDs = new HashSet<String>();
     	
     	while (!nodeStack.isEmpty()) {
     		Node node = nodeStack.pop();
     		
-    		Integer depth = depthStack.pop();
-    		
-    		if (nodeDepths.containsKey(node.getNodeID())) {
-    			Integer minDepth = nodeDepths.get(node.getNodeID());
-    			
-    			if (depth.intValue() < minDepth.intValue()) {
-    				nodeDepths.put(node.getNodeID(), depth);
-    			}
-    		} else {
-    			nodeDepths.put(node.getNodeID(), depth);
-    			
-    			if (depth > maxDepth) {
-    				maxDepth = depth;
-    				
-    				max = node.getNodeID();
-    			}
-    		}
+    		Integer direction = directionStack.pop();
     		
     		visitedIDs.add(node.getNodeID());
     		
     		if (node.hasEdges()) {
+    			Set<Edge> prunedEdges = new HashSet<Edge>();
+    			
     			for (Edge edge : node.getEdges()) {
-    				if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+    				if (nsEdges.contains(edge)) {
+    					if (direction.intValue() == 0 || direction.intValue() == 1) {
+    						if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+    							nodeStack.push(edge.getHead());
+
+    							directionStack.push(new Integer(1));
+    						}
+    					} else {
+    						prunedEdges.add(edge);
+    					}
+    				} else if (ewEdges.contains(edge)) {
+    					if (direction.intValue() == 0 || direction.intValue() == 2) {
+    						if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+    							nodeStack.push(edge.getHead());
+
+    							directionStack.push(new Integer(2));
+    						}
+    					} else {
+    						prunedEdges.add(edge);
+    					}
+    				} else {
     					nodeStack.push(edge.getHead());
-        				
-        				depthStack.push(new Integer(depth.intValue() + 1));
+
+    					directionStack.push(new Integer(0));
     				}
     			}
+    			
+    			node.deleteEdges(prunedEdges);
     		}
     	}
-    	
-    	return nodeDepths;
     }
+    
+    private void mergeNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
+    		int tolerance, int strength, boolean isIntersection, boolean isConservative) {
+    	int x = 0;
+
+    	for (NodeSpace inputSpace : inputSpaces) {
+    		if (!outputSpace.hasNodes()) {
+    			outputSpace.union(inputSpace);
+    		} else {
+    			System.out.println("merge " + x++);
+
+    			List<Node> inputNodes = inputSpace.orderNodes();
+
+    			List<Node> priorOutputNodes = outputSpace.orderNodes();
+    			
+    			outputSpace.clearNodes();
+
+    			List<List<Node>> productNodes = new ArrayList<List<Node>>(inputNodes.size());
+    			
+    			// Cartesian product of nodes
+    			for (int i = 0; i < inputNodes.size(); i++) {
+    				productNodes.add(new ArrayList<Node>(priorOutputNodes.size()));
+
+    				for (int j = 0; j < priorOutputNodes.size(); j++) {
+    					if (inputNodes.get(i).isAcceptNode() || priorOutputNodes.get(j).isAcceptNode()) {
+    						productNodes.get(i).add(outputSpace.createAcceptNode());
+    					} else {
+    						productNodes.get(i).add(outputSpace.createNode());
+    					}
+    				}
+    			}
+
+    			// Tensor product of graphs
+    			if (strength == 0 || strength == 2) {
+    				for (int i = 0; i < inputNodes.size(); i++) {
+    					for (int j = 0; j < priorOutputNodes.size(); j++) {
+    						if (inputNodes.get(i).hasEdges() 
+    								&& priorOutputNodes.get(j).hasEdges()) {
+    							for (Edge inputEdge : inputNodes.get(i).getEdges()) {
+    								for (Edge priorOutputEdge : priorOutputNodes.get(j).getEdges()) {
+    									if (inputEdge.isMatchingTo(priorOutputEdge, tolerance)) {
+    										Node outputNode = productNodes.get(i).get(j);
+
+    										int r = locateNodeFrom(inputEdge.getHead().getNodeID(), i, 
+    												inputNodes);
+
+    										int c = locateNodeFrom(priorOutputEdge.getHead().getNodeID(), j,
+    												priorOutputNodes);
+
+    										Edge outputEdge = outputNode.copyEdge(priorOutputEdge, 
+    												productNodes.get(r).get(c));
+
+    										if (isIntersection) {
+    											outputEdge.intersectWithEdge(inputEdge);
+    										} else if (tolerance > 0) {
+    											outputEdge.unionWithEdge(inputEdge);
+    										}
+    									}
+    								}
+    							}
+    						}
+    					}
+    				}
+    				
+    				if (strength == 0) {
+        				outputSpace.labelStartNodes();
+        				
+        				outputSpace.mergeStartNodes();
+        			}
+    			}
+    			
+    			// Strong product of graphs
+    			if (strength == 1 || strength == 2) {
+    				Set<Edge> nsEdges = new HashSet<Edge>();
+
+    				for (int i = 0; i < inputNodes.size(); i++) {
+    					if (inputNodes.get(i).hasEdges()) {
+    						for (Edge inputEdge : inputNodes.get(i).getEdges()) {
+    							int r = locateNodeFrom(inputEdge.getHead().getNodeID(), i, inputNodes);
+
+    							for (int j = 0; j < priorOutputNodes.size(); j++) {
+    								nsEdges.add(productNodes.get(i).get(j).copyEdge(inputEdge, 
+    										productNodes.get(r).get(j)));
+    							}
+    						}
+    					}
+    				}
+
+    				Set<Edge> ewEdges = new HashSet<Edge>();
+
+    				for (int j = 0; j < priorOutputNodes.size(); j++) {
+    					if (priorOutputNodes.get(j).hasEdges()) {
+    						for (Edge priorOutputEdge : priorOutputNodes.get(j).getEdges()) {
+    							int c = locateNodeFrom(priorOutputEdge.getHead().getNodeID(), j, priorOutputNodes);
+
+    							for (int i = 0; i < inputNodes.size(); i++) {
+    								ewEdges.add(productNodes.get(i).get(j).copyEdge(priorOutputEdge, 
+    										productNodes.get(i).get(c)));
+    							}
+    						}
+    					}
+    				}
+    				
+    				if (!productNodes.isEmpty() && !productNodes.get(0).isEmpty()) {
+    					productNodes.get(0).get(0).setNodeType(Node.NodeType.START.getValue());
+    				}
+ 
+    				if (isConservative) {
+    					pruneUnmergedEdges(outputSpace, nsEdges, ewEdges);
+    				}
+    			}
+    			
+    			outputSpace.deleteUnreachableNodes();
+    			
+    			outputSpace.labelAcceptNodes();
+    		}
+    	}
+    }
+    
+//    private void mergeNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
+//    		boolean isIntersection, boolean isCompleteMatch, int strength, int degree) {
+//    	int x = 0;
+//    	for (NodeSpace inputSpace : inputSpaces) {
+//    		System.out.println("merge " + x++);
+//    		if (outputSpace.hasNodes()) {
+//    			Set<Edge> mergedEdges = new HashSet<Edge>();
+//    			
+//    			HashMap<String, Node> mergedIDToOutputNode = new HashMap<String, Node>();
+//    			
+//    			HashMap<String, Set<Node>> inputIDToOutputNodes = new HashMap<String, Set<Node>>();
+//    			
+//    			HashMap<String, Set<Node>> priorIDToOutputNodes = new HashMap<String, Set<Node>>();
+//        		
+//        		HashMap<String, Integer> idToInputDepth = calculateNodeDepths(inputSpace);
+//        		
+//        		HashMap<String, Integer> idToOutputDepth = calculateNodeDepths(outputSpace);
+//        		
+//        		Set<Node> priorOutputNodes = new HashSet<Node>(outputSpace.getNodes());
+//        		
+//        		for (Node inputNode : inputSpace.getNodes()) {
+//        			for (Node priorOutputNode : priorOutputNodes) {
+//        				Integer inputDepth = idToInputDepth.get(inputNode.getNodeID());
+//        				
+//        				Integer outputDepth = idToOutputDepth.get(priorOutputNode.getNodeID());
+//        				
+//        				if (inputNode.hasEdges() 
+//        						&& priorOutputNode.hasEdges()
+//        						&& (degree == 2 
+//        								|| (degree == 1 && inputDepth.intValue() <= outputDepth.intValue()) 
+//        								|| (degree == 0 && inputDepth.intValue() == outputDepth.intValue()))) {
+//        					for (Edge inputEdge : inputNode.getEdges()) {
+//        						for (Edge priorOutputEdge : priorOutputNode.getEdges()) {
+//        							if (inputEdge.isMatchingTo(priorOutputEdge, strength)) {
+//        								String mergedID = inputNode.getNodeID() + priorOutputNode.getNodeID();
+//        								
+//        								Node outputNode;
+//        								
+//        								if (mergedIDToOutputNode.containsKey(mergedID)) {
+//        									outputNode = mergedIDToOutputNode.get(mergedID);
+//        								} else {
+//        									if (inputNode.isStartNode() || priorOutputNode.isStartNode()) {
+//        										outputNode = outputSpace.createStartNode();
+//        									} else if (inputNode.isAcceptNode() || priorOutputNode.isAcceptNode()) {
+//        										outputNode = outputSpace.createAcceptNode();
+//        									} else {
+//        										outputNode = outputSpace.createNode();
+//        									}
+//        									
+//        									mergedIDToOutputNode.put(mergedID, outputNode);
+//        									
+//        									if (!inputIDToOutputNodes.containsKey(inputNode.getNodeID())) {
+//        										inputIDToOutputNodes.put(inputNode.getNodeID(), new HashSet<Node>());
+//        									} 
+//        									
+//        									inputIDToOutputNodes.get(inputNode.getNodeID()).add(outputNode);
+//        									
+//        									if (!priorIDToOutputNodes.containsKey(priorOutputNode.getNodeID())) {
+//        										priorIDToOutputNodes.put(priorOutputNode.getNodeID(), new HashSet<Node>());
+//        									}
+//        									
+//        									priorIDToOutputNodes.get(priorOutputNode.getNodeID()).add(outputNode);
+//        								}
+//        								
+//        								mergedID = inputEdge.getHead().getNodeID() + priorOutputEdge.getHead().getNodeID();
+//        								
+//        								Node outputSuccessor;
+//        								
+//        								if (mergedIDToOutputNode.containsKey(mergedID)) {
+//        									outputSuccessor = mergedIDToOutputNode.get(mergedID);
+//        									
+//        									if (outputSuccessor.isStartNode()) {
+//        										if (inputEdge.getHead().isAcceptNode() || priorOutputEdge.getHead().isAcceptNode()) {
+//        											outputSuccessor.setNodeType(NodeType.ACCEPT.getValue());
+//        										} else {
+//        											outputSuccessor.clearNodeType();
+//        										}
+//        									}
+//        								} else {
+//        									if (inputEdge.getHead().isAcceptNode() || priorOutputEdge.getHead().isAcceptNode()) {
+//        										outputSuccessor = outputSpace.createAcceptNode();
+//        									} else {
+//        										outputSuccessor = outputSpace.createNode();
+//        									}
+//        									
+//        									mergedIDToOutputNode.put(mergedID, outputSuccessor);
+//        									
+//        									if (!inputIDToOutputNodes.containsKey(inputEdge.getHead().getNodeID())) {
+//        										inputIDToOutputNodes.put(inputEdge.getHead().getNodeID(), new HashSet<Node>());
+//        									} 
+//        									
+//        									inputIDToOutputNodes.get(inputEdge.getHead().getNodeID()).add(outputSuccessor);
+//        									
+//        									if (!priorIDToOutputNodes.containsKey(priorOutputEdge.getHead().getNodeID())) {
+//        										priorIDToOutputNodes.put(priorOutputEdge.getHead().getNodeID(), new HashSet<Node>());
+//        									}
+//        									
+//        									priorIDToOutputNodes.get(priorOutputEdge.getHead().getNodeID()).add(outputSuccessor);
+//        								}
+//        								
+//        								Edge outputEdge = outputNode.copyEdge(priorOutputEdge, outputSuccessor);
+//        								
+//        								if (isIntersection) {
+//        									outputEdge.intersectWithEdge(inputEdge);
+//        								} else if (strength > 0) {
+//        									outputEdge.unionWithEdge(inputEdge);
+//        								}
+//        								
+//        								mergedEdges.add(inputEdge);
+//            							
+//            							mergedEdges.add(priorOutputEdge);
+//        							}
+//        						}
+//        					}
+//        				}
+//        			}
+//        		}
+//        		
+//        		if (!isIntersection) {
+//        			mergeSurplusNodes(inputSpace.getNodes(), mergedEdges, inputIDToOutputNodes, outputSpace);
+//        			
+//        			mergeSurplusNodes(priorOutputNodes, mergedEdges, priorIDToOutputNodes, outputSpace);
+//        		}
+//        		
+//        		outputSpace.removeNodesWithSameIDs(priorOutputNodes);
+//    		} else {
+//    			outputSpace.unionNodes(inputSpace);
+//    		}
+//    		
+//    		Set<String> successorIDs = new HashSet<String>();
+//        	
+//        	for (Node outputNode : outputSpace.getNodes()) {
+//        		if (outputNode.hasEdges()) {
+//        			for (Edge outputEdge : outputNode.getEdges()) {
+//        				successorIDs.add(outputEdge.getHead().getNodeID());
+//        			}
+//        		} else if (!outputNode.isAcceptNode()) {
+//        			outputNode.setNodeType(Node.NodeType.ACCEPT.getValue());
+//        		}
+//        	}
+//        	
+//        	for (Node outputNode : outputSpace.getNodes()) {
+//        		if (!successorIDs.contains(outputNode.getNodeID()) && !outputNode.isStartNode()) {
+//        			outputNode.setNodeType(Node.NodeType.START.getValue());
+//        		}
+//        	}
+//        	
+//        	outputSpace.mergeStartNodes();
+//    	}
+//    }
+    
+//    private HashMap<String, Integer> calculateNodeDepths(NodeSpace space) {
+//    	int maxDepth = 0;
+//    	
+//    	Stack<Node> nodeStack = new Stack<Node>();
+//    	
+//    	Stack<Integer> depthStack = new Stack<Integer>();
+//    	
+//    	for (Node startNode : space.getStartNodes()) {
+//    		nodeStack.push(startNode);
+//    		
+//    		depthStack.push(new Integer(0));
+//    	}
+//    	
+//    	HashMap<String, Integer> nodeDepths = new HashMap<String, Integer>();
+//    	
+//    	Set<String> visitedIDs = new HashSet<String>();
+//    	
+//    	while (!nodeStack.isEmpty()) {
+//    		Node node = nodeStack.pop();
+//    		
+//    		Integer depth = depthStack.pop();
+//    		
+//    		if (nodeDepths.containsKey(node.getNodeID())) {
+//    			Integer minDepth = nodeDepths.get(node.getNodeID());
+//    			
+//    			if (depth.intValue() < minDepth.intValue()) {
+//    				nodeDepths.put(node.getNodeID(), depth);
+//    			}
+//    		} else {
+//    			nodeDepths.put(node.getNodeID(), depth);
+//    			
+//    			if (depth > maxDepth) {
+//    				maxDepth = depth;
+//    			}
+//    		}
+//    		
+//    		visitedIDs.add(node.getNodeID());
+//    		
+//    		if (node.hasEdges()) {
+//    			for (Edge edge : node.getEdges()) {
+//    				if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+//    					nodeStack.push(edge.getHead());
+//        				
+//        				depthStack.push(new Integer(depth.intValue() + 1));
+//    				}
+//    			}
+//    		}
+//    	}
+//    	
+//    	return nodeDepths;
+//    }
     
     private void mergeSurplusNodes(Set<Node> surplusNodes, Set<Edge> mergedEdges, 
     		HashMap<String, Set<Node>> idToOutputNodes, NodeSpace outputSpace) {

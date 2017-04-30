@@ -103,7 +103,7 @@ public class KnoxController {
     	}
     	
     	try {
-			designSpaceService.mergeSBOL(inputSBOLStreams, outputSpaceID, authority);
+			designSpaceService.importSBOL(inputSBOLStreams, outputSpaceID, authority);
 		} catch (SBOLValidationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -137,12 +137,13 @@ public class KnoxController {
     public ResponseEntity<String> andBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-    		@RequestParam(value = "degree", required = false, defaultValue = "0") int degree) {
+    		@RequestParam(value = "degree", required = false, defaultValue = "0") int tolerance) {
     	if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, true, true, 1, degree);
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, 0, 
+    				true, false);
 		} else {
 			designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID,
-	    			true, true, 1, degree);
+	    			tolerance, 0, true, false);
 		}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully intersected.\"}", 
@@ -229,13 +230,14 @@ public class KnoxController {
     public ResponseEntity<String> mergeBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-    		@RequestParam(value = "strength", required = false, defaultValue = "0") int strength,
-    		@RequestParam(value = "degree", required = false, defaultValue = "0") int degree) { 	
+    		@RequestParam(value = "strength", required = false, defaultValue = "0") int tolerance,
+    		@RequestParam(value = "degree", required = false, defaultValue = "0") int strength) { 	
     	if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, false, true, strength, degree); 
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, strength, 
+    				false, true); 
     	} else {
     		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
-    				false, true, strength, degree);
+    				tolerance, strength, false, true);
     	}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged.\"}", 
@@ -293,12 +295,12 @@ public class KnoxController {
     @RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
     public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-    		@RequestParam(value = "degree", required = false, defaultValue = "0") int degree) {
+    		@RequestParam(value = "degree", required = false, defaultValue = "0") int tolerance) {
     	try {
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, true, false, 1, degree);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, 0, true, false);
     		} else {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, true, false, 1, degree);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, 0, true, false);
     		}
 
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 
@@ -374,13 +376,14 @@ public class KnoxController {
     @RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
     public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-    		@RequestParam(value = "strength", required = false, defaultValue = "0") int strength,
-    		@RequestParam(value = "degree", required = false, defaultValue = "0") int degree) {
+    		@RequestParam(value = "strength", required = false, defaultValue = "0") int tolerance,
+    		@RequestParam(value = "degree", required = false, defaultValue = "0") int strength) {
+//    		@RequestParam(value = "isConservative", required = false, defaultValue = "true") boolean isConservative) {
     	try {
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, false, false, strength, degree);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, strength, false, true);
     		} else {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, false, false, strength, degree);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, strength, false, true);
     		}
     		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
