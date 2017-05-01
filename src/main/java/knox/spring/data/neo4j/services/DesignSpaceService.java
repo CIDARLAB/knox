@@ -1491,7 +1491,7 @@ public class DesignSpaceService {
     	return -1;
     }
     
-    private void pruneUnmergedEdges(NodeSpace space, Set<Edge> nsEdges, Set<Edge> ewEdges) {
+    private void pruneProduct(NodeSpace space, Set<Edge> nsEdges, Set<Edge> ewEdges) {
     	Stack<Node> nodeStack = new Stack<Node>();
     	
     	Stack<Integer> directionStack = new Stack<Integer>();
@@ -1502,53 +1502,79 @@ public class DesignSpaceService {
     		directionStack.push(new Integer(0));
     	}
     	
-//    	System.out.println("start " + space.getStartNodes().size());
-//    	
-//    	System.out.println("ns " + nsEdges.size());
-//    	
-//    	System.out.println("ew " + ewEdges.size());
+    	space.clearNodes();
     	
-    	Set<String> visitedIDs = new HashSet<String>();
+    	Stack<Node> copyNodeStack = new Stack<Node>();
+    	
+    	for (Node startNode : nodeStack) {
+    		copyNodeStack.push(space.copyNode(startNode));
+    	}
+    	
+    	HashMap<String, Node> idToCopyNode = new HashMap<String, Node>();
     	
     	while (!nodeStack.isEmpty()) {
     		Node node = nodeStack.pop();
     		
+    		Node copyNode = copyNodeStack.pop();
+    		
     		Integer direction = directionStack.pop();
     		
-    		visitedIDs.add(node.getNodeID());
-    		
     		if (node.hasEdges()) {
-    			Set<Edge> prunedEdges = new HashSet<Edge>();
-    			
     			for (Edge edge : node.getEdges()) {
     				if (nsEdges.contains(edge)) {
     					if (direction.intValue() == 0 || direction.intValue() == 1) {
-    						if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+    						String successorID = edge.getHead().getNodeID() + "ns";
+    						
+    						if (!idToCopyNode.containsKey(successorID)) {
+    							Node copySuccessor = space.copyNode(edge.getHead());
+    							
+    							idToCopyNode.put(successorID, copySuccessor);
+    							
     							nodeStack.push(edge.getHead());
+    							
+    							copyNodeStack.push(copySuccessor);
 
     							directionStack.push(new Integer(1));
     						}
-    					} else {
-    						prunedEdges.add(edge);
+    						
+    						copyNode.copyEdge(edge, idToCopyNode.get(successorID));
     					}
     				} else if (ewEdges.contains(edge)) {
     					if (direction.intValue() == 0 || direction.intValue() == 2) {
-    						if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+    						String successorID = edge.getHead().getNodeID() + "ew";
+    						
+    						if (!idToCopyNode.containsKey(successorID)) {
+    							Node copySuccessor = space.copyNode(edge.getHead());
+    							
+    							idToCopyNode.put(successorID, copySuccessor);
+    							
     							nodeStack.push(edge.getHead());
+    							
+    							copyNodeStack.push(copySuccessor);
 
     							directionStack.push(new Integer(2));
     						}
-    					} else {
-    						prunedEdges.add(edge);
+    						
+    						copyNode.copyEdge(edge, idToCopyNode.get(successorID));
     					}
     				} else {
-    					nodeStack.push(edge.getHead());
+    					String successorID = edge.getHead().getNodeID();
+						
+						if (!idToCopyNode.containsKey(successorID)) {
+							Node copySuccessor = space.copyNode(edge.getHead());
+							
+							idToCopyNode.put(successorID, copySuccessor);
+							
+							nodeStack.push(edge.getHead());
+							
+							copyNodeStack.push(copySuccessor);
 
-    					directionStack.push(new Integer(0));
+							directionStack.push(new Integer(0));
+						}
+						
+						copyNode.copyEdge(edge, idToCopyNode.get(successorID));
     				}
     			}
-    			
-    			node.deleteEdges(prunedEdges);
     		}
     	}
     }
@@ -1660,11 +1686,9 @@ public class DesignSpaceService {
     				}
  
     				if (isConservative) {
-    					pruneUnmergedEdges(outputSpace, nsEdges, ewEdges);
+    					pruneProduct(outputSpace, nsEdges, ewEdges);
     				}
     			}
-    			
-    			outputSpace.deleteUnreachableNodes();
     			
     			outputSpace.labelAcceptNodes();
     		}

@@ -386,6 +386,12 @@ public class KnoxController {
     			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, strength, false, true);
     		}
     		
+//    		if (outputSpaceID == null) {
+//    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, 0, 2, false, true);
+//    		} else {
+//    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, 0, 2, false, true);
+//    		}
+    		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
     	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
