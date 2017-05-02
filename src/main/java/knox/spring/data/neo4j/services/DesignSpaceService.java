@@ -7,7 +7,6 @@ import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
-import knox.spring.data.neo4j.domain.Node.NodeType;
 import knox.spring.data.neo4j.eugene.EugeneConverter;
 import knox.spring.data.neo4j.eugene.Device;
 import knox.spring.data.neo4j.eugene.Part;
@@ -23,6 +22,7 @@ import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.NodeRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
 import knox.spring.data.neo4j.sample.DesignSampler;
+import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLReader;
@@ -36,8 +36,6 @@ import org.sbolstandard.core2.SBOLDocument;
 import org.sbolstandard.core2.SequenceAnnotation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-//import org.springframework.transaction.annotation.Transactional;
-
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -56,16 +54,15 @@ import java.util.Stack;
 @Service
 //@Transactional
 public class DesignSpaceService {
-
     @Autowired CommitRepository commitRepository;
     @Autowired DesignSpaceRepository designSpaceRepository;
     @Autowired EdgeRepository edgeRepository;
     @Autowired NodeRepository nodeRepository;
     @Autowired SnapshotRepository snapshotRepository;
-    
+
     public static final String RESERVED_ID = "knox";
-    
-//    public void importEugene(List<InputStream> inputEugeneStreams) {
+
+    //    public void importEugene(List<InputStream> inputEugeneStreams) {
     public void importEugene() {
 //    	for (InputStream inputEugeneStream : inputEugeneStreams) {
 //    		try {
@@ -620,171 +617,184 @@ public class DesignSpaceService {
     }
     
     private boolean isDNAComponentDefinition(ComponentDefinition compDef) {
-    	Set<URI> compTypes = compDef.getTypes();
-    	if (compTypes.size() == 0) {
-    		return false;
-    	} else if (compTypes.contains(ComponentDefinition.DNA)) {
-    		return true;
-    	} else {
-    		return false;
-    	}
+        Set<URI> compTypes = compDef.getTypes();
+        if (compTypes.size() == 0) {
+            return false;
+        } else if (compTypes.contains(ComponentDefinition.DNA)) {
+            return true;
+        } else {
+            return false;
+        }
     }
-    
+
     private Set<String> convertSOIdentifiersToNames(Set<URI> soIdentifiers) {
-    	Set<String> roleNames= new HashSet<String>();
-		if (soIdentifiers.size() == 0) {
-			roleNames.add("engineered_region");
-		} else {
-			SequenceOntology so = new SequenceOntology();
-			
-			for (URI soIdentifier : soIdentifiers) {
-				if (soIdentifier.equals(SequenceOntology.PROMOTER)) {
-		    		roleNames.add("promoter");
-		    	} else if (soIdentifier.equals(so.getURIbyId("SO:0000374"))) {
-		    		roleNames.add("ribozyme");
-		    	} else if (soIdentifier.equals(SequenceOntology.INSULATOR)) {
-		    		roleNames.add("insulator");
-		    	} else if (soIdentifier.equals(SequenceOntology.RIBOSOME_ENTRY_SITE)) {
-		    		roleNames.add("ribosome_entry_site");
-		    	} else if (soIdentifier.equals(SequenceOntology.CDS)) {
-		    		roleNames.add("CDS");
-		    	} else if (soIdentifier.equals(SequenceOntology.TERMINATOR)) {
-		    		roleNames.add("terminator");
-		    	} else {
-		    		roleNames.add("engineered_region");
-		    	}
-			}
-		}
-    	return roleNames;
+        Set<String> roleNames = new HashSet<String>();
+        if (soIdentifiers.size() == 0) {
+            roleNames.add("engineered_region");
+        } else {
+            SequenceOntology so = new SequenceOntology();
+
+            for (URI soIdentifier : soIdentifiers) {
+                if (soIdentifier.equals(SequenceOntology.PROMOTER)) {
+                    roleNames.add("promoter");
+                } else if (soIdentifier.equals(so.getURIbyId("SO:0000374"))) {
+                    roleNames.add("ribozyme");
+                } else if (soIdentifier.equals(SequenceOntology.INSULATOR)) {
+                    roleNames.add("insulator");
+                } else if (soIdentifier.equals(
+                               SequenceOntology.RIBOSOME_ENTRY_SITE)) {
+                    roleNames.add("ribosome_entry_site");
+                } else if (soIdentifier.equals(SequenceOntology.CDS)) {
+                    roleNames.add("CDS");
+                } else if (soIdentifier.equals(SequenceOntology.TERMINATOR)) {
+                    roleNames.add("terminator");
+                } else {
+                    roleNames.add("engineered_region");
+                }
+            }
+        }
+        return roleNames;
     }
-    
+
     private int getStartOfSequenceAnnotation(SequenceAnnotation seqAnno) {
-    	int start = -1;
-    	for (Location location : seqAnno.getLocations()) {
-    		if (location instanceof Range) {
-    			Range range = (Range) location;
-    			if (start < 0 || range.getStart() < start) {
-    				start = range.getStart();
-    			}
-    		}
-    	}
-    	return start;
+        int start = -1;
+        for (Location location : seqAnno.getLocations()) {
+            if (location instanceof Range) {
+                Range range = (Range)location;
+                if (start < 0 || range.getStart() < start) {
+                    start = range.getStart();
+                }
+            }
+        }
+        return start;
     }
-    
+
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
-		designSpaceRepository.deleteBranch(targetSpaceID, targetBranchID);
-	}
-    
+        designSpaceRepository.deleteBranch(targetSpaceID, targetBranchID);
+    }
+
     public void copyHeadBranch(String targetSpaceID, String outputBranchID) {
-    	designSpaceRepository.copyHeadBranch(targetSpaceID, outputBranchID);
+        designSpaceRepository.copyHeadBranch(targetSpaceID, outputBranchID);
     }
-    
+
     public void checkoutBranch(String targetSpaceID, String targetBranchID) {
-    	deleteAllNodes(targetSpaceID);
-    	designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
-    	deleteNodeCopyIndices(targetSpaceID);
+        deleteAllNodes(targetSpaceID);
+        designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
+        deleteNodeCopyIndices(targetSpaceID);
     }
-    
+
     public void commitToBranch(String targetSpaceID, String targetBranchID) {
-    	createCommit(targetSpaceID, targetBranchID);
-    	copyDesignSpaceToSnapshot(targetSpaceID, targetBranchID);
+        createCommit(targetSpaceID, targetBranchID);
+        copyDesignSpaceToSnapshot(targetSpaceID, targetBranchID);
     }
-    
+
     public void commitToHeadBranch(String targetSpaceID) {
-    	String headBranchID = getHeadBranchID(targetSpaceID);
-    	createCommit(targetSpaceID, headBranchID);
-    	copyDesignSpaceToSnapshot(targetSpaceID, headBranchID);
+        String headBranchID = getHeadBranchID(targetSpaceID);
+        createCommit(targetSpaceID, headBranchID);
+        copyDesignSpaceToSnapshot(targetSpaceID, headBranchID);
     }
-    
-    public void resetBranch(DesignSpace targetSpace, Branch targetBranch, List<String> commitPath) {
-    	if (targetBranch != null && targetBranch.hasCommits()) {
-    		Commit targetCommit = targetBranch.getLatestCommit();
 
-    		int i = 0;
+    public void resetBranch(DesignSpace targetSpace, Branch targetBranch,
+                            List<String> commitPath) {
+        if (targetBranch != null && targetBranch.hasCommits()) {
+            Commit targetCommit = targetBranch.getLatestCommit();
 
-    		if (targetCommit.getCommitID().equals(commitPath.get(i))) {
-    			while (targetCommit != null && i + 1 < commitPath.size()) {
-    				targetCommit = targetCommit.findPredecessor(commitPath.get(i + 1));
-    				i++;
-    			}
-    			
-    			if (targetCommit != null) {
-    				targetBranch.setLatestCommit(targetCommit);
-    				
-        			Set<Commit> diffCommits = targetBranch.retainCommits(targetCommit.getHistory());
-        			
-        			Set<Commit> deletedCommits = new HashSet<Commit>();
-        			
-        			for (Commit diffCommit : diffCommits) {
-        				if (!targetSpace.containsCommit(diffCommit)) {
-        					deletedCommits.add(diffCommit);
-        				}
-        			}
-        			
-        			if (deletedCommits.size() > 0) {
-        				deleteCommits(deletedCommits);
-        			}
-        		}
-    		}
-    		
-    		saveDesignSpace(targetSpace);
-    	}
+            int i = 0;
+
+            if (targetCommit.getCommitID().equals(commitPath.get(i))) {
+                while (targetCommit != null && i + 1 < commitPath.size()) {
+                    targetCommit =
+                        targetCommit.findPredecessor(commitPath.get(i + 1));
+                    i++;
+                }
+
+                if (targetCommit != null) {
+                    targetBranch.setLatestCommit(targetCommit);
+
+                    Set<Commit> diffCommits =
+                        targetBranch.retainCommits(targetCommit.getHistory());
+
+                    Set<Commit> deletedCommits = new HashSet<Commit>();
+
+                    for (Commit diffCommit : diffCommits) {
+                        if (!targetSpace.containsCommit(diffCommit)) {
+                            deletedCommits.add(diffCommit);
+                        }
+                    }
+
+                    if (deletedCommits.size() > 0) {
+                        deleteCommits(deletedCommits);
+                    }
+                }
+            }
+
+            saveDesignSpace(targetSpace);
+        }
     }
-    
-    public void resetBranch(String targetSpaceID, String targetBranchID, List<String> commitPath) {
-    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
-    	
-    	Branch targetBranch = targetSpace.findBranch(targetBranchID);
-    	
-    	resetBranch(targetSpace, targetBranch, commitPath);
+
+    public void resetBranch(String targetSpaceID, String targetBranchID,
+                            List<String> commitPath) {
+        DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+
+        Branch targetBranch = targetSpace.findBranch(targetBranchID);
+
+        resetBranch(targetSpace, targetBranch, commitPath);
     }
-    
+
     public void resetHeadBranch(String targetSpaceID, List<String> commitPath) {
-    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
-    	
-    	resetBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
-    }
-    
-    public void revertBranch(DesignSpace targetSpace, Branch targetBranch, List<String> commitPath) {
-    	if (targetBranch != null && targetBranch.hasCommits()) {
-    		Commit targetCommit = targetBranch.getLatestCommit();
+        DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
 
-    		int i = 0;
+        resetBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
+    }
 
-    		while (targetCommit != null && i + 1 < commitPath.size()) {
-    			targetCommit = targetCommit.findPredecessor(commitPath.get(i + 1));
-    		
-    			i++;
-    		}
+    public void revertBranch(DesignSpace targetSpace, Branch targetBranch,
+                             List<String> commitPath) {
+        if (targetBranch != null && targetBranch.hasCommits()) {
+            Commit targetCommit = targetBranch.getLatestCommit();
 
-    		if (targetCommit != null) {
-    			Commit commitCopy = targetBranch.copyCommit(targetCommit);
-    			
-    			commitCopy.addPredecessor(targetBranch.getLatestCommit());
-    			
-    			targetBranch.setLatestCommit(commitCopy);
-    		}
-    		
-    		saveDesignSpace(targetSpace);
-    	}
+            int i = 0;
+
+            while (targetCommit != null && i + 1 < commitPath.size()) {
+                targetCommit =
+                    targetCommit.findPredecessor(commitPath.get(i + 1));
+
+                i++;
+            }
+
+            if (targetCommit != null) {
+                Commit commitCopy = targetBranch.copyCommit(targetCommit);
+
+                commitCopy.addPredecessor(targetBranch.getLatestCommit());
+
+                targetBranch.setLatestCommit(commitCopy);
+            }
+
+            saveDesignSpace(targetSpace);
+        }
     }
-    
-    public void revertBranch(String targetSpaceID, String targetBranchID, List<String> commitPath) {
-    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
-    	
-    	Branch targetBranch = targetSpace.findBranch(targetBranchID);
-    	
-    	revertBranch(targetSpace, targetBranch, commitPath);
+
+    public void revertBranch(String targetSpaceID, String targetBranchID,
+                             List<String> commitPath) {
+        DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+
+        Branch targetBranch = targetSpace.findBranch(targetBranchID);
+
+        revertBranch(targetSpace, targetBranch, commitPath);
     }
-    
-    public void revertHeadBranch(String targetSpaceID, List<String> commitPath) {
-    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
-    	
-    	revertBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
+
+    public void revertHeadBranch(String targetSpaceID,
+                                 List<String> commitPath) {
+        DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+
+        revertBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
     }
-    
+
     public Map<String, Object> d3GraphBranches(String targetSpaceID) {
     	return mapBranchesToD3Format(designSpaceRepository.mapBranches(targetSpaceID));
+    }
+    
+    public List<String> listDesignSpaces() {
+        return designSpaceRepository.listDesignSpaces();
     }
     
     public void insertBranch(String targetSpaceID, String inputBranchID1, String inputBranchID2, String targetNodeID, String outputBranchID) {
@@ -1020,83 +1030,113 @@ public class DesignSpaceService {
     }
     
     public void orBranches(String targetSpaceID, List<String> inputBranchIDs) {
-    	orBranches(targetSpaceID, inputBranchIDs, RESERVED_ID);
+        orBranches(targetSpaceID, inputBranchIDs, RESERVED_ID);
     }
-    
-    public void orBranches(String targetSpaceID, List<String> inputBranchIDs, String outputBranchID) {
-    	Set<String> prunedBranchIDs = new HashSet<String>(inputBranchIDs);
-    	
-    	for (String inputBranchID : prunedBranchIDs) {
-    		indexVersionMerger(targetSpaceID, inputBranchID);
-    	}
-    	
-    	for (String inputBranchID : prunedBranchIDs) {
-    		mergeBranch(targetSpaceID, inputBranchID, outputBranchID);
-    	}
-    	
-    	createCommit(targetSpaceID, outputBranchID);
-    	
-    	for (String inputBranchID : prunedBranchIDs) {
-    		unionSnapshot(targetSpaceID, inputBranchID, outputBranchID);
-    	}
-    	
-    	deleteNodeCopyIndices(targetSpaceID, outputBranchID);
-    	
-    	Set<Node> startNodes = getStartNodes(targetSpaceID, outputBranchID);
-    	
-    	if (startNodes.size() > 0) {
-    		Node startNodePrime = createTypedNode(targetSpaceID, outputBranchID, Node.NodeType.START.getValue());
 
-    		for (Node startNode : startNodes) {
-    			deleteNodeType(targetSpaceID, outputBranchID, startNode.getNodeID());
-    			createEdge(targetSpaceID, outputBranchID, startNodePrime.getNodeID(), startNode.getNodeID());
-    		}
-    	}
-    	
-    	Set<Node> acceptNodes = getAcceptNodes(targetSpaceID, outputBranchID);
-    	
-    	if (acceptNodes.size() > 0) {
-    		Node acceptNodePrime = createTypedNode(targetSpaceID, outputBranchID, Node.NodeType.ACCEPT.getValue());
+    public void orBranches(String targetSpaceID, List<String> inputBranchIDs,
+                           String outputBranchID) {
+        Set<String> prunedBranchIDs = new HashSet<String>(inputBranchIDs);
 
-    		for (Node acceptNode : acceptNodes) {
-    			deleteNodeType(targetSpaceID, outputBranchID, acceptNode.getNodeID());
-    			createEdge(targetSpaceID, outputBranchID, acceptNode.getNodeID(), acceptNodePrime.getNodeID());
-    		}
-    	}
-    	
-    	if (outputBranchID.equals(RESERVED_ID)) {
-    		for (String inputBranchID : prunedBranchIDs) {
-    			fastForwardBranch(targetSpaceID, inputBranchID, RESERVED_ID);
-    		}
-        	deleteBranch(targetSpaceID, RESERVED_ID);
-    	}
+        for (String inputBranchID : prunedBranchIDs) {
+            indexVersionMerger(targetSpaceID, inputBranchID);
+        }
+
+        for (String inputBranchID : prunedBranchIDs) {
+            mergeBranch(targetSpaceID, inputBranchID, outputBranchID);
+        }
+
+        createCommit(targetSpaceID, outputBranchID);
+
+        for (String inputBranchID : prunedBranchIDs) {
+            unionSnapshot(targetSpaceID, inputBranchID, outputBranchID);
+        }
+
+        deleteNodeCopyIndices(targetSpaceID, outputBranchID);
+
+        Set<Node> startNodes = getStartNodes(targetSpaceID, outputBranchID);
+
+        if (startNodes.size() > 0) {
+            Node startNodePrime = createTypedNode(
+                targetSpaceID, outputBranchID, Node.NodeType.START.getValue());
+
+            for (Node startNode : startNodes) {
+                deleteNodeType(targetSpaceID, outputBranchID,
+                               startNode.getNodeID());
+                createEdge(targetSpaceID, outputBranchID,
+                           startNodePrime.getNodeID(), startNode.getNodeID());
+            }
+        }
+
+        Set<Node> acceptNodes = getAcceptNodes(targetSpaceID, outputBranchID);
+
+        if (acceptNodes.size() > 0) {
+            Node acceptNodePrime = createTypedNode(
+                targetSpaceID, outputBranchID, Node.NodeType.ACCEPT.getValue());
+
+            for (Node acceptNode : acceptNodes) {
+                deleteNodeType(targetSpaceID, outputBranchID,
+                               acceptNode.getNodeID());
+                createEdge(targetSpaceID, outputBranchID,
+                           acceptNode.getNodeID(), acceptNodePrime.getNodeID());
+            }
+        }
+
+        if (outputBranchID.equals(RESERVED_ID)) {
+            for (String inputBranchID : prunedBranchIDs) {
+                fastForwardBranch(targetSpaceID, inputBranchID, RESERVED_ID);
+            }
+            deleteBranch(targetSpaceID, RESERVED_ID);
+        }
     }
-    
-//    public void resetHeadBranch(String targetSpaceID, String targetCommitID) {
-//    	validateDesignSpaceOperator(targetSpaceID);
-//    	designSpaceRepository.resetHeadBranch(targetSpaceID, targetCommitID);
-//    }
-   
+
+    //    public void resetHeadBranch(String targetSpaceID, String
+    //    targetCommitID)
+    //    {
+    //    	validateDesignSpaceOperator(targetSpaceID);
+    //    	designSpaceRepository.resetHeadBranch(targetSpaceID,
+    //    targetCommitID);
+    //    }
+
     public void deleteDesignSpace(String targetSpaceID) {
-    	validateDesignSpaceOperator(targetSpaceID);
-    	
-    	designSpaceRepository.deleteDesignSpace(targetSpaceID);
+        validateDesignSpaceOperator(targetSpaceID);
+
+        designSpaceRepository.deleteDesignSpace(targetSpaceID);
     }
-    
+
     public void createDesignSpace(String outputSpaceID) {
-    	validateGenerativeDesignSpaceOperator(outputSpaceID);
-    	
-    	designSpaceRepository.createDesignSpace(outputSpaceID);
+        validateGenerativeDesignSpaceOperator(outputSpaceID);
+
+        designSpaceRepository.createDesignSpace(outputSpaceID);
     }
-    
-    public void createDesignSpace(String outputSpaceID, List<String> compIDs, List<String> compRoles) {
-    	validateGenerativeDesignSpaceOperator(outputSpaceID);
-    	
-    	designSpaceRepository.createDesignSpace(outputSpaceID, new ArrayList<String>(compIDs), new ArrayList<String>(compRoles));
+
+    public void createDesignSpace(String outputSpaceID, List<String> compIDs,
+                                  List<String> compRoles) {
+        validateGenerativeDesignSpaceOperator(outputSpaceID);
+
+        designSpaceRepository.createDesignSpace(
+            outputSpaceID, new ArrayList<String>(compIDs),
+            new ArrayList<String>(compRoles));
     }
-    
+
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
         return mapDesignSpaceToD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
+    }
+    
+    public Set<List<String>> enumerateDesignSpace(String targetSpaceID, int numberOfDesigns, 
+    		EnumerateType enumerateType) {
+    	DesignSpace designSpace = loadDesignSpace(targetSpaceID, 5);
+    	
+        DesignSampler designSampler = new DesignSampler(designSpace);
+        
+        return designSampler.enumerate(enumerateType, numberOfDesigns);
+    }
+    
+    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numberOfDesigns) {
+    	DesignSpace designSpace = loadDesignSpace(targetSpaceID, 5);
+    	
+        DesignSampler designSampler = new DesignSampler(designSpace);
+        
+        return designSampler.sample(numberOfDesigns);
     }
     
     public void insertDesignSpace(String inputSpaceID1, String inputSpaceID2, String targetNodeID, String outputSpaceID)
@@ -1695,265 +1735,6 @@ public class DesignSpaceService {
     	}
     }
     
-//    private void mergeNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-//    		boolean isIntersection, boolean isCompleteMatch, int strength, int degree) {
-//    	int x = 0;
-//    	for (NodeSpace inputSpace : inputSpaces) {
-//    		System.out.println("merge " + x++);
-//    		if (outputSpace.hasNodes()) {
-//    			Set<Edge> mergedEdges = new HashSet<Edge>();
-//    			
-//    			HashMap<String, Node> mergedIDToOutputNode = new HashMap<String, Node>();
-//    			
-//    			HashMap<String, Set<Node>> inputIDToOutputNodes = new HashMap<String, Set<Node>>();
-//    			
-//    			HashMap<String, Set<Node>> priorIDToOutputNodes = new HashMap<String, Set<Node>>();
-//        		
-//        		HashMap<String, Integer> idToInputDepth = calculateNodeDepths(inputSpace);
-//        		
-//        		HashMap<String, Integer> idToOutputDepth = calculateNodeDepths(outputSpace);
-//        		
-//        		Set<Node> priorOutputNodes = new HashSet<Node>(outputSpace.getNodes());
-//        		
-//        		for (Node inputNode : inputSpace.getNodes()) {
-//        			for (Node priorOutputNode : priorOutputNodes) {
-//        				Integer inputDepth = idToInputDepth.get(inputNode.getNodeID());
-//        				
-//        				Integer outputDepth = idToOutputDepth.get(priorOutputNode.getNodeID());
-//        				
-//        				if (inputNode.hasEdges() 
-//        						&& priorOutputNode.hasEdges()
-//        						&& (degree == 2 
-//        								|| (degree == 1 && inputDepth.intValue() <= outputDepth.intValue()) 
-//        								|| (degree == 0 && inputDepth.intValue() == outputDepth.intValue()))) {
-//        					for (Edge inputEdge : inputNode.getEdges()) {
-//        						for (Edge priorOutputEdge : priorOutputNode.getEdges()) {
-//        							if (inputEdge.isMatchingTo(priorOutputEdge, strength)) {
-//        								String mergedID = inputNode.getNodeID() + priorOutputNode.getNodeID();
-//        								
-//        								Node outputNode;
-//        								
-//        								if (mergedIDToOutputNode.containsKey(mergedID)) {
-//        									outputNode = mergedIDToOutputNode.get(mergedID);
-//        								} else {
-//        									if (inputNode.isStartNode() || priorOutputNode.isStartNode()) {
-//        										outputNode = outputSpace.createStartNode();
-//        									} else if (inputNode.isAcceptNode() || priorOutputNode.isAcceptNode()) {
-//        										outputNode = outputSpace.createAcceptNode();
-//        									} else {
-//        										outputNode = outputSpace.createNode();
-//        									}
-//        									
-//        									mergedIDToOutputNode.put(mergedID, outputNode);
-//        									
-//        									if (!inputIDToOutputNodes.containsKey(inputNode.getNodeID())) {
-//        										inputIDToOutputNodes.put(inputNode.getNodeID(), new HashSet<Node>());
-//        									} 
-//        									
-//        									inputIDToOutputNodes.get(inputNode.getNodeID()).add(outputNode);
-//        									
-//        									if (!priorIDToOutputNodes.containsKey(priorOutputNode.getNodeID())) {
-//        										priorIDToOutputNodes.put(priorOutputNode.getNodeID(), new HashSet<Node>());
-//        									}
-//        									
-//        									priorIDToOutputNodes.get(priorOutputNode.getNodeID()).add(outputNode);
-//        								}
-//        								
-//        								mergedID = inputEdge.getHead().getNodeID() + priorOutputEdge.getHead().getNodeID();
-//        								
-//        								Node outputSuccessor;
-//        								
-//        								if (mergedIDToOutputNode.containsKey(mergedID)) {
-//        									outputSuccessor = mergedIDToOutputNode.get(mergedID);
-//        									
-//        									if (outputSuccessor.isStartNode()) {
-//        										if (inputEdge.getHead().isAcceptNode() || priorOutputEdge.getHead().isAcceptNode()) {
-//        											outputSuccessor.setNodeType(NodeType.ACCEPT.getValue());
-//        										} else {
-//        											outputSuccessor.clearNodeType();
-//        										}
-//        									}
-//        								} else {
-//        									if (inputEdge.getHead().isAcceptNode() || priorOutputEdge.getHead().isAcceptNode()) {
-//        										outputSuccessor = outputSpace.createAcceptNode();
-//        									} else {
-//        										outputSuccessor = outputSpace.createNode();
-//        									}
-//        									
-//        									mergedIDToOutputNode.put(mergedID, outputSuccessor);
-//        									
-//        									if (!inputIDToOutputNodes.containsKey(inputEdge.getHead().getNodeID())) {
-//        										inputIDToOutputNodes.put(inputEdge.getHead().getNodeID(), new HashSet<Node>());
-//        									} 
-//        									
-//        									inputIDToOutputNodes.get(inputEdge.getHead().getNodeID()).add(outputSuccessor);
-//        									
-//        									if (!priorIDToOutputNodes.containsKey(priorOutputEdge.getHead().getNodeID())) {
-//        										priorIDToOutputNodes.put(priorOutputEdge.getHead().getNodeID(), new HashSet<Node>());
-//        									}
-//        									
-//        									priorIDToOutputNodes.get(priorOutputEdge.getHead().getNodeID()).add(outputSuccessor);
-//        								}
-//        								
-//        								Edge outputEdge = outputNode.copyEdge(priorOutputEdge, outputSuccessor);
-//        								
-//        								if (isIntersection) {
-//        									outputEdge.intersectWithEdge(inputEdge);
-//        								} else if (strength > 0) {
-//        									outputEdge.unionWithEdge(inputEdge);
-//        								}
-//        								
-//        								mergedEdges.add(inputEdge);
-//            							
-//            							mergedEdges.add(priorOutputEdge);
-//        							}
-//        						}
-//        					}
-//        				}
-//        			}
-//        		}
-//        		
-//        		if (!isIntersection) {
-//        			mergeSurplusNodes(inputSpace.getNodes(), mergedEdges, inputIDToOutputNodes, outputSpace);
-//        			
-//        			mergeSurplusNodes(priorOutputNodes, mergedEdges, priorIDToOutputNodes, outputSpace);
-//        		}
-//        		
-//        		outputSpace.removeNodesWithSameIDs(priorOutputNodes);
-//    		} else {
-//    			outputSpace.unionNodes(inputSpace);
-//    		}
-//    		
-//    		Set<String> successorIDs = new HashSet<String>();
-//        	
-//        	for (Node outputNode : outputSpace.getNodes()) {
-//        		if (outputNode.hasEdges()) {
-//        			for (Edge outputEdge : outputNode.getEdges()) {
-//        				successorIDs.add(outputEdge.getHead().getNodeID());
-//        			}
-//        		} else if (!outputNode.isAcceptNode()) {
-//        			outputNode.setNodeType(Node.NodeType.ACCEPT.getValue());
-//        		}
-//        	}
-//        	
-//        	for (Node outputNode : outputSpace.getNodes()) {
-//        		if (!successorIDs.contains(outputNode.getNodeID()) && !outputNode.isStartNode()) {
-//        			outputNode.setNodeType(Node.NodeType.START.getValue());
-//        		}
-//        	}
-//        	
-//        	outputSpace.mergeStartNodes();
-//    	}
-//    }
-    
-//    private HashMap<String, Integer> calculateNodeDepths(NodeSpace space) {
-//    	int maxDepth = 0;
-//    	
-//    	Stack<Node> nodeStack = new Stack<Node>();
-//    	
-//    	Stack<Integer> depthStack = new Stack<Integer>();
-//    	
-//    	for (Node startNode : space.getStartNodes()) {
-//    		nodeStack.push(startNode);
-//    		
-//    		depthStack.push(new Integer(0));
-//    	}
-//    	
-//    	HashMap<String, Integer> nodeDepths = new HashMap<String, Integer>();
-//    	
-//    	Set<String> visitedIDs = new HashSet<String>();
-//    	
-//    	while (!nodeStack.isEmpty()) {
-//    		Node node = nodeStack.pop();
-//    		
-//    		Integer depth = depthStack.pop();
-//    		
-//    		if (nodeDepths.containsKey(node.getNodeID())) {
-//    			Integer minDepth = nodeDepths.get(node.getNodeID());
-//    			
-//    			if (depth.intValue() < minDepth.intValue()) {
-//    				nodeDepths.put(node.getNodeID(), depth);
-//    			}
-//    		} else {
-//    			nodeDepths.put(node.getNodeID(), depth);
-//    			
-//    			if (depth > maxDepth) {
-//    				maxDepth = depth;
-//    			}
-//    		}
-//    		
-//    		visitedIDs.add(node.getNodeID());
-//    		
-//    		if (node.hasEdges()) {
-//    			for (Edge edge : node.getEdges()) {
-//    				if (!visitedIDs.contains(edge.getHead().getNodeID())) {
-//    					nodeStack.push(edge.getHead());
-//        				
-//        				depthStack.push(new Integer(depth.intValue() + 1));
-//    				}
-//    			}
-//    		}
-//    	}
-//    	
-//    	return nodeDepths;
-//    }
-    
-    private void mergeSurplusNodes(Set<Node> surplusNodes, Set<Edge> mergedEdges, 
-    		HashMap<String, Set<Node>> idToOutputNodes, NodeSpace outputSpace) {
-    	HashMap<String, Node> idToOutputNode = new HashMap<String, Node>();
-    	
-    	for (Node surplusNode : surplusNodes) {
-			Set<Node> outputNodes = mergeSurplusNode(surplusNode, idToOutputNodes, idToOutputNode,
-					outputSpace);
-		
-			if (surplusNode.hasEdges()) {
-				for (Edge surplusEdge : surplusNode.getEdges()) { 
-					if (!mergedEdges.contains(surplusEdge)) {
-						Set<Node> outputSuccessors = mergeSurplusNode(surplusEdge.getHead(), idToOutputNodes,
-								idToOutputNode, outputSpace);
-
-						for (Node outputNode : outputNodes) {
-							for (Node outputSuccessor : outputSuccessors) {
-								outputNode.copyEdge(surplusEdge, outputSuccessor);
-
-								if (surplusEdge.getHead().isAcceptNode()) {
-									outputSuccessor.setNodeType(NodeType.ACCEPT.getValue());
-								} else {
-									outputSuccessor.clearNodeType();
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-    }
-    
-    private Set<Node> mergeSurplusNode(Node surplusNode, HashMap<String, Set<Node>> idToOutputNodes, 
-    		HashMap<String, Node> idToOutputNode, NodeSpace outputSpace) {
-    	Set<Node> outputNodes;
-		
-		if (idToOutputNodes.containsKey(surplusNode.getNodeID())) {
-			outputNodes = idToOutputNodes.get(surplusNode.getNodeID());
-		} else {
-			outputNodes = new HashSet<Node>();
-			
-			Node outputNode;
-			
-			if (idToOutputNode.containsKey(surplusNode.getNodeID())) {
-				outputNode = idToOutputNode.get(surplusNode.getNodeID());
-			} else {
-				outputNode = outputSpace.copyNode(surplusNode);
-				
-				idToOutputNode.put(surplusNode.getNodeID(), outputNode);
-			}
-			
-			outputNodes.add(outputNode);
-		}
-		
-		return outputNodes;
-    }
-    
     public void minimizeDesignSpace(String targetSpaceID) 
     		throws DesignSpaceNotFoundException {
     	validateDesignSpaceOperator(targetSpaceID);
@@ -2086,69 +1867,69 @@ public class DesignSpaceService {
     	}
     }
     
-    public void partitionDesignSpace(String inputSpaceID, String outputSpacePrefix) {
-    	DesignSpace inputSpace = loadDesignSpace(inputSpaceID, 2);
-    	
-    	String headBranchID = getHeadBranchID(inputSpaceID);
-    	
-    	int i = 0;
-    	
-    	for (Node inputStart : inputSpace.getStartNodes()) {
-    		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + i);
-    		
-    		HashMap<String, Node> inputIDToOutputNode = new HashMap<String, Node>();
-    		
-    		inputIDToOutputNode.put(inputStart.getNodeID(), outputSpace.copyNode(inputStart));
-    		
-    		Stack<Node> inputNodeStack = new Stack<Node>();
-    		
-    		inputNodeStack.push(inputStart);
-    		
-    		while (inputNodeStack.size() > 0) {
-    			Node inputNode = inputNodeStack.pop();
-    			
-    			Node outputNode;
-    			
-    			if (inputIDToOutputNode.containsKey(inputNode.getNodeID())) {
-    				outputNode = inputIDToOutputNode.get(inputNode.getNodeID());
-    			} else {
-    				outputNode = outputSpace.copyNode(inputNode);
-    				
-    				inputIDToOutputNode.put(inputNode.getNodeID(), outputNode);
-    			}
-    			
-    			if (inputNode.hasEdges()) {
-    				for (Edge inputEdge : inputNode.getEdges()) {
-    					Node inputSuccessor = inputEdge.getHead();
-
-    					Node outputSuccessor;
-
-    					if (inputIDToOutputNode.containsKey(inputSuccessor.getNodeID())) {
-    						outputSuccessor = inputIDToOutputNode.get(inputSuccessor.getNodeID());
-    					} else {
-    						outputSuccessor = outputSpace.copyNode(inputSuccessor);
-
-    						inputIDToOutputNode.put(inputSuccessor.getNodeID(), outputSuccessor);
-    					}
-
-    					outputNode.copyEdge(inputEdge, outputSuccessor);
-
-    					inputNodeStack.push(inputSuccessor);
-    				}
-    			}
-    		}
-    		
-    		saveDesignSpace(outputSpace);
-    		
-    		mergeVersionHistory(inputSpaceID, outputSpace.getSpaceID());
-    		
-    		selectHeadBranch(outputSpace.getSpaceID(), headBranchID);
-    		
-    		commitToHeadBranch(outputSpace.getSpaceID());
-    		
-    		i++;
-    	}
-    }
+//    public void partitionDesignSpace(String inputSpaceID, String outputSpacePrefix) {
+//    	DesignSpace inputSpace = loadDesignSpace(inputSpaceID, 2);
+//    	
+//    	String headBranchID = getHeadBranchID(inputSpaceID);
+//    	
+//    	int i = 0;
+//    	
+//    	for (Node inputStart : inputSpace.getStartNodes()) {
+//    		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + i);
+//    		
+//    		HashMap<String, Node> inputIDToOutputNode = new HashMap<String, Node>();
+//    		
+//    		inputIDToOutputNode.put(inputStart.getNodeID(), outputSpace.copyNode(inputStart));
+//    		
+//    		Stack<Node> inputNodeStack = new Stack<Node>();
+//    		
+//    		inputNodeStack.push(inputStart);
+//    		
+//    		while (inputNodeStack.size() > 0) {
+//    			Node inputNode = inputNodeStack.pop();
+//    			
+//    			Node outputNode;
+//    			
+//    			if (inputIDToOutputNode.containsKey(inputNode.getNodeID())) {
+//    				outputNode = inputIDToOutputNode.get(inputNode.getNodeID());
+//    			} else {
+//    				outputNode = outputSpace.copyNode(inputNode);
+//    				
+//    				inputIDToOutputNode.put(inputNode.getNodeID(), outputNode);
+//    			}
+//    			
+//    			if (inputNode.hasEdges()) {
+//    				for (Edge inputEdge : inputNode.getEdges()) {
+//    					Node inputSuccessor = inputEdge.getHead();
+//
+//    					Node outputSuccessor;
+//
+//    					if (inputIDToOutputNode.containsKey(inputSuccessor.getNodeID())) {
+//    						outputSuccessor = inputIDToOutputNode.get(inputSuccessor.getNodeID());
+//    					} else {
+//    						outputSuccessor = outputSpace.copyNode(inputSuccessor);
+//
+//    						inputIDToOutputNode.put(inputSuccessor.getNodeID(), outputSuccessor);
+//    					}
+//
+//    					outputNode.copyEdge(inputEdge, outputSuccessor);
+//
+//    					inputNodeStack.push(inputSuccessor);
+//    				}
+//    			}
+//    		}
+//    		
+//    		saveDesignSpace(outputSpace);
+//    		
+//    		mergeVersionHistory(inputSpaceID, outputSpace.getSpaceID());
+//    		
+//    		selectHeadBranch(outputSpace.getSpaceID(), headBranchID);
+//    		
+//    		commitToHeadBranch(outputSpace.getSpaceID());
+//    		
+//    		i++;
+//    	}
+//    }
     
     private void copyDesignSpaceToSnapshot(String inputSpaceID, String outputBranchID) {
 		designSpaceRepository.copyDesignSpaceToSnapshot(inputSpaceID, outputBranchID);
@@ -2651,6 +2432,14 @@ public class DesignSpaceService {
     	}
     }
 	
+	public Set<List<String>> partitionDesignSpace(String targetSpaceID) {
+        DesignSpace designSpace = loadDesignSpace(targetSpaceID, 5);
+        
+        DesignSampler designSampler = new DesignSampler(designSpace);
+        
+        return designSampler.partition();
+    }
+	
 	private Set<Edge> removeOutgoingEdges(String targetSpaceID, String targetNodeID) {
 		Set<Edge> removedEdges = getOutgoingEdges(targetSpaceID, targetNodeID);
 		if (removedEdges.size() > 0) {
@@ -2722,142 +2511,155 @@ public class DesignSpaceService {
 	private void unionDesignSpace(String inputSpaceID, String outputSpaceID) {
         designSpaceRepository.unionDesignSpace(inputSpaceID, outputSpaceID);
     }
-	
-	public void unionDesignSpaces(List<String> inputSpaceIDs) {	
-		unionDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
-	}
-	
-	public void unionDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) {
-		Set<String> prunedSpaceIDs = new HashSet<String>(inputSpaceIDs);
-		
-		prunedSpaceIDs.remove(outputSpaceID);
-		
-		for (String inputSpaceID : prunedSpaceIDs) {
-			unionDesignSpace(inputSpaceID, outputSpaceID);
-		}
-		
-		deleteNodeCopyIndices(outputSpaceID);
-		
-		if (inputSpaceIDs.contains(outputSpaceID)) {
-    		prunedSpaceIDs.add(outputSpaceID);
-    	}
-    	
-    	List<String> headBranchIDs = new LinkedList<String>();
-    	
-    	for (String inputSpaceID : prunedSpaceIDs) {
-    		if (!inputSpaceID.equals(outputSpaceID)) {
-    			mergeVersionHistory(inputSpaceID, outputSpaceID);
-    		}
-    		
-    		String headBranchID = getHeadBranchID(inputSpaceID);
 
-    		indexVersionMerger(outputSpaceID, headBranchID);
+    public void unionDesignSpaces(List<String> inputSpaceIDs) {
+        unionDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
+    }
 
-    		headBranchIDs.add(headBranchID);
-    	}
-    	
-    	unionBranches(outputSpaceID, headBranchIDs);
+    public void unionDesignSpaces(List<String> inputSpaceIDs,
+                                  String outputSpaceID) {
+        Set<String> prunedSpaceIDs = new HashSet<String>(inputSpaceIDs);
 
-    	if (!inputSpaceIDs.contains(outputSpaceID)) {
-    		selectHeadBranch(outputSpaceID, headBranchIDs.get(0));
-    	}
+        prunedSpaceIDs.remove(outputSpaceID);
+
+        for (String inputSpaceID : prunedSpaceIDs) {
+            unionDesignSpace(inputSpaceID, outputSpaceID);
+        }
+
+        deleteNodeCopyIndices(outputSpaceID);
+
+        if (inputSpaceIDs.contains(outputSpaceID)) {
+            prunedSpaceIDs.add(outputSpaceID);
+        }
+
+        List<String> headBranchIDs = new LinkedList<String>();
+
+        for (String inputSpaceID : prunedSpaceIDs) {
+            if (!inputSpaceID.equals(outputSpaceID)) {
+                mergeVersionHistory(inputSpaceID, outputSpaceID);
+            }
+
+            String headBranchID = getHeadBranchID(inputSpaceID);
+
+            indexVersionMerger(outputSpaceID, headBranchID);
+
+            headBranchIDs.add(headBranchID);
+        }
+
+        unionBranches(outputSpaceID, headBranchIDs);
+
+        if (!inputSpaceIDs.contains(outputSpaceID)) {
+            selectHeadBranch(outputSpaceID, headBranchIDs.get(0));
+        }
     }
-    
-    private void unionSnapshot(String targetSpaceID, String inputBranchID, String outputBranchID) {
-        designSpaceRepository.unionSnapshot(targetSpaceID, inputBranchID, outputBranchID);
+
+    private void unionSnapshot(String targetSpaceID, String inputBranchID,
+                               String outputBranchID) {
+        designSpaceRepository.unionSnapshot(targetSpaceID, inputBranchID,
+                                            outputBranchID);
     }
-    
-    private void validateNodeOperator(String targetSpaceID, String targetNodeID) 
-    		throws NodeNotFoundException {
-    	if (!hasNode(targetSpaceID, targetNodeID)) {
-    		throw new NodeNotFoundException(targetSpaceID, targetNodeID);
-    	}
+
+    private void validateNodeOperator(String targetSpaceID, String targetNodeID)
+        throws NodeNotFoundException {
+        if (!hasNode(targetSpaceID, targetNodeID)) {
+            throw new NodeNotFoundException(targetSpaceID, targetNodeID);
+        }
     }
-    
-    private void validateListParameter(String parameterName, List<String> parameter)
-    		throws ParameterEmptyException {
-    	if (parameter.size() == 0) {
-    		throw new ParameterEmptyException(parameterName);
-    	}
+
+    private void validateListParameter(String parameterName,
+                                       List<String> parameter)
+        throws ParameterEmptyException {
+        if (parameter.size() == 0) {
+            throw new ParameterEmptyException(parameterName);
+        }
     }
-    
+
     private void validateDesignSpaceOperator(String targetSpaceID) {
-    	if (!hasDesignSpace(targetSpaceID)) {
-    		throw new DesignSpaceNotFoundException(targetSpaceID);
-    	}
+        if (!hasDesignSpace(targetSpaceID)) {
+            throw new DesignSpaceNotFoundException(targetSpaceID);
+        }
     }
-    
-    private void validateGenerativeDesignSpaceOperator(String outputSpaceID) {
-    	if (hasDesignSpace(outputSpaceID)) {
-    		throw new DesignSpaceConflictException(outputSpaceID);
-    	}
-    }
-    
-    private void validateCombinationalDesignSpaceOperator(String inputSpaceID1, String inputSpaceID2, String outputSpaceID)
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
-    		DesignSpaceBranchesConflictException {
-    	List<String> inputSpaceIDs = new ArrayList<String>(2);
-    	inputSpaceIDs.add(inputSpaceID1);
-    	inputSpaceIDs.add(inputSpaceID2);
-    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
-    }
-    
-    private void validateCombinationalDesignSpaceOperator(List<String> inputSpaceIDs, String outputSpaceID)
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
-    		DesignSpaceBranchesConflictException {
-    	if (inputSpaceIDs.size() == 0) {
-    		throw new ParameterEmptyException("inputSpaceIDs");
-    	}
-    	
-    	if (outputSpaceID.length() == 0) {
-    		throw new ParameterEmptyException("outputSpaceID");
-    	}
-    		
-    	for (String inputSpaceID : inputSpaceIDs) {
-    		if (!hasDesignSpace(inputSpaceID)) {
-    			throw new DesignSpaceNotFoundException(inputSpaceID);
-    		}
-    	}
 
-    	if (!inputSpaceIDs.contains(outputSpaceID) && hasDesignSpace(outputSpaceID)) {
-    		throw new DesignSpaceConflictException(outputSpaceID);
-    	}
-    	
-    	Set<String> conflictingSpaceIDs = new HashSet<String>();
-    	
-    	Set<String> conflictingBranchIDs = new HashSet<String>();
-    	
-    	HashMap<String, String> branchIDToSpaceID = new HashMap<String, String>();
-		
-		for (String inputSpaceID : inputSpaceIDs) {
-			for (String branchID : getBranchIDs(inputSpaceID)) {
-				if (!branchIDToSpaceID.containsKey(branchID)) {
-					branchIDToSpaceID.put(branchID, inputSpaceID);
-				} else if (!branchIDToSpaceID.get(branchID).equals(inputSpaceID)) {
-					conflictingSpaceIDs.add(branchIDToSpaceID.get(branchID));
-					
-					conflictingSpaceIDs.add(inputSpaceID);
-					
-					conflictingBranchIDs.add(branchID);
-				}
-			}
-		}
-    	
-    	if (conflictingBranchIDs.size() > 0) {
-    		throw new DesignSpaceBranchesConflictException(conflictingSpaceIDs, conflictingBranchIDs);
-    	}
+    private void validateGenerativeDesignSpaceOperator(String outputSpaceID) {
+        if (hasDesignSpace(outputSpaceID)) {
+            throw new DesignSpaceConflictException(outputSpaceID);
+        }
     }
-    
+
+    private void validateCombinationalDesignSpaceOperator(String inputSpaceID1,
+                                                          String inputSpaceID2,
+                                                          String outputSpaceID)
+        throws ParameterEmptyException, DesignSpaceNotFoundException,
+               DesignSpaceConflictException,
+               DesignSpaceBranchesConflictException {
+        List<String> inputSpaceIDs = new ArrayList<String>(2);
+        inputSpaceIDs.add(inputSpaceID1);
+        inputSpaceIDs.add(inputSpaceID2);
+        validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
+    }
+
+    private void validateCombinationalDesignSpaceOperator(
+        List<String> inputSpaceIDs, String outputSpaceID)
+        throws ParameterEmptyException, DesignSpaceNotFoundException,
+               DesignSpaceConflictException,
+               DesignSpaceBranchesConflictException {
+        if (inputSpaceIDs.size() == 0) {
+            throw new ParameterEmptyException("inputSpaceIDs");
+        }
+
+        if (outputSpaceID.length() == 0) {
+            throw new ParameterEmptyException("outputSpaceID");
+        }
+
+        for (String inputSpaceID : inputSpaceIDs) {
+            if (!hasDesignSpace(inputSpaceID)) {
+                throw new DesignSpaceNotFoundException(inputSpaceID);
+            }
+        }
+
+        if (!inputSpaceIDs.contains(outputSpaceID) &&
+            hasDesignSpace(outputSpaceID)) {
+            throw new DesignSpaceConflictException(outputSpaceID);
+        }
+
+        Set<String> conflictingSpaceIDs = new HashSet<String>();
+
+        Set<String> conflictingBranchIDs = new HashSet<String>();
+
+        HashMap<String, String> branchIDToSpaceID =
+            new HashMap<String, String>();
+
+        for (String inputSpaceID : inputSpaceIDs) {
+            for (String branchID : getBranchIDs(inputSpaceID)) {
+                if (!branchIDToSpaceID.containsKey(branchID)) {
+                    branchIDToSpaceID.put(branchID, inputSpaceID);
+                } else if (!branchIDToSpaceID.get(branchID).equals(
+                               inputSpaceID)) {
+                    conflictingSpaceIDs.add(branchIDToSpaceID.get(branchID));
+
+                    conflictingSpaceIDs.add(inputSpaceID);
+
+                    conflictingBranchIDs.add(branchID);
+                }
+            }
+        }
+
+        if (conflictingBranchIDs.size() > 0) {
+            throw new DesignSpaceBranchesConflictException(
+                conflictingSpaceIDs, conflictingBranchIDs);
+        }
+    }
+
     private void printSpace(DesignSpace d) {
-    	System.out.println(d.getSpaceID());
-    	for (Node n : d.getNodes()) {
-    		System.out.println(n.getNodeID());
-    		if (n.hasEdges()) {
-    			for (Edge e : n.getEdges()) {
-    				System.out.println(e.getTail().getNodeID() + "-" + e.getHead().getNodeID());
-    			}
-    		}
-    	}
+        System.out.println(d.getSpaceID());
+        for (Node n : d.getNodes()) {
+            System.out.println(n.getNodeID());
+            if (n.hasEdges()) {
+                for (Edge e : n.getEdges()) {
+                    System.out.println(e.getTail().getNodeID() + "-" +
+                                       e.getHead().getNodeID());
+                }
+            }
+        }
     }
-    
 }
