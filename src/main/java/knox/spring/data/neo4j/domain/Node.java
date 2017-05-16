@@ -10,11 +10,15 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
 public class Node {
     @GraphId Long id;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(Node.class);
 
     String nodeID;
 
@@ -44,12 +48,12 @@ public class Node {
     }
 
     public Edge copyEdge(Edge edge, Node head) {
-    	if (hasEdge(head)) {
-			Edge existingEdge = getEdge(head);
+    	Edge parallelEdge = getEdge(head);
+    	
+    	if (parallelEdge != null) {
+			parallelEdge.unionWithEdge(edge);
 			
-			existingEdge.unionWithEdge(edge);
-			
-			return existingEdge;
+			return parallelEdge;
 		} else if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
     		return createEdge(head, new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
     	} else {
@@ -63,22 +67,49 @@ public class Node {
         return edge;
     }
 
-    public Edge createEdge(Node head, ArrayList<String> compIDs,
-                           ArrayList<String> compRoles) {
+    public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
         Edge edge = new Edge(this, head, compIDs, compRoles);
         addEdge(edge);
         return edge;
     }
 
-    public Long getGraphID() { return id; }
+    public Long getGraphID() { 
+    	return id; 
+    }
 
-    public String getNodeID() { return nodeID; }
+    public String getNodeID() { 
+    	return nodeID; 
+    }
+    
+    public void setNodeID(String nodeID) {
+    	this.nodeID = nodeID;
+    }
 
-    public int getNumEdges() { return edges.size(); }
+    public int getNumEdges() { 
+    	return edges.size(); 
+    }
 
-    public Set<Edge> getEdges() { return edges; }
+    public Set<Edge> getEdges() { 
+    	return edges; 
+    }
+    
+    public Edge[] getEdgeArray() {
+    	int numEdges = getNumEdges();
+    	
+    	if (numEdges > 0) {
+    		return edges.toArray(new Edge[numEdges]);
+    	} else {
+    		return new Edge[0];
+    	}
+    }
+    
+    public void setEdges(Set<Edge> edges) {
+    	this.edges = edges;
+    }
 
-    public String getNodeType() { return nodeType; }
+    public String getNodeType() {
+    	return nodeType;
+    }
 
     public boolean hasComponentID(String compID) {
         if (hasEdges()) {
@@ -105,7 +136,7 @@ public class Node {
     public Edge getEdge(Node head) {
     	if (hasEdges()) {
     		for (Edge edge : edges) {
-    			if (edge.getHead().equals(head)) {
+    			if (edge.getHead().isIdenticalTo(head)) {
     				return edge;
     			}
     		}
@@ -119,7 +150,7 @@ public class Node {
     public boolean hasEdge(Node head) {
     	if (hasEdges()) {
     		for (Edge edge : edges) {
-    			if (edge.getHead().equals(head)) {
+    			if (edge.getHead().isIdenticalTo(head)) {
     				return true;
     			}
     		}
@@ -172,6 +203,10 @@ public class Node {
         return hasNodeType() && nodeType.equals(NodeType.START.getValue());
     }
 
+    public boolean isIdenticalTo(Node node) {
+    	return node.getNodeID().equals(nodeID);
+    }
+    
     public boolean deleteEdges(Set<Edge> edges) {
     	if (hasEdges()) {
     		boolean success = this.edges.removeAll(edges);

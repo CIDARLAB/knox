@@ -75,8 +75,7 @@ public class DesignSpace extends NodeSpace {
                     Node nodeCopy = idToNodeCopy.get(node.getNodeID());
 
                     for (Edge edge : node.getEdges()) {
-                        nodeCopy.copyEdge(
-                            edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+                        nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
                     }
                 }
             }

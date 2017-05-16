@@ -48,13 +48,13 @@
         $(id).height($(id).parent().height());
     }
 
-    function translateRole(role) {
-        switch (role) {
-        case "ribozyme":
-            return "rna_stability_element";
-        }
-        return role;
-    }
+    // function translateRole(role) {
+    //     switch (role) {
+    //     case "ribozyme":
+    //         return "RNA_stability_element";
+    //     }
+    //     return role;
+    // }
     
     Target.prototype = {
         setGraph: function(graph) {
@@ -114,7 +114,7 @@
                     if (d.hasOwnProperty("componentRoles")) {
                         const sbolpath = "./img/sbol/";
                         var role = d["componentRoles"][0];
-                        switch (translateRole(role)) {
+                        switch (role) {
                         case "promoter":
                         case "terminator":
                         case "CDS":
@@ -127,6 +127,7 @@
                         case "ribosome_entry_site":
                         case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
                         case "RNA_stability_element":
+                        case "ribozyme":
                         case "insulator":
                         case "signature":
                         case "operator":
@@ -352,7 +353,6 @@
                 var pen = { x: 0, y: 0 };
                 data.map((list) => {
                     list.map((element) => {
-                        element = translateRole(element);
                         var svgimg =
                             document.createElementNS(
                                 "http://www.w3.org/2000/svg", "image");
@@ -411,15 +411,17 @@
                     break;
 
                 case "AND":
+                    query += encodeQueryParameter("tolerance", 1, query);
                     request.open("POST", "/designSpace/and" + query, false);
                     break;
 
                 case "Merge Weak":
+                    query += encodeQueryParameter("tolerance", 1, query);
                     request.open("POST", "/designSpace/merge" + query, false);
                     break;
 
                 case "Merge Strong":
-                    query += encodeQueryParameter("strength", 2, query);
+                    query += encodeQueryParameter("tolerance", 2, query);
                     request.open("POST", "/designSpace/merge" + query, false);
                     break;
 

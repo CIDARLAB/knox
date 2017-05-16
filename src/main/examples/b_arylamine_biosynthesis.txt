@@ -132,8 +132,8 @@ CREATE (n19e)-[:PRECEDES {componentIDs: ["F"], componentRoles: ["restriction_enz
 
 CREATE (n14f)-[:PRECEDES {componentIDs: ["J23102"], componentRoles: ["promoter"]}]->(n15f)
 CREATE (n15f)-[:PRECEDES {componentIDs: ["RiboJ"], componentRoles: ["ribozyme"]}]->(n16f)
-CREATE (n16f)-[:PRECEDES {componentIDs: ["rebF_opt"], componentRoles: ["ribosome_entry_site"]}]->(n17f)
-CREATE (n17f)-[:PRECEDES {componentIDs: ["rebF"], componentRoles: ["CDS"]}]->(n18f)
+CREATE (n16f)-[:PRECEDES {componentIDs: ["RebF_opt"], componentRoles: ["ribosome_entry_site"]}]->(n17f)
+CREATE (n17f)-[:PRECEDES {componentIDs: ["RebF"], componentRoles: ["CDS"]}]->(n18f)
 CREATE (n18f)-[:PRECEDES {componentIDs: ["L3SP21"], componentRoles: ["terminator"]}]->(n19f)
 CREATE (n19f)-[:PRECEDES {componentIDs: ["G"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n20)
 

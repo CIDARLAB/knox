@@ -34,6 +34,8 @@ import org.sbolstandard.core2.Location;
 import org.sbolstandard.core2.Range;
 import org.sbolstandard.core2.SBOLDocument;
 import org.sbolstandard.core2.SequenceAnnotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,6 +61,8 @@ public class DesignSpaceService {
     @Autowired EdgeRepository edgeRepository;
     @Autowired NodeRepository nodeRepository;
     @Autowired SnapshotRepository snapshotRepository;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(DesignSpaceService.class);
 
     public static final String RESERVED_ID = "knox";
 
@@ -307,7 +311,7 @@ public class DesignSpaceService {
     		
     		csvSpace.setSpaceID(outputSpacePrefix);
     		
-    		mergeNodeSpaces(csvSpaces, false, false, 0, 1);
+    		productOfNodeSpaces(csvSpaces, "cartesian", 0, true);
     		
 //    		csvSpace.createHeadBranch(csvSpace.getSpaceID());
     		
@@ -965,13 +969,12 @@ public class DesignSpaceService {
     }
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		int tolerance, int strength, boolean isIntersection, boolean isConservative) {
-    	mergeBranches(targetSpaceID, inputBranchIDs, RESERVED_ID, tolerance, strength, 
-    			isIntersection, isConservative);
+    		String type, int tolerance, boolean isConservative) {
+    	mergeBranches(targetSpaceID, inputBranchIDs, RESERVED_ID, type, tolerance, isConservative);
     }
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, String outputBranchID, 
-    		int tolerance, int strength, boolean isIntersection, boolean isConservative) {
+    		String type, int tolerance, boolean isConservative) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
     	
     	List<String> prunedBranchIDs = new LinkedList<String>(inputBranchIDs);
@@ -1016,8 +1019,7 @@ public class DesignSpaceService {
     		outputCommit.addPredecessor(inputCommit);
     	}
    
-    	mergeNodeSpaces(inputSnapshots, outputCommit.getSnapshot(), tolerance, strength, 
-    			isIntersection, isConservative);
+    	productOfNodeSpaces(inputSnapshots, outputCommit.getSnapshot(), type, tolerance, isConservative);
 
     	saveDesignSpace(targetSpace);
     	
@@ -1402,7 +1404,7 @@ public class DesignSpaceService {
 
     			inputSpaces.add(querySpaces.get(i));
     			
-    			mergeNodeSpaces(inputSpaces, true, true, 1, 1);
+    			productOfNodeSpaces(inputSpaces, "tensor", 0, false);
 
     			allMatchSpaces.get(i).add(queriedSpaces.get(j));
     		}
@@ -1427,17 +1429,33 @@ public class DesignSpaceService {
     	return completeMatches;
     }
     
-    public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, int strength, 
-    		boolean isIntersection, boolean isConservative) 
+    public void andDesignSpaces(List<String> inputSpaceIDs, int tolerance) {
+    	productOfDesignSpaces(inputSpaceIDs, "tensor", tolerance, false);
+    }
+    
+    public void andDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance) {
+    	productOfDesignSpaces(inputSpaceIDs, outputSpaceID, "tensor", tolerance, false);
+    }
+    
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance) {
+    	productOfDesignSpaces(inputSpaceIDs, "strong", tolerance, true);
+    }
+    
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance) {
+    	productOfDesignSpaces(inputSpaceIDs, outputSpaceID, "strong", tolerance, true);
+    }
+    
+    public void productOfDesignSpaces(List<String> inputSpaceIDs, String type, int tolerance, 
+    		boolean isConservative) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
     		DesignSpaceBranchesConflictException {
     	validateListParameter("inputSpaceIDs", inputSpaceIDs);
     	
-    	mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, strength, isIntersection, isConservative);
+    	productOfDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), type, tolerance, isConservative);
     }
     
-    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance, int strength,
-    		boolean isIntersection, boolean isConservative) 
+    public void productOfDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String type,
+    		int tolerance, boolean isConservative) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
     		DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -1452,7 +1470,7 @@ public class DesignSpaceService {
     	
     	List<NodeSpace> prunedSpaces = new LinkedList<NodeSpace>();
     	
-    	NodeSpace outputSpace;
+    	DesignSpace outputSpace;
     	
     	if (prunedSpaceIDs.remove(outputSpaceID)) {
     		outputSpace = loadDesignSpace(outputSpaceID, 2);
@@ -1476,10 +1494,9 @@ public class DesignSpaceService {
     		outputSpace = new DesignSpace(outputSpaceID, 0, maxMergeIndex);
     	}
     	
-    	mergeNodeSpaces(prunedSpaces, outputSpace, tolerance, strength,
-    			isIntersection, isConservative);
+    	productOfNodeSpaces(prunedSpaces, outputSpace, type, tolerance, isConservative);
   
-    	saveDesignSpace((DesignSpace) outputSpace);
+    	saveDesignSpace(outputSpace);
     	
     	if (inputSpaceIDs.contains(outputSpaceID)) {
     		prunedSpaces.add(0, outputSpace);
@@ -1489,6 +1506,7 @@ public class DesignSpaceService {
 
     	for (int i = 0; i < prunedSpaces.size(); i++) {
     		DesignSpace inputSpace = (DesignSpace) prunedSpaces.get(i);
+    		
     		if (!inputSpace.getSpaceID().equals(outputSpaceID)) {
     			mergeVersionHistory(inputSpace.getSpaceID(), outputSpaceID);
     		}
@@ -1500,18 +1518,18 @@ public class DesignSpaceService {
     		headBranchIDs.add(headBranchID);
     	}
     	
-    	mergeBranches(outputSpaceID, headBranchIDs, tolerance, strength, isIntersection, isConservative);
+    	mergeBranches(outputSpaceID, headBranchIDs, type, tolerance, isConservative);
     	
     	if (!inputSpaceIDs.contains(outputSpaceID)) {
     		selectHeadBranch(outputSpaceID, headBranchIDs.get(0));
     	}
     }
     
-    private void mergeNodeSpaces(List<NodeSpace> inputSpaces, boolean isIntersection, boolean isCompleteMatch,
-    		int strength, int degree) {
+    private void productOfNodeSpaces(List<NodeSpace> inputSpaces, String type, int tolerance,
+    		boolean isConservative) {
     	if (inputSpaces.size() > 1) {
-    		mergeNodeSpaces(inputSpaces.subList(1, inputSpaces.size()), inputSpaces.get(0), 
-    				 strength, degree, isIntersection, isCompleteMatch);
+    		productOfNodeSpaces(inputSpaces.subList(1, inputSpaces.size()), inputSpaces.get(0), 
+    				 type, tolerance, isConservative);
     	}
     }
     
@@ -1531,204 +1549,328 @@ public class DesignSpaceService {
     	return -1;
     }
     
-    private void pruneProduct(NodeSpace space, Set<Edge> nsEdges, Set<Edge> ewEdges) {
-    	Stack<Node> nodeStack = new Stack<Node>();
+    private void partitionPaths(Set<Node> pathNodes, NodeSpace pathSpace, Set<Edge> rowEdges, 
+    		Set<Edge> colEdges) {
+    	HashMap<String, Set<Edge>> nodeIDToIncomingEdges = pathSpace.mapNodeIDsToIncomingEdges();
     	
-    	Stack<Integer> directionStack = new Stack<Integer>();
+    	pathSpace.clearNodes();
     	
-    	for (Node startNode : space.getStartNodes()) {
-    		nodeStack.push(startNode);
-    		
+    	for (Node pathNode : pathNodes) {
+    		HashMap<String, Node> idToCopyNode = new HashMap<String, Node>();
+
+    		idToCopyNode.put(pathNode.getNodeID(), pathSpace.copyNode(pathNode));
+
+    		Stack<Node> nodeStack = new Stack<Node>();
+
+    		Stack<Integer> directionStack = new Stack<Integer>();
+
+    		// Copy outgoing paths
+
+    		nodeStack.push(pathNode);
+
     		directionStack.push(new Integer(0));
+
+    		while (!nodeStack.isEmpty()) {
+    			Node node = nodeStack.pop();
+
+    			Integer direction = directionStack.pop();
+    			
+    			if (node.hasEdges()) {
+    				String nodeID;
+        			
+        			if (direction.intValue() == 1) {
+        				nodeID = node.getNodeID() + "row";
+        			} else if (direction.intValue() == 2) {
+        				nodeID = node.getNodeID() + "col";
+        			} else {
+        				nodeID = node.getNodeID();
+        			}
+    				
+    				boolean hasDiagonal = false;
+
+    				Edge[] edges = node.getEdgeArray();
+
+    				for (int i = 0; i < edges.length; i++) {
+    					if (!rowEdges.contains(edges[i]) && !colEdges.contains(edges[i])) {
+    						hasDiagonal = true;
+
+    						String successorID = edges[i].getHead().getNodeID();
+
+    						if (!idToCopyNode.containsKey(successorID)) {
+    							idToCopyNode.put(successorID, 
+    									pathSpace.copyNode(edges[i].getHead()));
+
+    							nodeStack.push(edges[i].getHead());
+
+    							directionStack.push(new Integer(0));
+    						}
+
+    						idToCopyNode.get(nodeID).copyEdge(edges[i], 
+    								idToCopyNode.get(successorID));
+    					}
+    				}
+
+    				if (!hasDiagonal) {
+    					for (int i = 0; i < edges.length; i++) {
+    						if (rowEdges.contains(edges[i])) {
+    							if (direction.intValue() == 0 || direction.intValue() == 1) {
+    								String successorID = edges[i].getHead().getNodeID() + "row";
+
+    								if (!idToCopyNode.containsKey(successorID)) {
+    									idToCopyNode.put(successorID, 
+    											pathSpace.copyNode(edges[i].getHead()));
+
+    									nodeStack.push(edges[i].getHead());
+
+    									directionStack.push(new Integer(1));
+    								}
+
+    								idToCopyNode.get(nodeID).copyEdge(edges[i], 
+    										idToCopyNode.get(successorID));
+    							}
+    						} else if (colEdges.contains(edges[i])) {
+    							if (direction.intValue() == 0 || direction.intValue() == 2) {
+    								String successorID = edges[i].getHead().getNodeID() + "col";
+
+    								if (!idToCopyNode.containsKey(successorID)) {
+    									idToCopyNode.put(successorID, 
+    											pathSpace.copyNode(edges[i].getHead()));
+
+    									nodeStack.push(edges[i].getHead());
+
+    									directionStack.push(new Integer(2));
+    								}
+
+    								idToCopyNode.get(nodeID).copyEdge(edges[i], 
+    										idToCopyNode.get(successorID));
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
+
+    		// Copy incoming paths
+
+    		nodeStack.push(pathNode);
+
+    		directionStack.push(new Integer(0));
+
+    		while (!nodeStack.isEmpty()) {
+    			Node node = nodeStack.pop();
+
+    			Integer direction = directionStack.pop();
+    			
+    			String nodeID;
+    			
+    			if (direction.intValue() == 1) {
+    				nodeID = node.getNodeID() + "row";
+    			} else if (direction.intValue() == 2) {
+    				nodeID = node.getNodeID() + "col";
+    			} else {
+    				nodeID = node.getNodeID();
+    			}
+
+    			if (nodeIDToIncomingEdges.containsKey(node.getNodeID())) {
+    				boolean hasDiagonal = false;
+
+    				Edge[] edges = nodeIDToIncomingEdges.get(node.getNodeID())
+    						.toArray(new Edge[nodeIDToIncomingEdges.get(node.getNodeID()).size()]);
+
+    				for (int i = 0; i < edges.length; i++) {
+    					if (!rowEdges.contains(edges[i]) && !colEdges.contains(edges[i])) {
+    						hasDiagonal = true;
+
+    						String predecessorID = edges[i].getTail().getNodeID();
+
+    						if (!idToCopyNode.containsKey(predecessorID)) {
+    							idToCopyNode.put(predecessorID,
+    									pathSpace.copyNode(edges[i].getTail()));
+
+    							nodeStack.push(edges[i].getTail());
+
+    							directionStack.push(new Integer(0));
+    						}
+
+    						idToCopyNode.get(predecessorID).copyEdge(edges[i], 
+    								idToCopyNode.get(nodeID));
+    					}
+    				}
+
+    				if (!hasDiagonal) {
+    					for (int i = 0; i < edges.length; i++) {
+    						if (rowEdges.contains(edges[i])) {
+    							if (direction.intValue() == 0 || direction.intValue() == 1) {
+    								String predecessorID = edges[i].getTail().getNodeID() + "row";
+
+    								if (!idToCopyNode.containsKey(predecessorID)) {
+    									idToCopyNode.put(predecessorID, 
+    											pathSpace.copyNode(edges[i].getTail()));
+
+    									nodeStack.push(edges[i].getTail());
+
+    									directionStack.push(new Integer(1));
+    								}
+
+    								idToCopyNode.get(predecessorID).copyEdge(edges[i], 
+    										idToCopyNode.get(nodeID));
+    							}
+    						} else if (colEdges.contains(edges[i])) {
+    							if (direction.intValue() == 0 || direction.intValue() == 2) {
+    								String predecessorID = edges[i].getTail().getNodeID() + "col";
+
+    								if (!idToCopyNode.containsKey(predecessorID)) {
+    									idToCopyNode.put(predecessorID, 
+    											pathSpace.copyNode(edges[i].getTail()));
+
+    									nodeStack.push(edges[i].getTail());
+
+    									directionStack.push(new Integer(2));
+    								}
+
+    								idToCopyNode.get(predecessorID).copyEdge(edges[i], 
+    										idToCopyNode.get(nodeID));
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
     	}
     	
-    	space.clearNodes();
+    	pathSpace.mergeSourceNodes();
+    }
+    
+    private List<List<Node>> cartesianProductOfNodes(List<Node> rowNodes, List<Node> colNodes,
+    		NodeSpace productSpace) {
+    	List<List<Node>> productNodes = new ArrayList<List<Node>>(rowNodes.size());
     	
-    	Stack<Node> copyNodeStack = new Stack<Node>();
-    	
-    	for (Node startNode : nodeStack) {
-    		copyNodeStack.push(space.copyNode(startNode));
-    	}
-    	
-    	HashMap<String, Node> idToCopyNode = new HashMap<String, Node>();
-    	
-    	while (!nodeStack.isEmpty()) {
-    		Node node = nodeStack.pop();
-    		
-    		Node copyNode = copyNodeStack.pop();
-    		
-    		Integer direction = directionStack.pop();
-    		
-    		if (node.hasEdges()) {
-    			for (Edge edge : node.getEdges()) {
-    				if (nsEdges.contains(edge)) {
-    					if (direction.intValue() == 0 || direction.intValue() == 1) {
-    						String successorID = edge.getHead().getNodeID() + "ns";
-    						
-    						if (!idToCopyNode.containsKey(successorID)) {
-    							Node copySuccessor = space.copyNode(edge.getHead());
-    							
-    							idToCopyNode.put(successorID, copySuccessor);
-    							
-    							nodeStack.push(edge.getHead());
-    							
-    							copyNodeStack.push(copySuccessor);
+    	for (int i = 0; i < rowNodes.size(); i++) {
+			productNodes.add(new ArrayList<Node>(colNodes.size()));
 
-    							directionStack.push(new Integer(1));
+			for (int j = 0; j < colNodes.size(); j++) {
+				if (rowNodes.get(i).isAcceptNode() || colNodes.get(j).isAcceptNode()) {
+					productNodes.get(i).add(productSpace.createAcceptNode());
+				} else {
+					productNodes.get(i).add(productSpace.createNode());
+				}
+			}
+		}
+    	
+    	return productNodes;
+    }
+    
+    private void tensorProductOfGraphs(List<Node> rowNodes, List<Node> colNodes,
+    		List<List<Node>> productNodes, int tolerance) {
+    	for (int i = 0; i < rowNodes.size(); i++) {
+    		for (int j = 0; j < colNodes.size(); j++) {
+    			if (rowNodes.get(i).hasEdges() 
+    					&& colNodes.get(j).hasEdges()) {
+    				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
+    					for (Edge colEdge : colNodes.get(j).getEdges()) {
+    						if (rowEdge.isMatchingTo(colEdge, tolerance)) {
+    							Node outputNode = productNodes.get(i).get(j);
+
+    							int r = locateNodeFrom(rowEdge.getHead().getNodeID(), i, 
+    									rowNodes);
+
+    							int c = locateNodeFrom(colEdge.getHead().getNodeID(), j,
+    									colNodes);
+
+    							Edge productEdge = outputNode.copyEdge(colEdge, 
+    									productNodes.get(r).get(c));
+
+    							if (tolerance == 1) {
+    								productEdge.intersectWithEdge(rowEdge);
+    							} else if (tolerance > 1) {
+    								productEdge.unionWithEdge(rowEdge);
+    							}
     						}
-    						
-    						copyNode.copyEdge(edge, idToCopyNode.get(successorID));
     					}
-    				} else if (ewEdges.contains(edge)) {
-    					if (direction.intValue() == 0 || direction.intValue() == 2) {
-    						String successorID = edge.getHead().getNodeID() + "ew";
-    						
-    						if (!idToCopyNode.containsKey(successorID)) {
-    							Node copySuccessor = space.copyNode(edge.getHead());
-    							
-    							idToCopyNode.put(successorID, copySuccessor);
-    							
-    							nodeStack.push(edge.getHead());
-    							
-    							copyNodeStack.push(copySuccessor);
-
-    							directionStack.push(new Integer(2));
-    						}
-    						
-    						copyNode.copyEdge(edge, idToCopyNode.get(successorID));
-    					}
-    				} else {
-    					String successorID = edge.getHead().getNodeID();
-						
-						if (!idToCopyNode.containsKey(successorID)) {
-							Node copySuccessor = space.copyNode(edge.getHead());
-							
-							idToCopyNode.put(successorID, copySuccessor);
-							
-							nodeStack.push(edge.getHead());
-							
-							copyNodeStack.push(copySuccessor);
-
-							directionStack.push(new Integer(0));
-						}
-						
-						copyNode.copyEdge(edge, idToCopyNode.get(successorID));
     				}
     			}
     		}
     	}
     }
     
-    private void mergeNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-    		int tolerance, int strength, boolean isIntersection, boolean isConservative) {
-    	int x = 0;
+    private List<Set<Edge>> cartesianProductOfGraphs(List<Node> rowNodes, List<Node> colNodes,
+    		List<List<Node>> productNodes) {
+    	List<Set<Edge>> parallelEdges = new ArrayList<Set<Edge>>(2);
+    	
+    	parallelEdges.add(new HashSet<Edge>());
 
+		for (int i = 0; i < rowNodes.size(); i++) {
+			if (rowNodes.get(i).hasEdges()) {
+				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
+					int r = locateNodeFrom(rowEdge.getHead().getNodeID(), i, rowNodes);
+
+					for (int j = 0; j < colNodes.size(); j++) {
+						parallelEdges.get(0).add(productNodes.get(i).get(j).copyEdge(rowEdge, 
+								productNodes.get(r).get(j)));
+					}
+				}
+			}
+		}
+
+		parallelEdges.add(new HashSet<Edge>());
+
+		for (int j = 0; j < colNodes.size(); j++) {
+			if (colNodes.get(j).hasEdges()) {
+				for (Edge colEdge : colNodes.get(j).getEdges()) {
+					int c = locateNodeFrom(colEdge.getHead().getNodeID(), j, colNodes);
+
+					for (int i = 0; i < rowNodes.size(); i++) {
+						parallelEdges.get(1).add(productNodes.get(i).get(j).copyEdge(colEdge, 
+								productNodes.get(i).get(c)));
+					}
+				}
+			}
+		}
+		
+		return parallelEdges;
+    }
+    
+    private void productOfNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
+    		String type, int tolerance, boolean isConservative) {
     	for (NodeSpace inputSpace : inputSpaces) {
-    		if (!outputSpace.hasNodes()) {
+    		if (!outputSpace.hasNodes()) {	
     			outputSpace.union(inputSpace);
     		} else {
-    			System.out.println("merge " + x++);
-
     			List<Node> inputNodes = inputSpace.orderNodes();
 
     			List<Node> priorOutputNodes = outputSpace.orderNodes();
     			
     			outputSpace.clearNodes();
-
-    			List<List<Node>> productNodes = new ArrayList<List<Node>>(inputNodes.size());
     			
     			// Cartesian product of nodes
-    			for (int i = 0; i < inputNodes.size(); i++) {
-    				productNodes.add(new ArrayList<Node>(priorOutputNodes.size()));
-
-    				for (int j = 0; j < priorOutputNodes.size(); j++) {
-    					if (inputNodes.get(i).isAcceptNode() || priorOutputNodes.get(j).isAcceptNode()) {
-    						productNodes.get(i).add(outputSpace.createAcceptNode());
-    					} else {
-    						productNodes.get(i).add(outputSpace.createNode());
-    					}
-    				}
-    			}
+    			List<List<Node>> productNodes = cartesianProductOfNodes(inputNodes, priorOutputNodes,
+    					outputSpace);
 
     			// Tensor product of graphs
-    			if (strength == 0 || strength == 2) {
-    				for (int i = 0; i < inputNodes.size(); i++) {
-    					for (int j = 0; j < priorOutputNodes.size(); j++) {
-    						if (inputNodes.get(i).hasEdges() 
-    								&& priorOutputNodes.get(j).hasEdges()) {
-    							for (Edge inputEdge : inputNodes.get(i).getEdges()) {
-    								for (Edge priorOutputEdge : priorOutputNodes.get(j).getEdges()) {
-    									if (inputEdge.isMatchingTo(priorOutputEdge, tolerance)) {
-    										Node outputNode = productNodes.get(i).get(j);
-
-    										int r = locateNodeFrom(inputEdge.getHead().getNodeID(), i, 
-    												inputNodes);
-
-    										int c = locateNodeFrom(priorOutputEdge.getHead().getNodeID(), j,
-    												priorOutputNodes);
-
-    										Edge outputEdge = outputNode.copyEdge(priorOutputEdge, 
-    												productNodes.get(r).get(c));
-
-    										if (isIntersection) {
-    											outputEdge.intersectWithEdge(inputEdge);
-    										} else if (tolerance > 0) {
-    											outputEdge.unionWithEdge(inputEdge);
-    										}
-    									}
-    								}
-    							}
-    						}
-    					}
-    				}
+    			if (type.equals("tensor")) {
+    				tensorProductOfGraphs(inputNodes, priorOutputNodes, productNodes, tolerance);
     				
-    				if (strength == 0) {
-        				outputSpace.labelStartNodes();
-        				
-        				outputSpace.mergeStartNodes();
-        			}
+    				outputSpace.deleteUnconnectedNodes();
+    				
+    				outputSpace.mergeSourceNodes();
+    			} else if (type.equals("strong")) {
+    				tensorProductOfGraphs(inputNodes, priorOutputNodes, productNodes, tolerance);
     			}
     			
     			// Strong product of graphs
-    			if (strength == 1 || strength == 2) {
-    				Set<Edge> nsEdges = new HashSet<Edge>();
+    			if (type.equals("strong") && isConservative) {
+    				Set<Node> sourceNodes = outputSpace.getSourceNodes();
 
-    				for (int i = 0; i < inputNodes.size(); i++) {
-    					if (inputNodes.get(i).hasEdges()) {
-    						for (Edge inputEdge : inputNodes.get(i).getEdges()) {
-    							int r = locateNodeFrom(inputEdge.getHead().getNodeID(), i, inputNodes);
+    				List<Set<Edge>> orthogonalEdges = cartesianProductOfGraphs(inputNodes, 
+    						priorOutputNodes, productNodes);
 
-    							for (int j = 0; j < priorOutputNodes.size(); j++) {
-    								nsEdges.add(productNodes.get(i).get(j).copyEdge(inputEdge, 
-    										productNodes.get(r).get(j)));
-    							}
-    						}
-    					}
-    				}
-
-    				Set<Edge> ewEdges = new HashSet<Edge>();
-
-    				for (int j = 0; j < priorOutputNodes.size(); j++) {
-    					if (priorOutputNodes.get(j).hasEdges()) {
-    						for (Edge priorOutputEdge : priorOutputNodes.get(j).getEdges()) {
-    							int c = locateNodeFrom(priorOutputEdge.getHead().getNodeID(), j, priorOutputNodes);
-
-    							for (int i = 0; i < inputNodes.size(); i++) {
-    								ewEdges.add(productNodes.get(i).get(j).copyEdge(priorOutputEdge, 
-    										productNodes.get(i).get(c)));
-    							}
-    						}
-    					}
-    				}
-    				
-    				if (!productNodes.isEmpty() && !productNodes.get(0).isEmpty()) {
-    					productNodes.get(0).get(0).setNodeType(Node.NodeType.START.getValue());
-    				}
- 
-    				if (isConservative) {
-    					pruneProduct(outputSpace, nsEdges, ewEdges);
-    				}
+    				partitionPaths(sourceNodes, outputSpace, orthogonalEdges.get(0), 
+    						orthogonalEdges.get(1));
+    			} else if (type.equals("cartesian") || type.equals("strong")) {
+    				cartesianProductOfGraphs(inputNodes, priorOutputNodes, productNodes);
     			}
+    			
+    			outputSpace.labelStartNodes();
     			
     			outputSpace.labelAcceptNodes();
     		}
@@ -2461,15 +2603,18 @@ public class DesignSpaceService {
     }
 	
 	private void saveDesignSpace(DesignSpace space) {
-//		designSpaceRepository.save(space, 1);
-//		
-//		System.out.println("nodes saved");
-//		
-//		designSpaceRepository.save(space, 2);
-//		
-//		designSpaceRepository.save(space, 3);
-//		
-//		System.out.println("edges saved");
+		LOG.info("presave nodes {}", space.getNodes().size());
+		
+		LOG.info("presave edges {}", space.getEdges().size());
+		
+		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToOutgoingEdges();
+		
+		space.clearEdges();
+		
+		designSpaceRepository.save(space);
+		
+		space.loadEdges(nodeIDToEdges);
+		
 		designSpaceRepository.save(space);
 	}
 

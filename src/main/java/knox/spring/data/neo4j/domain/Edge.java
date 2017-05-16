@@ -45,10 +45,7 @@ public class Edge {
         this.head = head;
     }
 
-    public Edge(Node tail,
-                Node head,
-                ArrayList<String> componentIDs,
-                ArrayList<String> componentRoles,
+    public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles,
                 double probability) {
         this.tail = tail;
         this.head = head;
@@ -57,10 +54,7 @@ public class Edge {
         this.probability = probability;
     }
     
-    public Edge(Node tail,
-                Node head,
-                ArrayList<String> componentIDs,
-                ArrayList<String> componentRoles) {
+    public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
 		this.tail = tail;
 		this.head = head;
 		this.componentIDs = componentIDs;
@@ -190,7 +184,7 @@ public class Edge {
     }
 
     public boolean isIdenticalTo(Edge edge) {
-        if (tail.equals(edge.getTail()) && head.equals(edge.getHead())) {
+        if (tail.isIdenticalTo(edge.getTail()) && head.isIdenticalTo(edge.getHead())) {
             return hasSameComponents(edge);
         } else {
             return false;
@@ -199,8 +193,10 @@ public class Edge {
     
     public boolean isMatchingTo(Edge edge, int tolerance) {
     	if (tolerance == 0 && hasSameComponents(edge)
-				|| tolerance == 1 && hasSharedComponents(edge) 
-				|| tolerance == 2 && hasSharedRoles(edge)) {
+    			|| tolerance == 1 && hasSharedComponents(edge)
+				|| tolerance == 2 && hasSharedComponents(edge)
+				|| tolerance == 3 && hasSharedRoles(edge)
+				|| tolerance == 4) {
 			return true;
 		} else {
 			return false;
@@ -214,8 +210,7 @@ public class Edge {
             Set<String> compIDs2 = new HashSet<String>(edge.getComponentIDs());
 
             Set<String> compRoles1 = new HashSet<String>(componentRoles);
-            Set<String> compRoles2 =
-                new HashSet<String>(edge.getComponentRoles());
+            Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
 
             return compIDs1.equals(compIDs2) && compRoles1.equals(compRoles2);
         } else if (!hasComponentIDs() && !edge.hasComponentIDs() &&
@@ -264,7 +259,7 @@ public class Edge {
         }
     }
 
-    public boolean isCyclic() { return tail.equals(head); }
+    public boolean isCyclic() { return tail.isIdenticalTo(head); }
 
     public void setHead(Node head) { this.head = head; }
 

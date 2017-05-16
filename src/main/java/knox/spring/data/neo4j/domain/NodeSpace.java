@@ -17,12 +17,16 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
 public class NodeSpace {
 	@GraphId
     Long id;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(NodeSpace.class);
 	
 	int idIndex;
 	
@@ -42,6 +46,14 @@ public class NodeSpace {
 			nodes = new HashSet<Node>();
 		}
 		nodes.add(node);
+	}
+	
+	public void clearEdges() {
+		if (hasNodes()) {
+			for (Node node : nodes) {
+				node.clearEdges();
+			}
+		}
 	}
 	
 	public void clearNodes() {
@@ -277,26 +289,56 @@ public class NodeSpace {
             return nodes.size() > 0;
         }
     }
+    
+    public void loadEdges(HashMap<String, Set<Edge>> nodeIDToEdges) { 
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			if (nodeIDToEdges.containsKey(node.getNodeID())) {
+    				node.setEdges(nodeIDToEdges.get(node.getNodeID()));
+    			}
+    		}
+    	}
+    }
+    
+    public HashMap<String, Set<Edge>> mapNodeIDsToOutgoingEdges() {
+    	HashMap<String, Set<Edge>> nodeIDToOutgoingEdges = new HashMap<String, Set<Edge>>();
+        
+        if (hasNodes()) {
+            for (Node node : nodes) {
+                if (node.hasEdges()) {
+                    for (Edge edge : node.getEdges()) {
+                    	if (!nodeIDToOutgoingEdges.containsKey(node.getNodeID())) {
+                    		nodeIDToOutgoingEdges.put(node.getNodeID(), new HashSet<Edge>());
+                        }
+                        
+                    	nodeIDToOutgoingEdges.get(node.getNodeID()).add(edge);
+                    }
+                }
+            }
+        }
+        
+        return nodeIDToOutgoingEdges;
+    }
 
     public HashMap<String, Set<Edge>> mapNodeIDsToIncomingEdges() {
-        HashMap<String, Set<Edge>> nodeIDToIncomingEdges =
-            new HashMap<String, Set<Edge>>();
+        HashMap<String, Set<Edge>> nodeIDToIncomingEdges = new HashMap<String, Set<Edge>>();
+        
         if (hasNodes()) {
             for (Node node : nodes) {
                 if (node.hasEdges()) {
                     for (Edge edge : node.getEdges()) {
                         Node successor = edge.getHead();
-                        if (!nodeIDToIncomingEdges.containsKey(
-                                successor.getNodeID())) {
-                            nodeIDToIncomingEdges.put(successor.getNodeID(),
-                                                      new HashSet<Edge>());
+                        
+                        if (!nodeIDToIncomingEdges.containsKey(successor.getNodeID())) {
+                            nodeIDToIncomingEdges.put(successor.getNodeID(), new HashSet<Edge>());
                         }
-                        nodeIDToIncomingEdges.get(successor.getNodeID())
-                            .add(edge);
+                        
+                        nodeIDToIncomingEdges.get(successor.getNodeID()).add(edge);
                     }
                 }
             }
         }
+        
         return nodeIDToIncomingEdges;
     }
 
@@ -313,16 +355,38 @@ public class NodeSpace {
     }
     
     public void labelAcceptNodes() {
-    	if (hasNodes()) {
-    		for (Node node : nodes) {
-    			if (!node.hasEdges()) {
-    				node.setNodeType(Node.NodeType.ACCEPT.getValue());
-    			}
-    		}
+    	Set<Node> sinkNodes = getSinkNodes();
+    	
+    	for (Node sinkNode : sinkNodes) {
+    		sinkNode.setNodeType(Node.NodeType.ACCEPT.getValue());
     	}
     }
     
     public void labelStartNodes() {
+    	Set<Node> sourceNodes = getSourceNodes();
+    	
+    	for (Node sourceNode : sourceNodes) {
+    		sourceNode.setNodeType(Node.NodeType.START.getValue());
+    	}
+    }
+    
+    public Set<Node> getSinkNodes() {
+    	Set<Node> sinkNodes = new HashSet<Node>();
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			if (!node.hasEdges()) {
+    				sinkNodes.add(node);
+    			}
+    		}
+    	}
+    	
+    	return sinkNodes;
+    }
+    
+    public void deleteUnconnectedNodes() {
+    	Set<Node> deletedNodes = new HashSet<Node>();
+    	
     	if (hasNodes()) {
     		Set<String> successorIDs = new HashSet<String>();
 
@@ -335,29 +399,59 @@ public class NodeSpace {
     		}
 
     		for (Node node : nodes) {
-    			if (!successorIDs.contains(node.getNodeID())) {
-    				node.setNodeType(Node.NodeType.START.getValue());
+    			if (!successorIDs.contains(node.getNodeID()) && !node.hasEdges()) {
+    				deletedNodes.add(node);
     			}
     		}
     	}
+    	
+    	nodes.removeAll(deletedNodes);
     }
     
-    public void mergeStartNodes() {
+    public Set<Node> getSourceNodes() {
+    	Set<Node> sourceNodes = new HashSet<Node>();
+    	
     	if (hasNodes()) {
-    		Iterator<Node> startNodes = getStartNodes().iterator();
-    		
-    		Node primaryStart = startNodes.next();
-    		
-    		while (startNodes.hasNext()) {
-    			Node secondaryStart = startNodes.next();
-    			
-    			if (secondaryStart.hasEdges()) {
-    				for (Edge secondaryEdge : secondaryStart.getEdges()) {
-    					primaryStart.copyEdge(secondaryEdge);
+    		Set<String> successorIDs = new HashSet<String>();
+
+    		for (Node node : nodes) {
+    			if (node.hasEdges()) {
+    				for (Edge edge : node.getEdges()) {
+    					successorIDs.add(edge.getHead().getNodeID());
     				}
     			}
-    			
-    			nodes.remove(secondaryStart);
+    		}
+
+    		for (Node node : nodes) {
+    			if (!successorIDs.contains(node.getNodeID()) && node.hasEdges()) {
+    				sourceNodes.add(node);
+    			}
+    		}
+    	}
+    	
+    	return sourceNodes;
+    }
+    
+    public void mergeSourceNodes() {
+    	if (hasNodes()) {
+    		Iterator<Node> sourceNodes = getSourceNodes().iterator();
+    		
+    		if (sourceNodes.hasNext()) {
+    			Node primarySourceNode = sourceNodes.next();
+
+    			while (sourceNodes.hasNext()) {
+    				Node secondarySourceNode = sourceNodes.next();
+
+    				if (secondarySourceNode.hasEdges()) {
+    					for (Edge secondaryEdge : secondarySourceNode.getEdges()) {
+    						primarySourceNode.copyEdge(secondaryEdge);
+    					}
+    				}
+
+    				nodes.remove(secondarySourceNode);
+    			}
+
+    			reindexNodes();
     		}
     	}
     }
@@ -367,7 +461,7 @@ public class NodeSpace {
     	
     	if (hasNodes()) {
     		orderedNodes = new ArrayList<Node>(nodes.size());
-        	
+    		
         	Stack<Node> nodeStack = new Stack<Node>();
         	
         	for (Node startNode : getStartNodes()) {
@@ -381,12 +475,12 @@ public class NodeSpace {
         		
         		orderedNodes.add(node);
         		
-        		visitedIDs.add(node.getNodeID());
-        		
         		if (node.hasEdges()) {
         			for (Edge edge : node.getEdges()) {
         				if (!visitedIDs.contains(edge.getHead().getNodeID())) {
         					nodeStack.push(edge.getHead());
+        					
+        					visitedIDs.add(edge.getHead().getNodeID());
         				}
         			}
         		}
@@ -410,6 +504,16 @@ public class NodeSpace {
         }
 
         return diffNodes;
+    }
+    
+    private void reindexNodes() {
+    	if (hasNodes()) {
+    		idIndex = 0;
+    		
+    		for (Node node : nodes) {
+    			node.setNodeID("n" + idIndex++);
+    		}
+    	}
     }
 
     public Set<Node> retainNodes(Set<Node> retainedNodes) {

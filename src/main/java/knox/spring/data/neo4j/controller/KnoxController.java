@@ -14,7 +14,8 @@ import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLValidationException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController("/")
 public class KnoxController {
 	final DesignSpaceService designSpaceService;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
 	@Autowired
 	public KnoxController(DesignSpaceService designSpaceService) {
@@ -137,13 +140,13 @@ public class KnoxController {
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "degree", required = false, defaultValue = "0") int tolerance) {
-    	if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, 0, 
-    				true, false);
-		} else {
-			designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID,
-	    			tolerance, 0, true, false);
-		}
+//    	if (outputBranchID == null) {
+//    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, 0, 
+//    				true, false);
+//		} else {
+//			designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID,
+//	    			tolerance, 0, true, false);
+//		}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully intersected.\"}", 
     				HttpStatus.NO_CONTENT);
@@ -242,13 +245,13 @@ public class KnoxController {
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "strength", required = false, defaultValue = "0") int tolerance,
     		@RequestParam(value = "degree", required = false, defaultValue = "0") int strength) { 	
-    	if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, strength, 
-    				false, true); 
-    	} else {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
-    				tolerance, strength, false, true);
-    	}
+//    	if (outputBranchID == null) {
+//    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, strength, 
+//    				false, true); 
+//    	} else {
+//    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
+//    				tolerance, strength, false, true);
+//    	}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
@@ -317,12 +320,16 @@ public class KnoxController {
     @RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
     public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-    		@RequestParam(value = "degree", required = false, defaultValue = "0") int tolerance) {
+    		@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance) {
     	try {
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, 0, true, false);
+    			designSpaceService.andDesignSpaces(inputSpaceIDs, tolerance);
     		} else {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, 0, true, false);
+    			long startTime = System.nanoTime();
+    			
+    			designSpaceService.andDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance);
+    			
+    			LOG.info("time {}", System.nanoTime() - startTime);
     		}
 
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 
@@ -368,8 +375,12 @@ public class KnoxController {
             if (outputSpaceID == null) {
                 designSpaceService.joinDesignSpaces(inputSpaceIDs);
             } else {
+            	long startTime = System.nanoTime();
+            	
                 designSpaceService.joinDesignSpaces(inputSpaceIDs,
                         outputSpaceID);
+                
+                LOG.info("time {}", System.nanoTime() - startTime);
             }
 
             return new ResponseEntity<String>(
@@ -394,21 +405,13 @@ public class KnoxController {
     @RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
     public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-    		@RequestParam(value = "strength", required = false, defaultValue = "0") int tolerance,
-    		@RequestParam(value = "degree", required = false, defaultValue = "0") int strength) {
-//    		@RequestParam(value = "isConservative", required = false, defaultValue = "true") boolean isConservative) {
+    		@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance) {
     	try {
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, strength, false, true);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance);
     		} else {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, strength, false, true);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance);
     		}
-    		
-//    		if (outputSpaceID == null) {
-//    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, 0, 2, false, true);
-//    		} else {
-//    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, 0, 2, false, true);
-//    		}
     		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
@@ -464,7 +467,11 @@ public class KnoxController {
             if (outputSpaceID == null) {
                 designSpaceService.orDesignSpaces(inputSpaceIDs);
             } else {
+            	long startTime = System.nanoTime();
+            	
                 designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID);
+            	
+                LOG.info("time {}", System.nanoTime() - startTime);
             }
 
             return new ResponseEntity<String>(
