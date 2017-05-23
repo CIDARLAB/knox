@@ -161,12 +161,26 @@ public class Node {
     	}
     }
     
-    public Set<Edge> getMatchingEdges(Edge edge, int strength) {
+    public boolean hasMatchingEdge(Edge edge, int tolerance) {
+    	if (hasEdges()) {
+    		for (Edge e : edges) {
+    			if (edge.isMatchingTo(e, tolerance)) {
+    				return true;
+    			}
+    		}
+    		
+    		return false;
+    	} else {
+    		return false;
+    	}
+    }
+    
+    public Set<Edge> getMatchingEdges(Edge edge, int tolerance) {
     	Set<Edge> matchingEdges = new HashSet<Edge>();
     	
     	if (hasEdges()) {
     		for (Edge e : edges) {
-    			if (edge.isMatchingTo(e, strength)) {
+    			if (edge.isMatchingTo(e, tolerance)) {
     				matchingEdges.add(e);
     			}
     		}

@@ -12,4 +12,12 @@ public class Snapshot extends NodeSpace {
     public Snapshot() {}
 
     public Snapshot(int idIndex) { super(idIndex); }
+    
+    public Snapshot copy() {
+    	Snapshot snapCopy = new Snapshot(super.idIndex);
+    	
+    	snapCopy.copyNodeSpace(this);
+    	
+    	return snapCopy;
+    }
 }

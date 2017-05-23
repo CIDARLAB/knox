@@ -6,10 +6,14 @@ import java.util.Set;
 
 // import org.neo4j.ogm.annotation.*;
 
+import java.util.Stack;
+
+
 // import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 // import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import org.neo4j.ogm.annotation.Relationship;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -30,6 +34,14 @@ public class DesignSpace extends NodeSpace {
         this.spaceID = spaceID;
 
         this.mergeIndex = 0;
+    }
+    
+    public DesignSpace(String spaceID, int mergeIndex) {
+        super(0);
+
+        this.spaceID = spaceID;
+
+        this.mergeIndex = mergeIndex;
     }
 
     public DesignSpace(String spaceID, int idIndex, int mergeIndex) {
@@ -58,35 +70,89 @@ public class DesignSpace extends NodeSpace {
 
         return false;
     }
+    
+    public void copyDesignSpace(DesignSpace space) {
+    	copyNodeSpace(space);
+    	
+    	copyVersionHistory(space);
+    }
+    
+    public void updateMergeIDs() {
+    	for (Commit commit : getCommits()) {
+    		if (!commit.hasMergeID()) {
+    			commit.setMergeID("m" + mergeIndex++);
+    		}
+    	}
+    }
+    
+    public Branch copyVersionHistory(DesignSpace space) {
+    	Branch headBranchCopy = null;
+    	
+    	if (space.hasBranches()) {
+        	HashMap<String, Commit> idToCommitCopy = new HashMap<String, Commit>();
+        	
+        	for (Branch branch : space.getBranches()) {
+        		Branch branchCopy = branch.copy();
+        		
+        		if (branch.hasCommits()) {
+        			for (Commit commit : branch.getCommits()) {
+        				if (!idToCommitCopy.containsKey(commit.getCommitID())) {
+        					idToCommitCopy.put(commit.getCommitID(), commit.copy());
+        				}
+        				
+        				branchCopy.addCommit(idToCommitCopy.get(commit.getCommitID()));
+        			}
+        			
+        			for (Commit commit : branch.getCommits()) {
+        				if (commit.hasPredecessors()) {
+        					for (Commit predecessor : commit.getPredecessors()) {
+        						idToCommitCopy.get(commit.getCommitID())
+        								.addPredecessor(idToCommitCopy.get(predecessor.getCommitID()));
+        					}
+        				}
+        			}
+        			
+        			if (idToCommitCopy.containsKey(branch.getLatestCommit().getCommitID())) {
+        				branchCopy.setLatestCommit(idToCommitCopy.get(branch.getLatestCommit().getCommitID()));
+        			}
+        		}
+        		
+        		addBranch(branchCopy);
+        		
+        		if (branchCopy.getBranchID().equals(space.getHeadBranch().getBranchID())) {
+        			headBranchCopy = branchCopy;
+        		}
+        	}
+        }
+    	
+    	return headBranchCopy;
+    }
 
     public DesignSpace copy(String copyID) {
-        DesignSpace spaceCopy = new DesignSpace(copyID, idIndex, mergeIndex);
+    	DesignSpace spaceCopy = new DesignSpace(copyID, mergeIndex);
 
-        if (hasNodes()) {
-            HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
+    	spaceCopy.copyNodeSpace(this);
+    	
+    	spaceCopy.setIDIndex(idIndex);
 
-            for (Node node : nodes) {
-                idToNodeCopy.put(node.getNodeID(),
-                                 spaceCopy.copyNodeWithID(node));
-            }
-
-            for (Node node : nodes) {
-                if (node.hasEdges()) {
-                    Node nodeCopy = idToNodeCopy.get(node.getNodeID());
-
-                    for (Edge edge : node.getEdges()) {
-                        nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
-                    }
-                }
-            }
-        }
+    	spaceCopy.copyVersionHistory(this);
 
         return spaceCopy;
+    }
+    
+    public Branch createBranch(String branchID) {
+    	Branch branch = new Branch(branchID);
+    	
+        addBranch(branch);
+        
+        return branch;
     }
 
     public Branch createBranch(String branchID, int idIndex) {
         Branch branch = new Branch(branchID, idIndex);
+        
         addBranch(branch);
+        
         return branch;
     }
 
@@ -95,8 +161,12 @@ public class DesignSpace extends NodeSpace {
         this.headBranch = headBranch;
         return headBranch;
     }
+    
+    public void clearBranches() {
+    	branches = null;
+    }
 
-    public Branch findBranch(String branchID) {
+    public Branch getBranch(String branchID) {
         if (hasBranches()) {
             for (Branch branch : branches) {
                 if (branch.getBranchID().equals(branchID)) {
@@ -112,6 +182,10 @@ public class DesignSpace extends NodeSpace {
     public Set<Branch> getBranches() { return branches; }
 
     public Branch getHeadBranch() { return headBranch; }
+    
+    public Snapshot getHeadSnapshot() {
+    	return headBranch.getLatestCommit().getSnapshot();
+    }
 
     public int getMergeIndex() { return mergeIndex; }
 
@@ -129,5 +203,41 @@ public class DesignSpace extends NodeSpace {
 
     public void setHeadBranch(Branch headBranch) {
         this.headBranch = headBranch;
+    }
+    
+    public void setBranches(Set<Branch> branches) {
+    	this.branches = branches;
+    }
+    
+    public Set<Commit> getCommits() {
+    	Set<Commit> commits = new HashSet<Commit>();
+    	
+    	if (hasBranches()) {
+    		for (Branch branch : branches) {
+    			Stack<Commit> commitStack = new Stack<Commit>();
+    			
+    			if (branch.hasCommits()) {
+    				commitStack.push(branch.getLatestCommit());
+
+    				while (!commitStack.isEmpty()) {
+    					Commit commit = commitStack.pop();
+
+    					commits.add(commit);
+
+    					if (commit.hasPredecessors()) {
+    						for (Commit predecessor : commit.getPredecessors()) {
+    							commitStack.push(predecessor);
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+    	
+    	return commits;
+    }
+    
+    public boolean isIdenticalTo(DesignSpace space) {
+    	return space.getSpaceID().equals(spaceID);
     }
 }

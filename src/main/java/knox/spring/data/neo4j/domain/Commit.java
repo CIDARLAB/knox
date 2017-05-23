@@ -18,6 +18,8 @@ public class Commit {
     @GraphId Long id;
 
     String commitID;
+    
+    String mergeID;
 
     @Relationship(type = "SUCCEEDS") Set<Commit> predecessors;
 
@@ -26,6 +28,14 @@ public class Commit {
     public Commit() {}
 
     public Commit(String commitID) { this.commitID = commitID; }
+    
+    public Commit copy() {
+    	Commit commitCopy = new Commit(commitID);
+    	
+    	commitCopy.setSnapshot(snapshot.copy());
+    	
+    	return commitCopy;
+    }
 
     public Snapshot copySnapshot(Snapshot snapshot) {
         createSnapshot(snapshot.getIdIndex());
@@ -36,8 +46,7 @@ public class Commit {
             new HashMap<String, Set<Edge>>();
 
         for (Node node : snapshot.getNodes()) {
-            nodeIDToCopy.put(node.getNodeID(),
-                             this.snapshot.copyNodeWithID(node));
+            nodeIDToCopy.put(node.getNodeID(), this.snapshot.copyNodeWithID(node));
 
             if (node.hasEdges()) {
                 nodeIDToEdges.put(node.getNodeID(), node.getEdges());
@@ -58,12 +67,21 @@ public class Commit {
 
     public Snapshot createSnapshot() {
         snapshot = new Snapshot(0);
+        
         return snapshot;
     }
 
     public Snapshot createSnapshot(int idIndex) {
         snapshot = new Snapshot(idIndex);
         return snapshot;
+    }
+    
+    public void clearPredecessors() {
+    	predecessors = null;
+    }
+    
+    public void clearSnapshot() {
+    	snapshot = null;
     }
 
     public Commit findPredecessor(String predecessorID) {
@@ -102,10 +120,26 @@ public class Commit {
     }
 
     public Set<Commit> getPredecessors() { return predecessors; }
+    
+    public void setPredecessors(Set<Commit> predecessors) {
+    	this.predecessors = predecessors;
+    }
 
     public Snapshot getSnapshot() { return snapshot; }
+    
+    public void setSnapshot(Snapshot snapshot) {
+    	this.snapshot = snapshot;
+    }
 
     public String getCommitID() { return commitID; }
+    
+    public boolean hasMergeID() {
+    	return mergeID != null;
+    }
+    
+    public void setMergeID(String mergeID) {
+    	this.mergeID = mergeID;
+    }
 
     public boolean hasPredecessors() {
         return predecessors != null && predecessors.size() > 0;

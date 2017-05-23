@@ -64,6 +64,26 @@ public class NodeSpace {
     	}
     }
 	
+	public void copyNodeSpace(NodeSpace space) {
+		if (space.hasNodes()) {
+			HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
+
+			for (Node node : space.getNodes()) {
+				idToNodeCopy.put(node.getNodeID(), copyNodeWithID(node));
+			}
+
+			for (Node node : space.getNodes()) {
+				if (node.hasEdges()) {
+					Node nodeCopy = idToNodeCopy.get(node.getNodeID());
+
+					for (Edge edge : node.getEdges()) {
+						nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+					}
+				}
+			}
+		}
+	}
+	
 	public Node copyNodeWithEdges(Node node) {
 		Node nodeCopy = copyNode(node);
 		
@@ -432,7 +452,7 @@ public class NodeSpace {
     	return sourceNodes;
     }
     
-    public void mergeSourceNodes() {
+    public Node mergeSourceNodes() {
     	if (hasNodes()) {
     		Iterator<Node> sourceNodes = getSourceNodes().iterator();
     		
@@ -452,8 +472,12 @@ public class NodeSpace {
     			}
 
     			reindexNodes();
+    			
+    			return primarySourceNode;
     		}
     	}
+    	
+    	return null;
     }
     
     public List<Node> orderNodes() {

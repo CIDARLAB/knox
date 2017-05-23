@@ -24,6 +24,12 @@ public class Branch {
     @Relationship(type = "LATEST") Commit latestCommit;
 
     public Branch() {}
+    
+    public Branch(String branchID) {
+        this.branchID = branchID;
+        
+        idIndex = 0;
+    }
 
     public Branch(String branchID, int idIndex) {
         this.branchID = branchID;
@@ -43,6 +49,10 @@ public class Branch {
         } else {
             return false;
         }
+    }
+    
+    public Branch copy() {
+    	return new Branch(branchID, idIndex);
     }
 
     public Commit copyCommit(Commit commit) {
@@ -71,11 +81,27 @@ public class Branch {
 
     public Set<Commit> getCommits() { return commits; }
 
+    public void setCommits(Set<Commit> commits) {
+    	this.commits = commits;
+    }
+    
     public Commit getLatestCommit() { return latestCommit; }
+    
+    public void clearLatestCommit() {
+    	latestCommit = null;
+    }
+    
+    public void clearCommits() {
+    	commits = null;
+    }
 
     public String getBranchID() { return branchID; }
 
     public int getIdIndex() { return idIndex; }
+    
+    public void setIDIndex(int idIndex) {
+    	this.idIndex = idIndex;
+    }
 
     public boolean hasCommits() {
         if (commits == null) {
@@ -99,6 +125,10 @@ public class Branch {
         }
 
         return diffCommits;
+    }
+    
+    public boolean isIdenticalTo(Branch branch) {
+    	return branch.getBranchID().equals(branchID);
     }
 
     public void setLatestCommit(Commit commit) { latestCommit = commit; }

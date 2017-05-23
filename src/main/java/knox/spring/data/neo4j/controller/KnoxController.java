@@ -39,7 +39,7 @@ public class KnoxController {
 		this.designSpaceService = designSpaceService;
 	}
 
-	@RequestMapping(value = "/import/csv", method = RequestMethod.GET)
+	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
     		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
     	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
@@ -55,7 +55,7 @@ public class KnoxController {
     		}
     	}
     	
-		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true);
 		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
@@ -139,14 +139,12 @@ public class KnoxController {
     public ResponseEntity<String> andBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-    		@RequestParam(value = "degree", required = false, defaultValue = "0") int tolerance) {
-//    	if (outputBranchID == null) {
-//    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, 0, 
-//    				true, false);
-//		} else {
-//			designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID,
-//	    			tolerance, 0, true, false);
-//		}
+    		@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance) {
+    	if (outputBranchID == null) {
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance);
+		} else {
+			designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance);
+		}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully intersected.\"}", 
     				HttpStatus.NO_CONTENT);
@@ -243,15 +241,12 @@ public class KnoxController {
     public ResponseEntity<String> mergeBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-    		@RequestParam(value = "strength", required = false, defaultValue = "0") int tolerance,
-    		@RequestParam(value = "degree", required = false, defaultValue = "0") int strength) { 	
-//    	if (outputBranchID == null) {
-//    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, strength, 
-//    				false, true); 
-//    	} else {
-//    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
-//    				tolerance, strength, false, true);
-//    	}
+    		@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance) { 	
+    	if (outputBranchID == null) {
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance); 
+    	} else {
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance);
+    	}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged.\"}", 
     				HttpStatus.NO_CONTENT);
