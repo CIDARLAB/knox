@@ -79,13 +79,17 @@ public class Branch {
         }
     }
 
-    public Set<Commit> getCommits() { return commits; }
+    public Set<Commit> getCommits() { 
+    	return commits; 
+    }
 
     public void setCommits(Set<Commit> commits) {
     	this.commits = commits;
     }
     
-    public Commit getLatestCommit() { return latestCommit; }
+    public Commit getLatestCommit() { 
+    	return latestCommit; 
+    }
     
     public void clearLatestCommit() {
     	latestCommit = null;
@@ -95,9 +99,13 @@ public class Branch {
     	commits = null;
     }
 
-    public String getBranchID() { return branchID; }
+    public String getBranchID() { 
+    	return branchID; 
+    }
 
-    public int getIdIndex() { return idIndex; }
+    public int getIdIndex() { 
+    	return idIndex; 
+    }
     
     public void setIDIndex(int idIndex) {
     	this.idIndex = idIndex;
@@ -131,5 +139,7 @@ public class Branch {
     	return branch.getBranchID().equals(branchID);
     }
 
-    public void setLatestCommit(Commit commit) { latestCommit = commit; }
+    public void setLatestCommit(Commit commit) { 
+    	latestCommit = commit; 
+    }
 }

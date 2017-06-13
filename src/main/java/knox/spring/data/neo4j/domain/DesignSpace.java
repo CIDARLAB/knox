@@ -119,9 +119,9 @@ public class DesignSpace extends NodeSpace {
         		
         		addBranch(branchCopy);
         		
-        		if (branchCopy.getBranchID().equals(space.getHeadBranch().getBranchID())) {
-        			headBranchCopy = branchCopy;
-        		}
+        		if (branchCopy.isIdenticalTo(space.getHeadBranch())) {
+          			headBranchCopy = branchCopy;
+          		}
         	}
         }
     	
@@ -179,19 +179,29 @@ public class DesignSpace extends NodeSpace {
         }
     }
 
-    public Set<Branch> getBranches() { return branches; }
+    public Set<Branch> getBranches() { 
+    	return branches; 
+    }
 
-    public Branch getHeadBranch() { return headBranch; }
-    
+    public Branch getHeadBranch() { 
+    	return headBranch; 
+    }
+
     public Snapshot getHeadSnapshot() {
     	return headBranch.getLatestCommit().getSnapshot();
     }
 
-    public int getMergeIndex() { return mergeIndex; }
+    public int getMergeIndex() {
+    	return mergeIndex; 
+    }
 
-    public String getSpaceID() { return spaceID; }
+    public String getSpaceID() { 
+    	return spaceID; 
+    }
 
-    public void setSpaceID(String spaceID) { this.spaceID = spaceID; }
+    public void setSpaceID(String spaceID) { 
+    	this.spaceID = spaceID; 
+    }
 
     public boolean hasBranches() {
         if (branches == null) {

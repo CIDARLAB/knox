@@ -27,7 +27,9 @@ public class Commit {
 
     public Commit() {}
 
-    public Commit(String commitID) { this.commitID = commitID; }
+    public Commit(String commitID) { 
+    	this.commitID = commitID; 
+    }
     
     public Commit copy() {
     	Commit commitCopy = new Commit(commitID);
@@ -119,19 +121,25 @@ public class Commit {
         return history;
     }
 
-    public Set<Commit> getPredecessors() { return predecessors; }
+    public Set<Commit> getPredecessors() { 
+    	return predecessors; 
+    }
     
     public void setPredecessors(Set<Commit> predecessors) {
     	this.predecessors = predecessors;
     }
 
-    public Snapshot getSnapshot() { return snapshot; }
+    public Snapshot getSnapshot() { 
+    	return snapshot; 
+    }
     
     public void setSnapshot(Snapshot snapshot) {
     	this.snapshot = snapshot;
     }
 
-    public String getCommitID() { return commitID; }
+    public String getCommitID() { 
+    	return commitID;
+    }
     
     public boolean hasMergeID() {
     	return mergeID != null;

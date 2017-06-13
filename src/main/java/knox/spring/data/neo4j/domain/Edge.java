@@ -110,9 +110,13 @@ public class Edge {
         }
     }
 
-    public Node getTail() { return tail; }
+    public Node getTail() {
+    	return tail; 
+    }
 
-    public Node getHead() { return head; }
+    public Node getHead() { 
+    	return head; 
+    }
 
     public String getComponentID(int i) {
         if (i >= 0 && i < componentIDs.size()) {
@@ -122,11 +126,17 @@ public class Edge {
         }
     }
 
-    public ArrayList<String> getComponentIDs() { return componentIDs; }
+    public ArrayList<String> getComponentIDs() {
+    	return componentIDs; 
+    }
 
-    public int getNumComponentIDs() { return componentIDs.size(); }
+    public int getNumComponentIDs() { 
+    	return componentIDs.size(); 
+    }
 
-    public ArrayList<String> getComponentRoles() { return componentRoles; }
+    public ArrayList<String> getComponentRoles() { 
+    	return componentRoles; 
+    }
 
     public boolean hasComponentID(String compID) {
         if (hasComponentIDs()) {
@@ -259,11 +269,17 @@ public class Edge {
         }
     }
 
-    public boolean isCyclic() { return tail.isIdenticalTo(head); }
+    public boolean isCyclic() { 
+    	return tail.isIdenticalTo(head);
+    }
 
-    public void setHead(Node head) { this.head = head; }
+    public void setHead(Node head) {
+    	this.head = head; 
+    }
 
-    public void setTail(Node tail) { this.tail = tail; }
+    public void setTail(Node tail) { 
+    	this.tail = tail; 
+    }
 
     public void unionWithEdge(Edge edge) {
         Set<String> mergedCompIDs = new HashSet<String>();
@@ -296,5 +312,7 @@ public class Edge {
         this.probability = probability;
     }
 
-    public double getProbability() { return this.probability; }
+    public double getProbability() { 
+    	return this.probability; 
+    }
 }

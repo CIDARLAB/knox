@@ -41,7 +41,9 @@ public class Node {
         edges.add(edge);
     }
 
-    public void clearNodeType() { nodeType = null; }
+    public void clearNodeType() { 
+    	nodeType = null; 
+    }
 
     public Edge copyEdge(Edge edge) {
     	return copyEdge(edge, edge.getHead());
@@ -207,7 +209,9 @@ public class Node {
             (!node.hasNodeType() || !nodeType.equals(node.getNodeType()));
     }
 
-    public boolean hasNodeType() { return nodeType != null; }
+    public boolean hasNodeType() {
+    	return nodeType != null; 
+    }
 
     public boolean isAcceptNode() {
         return hasNodeType() && nodeType.equals(NodeType.ACCEPT.getValue());
@@ -252,5 +256,7 @@ public class Node {
         public String getValue() { return value; }
     }
 
-    public void setNodeType(String nodeType) { this.nodeType = nodeType; }
+    public void setNodeType(String nodeType) { 
+    	this.nodeType = nodeType;
+    }
 }

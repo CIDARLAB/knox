@@ -368,7 +368,17 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 
     @Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
            + "RETURN ID(target) as graphID")
-    Set<Integer> getGraphID(@Param("targetSpaceID") String targetSpaceID);
+    Set<Integer> getDesignSpaceGraphID(@Param("targetSpaceID") String targetSpaceID);
+        
+    @Query("MATCH (target:Commit {commitID: {targetCommitID}})-[:CONTAINS]->(subTarget:Snapshot) "
+    		+ "RETURN ID(subTarget) as graphID")
+    Set<Integer> getSnapshotGraphID(@Param("targetCommitID") String targetCommitID);
+    
+//    @Query("MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(:Branch {branchID: {targetBranchID}})-[:CONTAINS]->(target:Commit {commitID: {targetCommitID}})-[:CONTAINS]->(subTarget:Snapshot) "
+//    		+ "RETURN ID(subTarget) as graphID")
+//    Set<Integer> getSnapshotGraphID(@Param("targetSpaceID") String targetSpaceID,
+//    								@Param("targetBranchID") String targetBranchID,
+//    								@Param("targetCommitID") String targetCommitID);
 
     @Query(
         "MATCH (b:Branch)<-[:ARCHIVES]-(target:DesignSpace {spaceID: {targetSpaceID}})-[:SELECTS]->(b:Branch) "
