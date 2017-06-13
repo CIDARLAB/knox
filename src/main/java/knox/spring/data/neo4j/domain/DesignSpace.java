@@ -4,13 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-// import org.neo4j.ogm.annotation.*;
-
 import java.util.Stack;
 
-
-// import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-// import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -24,7 +19,7 @@ public class DesignSpace extends NodeSpace {
 
     @Relationship(type = "SELECTS") Branch headBranch;
 
-    int mergeIndex;
+    int commitIndex;
 
     public DesignSpace() {}
 
@@ -32,24 +27,12 @@ public class DesignSpace extends NodeSpace {
         super(0);
 
         this.spaceID = spaceID;
-
-        this.mergeIndex = 0;
-    }
-    
-    public DesignSpace(String spaceID, int mergeIndex) {
-        super(0);
-
-        this.spaceID = spaceID;
-
-        this.mergeIndex = mergeIndex;
     }
 
     public DesignSpace(String spaceID, int idIndex, int mergeIndex) {
         super(idIndex);
 
         this.spaceID = spaceID;
-
-        this.mergeIndex = mergeIndex;
     }
 
     public void addBranch(Branch branch) {
@@ -77,11 +60,11 @@ public class DesignSpace extends NodeSpace {
     	copyVersionHistory(space);
     }
     
-    public void updateMergeIDs() {
+    public void updateCommitIDs() {
+    	commitIndex = 0;
+    	
     	for (Commit commit : getCommits()) {
-    		if (!commit.hasMergeID()) {
-    			commit.setMergeID("m" + mergeIndex++);
-    		}
+    		commit.setCommitID("c" + commitIndex++);
     	}
     }
     
@@ -129,11 +112,11 @@ public class DesignSpace extends NodeSpace {
     }
 
     public DesignSpace copy(String copyID) {
-    	DesignSpace spaceCopy = new DesignSpace(copyID, mergeIndex);
+    	DesignSpace spaceCopy = new DesignSpace(copyID);
 
     	spaceCopy.copyNodeSpace(this);
     	
-    	spaceCopy.setIDIndex(idIndex);
+    	spaceCopy.setNodeIndex(nodeIndex);
 
     	spaceCopy.copyVersionHistory(this);
 
@@ -148,18 +131,28 @@ public class DesignSpace extends NodeSpace {
         return branch;
     }
 
-    public Branch createBranch(String branchID, int idIndex) {
-        Branch branch = new Branch(branchID, idIndex);
+    public Branch createHeadBranch(String branchID) {
+        Branch headBranch = createBranch(branchID);
         
-        addBranch(branch);
+        this.headBranch = headBranch;
         
-        return branch;
+        return headBranch;
+    }
+    
+    public Commit copyCommit(Branch branch, Commit commit) {
+        Commit commitCopy = createCommit(branch);
+
+        commitCopy.copySnapshot(commit.getSnapshot());
+
+        return commitCopy;
     }
 
-    public Branch createHeadBranch(String branchID) {
-        Branch headBranch = createBranch(branchID, 0);
-        this.headBranch = headBranch;
-        return headBranch;
+    public Commit createCommit(Branch branch) {
+        Commit commit = new Commit("c" + commitIndex++);
+
+        branch.addCommit(commit);
+
+        return commit;
     }
     
     public void clearBranches() {
@@ -191,9 +184,9 @@ public class DesignSpace extends NodeSpace {
     	return headBranch.getLatestCommit().getSnapshot();
     }
 
-    public int getMergeIndex() {
-    	return mergeIndex; 
-    }
+//    public int getMergeIndex() {
+//    	return mergeIndex; 
+//    }
 
     public String getSpaceID() { 
     	return spaceID; 

@@ -1,4 +1,4 @@
-CREATE (d1:DesignSpace {spaceID: "B-arylamine_pathways", idIndex: 40, mergeIndex: 0})
+CREATE (d1:DesignSpace {spaceID: "B-arylamine_pathways", nodeIndex: 40, commitIndex: 1})
 
 CREATE (n1:Node {nodeID: "n0", nodeType: "start"})
 CREATE (n2:Node {nodeID: "n1"})
@@ -138,7 +138,7 @@ CREATE (n18f)-[:PRECEDES {componentIDs: ["L3SP21"], componentRoles: ["terminator
 CREATE (n19f)-[:PRECEDES {componentIDs: ["G"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n20)
 
 
-CREATE (d1)-[:ARCHIVES]->(b1:Branch {branchID: "B-arylamine_pathways", idIndex: 1})-[:CONTAINS]->(c1:Commit {commitID: "c0"})-[:CONTAINS]->(s1:Snapshot {idIndex: 40})
+CREATE (d1)-[:ARCHIVES]->(b1:Branch {branchID: "B-arylamine_pathways"})-[:CONTAINS]->(c1:Commit {commitID: "c0"})-[:CONTAINS]->(s1:Snapshot {nodeIndex: 40})
 CREATE (d1)-[:SELECTS]->(b1)-[:LATEST]->(c1)
 
 CREATE (sn1:Node {nodeID: "n0", nodeType: "start"})

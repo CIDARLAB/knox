@@ -10,15 +10,11 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
 public class Node {
     @GraphId Long id;
-    
-    private static final Logger LOG = LoggerFactory.getLogger(Node.class);
 
     String nodeID;
 

@@ -40,7 +40,7 @@ public class Commit {
     }
 
     public Snapshot copySnapshot(Snapshot snapshot) {
-        createSnapshot(snapshot.getIdIndex());
+        createSnapshot(snapshot.getNodeIndex());
 
         HashMap<String, Node> nodeIDToCopy = new HashMap<String, Node>();
 
@@ -139,6 +139,10 @@ public class Commit {
 
     public String getCommitID() { 
     	return commitID;
+    }
+    
+    public void setCommitID(String commitID) {
+    	this.commitID = commitID;
     }
     
     public boolean hasMergeID() {
