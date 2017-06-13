@@ -17,6 +17,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
@@ -24,7 +26,9 @@ public class NodeSpace {
 	@GraphId
     Long id;
 	
-	int nodeIndex;
+	private static final Logger LOG = LoggerFactory.getLogger(NodeSpace.class);
+	
+	int idIndex;
 	
 	@Relationship(type = "CONTAINS") 
     Set<Node> nodes;
@@ -33,8 +37,8 @@ public class NodeSpace {
 		
 	}
 	
-	public NodeSpace(int nodeIndex) {
-		this.nodeIndex = nodeIndex;
+	public NodeSpace(int idIndex) {
+		this.idIndex = idIndex;
 	}
 	
 	public void addNode(Node node) {
@@ -56,7 +60,7 @@ public class NodeSpace {
     	if (hasNodes()) {
     		nodes = null;
     		
-    		nodeIndex = 0;
+    		idIndex = 0;
     	}
     }
 	
@@ -109,7 +113,7 @@ public class NodeSpace {
 	}
 	
 	public Node createNode() {
-		Node node = new Node("n" + nodeIndex++);
+		Node node = new Node("n" + idIndex++);
 		addNode(node);
 		return node;
 	}
@@ -121,7 +125,7 @@ public class NodeSpace {
 	}
 	
 	public Node createTypedNode(String nodeType) {
-		Node node = new Node("n" + nodeIndex++, nodeType);
+		Node node = new Node("n" + idIndex++, nodeType);
 		addNode(node);
 		return node;
 	}
@@ -228,8 +232,8 @@ public class NodeSpace {
 		 return minimizableEdges;
 	 }
 	
-	public int getNodeIndex() {
-		return nodeIndex;
+	public int getIdIndex() {
+		return idIndex;
 	}
 	
 	public Node getNode(String nodeID) {
@@ -528,10 +532,10 @@ public class NodeSpace {
     
     private void reindexNodes() {
     	if (hasNodes()) {
-    		nodeIndex = 0;
+    		idIndex = 0;
     		
     		for (Node node : nodes) {
-    			node.setNodeID("n" + nodeIndex++);
+    			node.setNodeID("n" + idIndex++);
     		}
     	}
     }
@@ -590,8 +594,8 @@ public class NodeSpace {
     	return diffEdges;
     }
     
-    public void setNodeIndex(int nodeIndex) {
-    	this.nodeIndex = nodeIndex;
+    public void setIDIndex(int idIndex) {
+    	this.idIndex = idIndex;
     }
     
     public void deleteUnreachableNodes() {
@@ -672,7 +676,7 @@ public class NodeSpace {
 				} 
 			}
 			
-			nodeIndex = Math.max(nodeIndex, space.getNodeIndex());
+			idIndex = Math.max(idIndex, space.getIdIndex());
 		}
     }
 }

@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.Stack;
 
 
-
 // import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 // import com.voodoodyne.jackson.jsog.JSOGGenerator;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -20,31 +19,37 @@ import org.neo4j.ogm.annotation.Relationship;
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class DesignSpace extends NodeSpace {
     String spaceID;
-    
-    int commitIndex;
 
     @Relationship(type = "ARCHIVES") Set<Branch> branches;
 
     @Relationship(type = "SELECTS") Branch headBranch;
 
-    public DesignSpace() {
-    	
-    }
+    int mergeIndex;
+
+    public DesignSpace() {}
 
     public DesignSpace(String spaceID) {
         super(0);
 
         this.spaceID = spaceID;
-        
-        commitIndex = 0;
-    }
 
-    public DesignSpace(String spaceID, int nodeIndex) {
-        super(nodeIndex);
+        this.mergeIndex = 0;
+    }
+    
+    public DesignSpace(String spaceID, int mergeIndex) {
+        super(0);
 
         this.spaceID = spaceID;
-        
-        commitIndex = 0;
+
+        this.mergeIndex = mergeIndex;
+    }
+
+    public DesignSpace(String spaceID, int idIndex, int mergeIndex) {
+        super(idIndex);
+
+        this.spaceID = spaceID;
+
+        this.mergeIndex = mergeIndex;
     }
 
     public void addBranch(Branch branch) {
@@ -72,11 +77,11 @@ public class DesignSpace extends NodeSpace {
     	copyVersionHistory(space);
     }
     
-    public void updateCommitIDs() {
-    	commitIndex = 0;
-    	
+    public void updateMergeIDs() {
     	for (Commit commit : getCommits()) {
-    		commit.setCommitID(commitIndex++);
+    		if (!commit.hasMergeID()) {
+    			commit.setMergeID("m" + mergeIndex++);
+    		}
     	}
     }
     
@@ -114,7 +119,7 @@ public class DesignSpace extends NodeSpace {
         		
         		addBranch(branchCopy);
         		
-        		if (branchCopy.isIdenticalTo(space.getHeadBranch())) {
+        		if (branchCopy.getBranchID().equals(space.getHeadBranch().getBranchID())) {
         			headBranchCopy = branchCopy;
         		}
         	}
@@ -124,11 +129,11 @@ public class DesignSpace extends NodeSpace {
     }
 
     public DesignSpace copy(String copyID) {
-    	DesignSpace spaceCopy = new DesignSpace(copyID);
+    	DesignSpace spaceCopy = new DesignSpace(copyID, mergeIndex);
 
     	spaceCopy.copyNodeSpace(this);
     	
-    	spaceCopy.setNodeIndex(nodeIndex);
+    	spaceCopy.setIDIndex(idIndex);
 
     	spaceCopy.copyVersionHistory(this);
 
@@ -143,11 +148,17 @@ public class DesignSpace extends NodeSpace {
         return branch;
     }
 
+    public Branch createBranch(String branchID, int idIndex) {
+        Branch branch = new Branch(branchID, idIndex);
+        
+        addBranch(branch);
+        
+        return branch;
+    }
+
     public Branch createHeadBranch(String branchID) {
-        Branch headBranch = createBranch(branchID);
-        
+        Branch headBranch = createBranch(branchID, 0);
         this.headBranch = headBranch;
-        
         return headBranch;
     }
     
@@ -168,45 +179,19 @@ public class DesignSpace extends NodeSpace {
         }
     }
 
-    public Set<Branch> getBranches() {
-    	return branches; 
-    }
+    public Set<Branch> getBranches() { return branches; }
 
-    public Branch getHeadBranch() { 
-    	return headBranch; 
-    }
-
+    public Branch getHeadBranch() { return headBranch; }
+    
     public Snapshot getHeadSnapshot() {
     	return headBranch.getLatestCommit().getSnapshot();
     }
 
-    public int getCommitIndex() { 
-    	return commitIndex; 
-    }
-    
-    public Commit copyCommit(Branch targetBranch, Commit commit) {
-        Commit commitCopy = createCommit(targetBranch);
+    public int getMergeIndex() { return mergeIndex; }
 
-        commitCopy.copySnapshot(commit.getSnapshot());
+    public String getSpaceID() { return spaceID; }
 
-        return commitCopy;
-    }
-
-    public Commit createCommit(Branch targetBranch) {
-        Commit commit = new Commit("c" + commitIndex++);
-        
-        targetBranch.addCommit(commit);
-
-        return commit;
-    }
-
-    public String getSpaceID() { 
-    	return spaceID; 
-    }
-
-    public void setSpaceID(String spaceID) { 
-    	this.spaceID = spaceID; 
-    	}
+    public void setSpaceID(String spaceID) { this.spaceID = spaceID; }
 
     public boolean hasBranches() {
         if (branches == null) {

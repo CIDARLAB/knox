@@ -670,8 +670,8 @@ public class DesignSpaceService {
             }
 
             if (targetCommit != null) {
-                Commit commitCopy = targetSpace.copyCommit(targetBranch, targetCommit);
-                
+                Commit commitCopy = targetBranch.copyCommit(targetCommit);
+
                 commitCopy.addPredecessor(targetBranch.getLatestCommit());
 
                 targetBranch.setLatestCommit(commitCopy);
@@ -1355,9 +1355,6 @@ public class DesignSpaceService {
     		int tolerance, boolean isConservative) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
     		DesignSpaceBranchesConflictException {
-    	System.out.println("loading spaces");
-		LOG.info("loading {}", "spaces");
-    	
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
 
     	List<String> prunedSpaceIDs = new LinkedList<String>();
@@ -1373,26 +1370,29 @@ public class DesignSpaceService {
     	DesignSpace outputSpace;
     	
     	if (prunedSpaceIDs.remove(outputSpaceID)) {
-    		outputSpace = loadDesignSpace(outputSpaceID);
-    	} else {
-    		outputSpace = new DesignSpace(outputSpaceID);
-    	}
-    	
-    	for (String inputSpaceID : prunedSpaceIDs) {
-    		System.out.println(inputSpaceID);
-    		LOG.info("inputSpaceID {}", inputSpaceID);
+    		outputSpace = loadDesignSpace(outputSpaceID, 5);
     		
-    		prunedSpaces.add(loadDesignSpace(inputSpaceID));
+    		for (String inputSpaceID : prunedSpaceIDs) {
+        		prunedSpaces.add(loadDesignSpace(inputSpaceID, 5));
+        	}
+    	} else {
+    		int maxMergeIndex = 0;
+
+    		for (String inputSpaceID : prunedSpaceIDs) {
+    			DesignSpace inputSpace = loadDesignSpace(inputSpaceID, 5);
+    			
+    			prunedSpaces.add(inputSpace);
+    			
+    			if (inputSpace.getMergeIndex() > maxMergeIndex) {
+    				maxMergeIndex = inputSpace.getMergeIndex();
+    			}
+    		}
+
+    		outputSpace = new DesignSpace(outputSpaceID, maxMergeIndex);
     	}
-    	
-    	System.out.println("node product");
-		LOG.info("node {}", "product");
     	
     	productOfNodeSpaces(prunedSpaces, outputSpace, type, tolerance, isConservative);
   
-    	System.out.println("merge versions");
-		LOG.info("merge {}", "versions");
-    	
 //    	saveDesignSpace(outputSpace);
     	
     	if (inputSpaceIDs.contains(outputSpaceID)) {
@@ -1405,16 +1405,7 @@ public class DesignSpaceService {
     		inputSpaces.add((DesignSpace) space);
     	}
     	
-    	List<Branch> headBranches = mergeVersionHistories(inputSpaces, outputSpace);
-    	
-    	List<NodeSpace> outputSnaps = new ArrayList<NodeSpace>(headBranches.size());
-    	
-    	for (Branch outputBranch : headBranches) {
-    		outputSnaps.add(outputBranch.getLatestCommit().getSnapshot());
-    	}
-    	
-    	System.out.println("product snaps");
-		LOG.info("product {}", "snaps");
+    	List<NodeSpace> outputSnaps = mergeVersionHistories(inputSpaces, outputSpace);
     	
     	productOfNodeSpaces(outputSnaps, outputSpace.getHeadSnapshot(), type, tolerance, 
     			isConservative);
@@ -1430,13 +1421,21 @@ public class DesignSpaceService {
     		Branch outputBranch) {
     	LOG.info("merging {}", "versions");
     	
+    	int maxIDIndex = 0;
+    	
     	HashMap<String, Commit> branchIDToLatestCommit = new HashMap<String, Commit>();
     	
     	for (Branch inputBranch : inputBranches) {
+    		if (inputBranch.getIdIndex() > maxIDIndex) {
+    			maxIDIndex = inputBranch.getIdIndex();
+    		}
+    		
     		branchIDToLatestCommit.put(inputBranch.getBranchID(), inputBranch.getLatestCommit());
     	}
     	
-    	Commit outputCommit = targetSpace.createCommit(outputBranch);
+    	outputBranch.setIDIndex(maxIDIndex);
+    	
+    	Commit outputCommit = outputBranch.createCommit();
     	
     	outputBranch.setLatestCommit(outputCommit);
     	
@@ -1455,7 +1454,7 @@ public class DesignSpaceService {
     	targetSpace.setHeadBranch(outputBranch);
     }
     
-    private List<Branch> mergeVersionHistories(List<DesignSpace> inputSpaces, DesignSpace outputSpace) {
+    private List<NodeSpace> mergeVersionHistories(List<DesignSpace> inputSpaces, DesignSpace outputSpace) {
     	LOG.info("merging {}", "history");
     	
     	List<Branch> headBranches = new ArrayList<Branch>(inputSpaces.size());
@@ -1468,11 +1467,17 @@ public class DesignSpaceService {
     		}
     	}
     	
-//    	outputSpace.updateCommitIDs();
+    	outputSpace.updateMergeIDs();
+    	
+    	List<NodeSpace> outputSnaps = new ArrayList<NodeSpace>(headBranches.size());
+    	
+    	for (Branch outputBranch : headBranches) {
+    		outputSnaps.add(outputBranch.getLatestCommit().getSnapshot());
+    	}
     	
     	mergeVersions(outputSpace, headBranches);
     	
-    	return headBranches;
+    	return outputSnaps;
     }
     
 //    public void productOfDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String type,
@@ -2090,29 +2095,29 @@ public class DesignSpaceService {
     		}
     	}
     	
-//    	if (inputSpaceIDs.contains(outputSpaceID)) {
-//    		prunedSpaceIDs.add(outputSpaceID);
-//    	}
-// 	
-//    	List<String> headBranchIDs = new LinkedList<String>();
-//    	
-//    	for (String inputSpaceID : prunedSpaceIDs) {
-//    		if (!inputSpaceID.equals(outputSpaceID)) {
-//    			mergeVersionHistory(inputSpaceID, outputSpaceID);
-//    		}
-//    		
-//    		String headBranchID = getHeadBranchID(inputSpaceID);
-//
-//    		indexVersionMerger(outputSpaceID, headBranchID);
-//
-//    		headBranchIDs.add(headBranchID);
-//    	}
-//    	
-//    	orBranches(outputSpaceID, headBranchIDs);
-//
-//    	if (!inputSpaceIDs.contains(outputSpaceID)) {
-//    		selectHeadBranch(outputSpaceID, headBranchIDs.get(0));
-//    	}
+    	if (inputSpaceIDs.contains(outputSpaceID)) {
+    		prunedSpaceIDs.add(outputSpaceID);
+    	}
+    	
+    	List<String> headBranchIDs = new LinkedList<String>();
+    	
+    	for (String inputSpaceID : prunedSpaceIDs) {
+    		if (!inputSpaceID.equals(outputSpaceID)) {
+    			mergeVersionHistory(inputSpaceID, outputSpaceID);
+    		}
+    		
+    		String headBranchID = getHeadBranchID(inputSpaceID);
+
+    		indexVersionMerger(outputSpaceID, headBranchID);
+
+    		headBranchIDs.add(headBranchID);
+    	}
+    	
+    	orBranches(outputSpaceID, headBranchIDs);
+
+    	if (!inputSpaceIDs.contains(outputSpaceID)) {
+    		selectHeadBranch(outputSpaceID, headBranchIDs.get(0));
+    	}
     }
     
 //    public void partitionDesignSpace(String inputSpaceID, String outputSpacePrefix) {
@@ -2327,27 +2332,8 @@ public class DesignSpaceService {
     }
 	
 	private DesignSpace loadDesignSpace(String targetSpaceID, int depth) {
-		DesignSpace targetSpace = designSpaceRepository.findOne(getDesignSpaceGraphID(targetSpaceID), depth);
-		
-		for (Commit commit : targetSpace.getCommits()) {
-			commit.setSnapshot(loadSnapshot(commit.getCommitID(), 2));
-		}
-		
-		return targetSpace;
-	}
-	
-	private DesignSpace loadDesignSpace(String targetSpaceID) {
-		DesignSpace targetSpace = designSpaceRepository.findOne(getDesignSpaceGraphID(targetSpaceID), 3);
-		
-		for (Commit commit : targetSpace.getCommits()) {
-			commit.setSnapshot(loadSnapshot(commit.getCommitID(), 2));
-		}
-		
-		return targetSpace;
-	}
-	
-	private Snapshot loadSnapshot(String targetCommitID, int depth) {
-		return snapshotRepository.findOne(getSnapshotGraphID(targetCommitID), depth);
+		return designSpaceRepository.findOne(getGraphID(targetSpaceID), depth);
+//		return designSpaceRepository.findBySpaceID(targetSpaceID);
 	}
 	
 	private Node findNode(String targetSpaceID, String targetNodeID) {
@@ -2390,17 +2376,8 @@ public class DesignSpaceService {
 		}
 	}
 	
-	private Long getDesignSpaceGraphID(String targetSpaceID) {
-		Set<Integer> graphIDs = designSpaceRepository.getDesignSpaceGraphID(targetSpaceID);
-		if (graphIDs.size() > 0) {
-			return new Long(graphIDs.iterator().next());
-		} else {
-			return null;
-		}
-	}
-	
-	private Long getSnapshotGraphID(String targetSpaceID) {
-		Set<Integer> graphIDs = designSpaceRepository.getSnapshotGraphID(targetSpaceID);
+	private Long getGraphID(String targetSpaceID) {
+		Set<Integer> graphIDs = designSpaceRepository.getGraphID(targetSpaceID);
 		if (graphIDs.size() > 0) {
 			return new Long(graphIDs.iterator().next());
 		} else {
@@ -2753,69 +2730,113 @@ public class DesignSpaceService {
 	}
 	
 	private void saveDesignSpace(DesignSpace space) {
-		System.out.println("clearing edges");
-		LOG.info("clearing {}", "edges");
-		
-		long startTime = System.nanoTime();
-		
-		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToOutgoingEdges();
-		
-		space.clearEdges();
-
-		Set<Commit> commits = space.getCommits();
-		
-		HashMap<String, HashMap<String, Set<Edge>>> commitIDToEdges = new HashMap<String, HashMap<String, Set<Edge>>>();
-
-		for (Commit commit : commits) {
-			commitIDToEdges.put(commit.getCommitID(), 
-					commit.getSnapshot().mapNodeIDsToOutgoingEdges());
-			
-			commit.getSnapshot().clearEdges();
-    	}
-		
-		long time1 = System.nanoTime() - startTime;
-		
-		System.out.println("saving nodes");
-		LOG.info("saving {}", "nodes");
-		
-		startTime = System.nanoTime();
-		
-		designSpaceRepository.save(space);
-		
-		long time2 = System.nanoTime() - startTime;
-		
-		System.out.println("loading edges");
-		LOG.info("loading {}", "edges");
-		
-		startTime = System.nanoTime();
-		
-		space.loadEdges(nodeIDToEdges);
-		
-		for (Commit commit : commits) {
-			System.out.println("saving commit " + commit.getCommitID());
-			LOG.info("saving commit {}", commit.getCommitID());
-
-			commit.getSnapshot().loadEdges(commitIDToEdges.get(commit.getCommitID()));
-
+//		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToOutgoingEdges();
+//		
+//		Set<Branch> branches;
+//		
+//		if (space.hasBranches()) {
+//			branches = space.getBranches();
+//		} else {
+//			branches = new HashSet<Branch>();
+//		}
+//		
+//		HashMap<String, Commit> branchIDToLatestCommit = new HashMap<String, Commit>();
+//		
+//		HashMap<String, Set<Commit>> branchIDToCommits = new HashMap<String, Set<Commit>>();
+//		
+//		for (Branch branch : branches) {
+//			if (branch.hasCommits()) {
+//				branchIDToLatestCommit.put(branch.getBranchID(), branch.getLatestCommit());
+//				
+//				branchIDToCommits.put(branch.getBranchID(), branch.getCommits());
+//			}
+//		}
+//		
+//		Set<Commit> commits = space.getCommits();
+//		
+//		HashMap<String, Set<Commit>> commitIDToPredecessors = new HashMap<String, Set<Commit>>();
+//		
+//		HashMap<String, Snapshot> commitIDToSnapshot = new HashMap<String, Snapshot>();
+//		
+//		Set<Snapshot> snaps = new HashSet<Snapshot>();
+//		
+//		HashMap<String, HashMap<String, Set<Edge>>> commitIDToEdges = new HashMap<String, HashMap<String, Set<Edge>>>();
+//		
+//		for (Commit commit : commits) {
+//			if (commit.hasPredecessors()) {
+//				commitIDToPredecessors.put(commit.getCommitID(), commit.getPredecessors());
+//			}
+//    		
+//    		commitIDToSnapshot.put(commit.getCommitID(), commit.getSnapshot());
+//    		
+//    		snaps.add(commit.getSnapshot());
+//			
+//			commitIDToEdges.put(commit.getCommitID(), commit.getSnapshot().mapNodeIDsToOutgoingEdges());
+//    	}
+//		
+//		space.clearEdges();
+//		
+//		for (Branch branch : branches) {
+//			branch.clearLatestCommit();
+//			
+//			branch.clearCommits();
+//		}
+//		
+//		for (Commit commit : commits) {
+//			commit.clearPredecessors();
+//			
+//			commit.clearSnapshot();
+//		}
+//		
+//		for (Snapshot snap : snaps) {
+//			snap.clearEdges();
+//		}
+//		
+//		LOG.info("saving {}", "nodes");
+//		
+//		designSpaceRepository.save(space);
+//		
+//		for (Commit commit : commits) {
+//			commitRepository.save(commit);
+//		}
+//		
+//		for (Snapshot snap : snaps) {
 //			snapshotRepository.save(snap);
-		}
-		
-		long time3 = System.nanoTime() - startTime;
-		
-		System.out.println("saving edges");
-		LOG.info("saving {}", "edges");
-		
-		startTime = System.nanoTime();
-		
+//		}
+//		
+//		space.loadEdges(nodeIDToEdges);
+//		
+//		for (Branch branch : branches) {
+//			if (branchIDToLatestCommit.containsKey(branch.getBranchID()) 
+//					&& branchIDToCommits.containsKey(branch.getBranchID())) {
+//				branch.setLatestCommit(branchIDToLatestCommit.get(branch.getBranchID()));
+//				
+//				branch.setCommits(branchIDToCommits.get(branch.getBranchID()));
+//			}
+//		}
+//		
+//		LOG.info("saving {}", "snaps");
+//		
+//		for (Commit commit : commits) {
+////			if (commitIDToPredecessors.containsKey(commit.getCommitID())) {
+////				commit.setPredecessors(commitIDToPredecessors.get(commit.getCommitID()));
+////			}
+//			
+//			if (commitIDToSnapshot.containsKey(commit.getCommitID()) 
+//					&& commitIDToEdges.containsKey(commit.getCommitID())) {
+//				Snapshot snap = commitIDToSnapshot.get(commit.getCommitID());
+//				
+////				commit.setSnapshot(snap);
+//				
+//				snap.loadEdges(commitIDToEdges.get(commit.getCommitID()));
+//				
+//				snapshotRepository.save(snap);
+//			}
+//		}
+//		
+//		LOG.info("saving {}", "edges");
+
 		designSpaceRepository.save(space);
-		
-		long time4 = System.nanoTime() - startTime;
-		
-		System.out.println("done");
-		LOG.info("done {}", "done");
-		
-		System.out.println("times: " + time1 + ", " + time2 + ", " + time3 +  ", " + time4);
-		LOG.info("times: {}", time1 + ", " + time2 + ", " + time3 +  ", " + time4);
 	}
 	
 //	private void saveDesignSpace(DesignSpace space) {
