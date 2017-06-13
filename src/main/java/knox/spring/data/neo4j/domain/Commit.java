@@ -18,8 +18,6 @@ public class Commit {
     @GraphId Long id;
 
     String commitID;
-    
-    String mergeID;
 
     @Relationship(type = "SUCCEEDS") Set<Commit> predecessors;
 
@@ -27,7 +25,9 @@ public class Commit {
 
     public Commit() {}
 
-    public Commit(String commitID) { this.commitID = commitID; }
+    public Commit(String commitID) { 
+    	this.commitID = commitID;
+    }
     
     public Commit copy() {
     	Commit commitCopy = new Commit(commitID);
@@ -38,7 +38,7 @@ public class Commit {
     }
 
     public Snapshot copySnapshot(Snapshot snapshot) {
-        createSnapshot(snapshot.getIdIndex());
+        createSnapshot(snapshot.getNodeIndex());
 
         HashMap<String, Node> nodeIDToCopy = new HashMap<String, Node>();
 
@@ -125,20 +125,20 @@ public class Commit {
     	this.predecessors = predecessors;
     }
 
-    public Snapshot getSnapshot() { return snapshot; }
+    public Snapshot getSnapshot() { 
+    	return snapshot; 
+    }
     
     public void setSnapshot(Snapshot snapshot) {
     	this.snapshot = snapshot;
     }
 
-    public String getCommitID() { return commitID; }
-    
-    public boolean hasMergeID() {
-    	return mergeID != null;
+    public String getCommitID() { 
+    	return commitID; 
     }
     
-    public void setMergeID(String mergeID) {
-    	this.mergeID = mergeID;
+    public void setCommitID(int commitIDIndex) {
+    	commitID = "c" + commitIDIndex;
     }
 
     public boolean hasPredecessors() {

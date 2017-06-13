@@ -1,4 +1,4 @@
-CREATE (d1:DesignSpace {spaceID: "bisindole_pathways", idIndex: 95, mergeIndex: 0})
+CREATE (d1:DesignSpace {spaceID: "bisindole_pathways", nodeIndex: 95, commitIndex: 1})
 
 CREATE (n1:Node {nodeID: "n0", nodeType: "start"})
 CREATE (n2:Node {nodeID: "n1"})
@@ -344,7 +344,7 @@ CREATE (n47)-[:PRECEDES {componentIDs: ["s9"], componentRoles: ["restriction_enz
 CREATE (n52)-[:PRECEDES {componentIDs: ["s9"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n60)
 
 
-CREATE (d1)-[:ARCHIVES]->(b1:Branch {branchID: "bisindole_pathways", idIndex: 1})-[:CONTAINS]->(c1:Commit {commitID: "c0"})-[:CONTAINS]->(s1:Snapshot {idIndex: 95})
+CREATE (d1)-[:ARCHIVES]->(b1:Branch {branchID: "bisindole_pathways"})-[:CONTAINS]->(c1:Commit {commitID: "c0"})-[:CONTAINS]->(s1:Snapshot {nodeIndex: 95})
 CREATE (d1)-[:SELECTS]->(b1)-[:LATEST]->(c1)
 
 CREATE (sn1:Node {nodeID: "n0", nodeType: "start"})

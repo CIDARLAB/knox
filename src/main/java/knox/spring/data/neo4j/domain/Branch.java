@@ -17,8 +17,6 @@ public class Branch {
 
     String branchID;
 
-    int idIndex;
-
     @Relationship(type = "CONTAINS") Set<Commit> commits;
 
     @Relationship(type = "LATEST") Commit latestCommit;
@@ -27,13 +25,6 @@ public class Branch {
     
     public Branch(String branchID) {
         this.branchID = branchID;
-        
-        idIndex = 0;
-    }
-
-    public Branch(String branchID, int idIndex) {
-        this.branchID = branchID;
-        this.idIndex = idIndex;
     }
 
     public void addCommit(Commit commit) {
@@ -52,23 +43,7 @@ public class Branch {
     }
     
     public Branch copy() {
-    	return new Branch(branchID, idIndex);
-    }
-
-    public Commit copyCommit(Commit commit) {
-        Commit commitCopy = createCommit();
-
-        commitCopy.copySnapshot(commit.getSnapshot());
-
-        return commitCopy;
-    }
-
-    public Commit createCommit() {
-        Commit commit = new Commit("c" + idIndex++);
-
-        addCommit(commit);
-
-        return commit;
+    	return new Branch(branchID);
     }
 
     public boolean deleteCommits(Set<Commit> deletedCommits) {
@@ -85,7 +60,9 @@ public class Branch {
     	this.commits = commits;
     }
     
-    public Commit getLatestCommit() { return latestCommit; }
+    public Commit getLatestCommit() { 
+    	return latestCommit; 
+    }
     
     public void clearLatestCommit() {
     	latestCommit = null;
@@ -95,12 +72,8 @@ public class Branch {
     	commits = null;
     }
 
-    public String getBranchID() { return branchID; }
-
-    public int getIdIndex() { return idIndex; }
-    
-    public void setIDIndex(int idIndex) {
-    	this.idIndex = idIndex;
+    public String getBranchID() { 
+    	return branchID; 
     }
 
     public boolean hasCommits() {
@@ -131,5 +104,7 @@ public class Branch {
     	return branch.getBranchID().equals(branchID);
     }
 
-    public void setLatestCommit(Commit commit) { latestCommit = commit; }
+    public void setLatestCommit(Commit commit) { 
+    	latestCommit = commit;
+    }
 }
