@@ -102,7 +102,7 @@ public class DesignSpace extends NodeSpace {
         		
         		addBranch(branchCopy);
         		
-        		if (branchCopy.isIdenticalTo(space.getHeadBranch())) {
+        		if (branch.isIdenticalTo(space.getHeadBranch())) {
           			headBranchCopy = branchCopy;
           		}
         	}

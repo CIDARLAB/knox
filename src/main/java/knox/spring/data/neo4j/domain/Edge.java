@@ -283,6 +283,7 @@ public class Edge {
 
     public void unionWithEdge(Edge edge) {
         Set<String> mergedCompIDs = new HashSet<String>();
+        
         Set<String> mergedCompRoles = new HashSet<String>();
 
         if (hasComponentIDs() && edge.hasComponentIDs()) {
@@ -291,6 +292,7 @@ public class Edge {
             for (String compID : edge.getComponentIDs()) {
                 if (!mergedCompIDs.contains(compID)) {
                     componentIDs.add(compID);
+                    
                     mergedCompIDs.add(compID);
                 }
             }
@@ -302,6 +304,7 @@ public class Edge {
             for (String compRole : edge.getComponentRoles()) {
                 if (!mergedCompRoles.contains(compRole)) {
                     componentRoles.add(compRole);
+                    
                     mergedCompRoles.add(compRole);
                 }
             }

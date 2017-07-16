@@ -411,12 +411,11 @@
                     break;
 
                 case "AND":
-                    query += encodeQueryParameter("tolerance", 1, query);
                     request.open("POST", "/designSpace/and" + query, false);
                     break;
 
                 case "Merge Weak":
-                    query += encodeQueryParameter("tolerance", 1, query);
+                    query += encodeQueryParameter("tolerance", 0, query);
                     request.open("POST", "/designSpace/merge" + query, false);
                     break;
 

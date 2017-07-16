@@ -314,17 +314,16 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
     public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-    		@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance) {
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
     	try {
     		if (outputSpaceID == null) {
-    			designSpaceService.andDesignSpaces(inputSpaceIDs, tolerance);
+    			designSpaceService.andDesignSpaces(inputSpaceIDs);
     		} else {
-    			long startTime = System.nanoTime();
+//    			long startTime = System.nanoTime();
     			
-    			designSpaceService.andDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance);
+    			designSpaceService.andDesignSpaces(inputSpaceIDs, outputSpaceID);
     			
-    			LOG.info("time {}", System.nanoTime() - startTime);
+//    			LOG.info("time {}", System.nanoTime() - startTime);
     		}
 
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 

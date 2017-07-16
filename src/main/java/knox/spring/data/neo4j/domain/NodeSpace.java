@@ -5,11 +5,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
 import knox.spring.data.neo4j.domain.Node.NodeType;
+import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -17,6 +19,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
@@ -28,6 +32,8 @@ public class NodeSpace {
 	
 	@Relationship(type = "CONTAINS") 
     Set<Node> nodes;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(DesignSpaceService.class);
 	
 	public NodeSpace() {
 		
@@ -59,6 +65,20 @@ public class NodeSpace {
     		nodeIndex = 0;
     	}
     }
+	
+	public NodeSpace copy() {
+		NodeSpace spaceCopy = new NodeSpace();
+		
+		spaceCopy.union(this);
+		
+		return spaceCopy;
+	}
+	
+	public void shallowCopyNodeSpace(NodeSpace space) {
+		nodeIndex = space.getNodeIndex();
+		
+		nodes = new HashSet<Node>(space.getNodes());
+	}
 	
 	public void copyNodeSpace(NodeSpace space) {
 		if (space.hasNodes()) {
@@ -497,7 +517,8 @@ public class NodeSpace {
         		
         		if (node.hasEdges()) {
         			for (Edge edge : node.getEdges()) {
-        				if (!visitedIDs.contains(edge.getHead().getNodeID())) {
+        				if (!visitedIDs.contains(edge.getHead().getNodeID()) 
+        						&& !edge.getHead().isIdenticalTo(node)) {
         					nodeStack.push(edge.getHead());
         					
         					visitedIDs.add(edge.getHead().getNodeID());

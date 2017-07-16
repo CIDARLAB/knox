@@ -40,6 +40,10 @@ public class Node {
     public void clearNodeType() { 
     	nodeType = null; 
     }
+    
+    public Node copy() {
+    	return new Node(nodeID, nodeType);
+    }
 
     public Edge copyEdge(Edge edge) {
     	return copyEdge(edge, edge.getHead());
