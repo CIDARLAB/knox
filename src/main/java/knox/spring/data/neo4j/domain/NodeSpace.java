@@ -69,7 +69,7 @@ public class NodeSpace {
 	public NodeSpace copy() {
 		NodeSpace spaceCopy = new NodeSpace();
 		
-		spaceCopy.union(this);
+		spaceCopy.copyNodeSpace(this);
 		
 		return spaceCopy;
 	}
@@ -98,6 +98,8 @@ public class NodeSpace {
 				}
 			}
 		}
+		
+		nodeIndex = space.getNodeIndex();
 	}
 	
 	public Node copyNodeWithEdges(Node node) {
@@ -326,6 +328,10 @@ public class NodeSpace {
         }
     }
     
+    public boolean isEmpty() {
+    	return getSize() == 0;
+    }
+    
     public void loadEdges(HashMap<String, Set<Edge>> nodeIDToEdges) { 
     	if (hasNodes()) {
     		for (Node node : nodes) {
@@ -390,7 +396,7 @@ public class NodeSpace {
     	return nodeIDToNode;
     }
     
-    public void labelAcceptNodes() {
+    public void labelSinkNodesAccept() {
     	Set<Node> sinkNodes = getSinkNodes();
     	
     	for (Node sinkNode : sinkNodes) {
@@ -398,7 +404,7 @@ public class NodeSpace {
     	}
     }
     
-    public void labelStartNodes() {
+    public void labelSourceNodesStart() {
     	Set<Node> sourceNodes = getSourceNodes();
     	
     	for (Node sourceNode : sourceNodes) {
@@ -470,26 +476,26 @@ public class NodeSpace {
     
     public Node mergeSourceNodes() {
     	if (hasNodes()) {
-    		Iterator<Node> sourceNodes = getSourceNodes().iterator();
+    		Iterator<Node> startNodes = getStartNodes().iterator();
     		
-    		if (sourceNodes.hasNext()) {
-    			Node primarySourceNode = sourceNodes.next();
+    		if (startNodes.hasNext()) {
+    			Node primaryStartNode = startNodes.next();
 
-    			while (sourceNodes.hasNext()) {
-    				Node secondarySourceNode = sourceNodes.next();
+    			while (startNodes.hasNext()) {
+    				Node secondaryStartNode = startNodes.next();
 
-    				if (secondarySourceNode.hasEdges()) {
-    					for (Edge secondaryEdge : secondarySourceNode.getEdges()) {
-    						primarySourceNode.copyEdge(secondaryEdge);
+    				if (secondaryStartNode.hasEdges()) {
+    					for (Edge secondaryEdge : secondaryStartNode.getEdges()) {
+    						primaryStartNode.copyEdge(secondaryEdge);
     					}
     				}
 
-    				nodes.remove(secondarySourceNode);
+    				nodes.remove(secondaryStartNode);
     			}
 
     			reindexNodes();
     			
-    			return primarySourceNode;
+    			return primaryStartNode;
     		}
     	}
     	
@@ -675,12 +681,12 @@ public class NodeSpace {
     	return removedNodes;
     }
     
-    public void union(NodeSpace space) {
+    public void unionNodes(NodeSpace space) {
     	if (space.hasNodes()) {
 			HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
 
 			for (Node node : space.getNodes()) {
-				idToNodeCopy.put(node.getNodeID(), copyNodeWithID(node));
+				idToNodeCopy.put(node.getNodeID(), copyNode(node));
 			}
 
 			for (Node node : space.getNodes()) {
@@ -692,8 +698,6 @@ public class NodeSpace {
 					}
 				} 
 			}
-			
-			nodeIndex = Math.max(nodeIndex, space.getNodeIndex());
 		}
     }
 }

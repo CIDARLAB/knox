@@ -31,31 +31,32 @@ public class DesignSampler {
 	 */
 	
 	public Set<List<String>> sample(int numberOfDesigns) {
-
 		Set<List<String>> designs = new HashSet<List<String>>();
+		
 		Random rand = new Random();
 
 		while (designs.size() < numberOfDesigns) {
-
 			List<String> design = new LinkedList<String>();
+			
 			Node node = starts.get(rand.nextInt(starts.size()));
+			
             Edge edge = new Edge();
 
             while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
 				// Get the number of edges w no probability
-				int numZero = 0; 
-				for (Edge e : node.getEdges()) {
-					if (e.getProbability() == 0.0)
-						numZero += 1;
-				}
+//				int numZero = 0; 
+//				for (Edge e : node.getEdges()) {
+//					if (e.getWeight() == 0.0)
+//						numZero += 1;
+//				}
 
 				// Add up the total weights
 				double totalWeights = 0.0;
 				for (Edge e: node.getEdges()) {
-					if (e.getProbability() == 0.0)
-						e.setProbability(1.0/numZero);
+//					if (e.getWeight() == 0.0)
+//						e.setProbability(1.0/numZero);
 
-					totalWeights += e.getProbability();
+					totalWeights += e.getWeight();
 				}
 
 				// Choose edge based on weight
@@ -63,7 +64,7 @@ public class DesignSampler {
 
 				double countWeights = 0.0;
 				for (Edge e: node.getEdges()) {
-					countWeights += e.getProbability();
+					countWeights += e.getWeight();
 					if (countWeights >= rWeight) {
 						edge = e;
 						break;

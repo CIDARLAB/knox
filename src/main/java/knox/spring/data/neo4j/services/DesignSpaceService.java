@@ -16,7 +16,9 @@ import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.NodeNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
-import knox.spring.data.neo4j.product.NodeProduct;
+import knox.spring.data.neo4j.operations.Concatenation;
+import knox.spring.data.neo4j.operations.Product;
+import knox.spring.data.neo4j.operations.Union;
 import knox.spring.data.neo4j.repositories.BranchRepository;
 import knox.spring.data.neo4j.repositories.CommitRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
@@ -60,15 +62,223 @@ import java.util.Stack;
 //@Transactional
 public class DesignSpaceService {
 	@Autowired BranchRepository branchRepository;
+	
     @Autowired CommitRepository commitRepository;
+    
     @Autowired DesignSpaceRepository designSpaceRepository;
+    
     @Autowired EdgeRepository edgeRepository;
+    
     @Autowired NodeRepository nodeRepository;
+    
     @Autowired SnapshotRepository snapshotRepository;
     
     private static final Logger LOG = LoggerFactory.getLogger(DesignSpaceService.class);
 
     public static final String RESERVED_ID = "knox";
+    
+    public void joinDesignSpaces(List<String> inputSpaceIDs) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
+    	
+    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
+    }
+    
+    public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
+    	
+    	List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
+    	
+    	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+    	
+    	if (inputSpaceIDs.contains(outputSpaceID)) {
+    		joinNodeSpaces(inputSpaces);
+    	} else {
+    		joinNodeSpaces(inputSpaces, outputSpace);
+    	}
+    	
+    	joinNodeSpaces(loadOutputSnapshots(inputSpaces, outputSpace), outputSpace.getHeadSnapshot());
+
+    	saveDesignSpace(outputSpace);
+    }
+    
+    private void joinNodeSpaces(List<NodeSpace> inputSpaces) {
+    	joinNodeSpaces(inputSpaces.subList(1, inputSpaces.size()), inputSpaces.get(0));
+    }
+	
+	private void joinNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
+		Concatenation concatenation = new Concatenation();
+		
+		for (NodeSpace inputSpace : inputSpaces) {
+			concatenation.concatenate(inputSpace);
+		}
+		
+		outputSpace.shallowCopyNodeSpace(concatenation.getConcatenationSpace());
+    }
+    
+    public void orDesignSpaces(List<String> inputSpaceIDs, boolean isClosed) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
+    	
+    	orDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), isClosed);
+    }
+    
+    public void orDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, boolean isClosed) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
+    	
+    	List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
+    	
+    	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+    	
+    	if (inputSpaceIDs.contains(outputSpaceID)) {
+    		orNodeSpaces(inputSpaces, isClosed);
+    	} else {
+    		orNodeSpaces(inputSpaces, outputSpace, isClosed);
+    	}
+    	
+    	orNodeSpaces(loadOutputSnapshots(inputSpaces, outputSpace), outputSpace.getHeadSnapshot(),
+    			isClosed);
+
+    	saveDesignSpace(outputSpace);
+    }
+    
+    private void orNodeSpaces(List<NodeSpace> inputSpaces, boolean isClosed) {
+    	orNodeSpaces(inputSpaces, inputSpaces.get(0), isClosed);
+    }
+	
+	private void orNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace, boolean isClosed) {
+		Union union = new Union(inputSpaces);
+		
+		union.connect(isClosed);
+		
+		outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+    }
+    
+    public void andDesignSpaces(List<String> inputSpaceIDs, int tolerance) {
+    	productOfDesignSpaces(inputSpaceIDs, "tensor", tolerance, false);
+    }
+    
+    public void andDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance) {
+    	productOfDesignSpaces(inputSpaceIDs, outputSpaceID, "tensor", tolerance, false);
+    }
+    
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance) {
+    	productOfDesignSpaces(inputSpaceIDs, "strong", tolerance, true);
+    }
+    
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance) {
+    	productOfDesignSpaces(inputSpaceIDs, outputSpaceID, "strong", tolerance, true);
+    }
+    
+    private void productOfDesignSpaces(List<String> inputSpaceIDs, String type, int tolerance, 
+    		boolean isModified) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
+    	
+    	productOfDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), type, tolerance, isModified);
+    }
+    
+    private void productOfDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, 
+    		String type, int tolerance, boolean isModified) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
+
+    	List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
+    	
+    	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+    	
+    	if (inputSpaceIDs.contains(outputSpaceID)) {
+    		productOfNodeSpaces(inputSpaces, type, tolerance, isModified);
+    	} else {
+    		productOfNodeSpaces(inputSpaces, outputSpace, type, tolerance, isModified);
+    	}
+    	
+    	productOfNodeSpaces(loadOutputSnapshots(inputSpaces, outputSpace), outputSpace.getHeadSnapshot(), 
+    			type, tolerance, isModified);
+
+    	saveDesignSpace(outputSpace);
+    }
+    
+    private void productOfNodeSpaces(List<NodeSpace> inputSpaces, String type, int tolerance,
+    		boolean isModified) {
+    	productOfNodeSpaces(inputSpaces.subList(1, inputSpaces.size()), inputSpaces.get(0), 
+    			type, tolerance, isModified);
+    }
+	
+	private void productOfNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
+    		String type, int tolerance, boolean isModified) {
+    	for (NodeSpace inputSpace : inputSpaces) {
+    		if (!outputSpace.hasNodes()) {	
+    			outputSpace.copyNodeSpace(inputSpace);
+    		} else {
+    			Product product = new Product(inputSpace, outputSpace);
+    			
+    			// Tensor product of graphs
+    			if (type.equals("tensor")) {
+    				if (isModified) {
+    					product.modifiedTensor(tolerance);
+    				} else {
+    					product.tensor(tolerance);
+    				}
+    			} else if (type.equals("cartesian")) {
+    				product.cartesian();
+    			} else if (type.equals("strong")) {
+    				if (isModified) {
+    					product.modifiedStrong(tolerance);
+    				} else {
+    					product.strong(tolerance);
+    				}
+    			}
+    			
+    			outputSpace.shallowCopyNodeSpace(product.getProductSpace());
+    		}
+    	}
+    }
+	
+	private DesignSpace loadIOSpaces(List<String> inputSpaceIDs, String outputSpaceID,
+    		List<NodeSpace> inputSpaces) {
+    	Set<String> prunedSpaceIDs = new HashSet<String>(inputSpaceIDs);
+    	
+//    	for (String inputSpaceID : inputSpaceIDs) {
+//    		if (!prunedSpaceIDs.contains(inputSpaceID)) {
+//    			prunedSpaceIDs.add(inputSpaceID);
+//    		}
+//    	}
+    	
+    	DesignSpace outputSpace;
+    	
+    	if (prunedSpaceIDs.remove(outputSpaceID)) {
+    		outputSpace = loadDesignSpace(outputSpaceID);
+    		
+    		inputSpaces.add(outputSpace);
+    	} else {
+    		outputSpace = new DesignSpace(outputSpaceID);
+    	}
+    	
+    	for (String inputSpaceID : prunedSpaceIDs) {
+    		inputSpaces.add(loadDesignSpace(inputSpaceID));
+    	}
+    	
+    	return outputSpace;
+    }
+    
+    private List<NodeSpace> loadOutputSnapshots(List<NodeSpace> inputSpaces, DesignSpace outputSpace) {
+    	List<DesignSpace> castInputSpaces = new ArrayList<DesignSpace>(inputSpaces.size());
+    	
+    	for (NodeSpace inputSpace : inputSpaces) {
+    		castInputSpaces.add((DesignSpace) inputSpace);
+    	}
+    	
+    	return mergeVersionHistories(castInputSpaces, outputSpace);
+    }
 
     //    public void importEugene(List<InputStream> inputEugeneStreams) {
     public void importEugene() {
@@ -472,7 +682,7 @@ public class DesignSpaceService {
     		}
     	}
     
-    	orDesignSpaces(compositeDefIDs, outputSpaceID);
+    	orDesignSpaces(compositeDefIDs, outputSpaceID, true);
     }
     
     private List<ComponentDefinition> flattenComponentDefinition(ComponentDefinition rootDef) {
@@ -1131,133 +1341,6 @@ public class DesignSpaceService {
     	}
     }
     
-    public void joinDesignSpaces(List<String> inputSpaceIDs) 
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
-    		DesignSpaceBranchesConflictException {
-    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
-    	
-    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
-    }
-    
-    public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
-    		DesignSpaceBranchesConflictException {
-    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
-    	
-    	Set<String> visitedSpaceIDs = new HashSet<String>();
-    	
-    	if (inputSpaceIDs.contains(outputSpaceID)) {
-    		visitedSpaceIDs.add(outputSpaceID);
-    	}
-    	
-    	int outputIndex = inputSpaceIDs.indexOf(outputSpaceID);
-    	
-    	for (int i = outputIndex + 1; i < inputSpaceIDs.size(); i++) {
-    		String inputSpaceID = inputSpaceIDs.get(i);
-    		
-    		if (visitedSpaceIDs.contains(inputSpaceID) && i > 0) {
-    			deleteNodeCopyIndices(outputSpaceID);
-    		}
-    		
-    		Set<String> startNodeIDs1 = getStartNodeIDs(outputSpaceID);
-
-    		Set<String> acceptNodeIDs1 = getAcceptNodeIDs(outputSpaceID);
-
-    		unionDesignSpace(inputSpaceID, outputSpaceID);
-
-    		if (acceptNodeIDs1.size() > 0) {
-    			Set<String> startNodeIDs2 = new HashSet<String>();
-    			
-    			for (String startNodeID : getStartNodeIDs(outputSpaceID)) {
-    				if (!startNodeIDs1.contains(startNodeID)) {
-    					deleteNodeType(outputSpaceID, startNodeID);
-    					
-    					startNodeIDs2.add(startNodeID);
-    				}
-    			}
-    			
-    			if (startNodeIDs2.size() > 0) {
-					for (String acceptNodeID1 : acceptNodeIDs1) {
-						deleteNodeType(outputSpaceID, acceptNodeID1);
-						
-						for (String startNodeID2 : startNodeIDs2) {
-							createEdge(outputSpaceID, acceptNodeID1, startNodeID2);
-						}
-					}
-    			}
-    		}
-
-    		visitedSpaceIDs.add(inputSpaceID);
-    	}
-    	
-    	for (int i = 0; i < outputIndex; i++) {
-    		String inputSpaceID = inputSpaceIDs.get(i);
-    		
-    		if (visitedSpaceIDs.contains(inputSpaceID)) {
-    			deleteNodeCopyIndices(outputSpaceID);
-    		}
-    		
-    		Set<String> startNodeIDs2 = getStartNodeIDs(outputSpaceID);
-
-    		Set<String> acceptNodeIDs2 = getAcceptNodeIDs(outputSpaceID);
-
-    		unionDesignSpace(inputSpaceID, outputSpaceID);
-
-    		if (startNodeIDs2.size() > 0) {
-    			Set<String> acceptNodeIDs1 = new HashSet<String>();
-    			
-    			for (String acceptNodeID : getAcceptNodeIDs(outputSpaceID)) {
-    				if (!acceptNodeIDs2.contains(acceptNodeID)) {
-    					deleteNodeType(outputSpaceID, acceptNodeID);
-    					
-    					acceptNodeIDs1.add(acceptNodeID);
-    				}
-    			}
-    			
-    			if (acceptNodeIDs1.size() > 0) {
-        			for (String startNodeID2 : startNodeIDs2) {
-        				deleteNodeType(outputSpaceID, startNodeID2);
-
-        				for (String acceptNodeID1 : acceptNodeIDs1) {
-        					createEdge(outputSpaceID, acceptNodeID1, startNodeID2);
-        				}
-        			}
-    			}
-    		}
-    		
-    		visitedSpaceIDs.add(inputSpaceID);
-    	}
-    	
-    	deleteNodeCopyIndices(outputSpaceID);
-    	
-    	visitedSpaceIDs.clear();
-    	
-    	List<String> headBranchIDs = new LinkedList<String>();
-
-    	for (String inputSpaceID : inputSpaceIDs) {
-    		String headBranchID = getHeadBranchID(inputSpaceID);
-    		
-    		if (!visitedSpaceIDs.contains(inputSpaceID)) {
-    			
-    			if (!inputSpaceID.equals(outputSpaceID)) {
-    				mergeVersionHistory(inputSpaceID, outputSpaceID);
-    			}
-        		
-        		indexVersionMerger(outputSpaceID, headBranchID);
-        		
-        		visitedSpaceIDs.add(inputSpaceID);
-    		}
-    		
-    		headBranchIDs.add(headBranchID);
-    	}
-
-    	joinBranches(outputSpaceID, headBranchIDs);
-    	
-    	if (!inputSpaceIDs.contains(outputSpaceID)) {
-    		selectHeadBranch(outputSpaceID, headBranchIDs.get(0));
-    	}
-    }
-    
 //    public void matchDesignSpace(String inputSpaceID1, List<String> inputSpaceIDs2, String outputSpacePrefix) {
 //    	for (int i = 0; i < inputSpaceIDs2.size(); i++) {
 //        	List<String> inputSpaceIDs = new ArrayList<String>(1);
@@ -1326,120 +1409,6 @@ public class DesignSpaceService {
 		}
     	
     	return completeMatches;
-    }
-    
-    public void andDesignSpaces(List<String> inputSpaceIDs) {
-    	productOfDesignSpaces(inputSpaceIDs, "tensor", 1, false);
-    }
-    
-    public void andDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) {
-    	productOfDesignSpaces(inputSpaceIDs, outputSpaceID, "tensor", 1, false);
-    }
-    
-    public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance) {
-    	productOfDesignSpaces(inputSpaceIDs, "strong", tolerance, true);
-    }
-    
-    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance) {
-    	productOfDesignSpaces(inputSpaceIDs, outputSpaceID, "strong", tolerance, true);
-    }
-    
-    private void productOfDesignSpaces(List<String> inputSpaceIDs, String type, int tolerance, 
-    		boolean isConservative) 
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
-    		DesignSpaceBranchesConflictException {
-    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
-    	
-    	productOfDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), type, tolerance, isConservative);
-    }
-    
-    private void productOfDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String type,
-    		int tolerance, boolean isConservative) 
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
-    		DesignSpaceBranchesConflictException {
-    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
-
-    	List<String> prunedSpaceIDs = new LinkedList<String>();
-    	
-    	for (String inputSpaceID : inputSpaceIDs) {
-    		if (!prunedSpaceIDs.contains(inputSpaceID)) {
-    			prunedSpaceIDs.add(inputSpaceID);
-    		}
-    	}
-    	
-    	List<NodeSpace> prunedSpaces = new LinkedList<NodeSpace>();
-    	
-    	DesignSpace outputSpace;
-    	
-    	if (prunedSpaceIDs.remove(outputSpaceID)) {
-    		outputSpace = loadDesignSpace(outputSpaceID);
-    	} else {
-    		outputSpace = new DesignSpace(outputSpaceID);
-    	}
-    	
-    	for (String inputSpaceID : prunedSpaceIDs) {
-    		prunedSpaces.add(loadDesignSpace(inputSpaceID));
-    	}
-    	
-    	productOfNodeSpaces(prunedSpaces, outputSpace, type, tolerance, isConservative);
-    	
-    	if (inputSpaceIDs.contains(outputSpaceID)) {
-    		prunedSpaces.add(0, outputSpace);
-    	}
-    	
-    	List<DesignSpace> inputSpaces = new ArrayList<DesignSpace>(prunedSpaces.size());
-    	
-    	for (NodeSpace space : prunedSpaces) {
-    		inputSpaces.add((DesignSpace) space);
-    	}
-    	
-    	List<NodeSpace> outputSnaps = mergeVersionHistories(inputSpaces, outputSpace);
-    	
-    	productOfNodeSpaces(outputSnaps, outputSpace.getHeadSnapshot(), type, tolerance, 
-    			isConservative);
-
-    	saveDesignSpace(outputSpace);
-    }
-    
-    private void productOfNodeSpaces(List<NodeSpace> inputSpaces, String type, int tolerance,
-    		boolean isConservative) {
-    	productOfNodeSpaces(inputSpaces.subList(1, inputSpaces.size()), inputSpaces.get(0), 
-    			type, tolerance, isConservative);
-    }
-	
-	private void productOfNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-    		String type, int tolerance, boolean isModified) {
-    	for (NodeSpace inputSpace : inputSpaces) {
-    		if (!outputSpace.hasNodes()) {	
-    			outputSpace.union(inputSpace);
-    		} else {
-    			NodeProduct nodeProduct = new NodeProduct(inputSpace.orderNodes(),
-    					outputSpace.orderNodes());
-    			
-    			// Tensor product of graphs
-    			if (type.equals("tensor")) {
-    				if (isModified) {
-    					nodeProduct.modifiedTensor(tolerance);
-    				} else {
-    					nodeProduct.tensor(tolerance);
-    				}
-    			} else if (type.equals("cartesian")) {
-    				nodeProduct.cartesian();
-    			} else if (type.equals("strong")) {
-    				if (isModified) {
-    					nodeProduct.modifiedStrong(tolerance);
-    				} else {
-    					nodeProduct.strong(tolerance);
-    				}
-    			}
-    			
-    			outputSpace.shallowCopyNodeSpace(nodeProduct.getNodeSpace());
-    			
-    			outputSpace.labelStartNodes();
-    			
-    			outputSpace.labelAcceptNodes();
-    		}
-    	}
     }
     
     private void mergeVersions(DesignSpace targetSpace, List<Branch> inputBranches) {
@@ -1564,77 +1533,6 @@ public class DesignSpaceService {
     	saveDesignSpace(targetSpace);
     	
     	nodeRepository.delete(deletedNodes);
-    }
-    
-    public void orDesignSpaces(List<String> inputSpaceIDs) 
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
-    		DesignSpaceBranchesConflictException {
-    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
-    	
-    	orDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
-    }
-    
-    
-    public void orDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, DesignSpaceConflictException, 
-    		DesignSpaceBranchesConflictException {
-    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
-    	
-    	Set<String> prunedSpaceIDs = new HashSet<String>(inputSpaceIDs);
-    	
-    	prunedSpaceIDs.remove(outputSpaceID);
-    	
-    	for (String inputSpaceID : prunedSpaceIDs) {
-    		unionDesignSpace(inputSpaceID, outputSpaceID);
-    	}
-    	
-    	deleteNodeCopyIndices(outputSpaceID);
-
-    	Set<String> startNodeIDs = getStartNodeIDs(outputSpaceID);
-    
-    	if (startNodeIDs.size() > 1) {
-    		Node startNodePrime = createTypedNode(outputSpaceID, Node.NodeType.START.getValue());
-
-    		for (String startNodeID : startNodeIDs) {
-    			deleteNodeType(outputSpaceID, startNodeID);
-    			createEdge(outputSpaceID, startNodePrime.getNodeID(), startNodeID);
-    		}
-    	}
-    	
-    	Set<String> acceptNodeIDs = getAcceptNodeIDs(outputSpaceID);
-        
-    	if (acceptNodeIDs.size() > 1) {
-    		Node acceptNodePrime = createTypedNode(outputSpaceID, Node.NodeType.ACCEPT.getValue());
-
-    		for (String acceptNodeID : acceptNodeIDs) {
-    			deleteNodeType(outputSpaceID, acceptNodeID);
-    			createEdge(outputSpaceID, acceptNodeID, acceptNodePrime.getNodeID());
-    		}
-    	}
-    	
-    	if (inputSpaceIDs.contains(outputSpaceID)) {
-    		prunedSpaceIDs.add(outputSpaceID);
-    	}
-    	
-    	List<String> headBranchIDs = new LinkedList<String>();
-    	
-    	for (String inputSpaceID : prunedSpaceIDs) {
-    		if (!inputSpaceID.equals(outputSpaceID)) {
-    			mergeVersionHistory(inputSpaceID, outputSpaceID);
-    		}
-    		
-    		String headBranchID = getHeadBranchID(inputSpaceID);
-
-    		indexVersionMerger(outputSpaceID, headBranchID);
-
-    		headBranchIDs.add(headBranchID);
-    	}
-    	
-    	orBranches(outputSpaceID, headBranchIDs);
-
-    	if (!inputSpaceIDs.contains(outputSpaceID)) {
-    		selectHeadBranch(outputSpaceID, headBranchIDs.get(0));
-    	}
     }
     
     private void copyDesignSpaceToSnapshot(String inputSpaceID, String outputBranchID) {
@@ -2370,10 +2268,9 @@ public class DesignSpaceService {
         }
     }
 
-    private void validateListParameter(String parameterName,
-                                       List<String> parameter)
+    private void validateListParameter(String parameterName, List<String> parameter)
         throws ParameterEmptyException {
-        if (parameter.size() == 0) {
+        if (parameter.isEmpty()) {
             throw new ParameterEmptyException(parameterName);
         }
     }
@@ -2390,12 +2287,10 @@ public class DesignSpaceService {
         }
     }
 
-    private void validateCombinationalDesignSpaceOperator(String inputSpaceID1,
-                                                          String inputSpaceID2,
-                                                          String outputSpaceID)
+    private void validateCombinationalDesignSpaceOperator(String inputSpaceID1, 
+    		String inputSpaceID2, String outputSpaceID)
         throws ParameterEmptyException, DesignSpaceNotFoundException,
-               DesignSpaceConflictException,
-               DesignSpaceBranchesConflictException {
+               DesignSpaceConflictException, DesignSpaceBranchesConflictException {
         List<String> inputSpaceIDs = new ArrayList<String>(2);
         inputSpaceIDs.add(inputSpaceID1);
         inputSpaceIDs.add(inputSpaceID2);
@@ -2449,8 +2344,8 @@ public class DesignSpaceService {
         }
 
         if (conflictingBranchIDs.size() > 0) {
-            throw new DesignSpaceBranchesConflictException(
-                conflictingSpaceIDs, conflictingBranchIDs);
+            throw new DesignSpaceBranchesConflictException(conflictingSpaceIDs, 
+            		conflictingBranchIDs);
         }
     }
 

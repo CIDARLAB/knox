@@ -38,6 +38,94 @@ public class KnoxController {
 	public KnoxController(DesignSpaceService designSpaceService) {
 		this.designSpaceService = designSpaceService;
 	}
+	
+	@RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
+    public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
+            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+        try {
+        	long startTime = System.nanoTime();
+        	
+            if (outputSpaceID == null) {
+                designSpaceService.joinDesignSpaces(inputSpaceIDs);
+            } else {
+                designSpaceService.joinDesignSpaces(inputSpaceIDs,
+                        outputSpaceID);
+            }
+
+            return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully joined after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+        } catch (ParameterEmptyException | DesignSpaceNotFoundException |
+                DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+            return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+	
+	@RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
+    public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
+            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+            @RequestParam(value = "isClosed", required = false, defaultValue = "true") boolean isClosed) {
+        try {
+        	long startTime = System.nanoTime();
+        	
+            if (outputSpaceID == null) {
+                designSpaceService.orDesignSpaces(inputSpaceIDs, isClosed);
+            } else {
+                designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID, isClosed);
+            }
+
+            return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully OR-ed after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+        } catch (ParameterEmptyException | DesignSpaceNotFoundException |
+                DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+            return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+	
+	@RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
+    public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+    		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance) {
+    	try {
+    		long startTime = System.nanoTime();
+    		
+    		if (outputSpaceID == null) {
+    			designSpaceService.andDesignSpaces(inputSpaceIDs, tolerance);
+    		} else {
+    			designSpaceService.andDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance);
+    		}
+
+    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully AND-ed after " +
+    				(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+    	} catch (ParameterEmptyException | DesignSpaceNotFoundException | 
+    			DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
+    	}
+    }
+	
+	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
+    public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+    		@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance) {
+    	try {
+    		long startTime = System.nanoTime();
+    		
+    		if (outputSpaceID == null) {
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance);
+    		} else {
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance);
+    		}
+    		
+    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged after " +
+    				(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+    	} catch (ParameterEmptyException | DesignSpaceNotFoundException | 
+    			DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+    				HttpStatus.BAD_REQUEST);
+    	}
+    }
 
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
@@ -312,28 +400,6 @@ public class KnoxController {
         }
     }
 
-    @RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
-    public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-    	try {
-    		if (outputSpaceID == null) {
-    			designSpaceService.andDesignSpaces(inputSpaceIDs);
-    		} else {
-//    			long startTime = System.nanoTime();
-    			
-    			designSpaceService.andDesignSpaces(inputSpaceIDs, outputSpaceID);
-    			
-//    			LOG.info("time {}", System.nanoTime() - startTime);
-    		}
-
-    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully intersected.\"}", 
-    				HttpStatus.NO_CONTENT);
-    	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
-    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
-    				HttpStatus.BAD_REQUEST);
-    	}
-    }
-
     @RequestMapping(value = "/designSpace/graph/d3", method = RequestMethod.GET)
     public Map<String, Object> d3GraphDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
         return designSpaceService.d3GraphDesignSpace(targetSpaceID);
@@ -362,57 +428,11 @@ public class KnoxController {
         }
     }
 
-    @RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
-    public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-        try {
-            if (outputSpaceID == null) {
-                designSpaceService.joinDesignSpaces(inputSpaceIDs);
-            } else {
-            	long startTime = System.nanoTime();
-            	
-                designSpaceService.joinDesignSpaces(inputSpaceIDs,
-                        outputSpaceID);
-                
-                LOG.info("time {}", System.nanoTime() - startTime);
-            }
-
-            return new ResponseEntity<String>(
-                    "{\"message\": \"Design spaces were successfully joined.\"}",
-                    HttpStatus.NO_CONTENT);
-        } catch (ParameterEmptyException | DesignSpaceNotFoundException |
-                DesignSpaceConflictException |
-                DesignSpaceBranchesConflictException ex) {
-            return new ResponseEntity<String>(
-                    "{\"message\": \"" + ex.getMessage() + "\"}",
-                    HttpStatus.BAD_REQUEST);
-        }
-    }
-
     @RequestMapping(value = "/designSpace/match", method = RequestMethod.GET)
     public Map<String, Object> matchDesignSpaces(@RequestParam(value = "querySpaceIDs", required = true) List<String> querySpaceIDs,
             @RequestParam(value = "queriedSpaceIDs", required = true) List<String> queriedSpaceIDs) {
         return designSpaceService.matchDesignSpaces(querySpaceIDs,
                 queriedSpaceIDs);
-    }
-
-    @RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
-    public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-    		@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance) {
-    	try {
-    		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance);
-    		} else {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance);
-    		}
-    		
-    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged.\"}", 
-    				HttpStatus.NO_CONTENT);
-    	} catch (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException ex) {
-    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
-    				HttpStatus.BAD_REQUEST);
-    	}
     }
     
     @RequestMapping(value = "/designSpace/union", method = RequestMethod.POST)
@@ -454,31 +474,7 @@ public class KnoxController {
         }
     }
 
-    @RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
-    public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-        try {
-            if (outputSpaceID == null) {
-                designSpaceService.orDesignSpaces(inputSpaceIDs);
-            } else {
-            	long startTime = System.nanoTime();
-            	
-                designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID);
-            	
-                LOG.info("time {}", System.nanoTime() - startTime);
-            }
-
-            return new ResponseEntity<String>(
-                    "{\"message\": \"Design spaces were successfully disjoined.\"}",
-                    HttpStatus.NO_CONTENT);
-        } catch (ParameterEmptyException | DesignSpaceNotFoundException |
-                DesignSpaceConflictException |
-                DesignSpaceBranchesConflictException ex) {
-            return new ResponseEntity<String>(
-                    "{\"message\": \"" + ex.getMessage() + "\"}",
-                    HttpStatus.BAD_REQUEST);
-        }
-    }
+    
 
 //    @RequestMapping(value = "/designSpace/partition",
 //            method = RequestMethod.POST)

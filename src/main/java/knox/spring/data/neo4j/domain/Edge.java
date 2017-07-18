@@ -36,22 +36,23 @@ public class Edge {
     ArrayList<String> componentIDs = new ArrayList<>();
     ArrayList<String> componentRoles = new ArrayList<>();
 
-    double probability;
+    double weight;
 
     public Edge() {}
 
     public Edge(Node tail, Node head) {
         this.tail = tail;
         this.head = head;
+        this.weight = 1.0;
     }
 
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles,
-                double probability) {
+                double weight) {
         this.tail = tail;
         this.head = head;
         this.componentIDs = componentIDs;
         this.componentRoles = componentRoles;
-        this.probability = probability;
+        this.weight = weight;
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
@@ -59,7 +60,7 @@ public class Edge {
 		this.head = head;
 		this.componentIDs = componentIDs;
 		this.componentRoles = componentRoles;
-        this.probability = 0.0;
+        this.weight = 1.0;
 	}
 
     public void addComponent(String compID, String compRole) {
@@ -205,8 +206,8 @@ public class Edge {
     	if (tolerance == 0 && hasSameComponents(edge)
     			|| tolerance == 1 && hasSharedComponents(edge)
 				|| tolerance == 2 && hasSharedComponents(edge)
-				|| tolerance == 3 && hasSharedRoles(edge)
-				|| tolerance == 4) {
+				|| tolerance == 3 && hasSameRoles(edge)
+				|| tolerance == 4 && hasSharedRoles(edge)) {
 			return true;
 		} else {
 			return false;
@@ -214,39 +215,36 @@ public class Edge {
     }
 
     public boolean hasSameComponents(Edge edge) {
-        if (hasComponentIDs() && edge.hasComponentIDs() &&
-            hasComponentRoles() && edge.hasComponentRoles()) {
+        if (hasComponentIDs() && edge.hasComponentIDs()) {
             Set<String> compIDs1 = new HashSet<String>(componentIDs);
             Set<String> compIDs2 = new HashSet<String>(edge.getComponentIDs());
 
-            Set<String> compRoles1 = new HashSet<String>(componentRoles);
-            Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
-
-            return compIDs1.equals(compIDs2) && compRoles1.equals(compRoles2);
-        } else if (!hasComponentIDs() && !edge.hasComponentIDs() &&
-                   !hasComponentRoles() && !edge.hasComponentRoles()) {
-            return true;
+            return compIDs1.equals(compIDs2);
         } else {
             return false;
         }
     }
 
     public boolean hasSharedComponents(Edge edge) {
-        if (hasComponentIDs() && edge.hasComponentIDs() &&
-            hasComponentRoles() && edge.hasComponentRoles()) {
+        if (hasComponentIDs() && edge.hasComponentIDs()) {
             Set<String> compIDs1 = new HashSet<String>(componentIDs);
             Set<String> compIDs2 = new HashSet<String>(edge.getComponentIDs());
 
-            Set<String> compRoles1 = new HashSet<String>(componentRoles);
-            Set<String> compRoles2 =
-                new HashSet<String>(edge.getComponentRoles());
-
             compIDs1.retainAll(compIDs2);
-            compRoles1.retainAll(compRoles2);
 
-            return compIDs1.size() > 0 && compRoles1.size() > 0;
-        } else if (!hasComponentIDs() && !edge.hasComponentIDs() &&
-                   !hasComponentRoles() && !edge.hasComponentRoles()) {
+            return compIDs1.size() > 0;
+        } else {
+            return false;
+        }
+    }
+    
+    public boolean hasSameRoles(Edge edge) {
+        if (hasComponentRoles() && edge.hasComponentRoles()) {
+            Set<String> compRoles1 = new HashSet<String>(componentRoles);
+            Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
+
+            return compRoles1.equals(compRoles2);
+        } else if (!hasComponentRoles() && !edge.hasComponentRoles()) {
             return true;
         } else {
             return false;
@@ -256,14 +254,11 @@ public class Edge {
     public boolean hasSharedRoles(Edge edge) {
         if (hasComponentRoles() && edge.hasComponentRoles()) {
             Set<String> compRoles1 = new HashSet<String>(componentRoles);
-            Set<String> compRoles2 =
-                new HashSet<String>(edge.getComponentRoles());
+            Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
 
             compRoles1.retainAll(compRoles2);
+            
             return compRoles1.size() > 0;
-
-        } else if (!hasComponentRoles() && !edge.hasComponentRoles()) {
-            return true;
         } else {
             return false;
         }
@@ -311,11 +306,11 @@ public class Edge {
         }
     }
 
-    public void setProbability(double probability) {
-        this.probability = probability;
+    public void setProbability(double weight) {
+        this.weight = weight;
     }
 
-    public double getProbability() { 
-    	return this.probability; 
+    public double getWeight() { 
+    	return weight; 
     }
 }
