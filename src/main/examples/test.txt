@@ -179,6 +179,7 @@ CREATE (sn0b)-[:PRECEDES {componentIDs: ["A","B"], componentRoles: ["CDS"]}]->(s
 CREATE (sn1b)-[:PRECEDES {componentIDs: ["C"], componentRoles: ["CDS"]}]->(sn2b)
 CREATE (sn2b)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"]}]->(sn3b)
 
+
 CREATE (d0c:DesignSpace {spaceID: "test3", nodeIndex: 4, commitIndex: 1})
 
 CREATE (n0c:Node {nodeID: "n0", nodeType: "start"})
@@ -211,6 +212,7 @@ CREATE (s0c)-[:CONTAINS]->(sn3c)
 CREATE (sn0c)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["CDS"]}]->(sn1c)
 CREATE (sn1c)-[:PRECEDES {componentIDs: ["Z"], componentRoles: ["CDS"]}]->(sn2c)
 CREATE (sn2c)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"]}]->(sn3c)
+
 
 CREATE (d0d:DesignSpace {spaceID: "test4", nodeIndex: 4, commitIndex: 1})
 
@@ -247,6 +249,7 @@ CREATE (sn1d)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["CDS"]}]->(sn2d)
 CREATE (sn0d)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"]}]->(sn3d)
 CREATE (sn3d)-[:PRECEDES {componentIDs: ["Z"], componentRoles: ["CDS"]}]->(sn2d)
 
+
 CREATE (d0e:DesignSpace {spaceID: "test5", nodeIndex: 4, commitIndex: 1})
 
 CREATE (n0e:Node {nodeID: "n0", nodeType: "start"})
@@ -264,7 +267,7 @@ CREATE (n1e)-[:PRECEDES {componentIDs: ["C"], componentRoles: ["CDS"]}]->(n2e)
 CREATE (n0e)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["CDS"]}]->(n3e)
 CREATE (n3e)-[:PRECEDES {componentIDs: ["Z"], componentRoles: ["CDS"]}]->(n2e)
 
-CREATE (d0e)-[:ARCHIVES]->(b0e:Branch {branchID: "test3"})-[:CONTAINS]->(c0e:Commit {commitID: "c0"})-[:CONTAINS]->(s0e:Snapshot {nodeIndex: 4})
+CREATE (d0e)-[:ARCHIVES]->(b0e:Branch {branchID: "test5"})-[:CONTAINS]->(c0e:Commit {commitID: "c0"})-[:CONTAINS]->(s0e:Snapshot {nodeIndex: 4})
 CREATE (d0e)-[:SELECTS]->(b0e)-[:LATEST]->(c0e)
 
 CREATE (sn0e:Node {nodeID: "n0", nodeType: "start"})

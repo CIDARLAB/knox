@@ -395,11 +395,16 @@
         }, function(isconfirm) {
             if (isconfirm) {
                 var lhs = currentSpace;
-                var rhs = $("#swal-combine-with").val();
+                var rhs = $("#swal-combine-with").val().split(",");
+                var lrhs = [lhs];
+                var i;
+                for (i = 0; i < rhs.length; i++) {
+                    lrhs[i + 1] = rhs[i];
+                }
                 var out = $("#swal-output").val();
                 var tol = $("#swal-tolerance").val();
                 var query = "?";
-                query += encodeQueryParameter("inputSpaceIDs", [lhs, rhs], query);
+                query += encodeQueryParameter("inputSpaceIDs", lrhs, query);
                 query += encodeQueryParameter("outputSpaceID", out, query);
                 var request = new XMLHttpRequest();
                 switch ($("#swal-select").val()) {

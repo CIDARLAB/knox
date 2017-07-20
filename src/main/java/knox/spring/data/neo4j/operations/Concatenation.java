@@ -27,7 +27,11 @@ public class Concatenation {
 				if (!startNodes.contains(startNode)) {
 					for (Node acceptNode : acceptNodes) {
 						acceptNode.createEdge(startNode);
+						
+						acceptNode.clearNodeType();
 					}
+					
+					startNode.clearNodeType();
 				}
 			}
 		}

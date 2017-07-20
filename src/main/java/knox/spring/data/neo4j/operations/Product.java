@@ -169,7 +169,11 @@ public class Product {
         	} else if (productSpace.getStartNodes().size() > 1) {
         		Union union = new Union(productSpace);
         		
-        		union.connect(true);
+        		if (partitions.size() > 1) {
+        			union.connect(true);
+        		} else {
+        			union.connect(false);
+        		}
         	}
     	}
     }
