@@ -15,26 +15,15 @@ import org.neo4j.ogm.annotation.StartNode;
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @RelationshipEntity(type = "PRECEDES")
 public class Edge {
-    /*
-    In the future, consider using builder pattern, that way you won't need to
-    have
-    multiple constructors.
-    This could be especially helpful in the future when you will need to have a
-    large amount of
-    properties for each class.
-
-    See here for more info:
-    http://www.javaworld.com/article/2074938/core-java/too-many-parameters-in-java-methods-part-3-builder-pattern.html
-     */
-
     @GraphId Long id;
 
     @StartNode Node tail;
 
     @EndNode Node head;
 
-    ArrayList<String> componentIDs = new ArrayList<>();
-    ArrayList<String> componentRoles = new ArrayList<>();
+    ArrayList<String> componentIDs;
+    
+    ArrayList<String> componentRoles;
 
     double weight;
 

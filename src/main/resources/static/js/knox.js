@@ -397,6 +397,7 @@
                 var lhs = currentSpace;
                 var rhs = $("#swal-combine-with").val();
                 var out = $("#swal-output").val();
+                var tol = $("#swal-tolerance").val();
                 var query = "?";
                 query += encodeQueryParameter("inputSpaceIDs", [lhs, rhs], query);
                 query += encodeQueryParameter("outputSpaceID", out, query);
@@ -411,21 +412,13 @@
                     break;
 
                 case "AND":
+                    query += encodeQueryParameter("tolerance", tol, query);
                     request.open("POST", "/designSpace/and" + query, false);
                     break;
 
-                case "Merge Weak":
-                    query += encodeQueryParameter("tolerance", 0, query);
+                case "Merge":
+                    query += encodeQueryParameter("tolerance", tol, query);
                     request.open("POST", "/designSpace/merge" + query, false);
-                    break;
-
-                case "Merge Strong":
-                    query += encodeQueryParameter("tolerance", 2, query);
-                    request.open("POST", "/designSpace/merge" + query, false);
-                    break;
-
-                case "Union":
-                    request.open("POST", "/designSpace/union" + query, false);
                     break;
                 }
                 request.send(null);

@@ -7,9 +7,6 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 
 import java.util.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Product {
 	private List<Node> rowNodes;
 	
@@ -21,8 +18,6 @@ public class Product {
 	
 	private HashMap<String, Integer> idToColIndex = new HashMap<String, Integer>();
 	
-	private static final Logger LOG = LoggerFactory.getLogger(Product.class);
-	
 	private NodeSpace productSpace;
 	
 	public Product(NodeSpace rowSpace, NodeSpace colSpace) {
@@ -33,6 +28,10 @@ public class Product {
 		this.colNodes = colSpace.orderNodes();
 		
 		productNodes = new ArrayList<List<Node>>(rowNodes.size());
+		
+		idToRowIndex = new HashMap<String, Integer>();
+		
+		idToColIndex = new HashMap<String, Integer>();
     	
     	for (int i = 0; i < rowNodes.size(); i++) {
 			productNodes.add(new ArrayList<Node>(colNodes.size()));
@@ -60,6 +59,29 @@ public class Product {
 			}
 		}
 	}
+	
+	public void connect(String type, int tolerance, boolean isModified) {
+		if (type.equals(ProductType.TENSOR.getValue())) {
+			if (isModified) {
+				modifiedTensor(tolerance);
+			} else {
+				tensor(tolerance);
+			}
+		} else if (type.equals(ProductType.CARTESIAN.getValue())) {
+			cartesian();
+		} else if (type.equals(ProductType.STRONG.getValue())) {
+			if (isModified) {
+				modifiedStrong(tolerance);
+			} else {
+				strong(tolerance);
+			}
+		}
+	}
+	
+
+    public NodeSpace getProductSpace() {
+    	return productSpace;
+    }
     
     public List<Set<Edge>> cartesian() {
     	List<Set<Edge>> orthogonalEdges = new ArrayList<Set<Edge>>(2);
@@ -95,10 +117,6 @@ public class Product {
 		}
 		
 		return orthogonalEdges;
-    }
-    
-    public NodeSpace getProductSpace() {
-    	return productSpace;
     }
     
     public void modifiedStrong(int tolerance) {
@@ -148,7 +166,7 @@ public class Product {
         		copyCartesianPaths(partition, colEdges, rowEdges, colEdges, 
         				edgeCopyCodes, idToIncomingEdges, tolerance, true);
         			
-        	} else if (partitions.size() > 1) {
+        	} else if (productSpace.getStartNodes().size() > 1) {
         		Union union = new Union(productSpace);
         		
         		union.connect(true);
@@ -246,11 +264,9 @@ public class Product {
         		for (Edge edge : determineNextEdges(node, pathEdges, rowEdges, colEdges, 
         				edgeCopyCodes, idToIncomingEdges, tolerance, isForward)) {
         			edgeCopyCodes.add(computeEdgeCode(edge, rowEdges, colEdges));
-        			
-        			Set<Node> nextNodes = determineNextNodes(edge, rowEdges, colEdges,
-        					partition, isForward);
 
-        			for (Node nextNode : nextNodes) {
+        			for (Node nextNode : determineNextNodes(edge, rowEdges, colEdges, partition, 
+        					isForward)) {
         				if (!partition.hasNodeCopy(nextNode.getNodeID())
         						&& !idToNodeCopy.containsKey(nextNode.getNodeID())
         						&& !nextNode.isIdenticalTo(node)) {
@@ -266,6 +282,8 @@ public class Product {
         					
         					if (isPathStartNode(nextNode, edge, rowEdges, colEdges)) {
         						nextNodeCopy.setNodeType(NodeType.START.getValue());
+        					} else if (!isPathAcceptNode(nextNode, edge, rowEdges, colEdges)) {
+        						nextNodeCopy.clearNodeType();
         					}
         				} else {
         					nextNodeCopy = partition.getNodeCopy(nextNode.getNodeID());
@@ -385,17 +403,6 @@ public class Product {
     	}
     }
     
-    private boolean isPathStartNode(Node node, Edge pathEdge, Set<Edge> rowEdges, 
-    		Set<Edge> colEdges) {
-    	if (rowEdges.contains(pathEdge)) {
-    		return rowNodes.get(getRow(node)).isStartNode();
-    	} else if (colEdges.contains(pathEdge)) {
-    		return colNodes.get(getColumn(node)).isStartNode();
-    	} else {
-    		return false;
-    	}
-    }
-    
     private boolean isEdgeCopied(Edge edge, Set<Edge> rowEdges, Set<Edge> colEdges,
     		Set<String> copiedEdgeCodes) {
     	return (copiedEdgeCodes.contains(computeEdgeCode(edge, rowEdges, colEdges)));
@@ -410,6 +417,28 @@ public class Product {
 		
 		return false;
 	}
+    
+    private boolean isPathAcceptNode(Node node, Edge pathEdge, Set<Edge> rowEdges, 
+    		Set<Edge> colEdges) {
+    	if (rowEdges.contains(pathEdge)) {
+    		return rowNodes.get(getRow(node)).isAcceptNode();
+    	} else if (colEdges.contains(pathEdge)) {
+    		return colNodes.get(getColumn(node)).isAcceptNode();
+    	} else {
+    		return false;
+    	}
+    }
+    
+    private boolean isPathStartNode(Node node, Edge pathEdge, Set<Edge> rowEdges, 
+    		Set<Edge> colEdges) {
+    	if (rowEdges.contains(pathEdge)) {
+    		return rowNodes.get(getRow(node)).isStartNode();
+    	} else if (colEdges.contains(pathEdge)) {
+    		return colNodes.get(getColumn(node)).isStartNode();
+    	} else {
+    		return false;
+    	}
+    }
     
     private int locateNode(Node node, int k, List<Node> nodes) {
     	for (int i = k; i < nodes.size(); i++) {
@@ -586,5 +615,21 @@ public class Product {
     			addNode(node);
     		}
     	}
+    }
+    
+    public enum ProductType {
+        TENSOR("tensor"),
+        CARTESIAN("cartesian"),
+        STRONG("strong");
+
+        private final String value;
+
+        ProductType(String value) { 
+        	this.value = value;
+        }
+
+        public String getValue() {
+        	return value; 
+        }
     }
 }

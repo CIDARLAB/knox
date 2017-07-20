@@ -250,10 +250,14 @@ public class Node {
         ACCEPT("accept");
 
         private final String value;
+        
+        NodeType(String value) { 
+        	this.value = value;
+        }
 
-        NodeType(String value) { this.value = value; }
-
-        public String getValue() { return value; }
+        public String getValue() {
+        	return value; 
+        }
     }
 
     public void setNodeType(String nodeType) { 

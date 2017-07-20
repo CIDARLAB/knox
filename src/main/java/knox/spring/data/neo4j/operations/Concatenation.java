@@ -1,6 +1,5 @@
 package knox.spring.data.neo4j.operations;
 
-import java.util.List;
 import java.util.Set;
 
 import knox.spring.data.neo4j.domain.Node;

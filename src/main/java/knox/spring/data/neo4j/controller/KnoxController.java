@@ -14,8 +14,6 @@ import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLValidationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController("/")
 public class KnoxController {
 	final DesignSpaceService designSpaceService;
-	
-	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
 	@Autowired
 	public KnoxController(DesignSpaceService designSpaceService) {
@@ -61,6 +57,22 @@ public class KnoxController {
         }
     }
 	
+	@RequestMapping(value = "/branch/join", method = RequestMethod.POST)
+    public ResponseEntity<String> joinBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+            @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
+            @RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
+		long startTime = System.nanoTime();
+		
+        if (outputBranchID == null) {
+            designSpaceService.joinBranches(targetSpaceID, inputBranchIDs);
+        } else {
+            designSpaceService.joinBranches(targetSpaceID, inputBranchIDs, outputBranchID);
+        }
+
+        return new ResponseEntity<String>("{\"message\": \"Branches were successfully joined after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+    }
+	
 	@RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
     public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
             @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
@@ -81,6 +93,24 @@ public class KnoxController {
             return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
                     HttpStatus.BAD_REQUEST);
         }
+    }
+	
+	@RequestMapping(value = "/branch/or", method = RequestMethod.POST)
+    public ResponseEntity<String> orBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+            @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
+            @RequestParam(value = "outputBranchID", required = false) String outputBranchID,
+            @RequestParam(value = "isClosed", required = false, defaultValue = "true") boolean isClosed) {
+        long startTime = System.nanoTime();
+		
+		if (outputBranchID == null) {
+            designSpaceService.orBranches(targetSpaceID, inputBranchIDs, isClosed);
+        } else {
+            designSpaceService.orBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
+            		isClosed);
+        }
+
+        return new ResponseEntity<String>("{\"message\": \"Branches were successfully OR-ed after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
     }
 	
 	@RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
@@ -105,6 +135,23 @@ public class KnoxController {
     	}
     }
 	
+	@RequestMapping(value = "/branch/and", method = RequestMethod.POST)
+    public ResponseEntity<String> andBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
+    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
+    		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance) {
+		long startTime = System.nanoTime();
+		
+		if (outputBranchID == null) {
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance);
+		} else {
+			designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance);
+		}
+    	
+    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully AND-ed after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+    }
+	
 	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
     public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
@@ -125,6 +172,23 @@ public class KnoxController {
     		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
     				HttpStatus.BAD_REQUEST);
     	}
+    }
+	
+	@RequestMapping(value = "/branch/merge", method = RequestMethod.POST)
+    public ResponseEntity<String> mergeBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
+    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
+    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
+    		@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance) { 	
+		long startTime = System.nanoTime();
+		
+		if (outputBranchID == null) {
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance); 
+    	} else {
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance);
+    	}
+    	
+    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully mergeded after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
     }
 
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
@@ -222,21 +286,6 @@ public class KnoxController {
         designSpaceService.copyHeadBranch(targetSpaceID, outputBranchID);
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
-
-    @RequestMapping(value = "/branch/and", method = RequestMethod.POST)
-    public ResponseEntity<String> andBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
-    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
-    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-    		@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance) {
-    	if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance);
-		} else {
-			designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance);
-		}
-    	
-    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully intersected.\"}", 
-    				HttpStatus.NO_CONTENT);
-    }
     
     @RequestMapping(value = "/branch/checkout", method = RequestMethod.PUT)
     public ResponseEntity<String> checkoutBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
@@ -306,53 +355,6 @@ public class KnoxController {
                 outputBranchID);
         return new ResponseEntity<String>(
                 "{\"message\": \"Branch was successfully inserted.\"}",
-                HttpStatus.NO_CONTENT);
-    }
-
-    @RequestMapping(value = "/branch/join", method = RequestMethod.POST)
-    public ResponseEntity<String> joinBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
-            @RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
-        if (outputBranchID == null) {
-            designSpaceService.joinBranches(targetSpaceID, inputBranchIDs);
-        } else {
-            designSpaceService.joinBranches(targetSpaceID, inputBranchIDs,
-                    outputBranchID);
-        }
-
-        return new ResponseEntity<String>(
-                "{\"message\": \"Branches were successfully joined.\"}",
-                HttpStatus.NO_CONTENT);
-    }
-
-    @RequestMapping(value = "/branch/merge", method = RequestMethod.POST)
-    public ResponseEntity<String> mergeBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
-    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
-    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-    		@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance) { 	
-    	if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance); 
-    	} else {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance);
-    	}
-    	
-    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged.\"}", 
-    				HttpStatus.NO_CONTENT);
-    }
-   
-    @RequestMapping(value = "/branch/or", method = RequestMethod.POST)
-    public ResponseEntity<String> orBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
-            @RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
-        if (outputBranchID == null) {
-            designSpaceService.orBranches(targetSpaceID, inputBranchIDs);
-        } else {
-            designSpaceService.orBranches(targetSpaceID, inputBranchIDs,
-                    outputBranchID);
-        }
-
-        return new ResponseEntity<String>(
-                "{\"message\": \"Branches were successfully disjoined.\"}",
                 HttpStatus.NO_CONTENT);
     }
 
