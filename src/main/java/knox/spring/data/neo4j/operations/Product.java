@@ -2,7 +2,6 @@ package knox.spring.data.neo4j.operations;
 
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
-import knox.spring.data.neo4j.domain.Node.NodeType;
 import knox.spring.data.neo4j.domain.NodeSpace;
 
 import java.util.*;
@@ -122,59 +121,92 @@ public class Product {
     public void modifiedStrong(int tolerance) {
     	tensor(tolerance);
     	
+    	productSpace.deleteUnconnectedNodes();
+    	
     	List<Partition> partitions = partitionNodesBySource();
-
-		List<Set<Edge>> orthogonalEdges = cartesian();
-		
-		Set<Edge> rowEdges = orthogonalEdges.get(0);
-		
-		Set<Edge> colEdges = orthogonalEdges.get(1);
-    	
-    	HashMap<String, Set<Edge>> idToIncomingEdges = productSpace.mapNodeIDsToIncomingEdges();
-    	
-    	productSpace.clearNodes();
     	
     	for (Partition partition : partitions) {
-    		Set<String> edgeCopyCodes = new HashSet<String>();
+    		HashMap<Integer, Node> rowToProductNode = new HashMap<Integer, Node>();
     		
-    		copyPartitionToNodeSpace(partition, rowEdges, colEdges);
-    		
-    		copyCartesianPaths(partition, rowEdges, rowEdges, colEdges, edgeCopyCodes,
-    				idToIncomingEdges, tolerance, true);
-    		
-    		copyCartesianPaths(partition, colEdges, rowEdges, colEdges, edgeCopyCodes,
-    				idToIncomingEdges, tolerance, true);
-    		
-    		copyCartesianPaths(partition, rowEdges, rowEdges, colEdges, edgeCopyCodes,
-    				idToIncomingEdges, tolerance, false);
-    		
-    		copyCartesianPaths(partition, colEdges, rowEdges, colEdges, edgeCopyCodes,
-    				idToIncomingEdges, tolerance, false);
-    	}
-    	
-    	if (!productNodes.isEmpty() && !productNodes.get(0).isEmpty()) {
-        	if (partitions.isEmpty()) {
-        		Set<String> edgeCopyCodes = new HashSet<String>();
-        		
-        		Partition partition = new Partition(productNodes.get(0).get(0));
-        		
-        		copyPartitionToNodeSpace(partition, rowEdges, colEdges);
-        		
-        		copyCartesianPaths(partition, rowEdges, rowEdges, colEdges, 
-        				edgeCopyCodes, idToIncomingEdges, tolerance, true);
+    		for (int i = 0; i < rowNodes.size(); i++) {
+    			Node productNode;
 
-        		copyCartesianPaths(partition, colEdges, rowEdges, colEdges, 
-        				edgeCopyCodes, idToIncomingEdges, tolerance, true);
-        			
-        	} else if (productSpace.getStartNodes().size() > 1) {
-        		Union union = new Union(productSpace);
-        		
-        		if (partitions.size() > 1) {
-        			union.connect(true);
-        		} else {
-        			union.connect(false);
+    			if (partition.hasRowNode(i)) {
+    				productNode = partition.getRowNode(i);
+    			} else if (rowToProductNode.containsKey(i)) {
+    				productNode = rowToProductNode.get(i);
+    			} else {
+    				productNode = productSpace.copyNode(rowNodes.get(i));
+
+    				rowToProductNode.put(i, productNode);
+    			}
+
+    			if (rowNodes.get(i).hasEdges()) {
+    				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
+    					int r = locateNode(rowEdge.getHead(), i, rowNodes);
+
+    					Node productHead;
+
+    					if (partition.hasRowNode(r)) {
+    						productHead = partition.getRowNode(r);
+    					} else if (rowToProductNode.containsKey(r)) {
+    						productHead = rowToProductNode.get(r);
+    					} else {
+    						productHead = productSpace.copyNode(rowEdge.getHead());
+
+    						rowToProductNode.put(r, productHead);
+    					}
+
+    					productNode.copyEdge(rowEdge, productHead);
+        			}
         		}
         	}
+    		
+    		HashMap<Integer, Node> colToProductNode = new HashMap<Integer, Node>();
+    		
+    		for (int j = 0; j < colNodes.size(); j++) {
+    			Node productNode;
+
+    			if (partition.hasColumnNode(j)) {
+    				productNode = partition.getColumnNode(j);
+    			} else if (colToProductNode.containsKey(j)) {
+    				productNode = colToProductNode.get(j);
+    			} else {
+    				productNode = productSpace.copyNode(colNodes.get(j));
+
+    				colToProductNode.put(j, productNode);
+    			}
+
+    			if (colNodes.get(j).hasEdges()) {
+    				for (Edge colEdge : colNodes.get(j).getEdges()) {
+    					int c = locateNode(colEdge.getHead(), j, colNodes);
+
+    					Node productHead;
+
+    					if (partition.hasColumnNode(c)) {
+    						productHead = partition.getColumnNode(c);
+    					} else if (colToProductNode.containsKey(c)) {
+    						productHead = colToProductNode.get(c);
+    					} else {
+    						productHead = productSpace.copyNode(colEdge.getHead());
+
+    						colToProductNode.put(c, productHead);
+    					}
+
+    					productNode.copyEdge(colEdge, productHead);
+    				}
+        		}
+        	}
+    	}
+    	
+    	if (productSpace.getStartNodes().size() > 1) {
+    		Union union = new Union(productSpace);
+    		
+    		if (partitions.size() > 1) {
+    			union.connect(true);
+    		} else {
+    			union.connect(false);
+    		}
     	}
     }
     
@@ -190,8 +222,6 @@ public class Product {
     	Union union = new Union(productSpace);
     	
     	union.connect(true);
-		
-		
     }
     
     public void strong(int tolerance) {
@@ -208,7 +238,7 @@ public class Product {
     				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
     					for (Edge colEdge : colNodes.get(j).getEdges()) {
     						if (rowEdge.isMatchingTo(colEdge, tolerance)) {
-    							Node outputNode = productNodes.get(i).get(j);
+    							Node productNode = productNodes.get(i).get(j);
 
     							int r = locateNode(rowEdge.getHead(), i, 
     									rowNodes);
@@ -216,7 +246,7 @@ public class Product {
     							int c = locateNode(colEdge.getHead(), j,
     									colNodes);
 
-    							Edge productEdge = outputNode.copyEdge(colEdge, 
+    							Edge productEdge = productNode.copyEdge(colEdge, 
     									productNodes.get(r).get(c));
 
     							if (tolerance == 0 || tolerance > 1 && tolerance <= 4) {
@@ -232,165 +262,6 @@ public class Product {
     	}
     }
     
-    private String computeEdgeCode(Edge edge, Set<Edge> rowEdges, Set<Edge> colEdges) {
-    	if (rowEdges.contains(edge)) {
-    		return getRow(edge.getTail()).toString() + getRow(edge.getHead()).toString() 
-    				+ "r";
-    	} else if (colEdges.contains(edge)) {
-    		return getColumn(edge.getTail()).toString() + getColumn(edge.getHead()).toString() 
-    				+ "c";
-    	} else {
-    		return "";
-    	}
-    }
-    
-    private void copyCartesianPaths(Partition partition, Set<Edge> pathEdges, 
-    		Set<Edge> rowEdges, Set<Edge> colEdges, Set<String> edgeCopyCodes, 
-    		HashMap<String, Set<Edge>> idToIncomingEdges, int tolerance, boolean isForward) {
-    	for (Node partitionNode : partition.getNodes()) {
-    		HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
-    		
-    		Stack<Node> nodeStack = new Stack<Node>();
-    		
-    		nodeStack.push(partitionNode);
-    		
-    		while (!nodeStack.isEmpty()) {
-        		Node node = nodeStack.pop();
-        		
-        		Node nodeCopy;
-        		
-        		if (idToNodeCopy.containsKey(node.getNodeID())) {
-        			nodeCopy = idToNodeCopy.get(node.getNodeID());
-        		} else {
-        			nodeCopy = partition.getNodeCopy(node.getNodeID());
-        		}
-
-        		for (Edge edge : determineNextEdges(node, pathEdges, rowEdges, colEdges, 
-        				edgeCopyCodes, idToIncomingEdges, tolerance, isForward)) {
-        			edgeCopyCodes.add(computeEdgeCode(edge, rowEdges, colEdges));
-
-        			for (Node nextNode : determineNextNodes(edge, rowEdges, colEdges, partition, 
-        					isForward)) {
-        				if (!partition.hasNodeCopy(nextNode.getNodeID())
-        						&& !idToNodeCopy.containsKey(nextNode.getNodeID())
-        						&& !nextNode.isIdenticalTo(node)) {
-        					idToNodeCopy.put(nextNode.getNodeID(), productSpace.copyNode(nextNode));
-
-        					nodeStack.push(nextNode);
-        				}
-
-        				Node nextNodeCopy;
-
-        				if (idToNodeCopy.containsKey(nextNode.getNodeID())) {
-        					nextNodeCopy = idToNodeCopy.get(nextNode.getNodeID());
-        					
-        					if (isPathStartNode(nextNode, edge, rowEdges, colEdges)) {
-        						nextNodeCopy.setNodeType(NodeType.START.getValue());
-        					} else if (!isPathAcceptNode(nextNode, edge, rowEdges, colEdges)) {
-        						nextNodeCopy.clearNodeType();
-        					}
-        				} else {
-        					nextNodeCopy = partition.getNodeCopy(nextNode.getNodeID());
-        				}
-
-        				if (isForward) {
-        					nodeCopy.copyEdge(edge, nextNodeCopy);
-        				} else {
-        					nextNodeCopy.copyEdge(edge, nodeCopy);
-        				}
-        			}
-        		}
-        	}
-    	}
-    }
-    
-    private void copyPartitionToNodeSpace(Partition partition, Set<Edge> rowEdges, 
-    		Set<Edge> colEdges) {
-		partition.copyToNodeSpace();
-		
-		for (Node node : partition.getNodes()) {
-			Node nodeCopy = partition.getNodeCopy(node.getNodeID());
-			
-    		if (node.hasEdges()) {
-    			for (Edge edge : node.getEdges()) {
-    				if (!rowEdges.contains(edge) && !colEdges.contains(edge)) {
-    					Node headCopy = partition.getNodeCopy(edge.getHead().getNodeID());
-
-    					nodeCopy.copyEdge(edge, headCopy);
-    				}
-    			}
-    		}
-    	}
-    }
-    
-    private Set<Edge> determineNextEdges(Node node, Set<Edge> pathEdges, Set<Edge> rowEdges, 
-    		Set<Edge> colEdges, Set<String> copiedEdgeCodes, HashMap<String, Set<Edge>> idToIncomingEdges, 
-    		int tolerance, boolean isForward) {
-    	Set<Edge> edges = new HashSet<Edge>();
-		
-		Set<Edge> diagonalEdges = new HashSet<Edge>();
-		
-		if (isForward) {
-			if (node.hasEdges()) {
-				edges.addAll(node.getEdges());
-			}
-		} else if (idToIncomingEdges.containsKey(node.getNodeID())) {
-			edges.addAll(idToIncomingEdges.get(node.getNodeID()));
-		}
-		
-		for (Edge edge : edges) {
-			if (!rowEdges.contains(edge) && !colEdges.contains(edge)) {
-				diagonalEdges.add(edge);
-			}
-		}
-		
-		edges.retainAll(pathEdges);
-		
-		Set<Edge> nextEdges = new HashSet<Edge>();
-		
-		for (Edge edge : edges) {
-			if (!isEdgeCopied(edge, rowEdges, colEdges, copiedEdgeCodes) 
-					&& !isEdgeMatching(edge, diagonalEdges, tolerance)) {
-				nextEdges.add(edge);
-			}
-		}
-		
-		return nextEdges;
-    }
-    
-    private Set<Node> determineNextNodes(Edge edge, Set<Edge> rowEdges, Set<Edge> colEdges,
-    		Partition partition, boolean isForward) {
-    	Set<Node> nextNodes = new HashSet<Node>();
-    	
-    	Node nextNode;
-    	
-    	if (isForward) {
-    		nextNode = edge.getHead();
-    	} else {
-    		nextNode = edge.getTail();
-    	}
-    	
-    	if (rowEdges.contains(edge)) {
-    		Integer row = getRow(nextNode);
-    		
-    		if (partition.isRowProjectable(row)) {
-    			nextNodes.addAll(partition.projectRow(row));
-    		} else {
-    			nextNodes.add(nextNode);
-    		}
-    	} else if (colEdges.contains(edge)) {
-    		Integer col = getColumn(nextNode);
-    		
-    		if (partition.isColumnProjectable(col)) {
-    			nextNodes.addAll(partition.projectColumn(col));
-    		} else {
-    			nextNodes.add(nextNode);
-    		}
-    	}
-    	
-    	return nextNodes;
-    }
-    
     private Integer getColumn(Node node) {
     	if (idToColIndex.containsKey(node.getNodeID())) {
     		return idToColIndex.get(node.getNodeID());
@@ -404,43 +275,6 @@ public class Product {
     		return idToRowIndex.get(node.getNodeID());
     	} else {
     		return new Integer(-1);
-    	}
-    }
-    
-    private boolean isEdgeCopied(Edge edge, Set<Edge> rowEdges, Set<Edge> colEdges,
-    		Set<String> copiedEdgeCodes) {
-    	return (copiedEdgeCodes.contains(computeEdgeCode(edge, rowEdges, colEdges)));
-    }
-    
-    private boolean isEdgeMatching(Edge edge, Set<Edge> edges, int tolerance) {
-		for (Edge e : edges) {
-			if (edge.isMatchingTo(e, tolerance)) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-    
-    private boolean isPathAcceptNode(Node node, Edge pathEdge, Set<Edge> rowEdges, 
-    		Set<Edge> colEdges) {
-    	if (rowEdges.contains(pathEdge)) {
-    		return rowNodes.get(getRow(node)).isAcceptNode();
-    	} else if (colEdges.contains(pathEdge)) {
-    		return colNodes.get(getColumn(node)).isAcceptNode();
-    	} else {
-    		return false;
-    	}
-    }
-    
-    private boolean isPathStartNode(Node node, Edge pathEdge, Set<Edge> rowEdges, 
-    		Set<Edge> colEdges) {
-    	if (rowEdges.contains(pathEdge)) {
-    		return rowNodes.get(getRow(node)).isStartNode();
-    	} else if (colEdges.contains(pathEdge)) {
-    		return colNodes.get(getColumn(node)).isStartNode();
-    	} else {
-    		return false;
     	}
     }
     
@@ -466,7 +300,7 @@ public class Product {
     	for (Node sourceNode : productSpace.getSourceNodes()) {
     		Partition partition = new Partition();
     		
-    		partition.addNode(sourceNode);
+    		partition.addNode(getRow(sourceNode), getColumn(sourceNode), sourceNode);
     		
     		int partitionIndex = -1;
     		
@@ -479,9 +313,11 @@ public class Product {
         		
         		if (node.hasEdges()) {
         			for (Edge edge : node.getEdges()) {
-        				int i = 0;
+        				
         				
         				if (partitionIndex < 0) {
+        					int i = 0;
+        					
         					while (i < partitions.size()) {
         						if (partitions.get(i).hasNode(edge.getHead())) {
         							partitions.get(i).union(partition);
@@ -496,19 +332,17 @@ public class Product {
         				}
         				
         				if (partitionIndex < 0) {
-        					if (!partition.hasNode(edge.getHead())
-        							&& !edge.getHead().isIdenticalTo(node)) {
+        					if (!partition.hasNode(edge.getHead())) {
         						nodeStack.push(edge.getHead());
             					
-            					partition.addNode(edge.getHead());
+            					partition.addNode(getRow(edge.getHead()), getColumn(edge.getHead()),
+            							edge.getHead());
         					}
-        				} else {
-        					if (!partitions.get(partitionIndex).hasNode(edge.getHead())
-        							&& !edge.getHead().isIdenticalTo(node)) {
-        						nodeStack.push(edge.getHead());
-            					
-            					partitions.get(partitionIndex).addNode(edge.getHead());
-        					}
+        				} else if (!partitions.get(partitionIndex).hasNode(edge.getHead())) {
+        					nodeStack.push(edge.getHead());
+
+        					partitions.get(partitionIndex).addNode(getRow(edge.getHead()), 
+        							getColumn(edge.getHead()), edge.getHead());
         				}
         			}
         		}
@@ -519,10 +353,6 @@ public class Product {
     		}
     	}
     	
-    	for (Partition partition : partitions) {
-    		partition.mapNodes(this);
-    	}
-    	
     	return partitions;
     }
     
@@ -530,94 +360,60 @@ public class Product {
     	
     	private Set<Node> nodes = new HashSet<Node>();
     	
-    	private Set<String> nodeIDs = new HashSet<String>();
+    	private HashMap<Integer, Node> rowToNode = new HashMap<Integer, Node>();
     	
-    	private HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
-    	
-    	private HashMap<Integer, Set<Node>> rowToNodes = new HashMap<Integer, Set<Node>>();
-    	
-    	private HashMap<Integer, Set<Node>> colToNodes = new HashMap<Integer, Set<Node>>();
+    	private HashMap<Integer, Node> colToNode = new HashMap<Integer, Node>();
     	
     	public Partition() {
     		
     	}
     	
-    	public Partition(Node node) {
-    		addNode(node);
-    	}
-    	
-    	public void addNode(Node node) {
+    	public void addNode(Integer row, Integer col, Node node) {
     		nodes.add(node);
     		
-    		nodeIDs.add(node.getNodeID());
-    	}
-    	
-    	public void copyToNodeSpace() {
-    		for (Node node : nodes) {
-    			idToNodeCopy.put(node.getNodeID(), productSpace.copyNode(node));
-        	}
-    	}
-    	
-    	public Node getNodeCopy(String nodeID) {
-    		return idToNodeCopy.get(nodeID);
+    		rowToNode.put(row, node);
+    		
+    		colToNode.put(col, node);
     	}
     	
     	public Set<Node> getNodes() {
     		return nodes;
     	}
     	
-    	public boolean hasNodeCopy(String nodeID) {
-    		return idToNodeCopy.containsKey(nodeID);
-    	}
-    	
     	public boolean hasNode(Node node) {
-    		return nodeIDs.contains(node.getNodeID());
+    		return nodes.contains(node);
     	}
     	
-    	public boolean isRowProjectable(Integer row) {
-    		return rowToNodes.containsKey(row);
+    	public boolean hasRowNode(Integer row) {
+    		return rowToNode.containsKey(row);
     	}
     	
-    	public boolean isColumnProjectable(Integer col) {
-    		return colToNodes.containsKey(col);
+    	public boolean hasColumnNode(Integer col) {
+    		return colToNode.containsKey(col);
     	}
     	
-    	public void mapNodes(Product nodeProduct) {
-    		for (Node node : nodes) {
-    			Integer row = nodeProduct.getRow(node);
-    			
-    			if (row.intValue() > 0 ) {
-    				if (!rowToNodes.containsKey(row)) {
-    					rowToNodes.put(row, new HashSet<Node>());
-    				}
-
-    				rowToNodes.get(row).add(node);
-    			}
-    			
-    			Integer col = nodeProduct.getColumn(node);
-    			
-    			if (col.intValue() > 0 ) {
-    				if (!colToNodes.containsKey(col)) {
-    					colToNodes.put(col, new HashSet<Node>());
-    				}
-
-    				colToNodes.get(col).add(node);
-    			}
-    		}
+    	public Node getRowNode(Integer row) {
+    		return rowToNode.get(row);
     	}
     	
-    	public Set<Node> projectRow(Integer row) {
-    		return rowToNodes.get(row);
+    	public Node getColumnNode(Integer col) {
+    		return colToNode.get(col);
     	}
     	
-    	public Set<Node> projectColumn(Integer col) {
-    		return colToNodes.get(col);
+    	public HashMap<Integer, Node> getRowToNode() {
+    		return rowToNode;
+    	}
+    	
+    	public HashMap<Integer, Node> getColToNode() {
+    		return colToNode;
     	}
     	
     	public void union(Partition partition) {
-    		for (Node node : partition.getNodes()) {
-    			addNode(node);
-    		}
+    		nodes.addAll(partition.getNodes());
+    		
+    		rowToNode.putAll(partition.getRowToNode());
+    		
+    		colToNode.putAll(partition.getColToNode());
     	}
     }
     

@@ -13,7 +13,7 @@ public class Concatenation {
 		concatenationSpace = new NodeSpace();
 	}
 	
-	public void concatenate(NodeSpace space) {
+	public void connect(NodeSpace space) {
 		if (concatenationSpace.isEmpty()) {
 			concatenationSpace.unionNodes(space);
 		} else {

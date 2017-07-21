@@ -130,7 +130,7 @@ public class DesignSpaceService {
 		Concatenation concatenation = new Concatenation();
 		
 		for (NodeSpace inputSpace : inputSpaces) {
-			concatenation.concatenate(inputSpace);
+			concatenation.connect(inputSpace);
 		}
 		
 		outputSpace.shallowCopyNodeSpace(concatenation.getConcatenationSpace());
