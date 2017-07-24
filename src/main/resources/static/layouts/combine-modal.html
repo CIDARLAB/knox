@@ -1,18 +1,41 @@
 <div>
   Combine with: <input id="swal-combine-with"/><br/><br/>
   Output Id: <input id="swal-output"/><br/><br/>
-  Method: <select id="swal-select">
-  <option value="Join">Join</option>
-  <option value="OR">OR</option>
-  <option value="AND">AND</option>
-  <option value="Merge">Merge</option>
-  </select>
-  Tolerance: <select id="swal-tolerance">
-  <option value=0>0</option>
-  <option value=1>1</option>
-  <option value=2>2</option>
-  <option value=3>3</option>
-  <option value=4>4</option>
-  </select>
+  <div>
+    <div>
+      <label for="swal-select" id="swal-select-lab">Method: <label>
+      <select id="swal-select" onchange="
+          (function() { 
+              if ($('#swal-select').val() === 'AND' || $('#swal-select').val() === 'Merge') {
+                  $('#swal-tolerance-div').show();
+                  $('#swal-optional-div').hide();
+              } else if ($('#swal-select').val() === 'Repeat') {
+                  $('#swal-optional-div').show();
+                  $('#swal-tolerance-div').hide();
+              }
+          })();">
+        <option value="Join">Join</option>
+        <option value="OR">OR</option>
+        <option value="Repeat">Repeat</option>
+        <option value="AND">AND</option>
+        <option value="Merge">Merge</option>
+      </select>
+      <label for="swal-tolerance" id="swal-tolerance-lab">Tolerance: <label>
+      <select id="swal-tolerance">
+        <option value=0>0</option>
+        <option value=1>1</option>
+        <option value=2>2</option>
+        <option value=3>3</option>
+        <option value=4>4</option>
+      </select>
+      <label for="swal-optional" id="swal-optional-lab">Option: <label>
+      <select id="swal-optional">
+        <option value=false>one-or-more</option>
+        <option value=true>zero-or-more</option>
+      </select>
+    </div>
+  </div>
   <br/>
 </div>
+
+

@@ -18,6 +18,7 @@ import knox.spring.data.neo4j.exception.NodeNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
 import knox.spring.data.neo4j.operations.Concatenation;
 import knox.spring.data.neo4j.operations.Product;
+import knox.spring.data.neo4j.operations.Star;
 import knox.spring.data.neo4j.operations.Union;
 import knox.spring.data.neo4j.operations.Product.ProductType;
 import knox.spring.data.neo4j.repositories.BranchRepository;
@@ -191,6 +192,64 @@ public class DesignSpaceService {
 		union.connect(isClosed);
 		
 		outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+    }
+	
+	public void repeatDesignSpaces(List<String> inputSpaceIDs, boolean isOptional) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateListParameter("inputSpaceIDs", inputSpaceIDs);
+    	
+    	repeatDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), isOptional);
+    }
+    
+    public void repeatDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, boolean isOptional) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
+    	
+    	List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
+    	
+    	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+    	
+    	repeatNodeSpaces(inputSpaces, outputSpace, isOptional);
+    	
+    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+    	
+    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
+    			outputSpace, inputSnaps);
+    	
+    	repeatNodeSpaces(inputSnaps, outputSnap, isOptional);
+
+    	saveDesignSpace(outputSpace);
+    }
+    
+    public void repeatBranches(String targetSpaceID, List<String> inputBranchIDs, boolean isOptional) {
+        repeatBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), isOptional);
+    }
+
+    public void repeatBranches(String targetSpaceID, List<String> inputBranchIDs, 
+    		String outputBranchID, boolean isOptional) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+    	
+        List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
+        
+        Branch outputBranch = loadIOBranches(targetSpace, inputBranchIDs, outputBranchID,
+        		inputBranches);
+        
+        List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputBranches.size());
+        
+        NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, inputSnaps);
+
+        repeatNodeSpaces(inputSnaps, outputSnap, isOptional);
+    }
+    
+	private void repeatNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace, 
+			boolean isOptional) {
+		Star star = new Star(inputSpaces);
+		
+		star.connect(isOptional);
+		
+		outputSpace.shallowCopyNodeSpace(star.getStarSpace());
     }
     
     public void andDesignSpaces(List<String> inputSpaceIDs, int tolerance) {

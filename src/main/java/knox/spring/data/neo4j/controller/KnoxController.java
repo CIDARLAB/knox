@@ -113,6 +113,46 @@ public class KnoxController {
             		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
     }
 	
+	@RequestMapping(value = "/designSpace/repeat", method = RequestMethod.POST)
+    public ResponseEntity<String> repeatDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
+            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+            @RequestParam(value = "isOptional", required = false, defaultValue = "false") boolean isOptional) {
+        try {
+        	long startTime = System.nanoTime();
+        	
+            if (outputSpaceID == null) {
+                designSpaceService.repeatDesignSpaces(inputSpaceIDs, isOptional);
+            } else {
+                designSpaceService.repeatDesignSpaces(inputSpaceIDs, outputSpaceID, isOptional);
+            }
+
+            return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully repeated after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+        } catch (ParameterEmptyException | DesignSpaceNotFoundException |
+                DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+            return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+	
+	@RequestMapping(value = "/branch/repeat", method = RequestMethod.POST)
+    public ResponseEntity<String> repeatBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+            @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
+            @RequestParam(value = "outputBranchID", required = false) String outputBranchID,
+            @RequestParam(value = "isOptional", required = false, defaultValue = "false") boolean isOptional) {
+        long startTime = System.nanoTime();
+		
+		if (outputBranchID == null) {
+            designSpaceService.repeatBranches(targetSpaceID, inputBranchIDs, isOptional);
+        } else {
+            designSpaceService.repeatBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
+            		isOptional);
+        }
+
+        return new ResponseEntity<String>("{\"message\": \"Branches were successfully repeated after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+    }
+	
 	@RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
     public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,

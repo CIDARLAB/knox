@@ -121,7 +121,7 @@
                         case "restriction_enzyme_assembly_scar":
                         case "restriction_enzyme_recognition_site":
                         case "protein_stability_element":
-                        case "blunt_end_restriction_enzyme_clevage_site":
+                        case "blunt_end_restriction_enzyme_cleavage_site":
                         case "ribonuclease_site":
                         case "restriction_enzyme_five_prime_single_strand_overhang":
                         case "ribosome_entry_site":
@@ -414,6 +414,10 @@
 
                 case "OR":
                     request.open("POST", "/designSpace/or" + query, false);
+                    break;
+
+                case "Repeat":
+                    request.open("POST", "/designSpace/repeat" + query, false);
                     break;
 
                 case "AND":
