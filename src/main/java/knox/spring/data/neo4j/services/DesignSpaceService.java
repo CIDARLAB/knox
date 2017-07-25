@@ -128,13 +128,13 @@ public class DesignSpaceService {
     }
     
 	private void joinNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
-		Concatenation concatenation = new Concatenation();
+		Concatenation concat = new Concatenation();
 		
 		for (NodeSpace inputSpace : inputSpaces) {
-			concatenation.connect(inputSpace);
+			concat.connect(inputSpace);
 		}
 		
-		outputSpace.shallowCopyNodeSpace(concatenation.getConcatenationSpace());
+		outputSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
     }
     
     public void orDesignSpaces(List<String> inputSpaceIDs, boolean isClosed) 

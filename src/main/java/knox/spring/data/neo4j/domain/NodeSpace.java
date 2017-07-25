@@ -71,7 +71,9 @@ public class NodeSpace {
 	public void shallowCopyNodeSpace(NodeSpace space) {
 		nodeIndex = space.getNodeIndex();
 		
-		nodes = new HashSet<Node>(space.getNodes());
+		if (space.hasNodes()) {
+			nodes = new HashSet<Node>(space.getNodes());
+		}
 	}
 	
 	public void copyNodeSpace(NodeSpace space) {
@@ -324,6 +326,37 @@ public class NodeSpace {
     
     public boolean isEmpty() {
     	return getSize() == 0;
+    }
+    
+    public boolean isConnected() {
+    	Set<Node> startNodes = getStartNodes();
+    	
+    	if (!startNodes.isEmpty()) {
+    		Stack<Node> nodeStack = new Stack<Node>();
+    		
+    		nodeStack.push(getStartNodes().iterator().next());
+    		
+    		Set<String> visitedNodeIDs = new HashSet<String>();
+
+    		while (!nodeStack.isEmpty()) {
+    			Node node = nodeStack.pop();
+    			
+    			visitedNodeIDs.add(node.getNodeID());
+
+    			if (node.hasEdges()) {
+    				for (Edge edge : node.getEdges()) {
+    					if (!visitedNodeIDs.contains(edge.getHead().getNodeID())) {
+    						nodeStack.push(edge.getHead());	
+    					}
+    				}
+    			}
+    		}
+    		
+    		return visitedNodeIDs.size() == nodes.size();
+    	} else {
+    		return false;
+    	}
+    	
     }
     
     public void loadEdges(HashMap<String, Set<Edge>> nodeIDToEdges) { 

@@ -12,11 +12,13 @@ private NodeSpace starSpace;
 	public Star(List<NodeSpace> spaces) {
 		this.starSpace = new NodeSpace();
 		
-		Concatenation concatentation = new Concatenation();
+		Concatenation concat = new Concatenation();
 		
 		for (NodeSpace space : spaces) {
-			concatentation.connect(space);
+			concat.connect(space);
 		}
+		
+		starSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
 	}
 	
 	public void connect(boolean isOptional) {

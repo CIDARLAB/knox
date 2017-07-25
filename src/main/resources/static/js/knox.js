@@ -385,7 +385,7 @@
 
     $(exploreBtnIDs.combine).click(() => {
         swal({
-            title: "Combine",
+            title: "Apply Operator",
             html: true,
             animation: false,
             showCancelButton: true,
@@ -399,13 +399,13 @@
                 var lrhs = [lhs];
                 var i;
                 for (i = 0; i < rhs.length; i++) {
-                    lrhs[i + 1] = rhs[i];
+                    if (rhs[i].length > 0) {
+                        lrhs.push(rhs[i]);
+                    }
                 }
-                var out = $("#swal-output").val();
-                var tol = $("#swal-tolerance").val();
                 var query = "?";
                 query += encodeQueryParameter("inputSpaceIDs", lrhs, query);
-                query += encodeQueryParameter("outputSpaceID", out, query);
+                query += encodeQueryParameter("outputSpaceID", $("#swal-output").val(), query);
                 var request = new XMLHttpRequest();
                 switch ($("#swal-select").val()) {
                 case "Join":
@@ -413,20 +413,22 @@
                     break;
 
                 case "OR":
+                    query += encodeQueryParameter("isClosed", $("#swal-closed").val(), query);
                     request.open("POST", "/designSpace/or" + query, false);
                     break;
 
                 case "Repeat":
+                    query += encodeQueryParameter("isOptional", $("#swal-cardinality").val(), query);
                     request.open("POST", "/designSpace/repeat" + query, false);
                     break;
 
                 case "AND":
-                    query += encodeQueryParameter("tolerance", tol, query);
+                    query += encodeQueryParameter("tolerance", $("#swal-tolerance").val(), query);
                     request.open("POST", "/designSpace/and" + query, false);
                     break;
 
                 case "Merge":
-                    query += encodeQueryParameter("tolerance", tol, query);
+                    query += encodeQueryParameter("tolerance", $("#swal-tolerance").val(), query);
                     request.open("POST", "/designSpace/merge" + query, false);
                     break;
                 }
