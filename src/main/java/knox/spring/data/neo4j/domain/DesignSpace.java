@@ -39,6 +39,7 @@ public class DesignSpace extends NodeSpace {
         if (branches == null) {
             branches = new HashSet<Branch>();
         }
+        
         branches.add(branch);
     }
 
@@ -65,6 +66,24 @@ public class DesignSpace extends NodeSpace {
     	
     	for (Commit commit : getCommits()) {
     		commit.setCommitID("c" + commitIndex++);
+    	}
+    }
+    
+    public void commitToHead() {
+    	if (hasHeadBranch()) {
+    		Commit commit = createCommit(headBranch);
+
+    		if (headBranch.hasLatestCommit()) {
+    			Set<Commit> predecessors = new HashSet<Commit>();
+
+    			predecessors.add(headBranch.getLatestCommit());
+
+    			commit.setPredecessors(predecessors);
+    		}
+    		
+    		headBranch.setLatestCommit(commit);
+    		
+    		commit.createSnapshot().copyNodeSpace(this);
     	}
     }
     
@@ -178,6 +197,10 @@ public class DesignSpace extends NodeSpace {
 
     public Branch getHeadBranch() { 
     	return headBranch; 
+    }
+    
+    public boolean hasHeadBranch() {
+    	return headBranch != null;
     }
 
     public Snapshot getHeadSnapshot() {

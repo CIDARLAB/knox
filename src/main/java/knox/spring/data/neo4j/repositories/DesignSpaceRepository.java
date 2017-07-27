@@ -481,10 +481,9 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
         "MATCH (target:DesignSpace)-[:CONTAINS]->(m:Node)-[e:PRECEDES]->(n:Node)<-[:CONTAINS]-(target:DesignSpace) "
         + "WHERE target.spaceID = {targetSpaceID} "
         +
-        "RETURN target.spaceID as spaceID, m.nodeID as tailID, m.nodeType as tailType, e.componentRoles as componentRoles, "
-        + "n.nodeID as headID, n.nodeType as headType")
-    List<Map<String, Object>> mapDesignSpace(@Param("targetSpaceID")
-                                             String targetSpaceID);
+        "RETURN target.spaceID as spaceID, m.nodeID as tailID, m.nodeTypes as tailTypes, e.componentRoles as componentRoles, "
+        + "n.nodeID as headID, n.nodeTypes as headTypes")
+    List<Map<String, Object>> mapDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 
     @Query(
         "MATCH (target:DesignSpace {spaceID: {targetSpaceID}})-[:ARCHIVES]->(bi:Branch {branchID: {inputBranchID}}) "

@@ -78,15 +78,16 @@ public class DesignSpaceService {
 
     public static final String RESERVED_ID = "knox";
     
-    public void joinDesignSpaces(List<String> inputSpaceIDs) 
+    public void joinDesignSpaces(List<String> inputSpaceIDs, boolean isMinimized) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateListParameter("inputSpaceIDs", inputSpaceIDs);
     	
-    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
+    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), isMinimized);
     }
     
-    public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
+    public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID,
+    		boolean isMinimized) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -95,24 +96,25 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
 
-    	joinNodeSpaces(inputSpaces, outputSpace);
+    	joinNodeSpaces(inputSpaces, outputSpace, isMinimized);
     	
     	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
     	
     	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
     			outputSpace, inputSnaps);
 
-    	joinNodeSpaces(inputSnaps, outputSnap);
+    	joinNodeSpaces(inputSnaps, outputSnap, isMinimized);
 
     	saveDesignSpace(outputSpace);
     }
     
-    public void joinBranches(String targetSpaceID, List<String> inputBranchIDs) {
-        joinBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0));
+    public void joinBranches(String targetSpaceID, List<String> inputBranchIDs, 
+    		boolean isMinimized) {
+        joinBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), isMinimized);
     }
 
     public void joinBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		String outputBranchID) {
+    		String outputBranchID, boolean isMinimized) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
         List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
@@ -124,14 +126,19 @@ public class DesignSpaceService {
         
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, inputSnaps);
 
-        joinNodeSpaces(inputSnaps, outputSnap);
+        joinNodeSpaces(inputSnaps, outputSnap, isMinimized);
     }
     
-	private void joinNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
+	private void joinNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
+			boolean isMinimized) {
 		Concatenation concat = new Concatenation();
 		
 		for (NodeSpace inputSpace : inputSpaces) {
 			concat.connect(inputSpace);
+		}
+		
+		if (isMinimized) {
+			concat.getConcatenationSpace().minimize();
 		}
 		
 		outputSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
@@ -836,6 +843,7 @@ public class DesignSpaceService {
 
     				for (int i = 0; i < leafDefs.size(); i++) {
     					ArrayList<String> compIDs = new ArrayList<String>();
+    					
     					compIDs.add(leafDefs.get(i).getIdentity().toString());
 
     					ArrayList<String> compRoles = new ArrayList<String>(
@@ -854,10 +862,10 @@ public class DesignSpaceService {
     				}
 
     				outputSpace.createHeadBranch(compDef.getIdentity().toString());
-
-    				saveDesignSpace(outputSpace);
     				
-    				commitToBranch(outputSpace.getSpaceID(), outputSpace.getHeadBranch().getBranchID());
+    				outputSpace.commitToHead();
+    				
+    				saveDesignSpace(outputSpace);
     			}
     		}
 
@@ -867,8 +875,10 @@ public class DesignSpaceService {
     			}
     		}
     	}
-    
-    	orDesignSpaces(compositeDefIDs, outputSpaceID, true);
+    	
+    	if (compositeDefIDs.size() > 1) {
+    		orDesignSpaces(compositeDefIDs, outputSpaceID, true);
+    	}
     }
     
     private List<ComponentDefinition> flattenComponentDefinition(ComponentDefinition rootDef) {
@@ -1347,66 +1357,66 @@ public class DesignSpaceService {
     	return completeMatches;
     }
     
-    public void minimizeDesignSpace(String targetSpaceID) 
-    		throws DesignSpaceNotFoundException {
-    	validateDesignSpaceOperator(targetSpaceID);
-
-    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 2);
-    	
-    	HashMap<String, Node> nodeIDToNode = targetSpace.mapNodeIDsToNodes();
-    	HashMap<String, Set<Edge>> nodeIDsToIncomingEdges = targetSpace.mapNodeIDsToIncomingEdges();
-    	
-    	Stack<Node> nodeStack = new Stack<Node>();
-    	for (Node node : targetSpace.getNodes()) {
-    		nodeStack.push(node);
-    	}
-    	
-    	Set<String> deletedNodeIDs = new HashSet<String>();
-    	
-    	while (nodeStack.size() > 0) {
-    		Node node = nodeStack.peek();
-    		
-    		Set<Edge> minimizableEdges = targetSpace.getMinimizableEdges(node, nodeIDsToIncomingEdges);
-
-    		if (minimizableEdges.size() == 0 || deletedNodeIDs.contains(node.getNodeID())) {
-    			nodeStack.pop();
-    		} else {
-    			for (Edge minimizableEdge : minimizableEdges) {
-    				Node predecessor = nodeIDToNode.get(minimizableEdge.getTail().getNodeID());
-
-    				deletedNodeIDs.add(predecessor.getNodeID());
-
-    				if (nodeIDsToIncomingEdges.containsKey(predecessor.getNodeID())) {
-    					for (Edge incomingEdge : nodeIDsToIncomingEdges.get(predecessor.getNodeID())) {
-    						incomingEdge.setHead(node);
-    						nodeIDsToIncomingEdges.get(node.getNodeID()).add(incomingEdge);
-    					}
-    				}
-
-    				if (minimizableEdges.size() == 1) {
-    					for (Edge edge : predecessor.getEdges()) {
-    						if (!edge.equals(minimizableEdge)) {
-    							nodeIDsToIncomingEdges.get(edge.getHead().getNodeID()).add(node.copyEdge(edge));
-    							nodeIDsToIncomingEdges.get(edge.getHead().getNodeID()).remove(edge);
-    						}
-    					}
-    				}
-
-    				if (predecessor.hasNodeType()) {
-    					node.setNodeType(predecessor.getNodeType());
-    				}
-    			}
-    			
-    			nodeIDsToIncomingEdges.get(node.getNodeID()).removeAll(minimizableEdges);
-    		}
-    	}
-    	
-    	Set<Node> deletedNodes = targetSpace.removeNodesByID(deletedNodeIDs);
-    	
-    	saveDesignSpace(targetSpace);
-    	
-    	nodeRepository.delete(deletedNodes);
-    }
+//    public void minimizeDesignSpace(String targetSpaceID) 
+//    		throws DesignSpaceNotFoundException {
+//    	validateDesignSpaceOperator(targetSpaceID);
+//
+//    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 2);
+//    	
+//    	HashMap<String, Node> nodeIDToNode = targetSpace.mapNodeIDsToNodes();
+//    	HashMap<String, Set<Edge>> nodeIDsToIncomingEdges = targetSpace.mapNodeIDsToIncomingEdges();
+//    	
+//    	Stack<Node> nodeStack = new Stack<Node>();
+//    	for (Node node : targetSpace.getNodes()) {
+//    		nodeStack.push(node);
+//    	}
+//    	
+//    	Set<String> deletedNodeIDs = new HashSet<String>();
+//    	
+//    	while (nodeStack.size() > 0) {
+//    		Node node = nodeStack.peek();
+//    		
+//    		Set<Edge> minimizableEdges = targetSpace.getMinimizableEdges(node, nodeIDsToIncomingEdges);
+//
+//    		if (minimizableEdges.size() == 0 || deletedNodeIDs.contains(node.getNodeID())) {
+//    			nodeStack.pop();
+//    		} else {
+//    			for (Edge minimizableEdge : minimizableEdges) {
+//    				Node predecessor = nodeIDToNode.get(minimizableEdge.getTail().getNodeID());
+//
+//    				deletedNodeIDs.add(predecessor.getNodeID());
+//
+//    				if (nodeIDsToIncomingEdges.containsKey(predecessor.getNodeID())) {
+//    					for (Edge incomingEdge : nodeIDsToIncomingEdges.get(predecessor.getNodeID())) {
+//    						incomingEdge.setHead(node);
+//    						nodeIDsToIncomingEdges.get(node.getNodeID()).add(incomingEdge);
+//    					}
+//    				}
+//
+//    				if (minimizableEdges.size() == 1) {
+//    					for (Edge edge : predecessor.getEdges()) {
+//    						if (!edge.equals(minimizableEdge)) {
+//    							nodeIDsToIncomingEdges.get(edge.getHead().getNodeID()).add(node.copyEdge(edge));
+//    							nodeIDsToIncomingEdges.get(edge.getHead().getNodeID()).remove(edge);
+//    						}
+//    					}
+//    				}
+//
+//    				if (predecessor.hasNodeType()) {
+//    					node.setNodeType(predecessor.getNodeType());
+//    				}
+//    			}
+//    			
+//    			nodeIDsToIncomingEdges.get(node.getNodeID()).removeAll(minimizableEdges);
+//    		}
+//    	}
+//    	
+//    	Set<Node> deletedNodes = targetSpace.removeNodesByID(deletedNodeIDs);
+//    	
+//    	saveDesignSpace(targetSpace);
+//    	
+//    	nodeRepository.delete(deletedNodes);
+//    }
     
     private void copyDesignSpaceToSnapshot(String inputSpaceID, String outputBranchID) {
 		designSpaceRepository.copyDesignSpaceToSnapshot(inputSpaceID, outputBranchID);
@@ -1749,7 +1759,7 @@ public class DesignSpaceService {
 	        	d3Graph.put("spaceID", row.get("spaceID"));
 	        }
 	        
-	        Map<String, Object> tail = makeD3("nodeID", row.get("tailID"), "nodeType", row.get("tailType"));
+	        Map<String, Object> tail = makeD3("nodeID", row.get("tailID"), "nodeTypes", row.get("tailTypes"));
 	        
 	        int source = nodes.indexOf(tail);
 	        
@@ -1759,7 +1769,7 @@ public class DesignSpaceService {
 	        	source = i++;
 	        }
 	        
-	        Map<String, Object> head = makeD3("nodeID", row.get("headID"), "nodeType", row.get("headType"));
+	        Map<String, Object> head = makeD3("nodeID", row.get("headID"), "nodeTypes", row.get("headTypes"));
 	       
 	        int target = nodes.indexOf(head);
 	        
@@ -1795,7 +1805,11 @@ public class DesignSpaceService {
 	    d3Graph.put("spaceID", space.getSpaceID());
 	    
 	    for (Node node : space.getNodes()) {
-	    	nodes.add(makeD3("nodeID", node.getNodeID(), "nodeType", node.getNodeType()));
+	    	if (node.hasNodeTypes()) {
+	    		nodes.add(makeD3("nodeID", node.getNodeID(), "nodeTypes", node.getNodeTypes()));
+	    	} else {
+	    		nodes.add(makeD3("nodeID", node.getNodeID()));
+	    	}
 	    	
 	    	nodeIndices.put(node.getNodeID(), new Integer(nodes.size()));
 	    }
@@ -1828,8 +1842,19 @@ public class DesignSpaceService {
 
 	private Map<String, Object> makeD3(String key1, Object value1, String key2, Object value2) {
 	    Map<String, Object> result = new HashMap<String, Object>();
+	    
 	    result.put(key1, value1);
+	    
 	    result.put(key2, value2);
+	    
+	    return result;
+	}
+	
+	private Map<String, Object> makeD3(String key, Object value) {
+	    Map<String, Object> result = new HashMap<String, Object>();
+	    
+	    result.put(key, value);
+	    
 	    return result;
 	}
 

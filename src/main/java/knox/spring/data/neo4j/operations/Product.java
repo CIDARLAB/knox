@@ -3,6 +3,7 @@ package knox.spring.data.neo4j.operations;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
+import knox.spring.data.neo4j.domain.Node.NodeType;
 
 import java.util.*;
 
@@ -310,14 +311,12 @@ public class Product {
     
     private void crossNodes(int i, int j) {
     	if (!hasProductNode(i, j)) {
-			Node productNode;
+			Node productNode = productSpace.createNode();
 			
-			if (rowNodes.get(i).isAcceptNode() || colNodes.get(j).isAcceptNode()) {
-				productNode = productSpace.createAcceptNode();
-			} else if (rowNodes.get(i).isStartNode() && colNodes.get(j).isStartNode()) {
-				productNode = productSpace.createStartNode();
-			} else {
-				productNode = productSpace.createNode();
+			if (rowNodes.get(i).isStartNode() && colNodes.get(j).isStartNode()) {
+				productNode.addNodeType(NodeType.START.getValue());
+			} else if (rowNodes.get(i).isAcceptNode() || colNodes.get(j).isAcceptNode()) {
+				productNode.addNodeType(NodeType.ACCEPT.getValue());
 			}
 			
 			addProductNode(i, j, productNode);

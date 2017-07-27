@@ -28,10 +28,10 @@ public class Concatenation {
 					for (Node acceptNode : acceptNodes) {
 						acceptNode.createEdge(startNode);
 						
-						acceptNode.clearNodeType();
+						acceptNode.clearNodeTypes();
 					}
 					
-					startNode.clearNodeType();
+					startNode.clearNodeTypes();
 				}
 			}
 		}

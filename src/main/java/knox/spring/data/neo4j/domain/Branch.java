@@ -31,6 +31,7 @@ public class Branch {
         if (!hasCommits()) {
             commits = new HashSet<Commit>();
         }
+        
         commits.add(commit);
     }
 
@@ -76,6 +77,10 @@ public class Branch {
 
     public String getBranchID() { 
     	return branchID; 
+    }
+    
+    public boolean hasLatestCommit() {
+    	return latestCommit != null;
     }
 
     public boolean hasCommits() {

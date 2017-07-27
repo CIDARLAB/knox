@@ -17,6 +17,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
@@ -28,6 +30,8 @@ public class NodeSpace {
 	
 	@Relationship(type = "CONTAINS") 
     Set<Node> nodes;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(NodeSpace.class);
 	
 	public NodeSpace() {
 		
@@ -111,19 +115,27 @@ public class NodeSpace {
 	}
 	
 	public Node copyNodeWithID(Node node) {
-		if (node.hasNodeType()) {
-			return createTypedNode(node.getNodeID(), node.getNodeType());
-		} else {
-			return createNode(node.getNodeID());
-		} 
+		Node nodeCopy = createNode(node.getNodeID());
+		
+		if (node.hasNodeTypes()) {
+			for (String nodeType : node.getNodeTypes()) {
+				nodeCopy.addNodeType(nodeType);
+			}
+		}
+		
+		return nodeCopy;
 	}
 	
 	public Node copyNode(Node node) {
-		if (node.hasNodeType()) {
-			return createTypedNode(node.getNodeType());
-		} else {
-			return createNode();
+		Node nodeCopy = createNode();
+		
+		if (node.hasNodeTypes()) {
+			for (String nodeType : node.getNodeTypes()) {
+				nodeCopy.addNodeType(nodeType);
+			}
 		}
+		
+		return nodeCopy;
 	}
 	
 	public Node createNode() {
@@ -139,14 +151,22 @@ public class NodeSpace {
 	}
 	
 	public Node createTypedNode(String nodeType) {
-		Node node = new Node("n" + nodeIndex++, nodeType);
+		Node node = createNode();
+		
+		node.addNodeType(nodeType);
+		
 		addNode(node);
+		
 		return node;
 	}
 	
 	public Node createTypedNode(String nodeID, String nodeType) {
-		Node node = new Node(nodeID, nodeType);
+		Node node = createNode(nodeID);
+		
+		node.addNodeType(nodeType);
+		
 		addNode(node);
+		
 		return node;
 	}
 	
@@ -216,35 +236,35 @@ public class NodeSpace {
 		return edges;
 	}
 	
-	public Set<Edge> getMinimizableEdges(Node node, HashMap<String, Set<Edge>> nodeIDsToIncomingEdges) {
-		 Set<Edge> minimizableEdges = new HashSet<Edge>();
-
-		 if (nodeIDsToIncomingEdges.containsKey(node.getNodeID())) {
-			 Set<Edge> incomingEdges = nodeIDsToIncomingEdges.get(node.getNodeID());
-
-			 if (incomingEdges.size() == 1) {
-				 Edge incomingEdge = incomingEdges.iterator().next();
-
-				 Node predecessor = incomingEdge.getTail();
-
-				 if (!incomingEdge.hasComponents() && !incomingEdge.isCyclic()
-						 && (predecessor.getNumEdges() == 1 || !node.hasConflictingNodeType(predecessor))) {
-					 minimizableEdges.add(incomingEdge);
-				 }
-			 } else if (incomingEdges.size() > 1) {
-				 for (Edge incomingEdge : incomingEdges) {
-					 Node predecessor = incomingEdge.getTail();
-
-					 if (!incomingEdge.hasComponents() && !incomingEdge.isCyclic() 
-							 && predecessor.getNumEdges() == 1 && !predecessor.hasConflictingNodeType(node)) {
-						 minimizableEdges.add(incomingEdge);
-					 }
-				 }
-			 }
-		 }
-
-		 return minimizableEdges;
-	 }
+//	public Set<Edge> getMinimizableEdges(Node node, HashMap<String, Set<Edge>> nodeIDsToIncomingEdges) {
+//		 Set<Edge> minimizableEdges = new HashSet<Edge>();
+//
+//		 if (nodeIDsToIncomingEdges.containsKey(node.getNodeID())) {
+//			 Set<Edge> incomingEdges = nodeIDsToIncomingEdges.get(node.getNodeID());
+//
+//			 if (incomingEdges.size() == 1) {
+//				 Edge incomingEdge = incomingEdges.iterator().next();
+//
+//				 Node predecessor = incomingEdge.getTail();
+//
+//				 if (!incomingEdge.hasComponents() && !incomingEdge.isCyclic()
+//						 && (predecessor.getNumEdges() == 1 || !node.hasConflictingNodeType(predecessor))) {
+//					 minimizableEdges.add(incomingEdge);
+//				 }
+//			 } else if (incomingEdges.size() > 1) {
+//				 for (Edge incomingEdge : incomingEdges) {
+//					 Node predecessor = incomingEdge.getTail();
+//
+//					 if (!incomingEdge.hasComponents() && !incomingEdge.isCyclic() 
+//							 && predecessor.getNumEdges() == 1 && !predecessor.hasConflictingNodeType(node)) {
+//						 minimizableEdges.add(incomingEdge);
+//					 }
+//				 }
+//			 }
+//		 }
+//
+//		 return minimizableEdges;
+//	 }
 	
 	public int getNodeIndex() {
 		return nodeIndex;
@@ -307,7 +327,7 @@ public class NodeSpace {
 
         if (hasNodes()) {
             for (Node node : nodes) {
-                if (node.hasNodeType()) {
+                if (node.hasNodeTypes()) {
                     typedNodes.add(node);
                 }
             }
@@ -423,11 +443,56 @@ public class NodeSpace {
     	return nodeIDToNode;
     }
     
+    public void minimize() {
+    	if (hasNodes()) {
+			HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
+			
+			boolean isMini;
+			
+			do {
+				isMini = true;
+				
+				Set<Node> deletedNodes = new HashSet<Node>();
+				
+				for (Node node : nodes) {
+					if (node.hasEdges()) {
+						Set<Edge> deletedEdges = new HashSet<Edge>();
+						
+						for (Edge edge : node.getEdges()) {
+							if (!edge.hasComponentIDs() && !edge.hasComponentRoles()
+									&& !((idToIncomingEdges.get(edge.getHead().getNodeID()).size() > 1
+													|| edge.getHead().isStartNode()) 
+											&& node.getNumEdges() > 1)) {
+								isMini = false;
+								
+								deletedEdges.add(edge);
+							}
+						}
+						
+						node.deleteEdges(deletedEdges);
+						
+						Set<Node> mergedNodes = new HashSet<Node>();
+						
+						for (Edge deletedEdge : deletedEdges) {
+							mergedNodes.add(deletedEdge.getHead());
+						}
+						
+						node.mergeNodes(mergedNodes);
+						
+						deletedNodes.addAll(mergedNodes);
+					}
+				}
+				
+				deleteNodes(deletedNodes);
+			} while (!isMini);
+		}
+    }
+    
     public void labelSinkNodesAccept() {
     	Set<Node> sinkNodes = getSinkNodes();
     	
     	for (Node sinkNode : sinkNodes) {
-    		sinkNode.setNodeType(Node.NodeType.ACCEPT.getValue());
+    		sinkNode.addNodeType(Node.NodeType.ACCEPT.getValue());
     	}
     }
     
@@ -435,7 +500,7 @@ public class NodeSpace {
     	Set<Node> sourceNodes = getSourceNodes();
     	
     	for (Node sourceNode : sourceNodes) {
-    		sourceNode.setNodeType(Node.NodeType.START.getValue());
+    		sourceNode.addNodeType(Node.NodeType.START.getValue());
     	}
     }
     

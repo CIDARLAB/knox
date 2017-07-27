@@ -99,10 +99,12 @@
 
             var circles = nodesEnter.append("circle")
                 .attr("class", function(d) {
-                    switch (d.nodeType) {
-                    case "start": return "start-node";
-                    case "accept": return "accept-node";
-                    default: return "node";
+                    if (d.nodeTypes == null) {
+                        return "node";
+                    } else if (d.nodeTypes.indexOf("start") >= 0) {
+                        return "start-node";
+                    } else if (d.nodeTypes.indexOf("accept") >= 0) {
+                        return "accept-node";
                     }
                 })
                 .attr("r", 7).call(force.drag);

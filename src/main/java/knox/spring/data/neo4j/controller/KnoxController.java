@@ -37,15 +37,15 @@ public class KnoxController {
 	
 	@RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
     public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+            @RequestParam(value = "isMinimized", required = false, defaultValue = "true") boolean isMinimized) {
         try {
         	long startTime = System.nanoTime();
         	
             if (outputSpaceID == null) {
-                designSpaceService.joinDesignSpaces(inputSpaceIDs);
+                designSpaceService.joinDesignSpaces(inputSpaceIDs, isMinimized);
             } else {
-                designSpaceService.joinDesignSpaces(inputSpaceIDs,
-                        outputSpaceID);
+                designSpaceService.joinDesignSpaces(inputSpaceIDs, outputSpaceID, isMinimized);
             }
 
             return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully joined after " + 
@@ -60,13 +60,15 @@ public class KnoxController {
 	@RequestMapping(value = "/branch/join", method = RequestMethod.POST)
     public ResponseEntity<String> joinBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
-            @RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
+            @RequestParam(value = "outputBranchID", required = false) String outputBranchID,
+            @RequestParam(value = "isMinimized", required = false, defaultValue = "true") boolean isMinimized) {
 		long startTime = System.nanoTime();
 		
         if (outputBranchID == null) {
-            designSpaceService.joinBranches(targetSpaceID, inputBranchIDs);
+            designSpaceService.joinBranches(targetSpaceID, inputBranchIDs, isMinimized);
         } else {
-            designSpaceService.joinBranches(targetSpaceID, inputBranchIDs, outputBranchID);
+            designSpaceService.joinBranches(targetSpaceID, inputBranchIDs, outputBranchID,
+            		isMinimized);
         }
 
         return new ResponseEntity<String>("{\"message\": \"Branches were successfully joined after " + 
@@ -500,21 +502,21 @@ public class KnoxController {
         }
     }
 
-    @RequestMapping(value = "/designSpace/minimize", method = RequestMethod.POST)
-    public ResponseEntity<String>
-    minimizeDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-        try {
-            designSpaceService.minimizeDesignSpace(targetSpaceID);
-
-            return new ResponseEntity<String>(
-                    "{\"message\": \"Design space was successfully minimized.\"}",
-                    HttpStatus.NO_CONTENT);
-        } catch (DesignSpaceNotFoundException ex) {
-            return new ResponseEntity<String>(
-                    "{\"message\": \"" + ex.getMessage() + "\"}",
-                    HttpStatus.BAD_REQUEST);
-        }
-    }
+//    @RequestMapping(value = "/designSpace/minimize", method = RequestMethod.POST)
+//    public ResponseEntity<String>
+//    minimizeDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+//        try {
+//            designSpaceService.minimizeDesignSpace(targetSpaceID);
+//
+//            return new ResponseEntity<String>(
+//                    "{\"message\": \"Design space was successfully minimized.\"}",
+//                    HttpStatus.NO_CONTENT);
+//        } catch (DesignSpaceNotFoundException ex) {
+//            return new ResponseEntity<String>(
+//                    "{\"message\": \"" + ex.getMessage() + "\"}",
+//                    HttpStatus.BAD_REQUEST);
+//        }
+//    }
 
     
 

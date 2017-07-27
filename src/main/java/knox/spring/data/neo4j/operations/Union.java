@@ -27,7 +27,7 @@ public class Union {
     		if (!primaryStartNode.isIdenticalTo(startNode)) {
     			primaryStartNode.createEdge(startNode);
     			
-    			startNode.clearNodeType();
+    			startNode.clearNodeTypes();
     		}
     	}
     	
@@ -38,7 +38,7 @@ public class Union {
     			if (!primaryAcceptNode.isIdenticalTo(acceptNode)) {
     				acceptNode.createEdge(primaryAcceptNode);
     				
-    				acceptNode.clearNodeType();
+    				acceptNode.clearNodeTypes();
     			}
     		}
     	}

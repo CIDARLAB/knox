@@ -20,7 +20,9 @@ public class Node {
 
     @Relationship(type = "PRECEDES") Set<Edge> edges = new HashSet<>();
 
-    String nodeType;
+//    String nodeType;
+    
+    ArrayList<String> nodeTypes;
 
     public Node() {}
     
@@ -28,21 +30,26 @@ public class Node {
     	this.nodeID = nodeID;
     }
     
-    public Node(String nodeID, String nodeType) {
+    public Node(String nodeID, ArrayList<String> nodeTypes) {
         this.nodeID = nodeID;
-        this.nodeType = nodeType;
+        
+        this.nodeTypes = nodeTypes;
     }
 
     public void addEdge(Edge edge) {
+    	if (edges == null) {
+    		edges = new HashSet<Edge>();
+    	}
+    	
         edges.add(edge);
     }
 
-    public void clearNodeType() { 
-    	nodeType = null; 
+    public void clearNodeTypes() { 
+    	nodeTypes = null; 
     }
     
     public Node copy() {
-    	return new Node(nodeID, nodeType);
+    	return new Node(nodeID, new ArrayList<String>(nodeTypes));
     }
 
     public Edge copyEdge(Edge edge) {
@@ -109,8 +116,8 @@ public class Node {
     	this.edges = edges;
     }
 
-    public String getNodeType() {
-    	return nodeType;
+    public ArrayList<String> getNodeTypes() {
+    	return nodeTypes;
     }
 
     public boolean hasComponentID(String compID) {
@@ -204,21 +211,21 @@ public class Node {
         }
     }
 
-    public boolean hasConflictingNodeType(Node node) {
-        return hasNodeType() &&
-            (!node.hasNodeType() || !nodeType.equals(node.getNodeType()));
-    }
+//    public boolean hasConflictingNodeType(Node node) {
+//        return hasNodeType() &&
+//            (!node.hasNodeType() || !nodeType.equals(node.getNodeType()));
+//    }
 
-    public boolean hasNodeType() {
-    	return nodeType != null; 
+    public boolean hasNodeTypes() {
+    	return nodeTypes != null && !nodeTypes.isEmpty(); 
     }
 
     public boolean isAcceptNode() {
-        return hasNodeType() && nodeType.equals(NodeType.ACCEPT.getValue());
+        return hasNodeTypes() && nodeTypes.contains(NodeType.ACCEPT.getValue());
     }
 
     public boolean isStartNode() {
-        return hasNodeType() && nodeType.equals(NodeType.START.getValue());
+        return hasNodeTypes() && nodeTypes.contains(NodeType.START.getValue());
     }
 
     public boolean isIdenticalTo(Node node) {
@@ -260,7 +267,31 @@ public class Node {
         }
     }
 
-    public void setNodeType(String nodeType) { 
-    	this.nodeType = nodeType;
+    public void addNodeType(String nodeType) { 
+    	if (!hasNodeTypes()) {
+    		nodeTypes = new ArrayList<String>();
+    	}
+    	
+    	nodeTypes.add(nodeType);
+    }
+    
+    public void mergeNodes(Set<Node> mergedNodes) {
+    	for (Node mergedNode : mergedNodes) {
+			if (mergedNode.hasEdges()) {
+				for (Edge edge : mergedNode.getEdges()) {
+					addEdge(edge);
+					
+					edge.setTail(this);
+				}
+			}
+			
+			if (mergedNode.isAcceptNode() && !isAcceptNode()) {
+				addNodeType(NodeType.ACCEPT.getValue());
+			}
+			
+			if (mergedNode.isStartNode()) {
+				addNodeType(NodeType.START.getValue());
+			}
+		}
     }
 }

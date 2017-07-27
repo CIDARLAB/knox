@@ -42,13 +42,13 @@ private NodeSpace starSpace;
 			for (Node startNode : startNodes) {
 				primaryStartNode.createEdge(startNode);
 				
-				startNode.clearNodeType();
+				startNode.clearNodeTypes();
 			}
 			
 			for (Node acceptNode : acceptNodes) {
 				acceptNode.createEdge(primaryAcceptNode);
 				
-				acceptNode.clearNodeType();
+				acceptNode.clearNodeTypes();
 			}
 		}
 	}
