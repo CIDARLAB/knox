@@ -212,13 +212,16 @@ public class Node {
         }
     }
 
-//    public boolean hasConflictingNodeType(Node node) {
-//        return hasNodeType() &&
-//            (!node.hasNodeType() || !nodeType.equals(node.getNodeType()));
-//    }
-
     public boolean hasNodeTypes() {
     	return nodeTypes != null && !nodeTypes.isEmpty(); 
+    }
+    
+    public boolean hasConflictingType(Node node) {
+    	return hasNodeTypes() && node.hasNodeTypes() 
+    			&& ((nodeTypes.contains(NodeType.ACCEPT.getValue()) 
+    							&& node.getNodeTypes().contains(NodeType.START.getValue()))
+    					|| (nodeTypes.contains(NodeType.START.getValue())
+    							&& node.getNodeTypes().contains(NodeType.ACCEPT.getValue())));
     }
 
     public boolean isAcceptNode() {

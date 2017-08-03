@@ -180,8 +180,6 @@ public class Product {
     public void modifiedStrong(int tolerance) {
     	tensor(tolerance);
     	
-//    	productSpace.deleteUnconnectedNodes();
-    	
     	HashMap<Integer, Node> rowToProductNode = new HashMap<Integer, Node>();
 
     	for (int i = 0; i < rowNodes.size(); i++) {

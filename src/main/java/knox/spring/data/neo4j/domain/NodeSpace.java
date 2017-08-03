@@ -460,6 +460,7 @@ public class NodeSpace {
 						
 						for (Edge edge : node.getEdges()) {
 							if (!edge.hasComponentIDs() && !edge.hasComponentRoles()
+									&& !node.hasConflictingType(edge.getHead())
 									&& !((idToIncomingEdges.get(edge.getHead().getNodeID()).size() > 1
 													|| edge.getHead().isStartNode()) 
 											&& node.getNumEdges() > 1)) {
