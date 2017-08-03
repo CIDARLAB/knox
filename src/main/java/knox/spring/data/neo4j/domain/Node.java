@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.domain;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -275,7 +276,9 @@ public class Node {
     	nodeTypes.add(nodeType);
     }
     
-    public void mergeNodes(Set<Node> mergedNodes) {
+    public void mergeNodes(Set<Node> mergedNodes, HashMap<String, Set<Edge>> idToIncomingEdges) {
+    	mergedNodes.remove(this);
+    	
     	for (Node mergedNode : mergedNodes) {
 			if (mergedNode.hasEdges()) {
 				for (Edge edge : mergedNode.getEdges()) {
@@ -283,6 +286,24 @@ public class Node {
 					
 					edge.setTail(this);
 				}
+			}
+			
+			if (idToIncomingEdges.containsKey(mergedNode.getNodeID())) {
+				Set<Edge> reassignedEdges = new HashSet<Edge>();
+				
+				for (Edge edge : idToIncomingEdges.get(mergedNode.getNodeID())) {
+					edge.setHead(this);
+					
+					if (!idToIncomingEdges.containsKey(nodeID)) {
+						idToIncomingEdges.put(nodeID, new HashSet<Edge>());
+					}
+					
+					idToIncomingEdges.get(nodeID).add(edge);
+					
+					reassignedEdges.add(edge);
+				}
+				
+				idToIncomingEdges.get(mergedNode.getNodeID()).removeAll(reassignedEdges);
 			}
 			
 			if (mergedNode.isAcceptNode() && !isAcceptNode()) {

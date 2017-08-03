@@ -1,0 +1,350 @@
+CREATE (d0:DesignSpace {spaceID: "prom0", nodeIndex: 4, commitIndex: 1})
+
+CREATE (n0:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1:Node {nodeID: "n1"})
+CREATE (n2:Node {nodeID: "n2"})
+CREATE (n3:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (d0)-[:CONTAINS]->(n0)
+CREATE (d0)-[:CONTAINS]->(n1)
+CREATE (d0)-[:CONTAINS]->(n2)
+CREATE (d0)-[:CONTAINS]->(n3)
+
+CREATE (n0)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1)
+CREATE (n1)-[:PRECEDES {componentIDs: ["pY"], componentRoles: ["promoter"]}]->(n2)
+CREATE (n2)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n3)
+
+CREATE (d0)-[:ARCHIVES]->(b0:Branch {branchID: "prom0"})-[:CONTAINS]->(c0:Commit {commitID: "c0"})-[:CONTAINS]->(s0:Snapshot {nodeIndex: 4})
+CREATE (d0)-[:SELECTS]->(b0)-[:LATEST]->(c0)
+
+CREATE (sn0:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1:Node {nodeID: "n1"})
+CREATE (sn2:Node {nodeID: "n2"})
+CREATE (sn3:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (s0)-[:CONTAINS]->(sn0)
+CREATE (s0)-[:CONTAINS]->(sn1)
+CREATE (s0)-[:CONTAINS]->(sn2)
+CREATE (s0)-[:CONTAINS]->(sn3)
+
+CREATE (sn0)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1)
+CREATE (sn1)-[:PRECEDES {componentIDs: ["pY"], componentRoles: ["promoter"]}]->(sn2)
+CREATE (sn2)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn3)
+
+
+
+CREATE (d0a:DesignSpace {spaceID: "prom1", nodeIndex: 4, commitIndex: 1})
+
+CREATE (n0a:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1a:Node {nodeID: "n1"})
+CREATE (n2a:Node {nodeID: "n2"})
+CREATE (n3a:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (d0a)-[:CONTAINS]->(n0a)
+CREATE (d0a)-[:CONTAINS]->(n1a)
+CREATE (d0a)-[:CONTAINS]->(n2a)
+CREATE (d0a)-[:CONTAINS]->(n3a)
+
+CREATE (n0a)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1a)
+CREATE (n1a)-[:PRECEDES {componentIDs: ["pR"], componentRoles: ["promoter"]}]->(n2a)
+CREATE (n2a)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n3a)
+
+CREATE (d0a)-[:ARCHIVES]->(b0a:Branch {branchID: "prom1"})-[:CONTAINS]->(c0a:Commit {commitID: "c0"})-[:CONTAINS]->(s0a:Snapshot {nodeIndex: 4})
+CREATE (d0a)-[:SELECTS]->(b0a)-[:LATEST]->(c0a)
+
+CREATE (sn0a:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1a:Node {nodeID: "n1"})
+CREATE (sn2a:Node {nodeID: "n2"})
+CREATE (sn3a:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (s0a)-[:CONTAINS]->(sn0a)
+CREATE (s0a)-[:CONTAINS]->(sn1a)
+CREATE (s0a)-[:CONTAINS]->(sn2a)
+CREATE (s0a)-[:CONTAINS]->(sn3a)
+
+CREATE (sn0a)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1a)
+CREATE (sn1a)-[:PRECEDES {componentIDs: ["pR"], componentRoles: ["promoter"]}]->(sn2a)
+CREATE (sn2a)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn3a)
+
+
+
+CREATE (d0b:DesignSpace {spaceID: "prom2", nodeIndex: 4, commitIndex: 1})
+
+CREATE (n0b:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1b:Node {nodeID: "n1"})
+CREATE (n2b:Node {nodeID: "n2"})
+CREATE (n3b:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (d0b)-[:CONTAINS]->(n0b)
+CREATE (d0b)-[:CONTAINS]->(n1b)
+CREATE (d0b)-[:CONTAINS]->(n2b)
+CREATE (d0b)-[:CONTAINS]->(n3b)
+
+CREATE (n0b)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1b)
+CREATE (n1b)-[:PRECEDES {componentIDs: ["pM"], componentRoles: ["promoter"]}]->(n2b)
+CREATE (n2b)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n3b)
+
+CREATE (d0b)-[:ARCHIVES]->(b0b:Branch {branchID: "prom2"})-[:CONTAINS]->(c0b:Commit {commitID: "c0"})-[:CONTAINS]->(s0b:Snapshot {nodeIndex: 4})
+CREATE (d0b)-[:SELECTS]->(b0b)-[:LATEST]->(c0b)
+
+CREATE (sn0b:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1b:Node {nodeID: "n1"})
+CREATE (sn2b:Node {nodeID: "n2"})
+CREATE (sn3b:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (s0b)-[:CONTAINS]->(sn0b)
+CREATE (s0b)-[:CONTAINS]->(sn1b)
+CREATE (s0b)-[:CONTAINS]->(sn2b)
+CREATE (s0b)-[:CONTAINS]->(sn3b)
+
+CREATE (sn0b)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1b)
+CREATE (sn1b)-[:PRECEDES {componentIDs: ["pM"], componentRoles: ["promoter"]}]->(sn2b)
+CREATE (sn2b)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn3b)
+
+
+
+CREATE (d0c:DesignSpace {spaceID: "ribo0", nodeIndex: 5, commitIndex: 1})
+
+CREATE (n0c:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1c:Node {nodeID: "n1"})
+CREATE (n2c:Node {nodeID: "n2"})
+CREATE (n3c:Node {nodeID: "n3"})
+CREATE (n4c:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (d0c)-[:CONTAINS]->(n0c)
+CREATE (d0c)-[:CONTAINS]->(n1c)
+CREATE (d0c)-[:CONTAINS]->(n2c)
+CREATE (d0c)-[:CONTAINS]->(n3c)
+CREATE (d0c)-[:CONTAINS]->(n4c)
+
+CREATE (n0c)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1c)
+CREATE (n1c)-[:PRECEDES {componentIDs: ["zG"], componentRoles: ["ribozyme"]}]->(n2c)
+CREATE (n2c)-[:PRECEDES {componentIDs: ["rB"], componentRoles: ["ribosome_entry_site"]}]->(n3c)
+CREATE (n3c)-[:PRECEDES {componentIDs: ["R"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n4c)
+
+CREATE (d0c)-[:ARCHIVES]->(b0c:Branch {branchID: "prom0"})-[:CONTAINS]->(c0c:Commit {commitID: "c0"})-[:CONTAINS]->(s0c:Snapshot {nodeIndex: 5})
+CREATE (d0c)-[:SELECTS]->(b0c)-[:LATEST]->(c0c)
+
+CREATE (sn0c:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1c:Node {nodeID: "n1"})
+CREATE (sn2c:Node {nodeID: "n2"})
+CREATE (sn3c:Node {nodeID: "n3"})
+CREATE (sn4c:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (s0c)-[:CONTAINS]->(sn0c)
+CREATE (s0c)-[:CONTAINS]->(sn1c)
+CREATE (s0c)-[:CONTAINS]->(sn2c)
+CREATE (s0c)-[:CONTAINS]->(sn3c)
+CREATE (s0c)-[:CONTAINS]->(sn4c)
+
+CREATE (sn0c)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1c)
+CREATE (sn1c)-[:PRECEDES {componentIDs: ["zG"], componentRoles: ["ribozyme"]}]->(sn2c)
+CREATE (sn2c)-[:PRECEDES {componentIDs: ["rB"], componentRoles: ["ribosome_entry_site"]}]->(sn3c)
+CREATE (sn3c)-[:PRECEDES {componentIDs: ["R"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn4c)
+
+
+
+CREATE (d0d:DesignSpace {spaceID: "ribo1", nodeIndex: 5, commitIndex: 1})
+
+CREATE (n0d:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1d:Node {nodeID: "n1"})
+CREATE (n2d:Node {nodeID: "n2"})
+CREATE (n3d:Node {nodeID: "n3"})
+CREATE (n4d:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (d0d)-[:CONTAINS]->(n0d)
+CREATE (d0d)-[:CONTAINS]->(n1d)
+CREATE (d0d)-[:CONTAINS]->(n2d)
+CREATE (d0d)-[:CONTAINS]->(n3d)
+CREATE (d0d)-[:CONTAINS]->(n4d)
+
+CREATE (n0d)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1d)
+CREATE (n1d)-[:PRECEDES {componentIDs: ["zU"], componentRoles: ["ribozyme"]}]->(n2d)
+CREATE (n2d)-[:PRECEDES {componentIDs: ["rB"], componentRoles: ["ribosome_entry_site"]}]->(n3d)
+CREATE (n3d)-[:PRECEDES {componentIDs: ["U"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n4d)
+
+CREATE (d0d)-[:ARCHIVES]->(b0d:Branch {branchID: "ribo1"})-[:CONTAINS]->(c0d:Commit {commitID: "c0"})-[:CONTAINS]->(s0d:Snapshot {nodeIndex: 5})
+CREATE (d0d)-[:SELECTS]->(b0d)-[:LATEST]->(c0d)
+
+CREATE (sn0d:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1d:Node {nodeID: "n1"})
+CREATE (sn2d:Node {nodeID: "n2"})
+CREATE (sn3d:Node {nodeID: "n3"})
+CREATE (sn4d:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (s0d)-[:CONTAINS]->(sn0d)
+CREATE (s0d)-[:CONTAINS]->(sn1d)
+CREATE (s0d)-[:CONTAINS]->(sn2d)
+CREATE (s0d)-[:CONTAINS]->(sn3d)
+CREATE (s0d)-[:CONTAINS]->(sn4d)
+
+CREATE (sn0d)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1d)
+CREATE (sn1d)-[:PRECEDES {componentIDs: ["zU"], componentRoles: ["ribozyme"]}]->(sn2d)
+CREATE (sn2d)-[:PRECEDES {componentIDs: ["rB"], componentRoles: ["ribosome_entry_site"]}]->(sn3d)
+CREATE (sn3d)-[:PRECEDES {componentIDs: ["U"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn4d)
+
+
+
+CREATE (d0e:DesignSpace {spaceID: "ribo2", nodeIndex: 5, commitIndex: 1})
+
+CREATE (n0e:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1e:Node {nodeID: "n1"})
+CREATE (n2e:Node {nodeID: "n2"})
+CREATE (n3e:Node {nodeID: "n3"})
+CREATE (n4e:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (d0e)-[:CONTAINS]->(n0e)
+CREATE (d0e)-[:CONTAINS]->(n1e)
+CREATE (d0e)-[:CONTAINS]->(n2e)
+CREATE (d0e)-[:CONTAINS]->(n3e)
+CREATE (d0e)-[:CONTAINS]->(n4e)
+
+CREATE (n0e)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1e)
+CREATE (n1e)-[:PRECEDES {componentIDs: ["zR"], componentRoles: ["ribozyme"]}]->(n2e)
+CREATE (n2e)-[:PRECEDES {componentIDs: ["rP"], componentRoles: ["ribosome_entry_site"]}]->(n3e)
+CREATE (n3e)-[:PRECEDES {componentIDs: ["R"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n4e)
+
+CREATE (d0e)-[:ARCHIVES]->(b0e:Branch {branchID: "ribo2"})-[:CONTAINS]->(c0e:Commit {commitID: "c0"})-[:CONTAINS]->(s0e:Snapshot {nodeIndex: 5})
+CREATE (d0e)-[:SELECTS]->(b0e)-[:LATEST]->(c0e)
+
+CREATE (sn0e:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1e:Node {nodeID: "n1"})
+CREATE (sn2e:Node {nodeID: "n2"})
+CREATE (sn3e:Node {nodeID: "n3"})
+CREATE (sn4e:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (s0e)-[:CONTAINS]->(sn0e)
+CREATE (s0e)-[:CONTAINS]->(sn1e)
+CREATE (s0e)-[:CONTAINS]->(sn2e)
+CREATE (s0e)-[:CONTAINS]->(sn3e)
+CREATE (s0e)-[:CONTAINS]->(sn4e)
+
+CREATE (sn0e)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1e)
+CREATE (sn1e)-[:PRECEDES {componentIDs: ["zR"], componentRoles: ["ribozyme"]}]->(sn2e)
+CREATE (sn2e)-[:PRECEDES {componentIDs: ["rP"], componentRoles: ["ribosome_entry_site"]}]->(sn3e)
+CREATE (sn3e)-[:PRECEDES {componentIDs: ["R"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn4e)
+
+
+
+CREATE (d0f:DesignSpace {spaceID: "term0", nodeIndex: 5, commitIndex: 1})
+
+CREATE (n0f:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1f:Node {nodeID: "n1"})
+CREATE (n2f:Node {nodeID: "n2"})
+CREATE (n3f:Node {nodeID: "n3"})
+CREATE (n4f:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (d0f)-[:CONTAINS]->(n0f)
+CREATE (d0f)-[:CONTAINS]->(n1f)
+CREATE (d0f)-[:CONTAINS]->(n2f)
+CREATE (d0f)-[:CONTAINS]->(n3f)
+CREATE (d0f)-[:CONTAINS]->(n4f)
+
+CREATE (n0f)-[:PRECEDES {componentIDs: ["R"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1f)
+CREATE (n1f)-[:PRECEDES {componentIDs: ["cG"], componentRoles: ["ribozyme"]}]->(n2f)
+CREATE (n2f)-[:PRECEDES {componentIDs: ["tU"], componentRoles: ["ribosome_entry_site"]}]->(n3f)
+CREATE (n3f)-[:PRECEDES {componentIDs: ["G"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n4f)
+
+CREATE (d0f)-[:ARCHIVES]->(b0f:Branch {branchID: "term0"})-[:CONTAINS]->(c0f:Commit {commitID: "c0"})-[:CONTAINS]->(s0f:Snapshot {nodeIndex: 5})
+CREATE (d0f)-[:SELECTS]->(b0f)-[:LATEST]->(c0f)
+
+CREATE (sn0f:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1f:Node {nodeID: "n1"})
+CREATE (sn2f:Node {nodeID: "n2"})
+CREATE (sn3f:Node {nodeID: "n3"})
+CREATE (sn4f:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (s0f)-[:CONTAINS]->(sn0f)
+CREATE (s0f)-[:CONTAINS]->(sn1f)
+CREATE (s0f)-[:CONTAINS]->(sn2f)
+CREATE (s0f)-[:CONTAINS]->(sn3f)
+CREATE (s0f)-[:CONTAINS]->(sn4f)
+
+CREATE (sn0f)-[:PRECEDES {componentIDs: ["R"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1f)
+CREATE (sn1f)-[:PRECEDES {componentIDs: ["cG"], componentRoles: ["ribozyme"]}]->(sn2f)
+CREATE (sn2f)-[:PRECEDES {componentIDs: ["tU"], componentRoles: ["ribosome_entry_site"]}]->(sn3f)
+CREATE (sn3f)-[:PRECEDES {componentIDs: ["G"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn4f)
+
+
+
+CREATE (d0g:DesignSpace {spaceID: "term1", nodeIndex: 5, commitIndex: 1})
+
+CREATE (n0g:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1g:Node {nodeID: "n1"})
+CREATE (n2g:Node {nodeID: "n2"})
+CREATE (n3g:Node {nodeID: "n3"})
+CREATE (n4g:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (d0g)-[:CONTAINS]->(n0g)
+CREATE (d0g)-[:CONTAINS]->(n1g)
+CREATE (d0g)-[:CONTAINS]->(n2g)
+CREATE (d0g)-[:CONTAINS]->(n3g)
+CREATE (d0g)-[:CONTAINS]->(n4g)
+
+CREATE (n0g)-[:PRECEDES {componentIDs: ["R"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1g)
+CREATE (n1g)-[:PRECEDES {componentIDs: ["cY"], componentRoles: ["ribozyme"]}]->(n2g)
+CREATE (n2g)-[:PRECEDES {componentIDs: ["tU"], componentRoles: ["ribosome_entry_site"]}]->(n3g)
+CREATE (n3g)-[:PRECEDES {componentIDs: ["G"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n4g)
+
+CREATE (d0g)-[:ARCHIVES]->(b0g:Branch {branchID: "term1"})-[:CONTAINS]->(c0g:Commit {commitID: "c0"})-[:CONTAINS]->(s0g:Snapshot {nodeIndex: 5})
+CREATE (d0g)-[:SELECTS]->(b0g)-[:LATEST]->(c0g)
+
+CREATE (sn0g:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1g:Node {nodeID: "n1"})
+CREATE (sn2g:Node {nodeID: "n2"})
+CREATE (sn3g:Node {nodeID: "n3"})
+CREATE (sn4g:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (s0g)-[:CONTAINS]->(sn0g)
+CREATE (s0g)-[:CONTAINS]->(sn1g)
+CREATE (s0g)-[:CONTAINS]->(sn2g)
+CREATE (s0g)-[:CONTAINS]->(sn3g)
+CREATE (s0g)-[:CONTAINS]->(sn4g)
+
+CREATE (sn0g)-[:PRECEDES {componentIDs: ["R"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1g)
+CREATE (sn1g)-[:PRECEDES {componentIDs: ["cY"], componentRoles: ["ribozyme"]}]->(sn2g)
+CREATE (sn2g)-[:PRECEDES {componentIDs: ["tU"], componentRoles: ["ribosome_entry_site"]}]->(sn3g)
+CREATE (sn3g)-[:PRECEDES {componentIDs: ["G"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn4g)
+
+
+
+CREATE (d0h:DesignSpace {spaceID: "term2", nodeIndex: 5, commitIndex: 1})
+
+CREATE (n0h:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n1h:Node {nodeID: "n1"})
+CREATE (n2h:Node {nodeID: "n2"})
+CREATE (n3h:Node {nodeID: "n3"})
+CREATE (n4h:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (d0h)-[:CONTAINS]->(n0h)
+CREATE (d0h)-[:CONTAINS]->(n1h)
+CREATE (d0h)-[:CONTAINS]->(n2h)
+CREATE (d0h)-[:CONTAINS]->(n3h)
+CREATE (d0h)-[:CONTAINS]->(n4h)
+
+CREATE (n0h)-[:PRECEDES {componentIDs: ["U"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n1h)
+CREATE (n1h)-[:PRECEDES {componentIDs: ["cP"], componentRoles: ["ribozyme"]}]->(n2h)
+CREATE (n2h)-[:PRECEDES {componentIDs: ["tU"], componentRoles: ["ribosome_entry_site"]}]->(n3h)
+CREATE (n3h)-[:PRECEDES {componentIDs: ["G"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(n4h)
+
+CREATE (d0h)-[:ARCHIVES]->(b0h:Branch {branchID: "term2"})-[:CONTAINS]->(c0h:Commit {commitID: "c0"})-[:CONTAINS]->(s0h:Snapshot {nodeIndex: 5})
+CREATE (d0h)-[:SELECTS]->(b0h)-[:LATEST]->(c0h)
+
+CREATE (sn0h:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (sn1h:Node {nodeID: "n1"})
+CREATE (sn2h:Node {nodeID: "n2"})
+CREATE (sn3h:Node {nodeID: "n3"})
+CREATE (sn4h:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (s0h)-[:CONTAINS]->(sn0h)
+CREATE (s0h)-[:CONTAINS]->(sn1h)
+CREATE (s0h)-[:CONTAINS]->(sn2h)
+CREATE (s0h)-[:CONTAINS]->(sn3h)
+CREATE (s0h)-[:CONTAINS]->(sn4h)
+
+CREATE (sn0h)-[:PRECEDES {componentIDs: ["U"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn1h)
+CREATE (sn1h)-[:PRECEDES {componentIDs: ["cP"], componentRoles: ["ribozyme"]}]->(sn2h)
+CREATE (sn2h)-[:PRECEDES {componentIDs: ["tU"], componentRoles: ["ribosome_entry_site"]}]->(sn3h)
+CREATE (sn3h)-[:PRECEDES {componentIDs: ["G"], componentRoles: ["restriction_enzyme_assembly_scar"]}]->(sn4h)
+
+;

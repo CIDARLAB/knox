@@ -78,16 +78,15 @@ public class DesignSpaceService {
 
     public static final String RESERVED_ID = "knox";
     
-    public void joinDesignSpaces(List<String> inputSpaceIDs, boolean isMinimized) 
+    public void joinDesignSpaces(List<String> inputSpaceIDs) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateListParameter("inputSpaceIDs", inputSpaceIDs);
     	
-    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), isMinimized);
+    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
     }
     
-    public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID,
-    		boolean isMinimized) 
+    public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -96,25 +95,24 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
 
-    	joinNodeSpaces(inputSpaces, outputSpace, isMinimized);
+    	joinNodeSpaces(inputSpaces, outputSpace);
     	
     	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
     	
     	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
     			outputSpace, inputSnaps);
 
-    	joinNodeSpaces(inputSnaps, outputSnap, isMinimized);
+    	joinNodeSpaces(inputSnaps, outputSnap);
 
     	saveDesignSpace(outputSpace);
     }
     
-    public void joinBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		boolean isMinimized) {
-        joinBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), isMinimized);
+    public void joinBranches(String targetSpaceID, List<String> inputBranchIDs) {
+        joinBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0));
     }
 
     public void joinBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		String outputBranchID, boolean isMinimized) {
+    		String outputBranchID) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
         List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
@@ -126,20 +124,17 @@ public class DesignSpaceService {
         
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, inputSnaps);
 
-        joinNodeSpaces(inputSnaps, outputSnap, isMinimized);
+        joinNodeSpaces(inputSnaps, outputSnap);
     }
     
-	private void joinNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-			boolean isMinimized) {
+	private void joinNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
 		Concatenation concat = new Concatenation();
 		
 		for (NodeSpace inputSpace : inputSpaces) {
 			concat.connect(inputSpace);
 		}
 		
-		if (isMinimized) {
-			concat.getConcatenationSpace().minimize();
-		}
+		concat.getConcatenationSpace().minimize();
 		
 		outputSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
     }
@@ -198,6 +193,8 @@ public class DesignSpaceService {
 		
 		union.connect(isClosed);
 		
+		union.getUnionSpace().minimize();
+		
 		outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
     }
 	
@@ -255,6 +252,8 @@ public class DesignSpaceService {
 		Star star = new Star(inputSpaces);
 		
 		star.connect(isOptional);
+		
+		star.getStarSpace().minimize();
 		
 		outputSpace.shallowCopyNodeSpace(star.getStarSpace());
     }
@@ -1745,6 +1744,18 @@ public class DesignSpaceService {
 	    return d3Graph;
 	}
 
+	private int locateD3Node(Map<String, Object> node, List<Map<String, Object>> nodes) {
+		for (int i = 0; i < nodes.size(); i++) {
+			if (node.containsKey("nodeID") && nodes.get(i).containsKey("nodeID")) {
+				if (((String) node.get("nodeID")).equals((String) nodes.get(i).get("nodeID"))) {
+					return i;
+				}
+			}	
+		}
+		
+		return -1;
+	}
+	
 	private Map<String, Object> mapDesignSpaceToD3Format(List<Map<String, Object>> spaceMap) {
 		Map<String, Object> d3Graph = new HashMap<String, Object>();
 		
@@ -1761,7 +1772,7 @@ public class DesignSpaceService {
 	        
 	        Map<String, Object> tail = makeD3("nodeID", row.get("tailID"), "nodeTypes", row.get("tailTypes"));
 	        
-	        int source = nodes.indexOf(tail);
+	        int source = locateD3Node(tail, nodes);
 	        
 	        if (source == -1) {
 	        	nodes.add(tail);
@@ -1771,7 +1782,7 @@ public class DesignSpaceService {
 	        
 	        Map<String, Object> head = makeD3("nodeID", row.get("headID"), "nodeTypes", row.get("headTypes"));
 	       
-	        int target = nodes.indexOf(head);
+	        int target = locateD3Node(head, nodes);
 	        
 	        if (target == -1) {
 	        	nodes.add(head);
@@ -1922,11 +1933,6 @@ public class DesignSpaceService {
 	}
 	
 	private void saveDesignSpace(DesignSpace space) {
-		System.out.println("clearing edges");
-		LOG.info("clearing {}", "edges");
-
-		long startTime = System.nanoTime();
-
 		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToOutgoingEdges();
 
 		space.clearEdges();
@@ -1941,49 +1947,17 @@ public class DesignSpaceService {
 
 			commit.getSnapshot().clearEdges();
 		}
-
-		long time1 = System.nanoTime() - startTime;
-
-		System.out.println("saving nodes");
-		LOG.info("saving {}", "nodes");
-
-		startTime = System.nanoTime();
-
+		
 		designSpaceRepository.save(space);
-
-		long time2 = System.nanoTime() - startTime;
-
-		System.out.println("loading edges");
-		LOG.info("loading {}", "edges");
-
-		startTime = System.nanoTime();
 
 		space.loadEdges(nodeIDToEdges);
 
 		for (Commit commit : commits) {
-			System.out.println("saving commit " + commit.getCommitID());
-			LOG.info("saving commit {}", commit.getCommitID());
-
 			commit.getSnapshot().loadEdges(commitIDToEdges.get(commit.getCommitID()));
 
 		}
 
-		long time3 = System.nanoTime() - startTime;
-
-		System.out.println("saving edges");
-		LOG.info("saving {}", "edges");
-
-		startTime = System.nanoTime();
-
 		designSpaceRepository.save(space);
-
-		long time4 = System.nanoTime() - startTime;
-
-		System.out.println("done");
-		LOG.info("done {}", "done");
-
-		System.out.println("times: " + time1 + ", " + time2 + ", " + time3 +  ", " + time4);
-		LOG.info("times: {}", time1 + ", " + time2 + ", " + time3 +  ", " + time4);
 	}
 
 	private void selectHeadBranch(String targetSpaceID, String targetBranchID) {

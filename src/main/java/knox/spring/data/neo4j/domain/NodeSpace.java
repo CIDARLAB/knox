@@ -477,7 +477,7 @@ public class NodeSpace {
 							mergedNodes.add(deletedEdge.getHead());
 						}
 						
-						node.mergeNodes(mergedNodes);
+						node.mergeNodes(mergedNodes, idToIncomingEdges);
 						
 						deletedNodes.addAll(mergedNodes);
 					}
