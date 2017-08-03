@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -348,37 +349,6 @@ public class NodeSpace {
     	return getSize() == 0;
     }
     
-    public boolean isConnected() {
-    	Set<Node> startNodes = getStartNodes();
-    	
-    	if (!startNodes.isEmpty()) {
-    		Stack<Node> nodeStack = new Stack<Node>();
-    		
-    		nodeStack.push(getStartNodes().iterator().next());
-    		
-    		Set<String> visitedNodeIDs = new HashSet<String>();
-
-    		while (!nodeStack.isEmpty()) {
-    			Node node = nodeStack.pop();
-    			
-    			visitedNodeIDs.add(node.getNodeID());
-
-    			if (node.hasEdges()) {
-    				for (Edge edge : node.getEdges()) {
-    					if (!visitedNodeIDs.contains(edge.getHead().getNodeID())) {
-    						nodeStack.push(edge.getHead());	
-    					}
-    				}
-    			}
-    		}
-    		
-    		return visitedNodeIDs.size() == nodes.size();
-    	} else {
-    		return false;
-    	}
-    	
-    }
-    
     public void loadEdges(HashMap<String, Set<Edge>> nodeIDToEdges) { 
     	if (hasNodes()) {
     		for (Node node : nodes) {
@@ -595,41 +565,78 @@ public class NodeSpace {
     	return null;
     }
     
-    public List<Node> orderNodes() {
-    	List<Node> orderedNodes;
-    	
+    public boolean isConnected() {
     	if (hasNodes()) {
-    		orderedNodes = new ArrayList<Node>(nodes.size());
-    		
-        	Stack<Node> nodeStack = new Stack<Node>();
+        	Set<String> globalIDs = new HashSet<String>();
+        	
+        	int numPartitions = 0;
         	
         	for (Node startNode : getStartNodes()) {
-        		nodeStack.push(startNode);
-        	}
-        	
-        	Set<String> visitedIDs = new HashSet<String>();
-        	
-        	while (!nodeStack.isEmpty()) {
-        		Node node = nodeStack.pop();
+        		if (depthFirstTraversal(startNode, new LinkedList<Node>(), globalIDs)) {
+        			numPartitions++;
+        		}
         		
-        		orderedNodes.add(node);
-        		
-        		if (node.hasEdges()) {
-        			for (Edge edge : node.getEdges()) {
-        				if (!visitedIDs.contains(edge.getHead().getNodeID()) 
-        						&& !edge.getHead().isIdenticalTo(node)) {
-        					nodeStack.push(edge.getHead());
-        					
-        					visitedIDs.add(edge.getHead().getNodeID());
-        				}
-        			}
+        		if (numPartitions > 1) {
+        			return false;
         		}
         	}
-    	} else {
-    		orderedNodes = new ArrayList<Node>(0);
     	}
     	
-    	return orderedNodes;
+    	return true;
+    }
+    
+    public List<Node> depthFirstTraversal() {
+    	List<Node> traversalNodes;
+    	
+    	if (hasNodes()) {
+    		traversalNodes = new ArrayList<Node>(nodes.size());
+    		
+        	Set<String> globalIDs = new HashSet<String>();
+        	
+        	for (Node startNode : getStartNodes()) {
+        		depthFirstTraversal(startNode, traversalNodes, globalIDs);
+        	}
+        	
+    	} else {
+    		traversalNodes = new ArrayList<Node>(0);
+    	}
+    	
+    	return traversalNodes;
+    }
+    
+    private boolean depthFirstTraversal(Node startNode, List<Node> traversalNodes, 
+    		Set<String> globalIDs) {
+    	boolean isOrthogonal = true;
+    	
+    	Stack<Node> nodeStack = new Stack<Node>();
+
+    	nodeStack.push(startNode);
+
+    	Set<String> localIDs = new HashSet<String>();
+    	
+    	localIDs.add(startNode.getNodeID());
+
+    	while (!nodeStack.isEmpty()) {
+    		Node node = nodeStack.pop();
+
+    		traversalNodes.add(node);
+
+    		if (node.hasEdges()) {
+    			for (Edge edge : node.getEdges()) {
+    				if (globalIDs.contains(edge.getHead().getNodeID())) {
+    					isOrthogonal = false;
+    				} else if (!localIDs.contains(edge.getHead().getNodeID())) {
+    					nodeStack.push(edge.getHead());
+
+    					localIDs.add(edge.getHead().getNodeID());
+    				}
+    			}
+    		}
+    	}
+    	
+    	globalIDs.addAll(localIDs);
+    	
+    	return isOrthogonal;
     }
     
     public Set<Node> getOtherNodes(Set<Node> nodes) {
@@ -715,7 +722,7 @@ public class NodeSpace {
     }
     
     public void deleteUnreachableNodes() {
-    	deleteNodesWithoutSameIDs(orderNodes());
+    	deleteNodesWithoutSameIDs(depthFirstTraversal());
     }
     
     public void deleteNodesWithSameIDs(Collection<Node> nodes) {

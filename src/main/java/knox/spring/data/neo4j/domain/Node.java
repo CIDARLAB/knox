@@ -72,28 +72,55 @@ public class Node {
     }
 
     public Edge copyEdge(Edge edge, Node head) {
-    	Edge parallelEdge = getEdge(head);
+    	Set<Edge> parallelEdges = getEdges(head);
     	
-    	if (parallelEdge != null) {
-			parallelEdge.unionWithEdge(edge);
+    	if (edge.hasComponentIDs()) {
+			for (Edge parallelEdge : parallelEdges) {
+    			if (parallelEdge.hasComponentIDs()) {
+    				parallelEdge.unionWithEdge(edge);
+    				
+    				return parallelEdge;
+    			}
+    		}
 			
-			return parallelEdge;
-		} else if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
-    		return createEdge(head, new ArrayList<String>(edge.getComponentIDs()), new ArrayList<String>(edge.getComponentRoles()));
-    	} else {
+			if (edge.hasComponentRoles()) {
+				return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
+						new ArrayList<String>(edge.getComponentRoles()));
+			} else {
+				return createEdge(head, new ArrayList<String>(edge.getComponentIDs()));
+			}
+		} else {
+			for (Edge parallelEdge : parallelEdges) {
+    			if (!parallelEdge.hasComponentIDs()) {
+    				return parallelEdge;
+    			}
+    		}
+    		
     		return createEdge(head);
-    	}
+		}
     }
 
     public Edge createEdge(Node head) {
         Edge edge = new Edge(this, head);
+        
         addEdge(edge);
+        
+        return edge;
+    }
+    
+    public Edge createEdge(Node head, ArrayList<String> compIDs) {
+        Edge edge = new Edge(this, head, compIDs);
+        
+        addEdge(edge);
+        
         return edge;
     }
 
     public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles) {
         Edge edge = new Edge(this, head, compIDs, compRoles);
+        
         addEdge(edge);
+        
         return edge;
     }
 
@@ -157,18 +184,18 @@ public class Node {
         }
     }
     
-    public Edge getEdge(Node head) {
+    public Set<Edge> getEdges(Node head) {
+    	Set<Edge> edgesWithHead = new HashSet<Edge>();
+    	
     	if (hasEdges()) {
     		for (Edge edge : edges) {
     			if (edge.getHead().isIdenticalTo(head)) {
-    				return edge;
+    				edgesWithHead.add(edge);
     			}
     		}
-    		
-    		return null;
-    	} else {
-    		return null;
-    	}
+    	} 
+    	
+    	return edgesWithHead;
     }
     
     public boolean hasEdge(Node head) {
@@ -244,6 +271,10 @@ public class Node {
 
     public boolean isStartNode() {
         return hasNodeTypes() && nodeTypes.contains(NodeType.START.getValue());
+    }
+    
+    public boolean isSinkNode() {
+    	return hasEdges();
     }
 
     public boolean isIdenticalTo(Node node) {

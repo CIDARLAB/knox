@@ -4,19 +4,17 @@ import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Node.NodeType;
+import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import java.util.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Product {
 	private List<Node> rowNodes;
 	
 	private List<Node> colNodes;
-	
-//	private List<List<Node>> productNodes;
-//	
-//	private HashMap<String, Integer> idToRowIndex = new HashMap<String, Integer>();
-//	
-//	private HashMap<String, Integer> idToColIndex = new HashMap<String, Integer>();
 	
 	private HashMap<Integer, Set<Node>> rowToProductNodes;
 	
@@ -24,48 +22,18 @@ public class Product {
 	
 	private NodeSpace productSpace;
 	
+	private static final Logger LOG = LoggerFactory.getLogger(Product.class);
+	
 	public Product(NodeSpace rowSpace, NodeSpace colSpace) {
 		productSpace = new NodeSpace();
 		
-		this.rowNodes = rowSpace.orderNodes();
+		this.rowNodes = rowSpace.depthFirstTraversal();
 		
-		this.colNodes = colSpace.orderNodes();
+		this.colNodes = colSpace.depthFirstTraversal();
 		
 		rowToProductNodes = new HashMap<Integer, Set<Node>>();
 		
 		colToProductNodes = new HashMap<Integer, Set<Node>>();
-		
-//		productNodes = new ArrayList<List<Node>>(rowNodes.size());
-//		
-//		idToRowIndex = new HashMap<String, Integer>();
-//		
-//		idToColIndex = new HashMap<String, Integer>();
-    	
-//    	for (int i = 0; i < rowNodes.size(); i++) {
-//			productNodes.add(new ArrayList<Node>(colNodes.size()));
-//
-//			for (int j = 0; j < colNodes.size(); j++) {
-//				Node node;
-//				
-//				if (rowNodes.get(i).isAcceptNode() || colNodes.get(j).isAcceptNode()) {
-//					node = productSpace.createAcceptNode();
-//					
-//					productNodes.get(i).add(node);
-//				} else if (rowNodes.get(i).isStartNode() && colNodes.get(j).isStartNode()) {
-//					node = productSpace.createStartNode();
-//					
-//					productNodes.get(i).add(node);
-//				} else {
-//					node = productSpace.createNode();
-//					
-//					productNodes.get(i).add(node);
-//				}
-//				
-//				idToRowIndex.put(node.getNodeID(), new Integer(i));
-//				
-//				idToColIndex.put(node.getNodeID(), new Integer(j));
-//			}
-//		}
 	}
 	
 	public void connect(String type, int tolerance, boolean isModified) {

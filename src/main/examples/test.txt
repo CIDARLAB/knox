@@ -159,7 +159,7 @@ CREATE (d0b)-[:CONTAINS]->(n2b)
 CREATE (d0b)-[:CONTAINS]->(n3b)
 
 CREATE (n0b)-[:PRECEDES {componentIDs: ["A","B"], componentRoles: ["CDS"]}]->(n1b)
-CREATE (n1b)-[:PRECEDES {componentIDs: ["C"], componentRoles: ["CDS"]}]->(n2b)
+CREATE (n1b)-[:PRECEDES]->(n2b)
 CREATE (n2b)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"]}]->(n3b)
 
 CREATE (d0b)-[:ARCHIVES]->(b0b:Branch {branchID: "test2"})-[:CONTAINS]->(c0b:Commit {commitID: "c0"})-[:CONTAINS]->(s0b:Snapshot {nodeIndex: 4})
@@ -176,7 +176,7 @@ CREATE (s0b)-[:CONTAINS]->(sn2b)
 CREATE (s0b)-[:CONTAINS]->(sn3b)
 
 CREATE (sn0b)-[:PRECEDES {componentIDs: ["A","B"], componentRoles: ["CDS"]}]->(sn1b)
-CREATE (sn1b)-[:PRECEDES {componentIDs: ["C"], componentRoles: ["CDS"]}]->(sn2b)
+CREATE (sn1b)-[:PRECEDES]->(sn2b)
 CREATE (sn2b)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"]}]->(sn3b)
 
 

@@ -1356,67 +1356,6 @@ public class DesignSpaceService {
     	return completeMatches;
     }
     
-//    public void minimizeDesignSpace(String targetSpaceID) 
-//    		throws DesignSpaceNotFoundException {
-//    	validateDesignSpaceOperator(targetSpaceID);
-//
-//    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 2);
-//    	
-//    	HashMap<String, Node> nodeIDToNode = targetSpace.mapNodeIDsToNodes();
-//    	HashMap<String, Set<Edge>> nodeIDsToIncomingEdges = targetSpace.mapNodeIDsToIncomingEdges();
-//    	
-//    	Stack<Node> nodeStack = new Stack<Node>();
-//    	for (Node node : targetSpace.getNodes()) {
-//    		nodeStack.push(node);
-//    	}
-//    	
-//    	Set<String> deletedNodeIDs = new HashSet<String>();
-//    	
-//    	while (nodeStack.size() > 0) {
-//    		Node node = nodeStack.peek();
-//    		
-//    		Set<Edge> minimizableEdges = targetSpace.getMinimizableEdges(node, nodeIDsToIncomingEdges);
-//
-//    		if (minimizableEdges.size() == 0 || deletedNodeIDs.contains(node.getNodeID())) {
-//    			nodeStack.pop();
-//    		} else {
-//    			for (Edge minimizableEdge : minimizableEdges) {
-//    				Node predecessor = nodeIDToNode.get(minimizableEdge.getTail().getNodeID());
-//
-//    				deletedNodeIDs.add(predecessor.getNodeID());
-//
-//    				if (nodeIDsToIncomingEdges.containsKey(predecessor.getNodeID())) {
-//    					for (Edge incomingEdge : nodeIDsToIncomingEdges.get(predecessor.getNodeID())) {
-//    						incomingEdge.setHead(node);
-//    						nodeIDsToIncomingEdges.get(node.getNodeID()).add(incomingEdge);
-//    					}
-//    				}
-//
-//    				if (minimizableEdges.size() == 1) {
-//    					for (Edge edge : predecessor.getEdges()) {
-//    						if (!edge.equals(minimizableEdge)) {
-//    							nodeIDsToIncomingEdges.get(edge.getHead().getNodeID()).add(node.copyEdge(edge));
-//    							nodeIDsToIncomingEdges.get(edge.getHead().getNodeID()).remove(edge);
-//    						}
-//    					}
-//    				}
-//
-//    				if (predecessor.hasNodeType()) {
-//    					node.setNodeType(predecessor.getNodeType());
-//    				}
-//    			}
-//    			
-//    			nodeIDsToIncomingEdges.get(node.getNodeID()).removeAll(minimizableEdges);
-//    		}
-//    	}
-//    	
-//    	Set<Node> deletedNodes = targetSpace.removeNodesByID(deletedNodeIDs);
-//    	
-//    	saveDesignSpace(targetSpace);
-//    	
-//    	nodeRepository.delete(deletedNodes);
-//    }
-    
     private void copyDesignSpaceToSnapshot(String inputSpaceID, String outputBranchID) {
 		designSpaceRepository.copyDesignSpaceToSnapshot(inputSpaceID, outputBranchID);
 	}
