@@ -44,6 +44,20 @@ public class Node {
     	
         edges.add(edge);
     }
+    
+    public boolean deleteNodeType(String nodeType) {
+    	if (hasNodeTypes()) {
+    		boolean isDeleted = nodeTypes.remove(nodeType);
+    		
+    		if (nodeTypes.isEmpty()) {
+    			nodeTypes = null;
+    		}
+    		
+    		 return isDeleted;
+    	} else {
+    		return false;
+    	}
+    }
 
     public void clearNodeTypes() { 
     	nodeTypes = null; 
@@ -238,13 +252,13 @@ public class Node {
     
     public boolean deleteEdges(Set<Edge> edges) {
     	if (hasEdges()) {
-    		boolean success = this.edges.removeAll(edges);
+    		boolean isDeleted = this.edges.removeAll(edges);
     		
     		if (this.edges.isEmpty()) {
     			this.edges = null;
     		}
     		
-    		return success;
+    		return isDeleted;
     	} else {
     		return false;
     	}

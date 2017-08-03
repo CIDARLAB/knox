@@ -5,6 +5,7 @@ import java.util.Set;
 
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
+import knox.spring.data.neo4j.domain.Node.NodeType;
 
 public class Star {
 private NodeSpace starSpace;
@@ -42,13 +43,13 @@ private NodeSpace starSpace;
 			for (Node startNode : startNodes) {
 				primaryStartNode.createEdge(startNode);
 				
-				startNode.clearNodeTypes();
+				startNode.deleteNodeType(NodeType.START.getValue());
 			}
 			
 			for (Node acceptNode : acceptNodes) {
 				acceptNode.createEdge(primaryAcceptNode);
 				
-				acceptNode.clearNodeTypes();
+				acceptNode.deleteNodeType(NodeType.ACCEPT.getValue());
 			}
 		}
 	}

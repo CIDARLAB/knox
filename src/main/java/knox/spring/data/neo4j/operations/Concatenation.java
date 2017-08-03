@@ -3,6 +3,7 @@ package knox.spring.data.neo4j.operations;
 import java.util.Set;
 
 import knox.spring.data.neo4j.domain.Node;
+import knox.spring.data.neo4j.domain.Node.NodeType;
 import knox.spring.data.neo4j.domain.NodeSpace;
 
 public class Concatenation {
@@ -28,10 +29,10 @@ public class Concatenation {
 					for (Node acceptNode : acceptNodes) {
 						acceptNode.createEdge(startNode);
 						
-						acceptNode.clearNodeTypes();
+						acceptNode.deleteNodeType(NodeType.ACCEPT.getValue());
 					}
 					
-					startNode.clearNodeTypes();
+					startNode.deleteNodeType(NodeType.START.getValue());
 				}
 			}
 		}

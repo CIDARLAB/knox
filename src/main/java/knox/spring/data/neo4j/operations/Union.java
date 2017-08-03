@@ -4,6 +4,7 @@ import java.util.List;
 
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
+import knox.spring.data.neo4j.domain.Node.NodeType;
 
 public class Union {
 	private NodeSpace unionSpace;
@@ -27,7 +28,7 @@ public class Union {
     		if (!primaryStartNode.isIdenticalTo(startNode)) {
     			primaryStartNode.createEdge(startNode);
     			
-    			startNode.clearNodeTypes();
+    			startNode.deleteNodeType(NodeType.START.getValue());
     		}
     	}
     	
@@ -38,7 +39,7 @@ public class Union {
     			if (!primaryAcceptNode.isIdenticalTo(acceptNode)) {
     				acceptNode.createEdge(primaryAcceptNode);
     				
-    				acceptNode.clearNodeTypes();
+    				acceptNode.deleteNodeType(NodeType.ACCEPT.getValue());
     			}
     		}
     	}
