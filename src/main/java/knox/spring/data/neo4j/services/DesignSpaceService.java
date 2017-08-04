@@ -1156,11 +1156,7 @@ public class DesignSpaceService {
     		}
     		for (Node acceptNode1 : acceptNodes1) {
     			for (Edge removedEdge : removedEdges) {
-    				if (removedEdge.hasComponentIDs() && removedEdge.hasComponentRoles()) {
-    					createComponentEdge(targetSpaceID, outputBranchID, acceptNode1.getNodeID(), removedEdge.getHead().getNodeID(), removedEdge.getComponentIDs(), removedEdge.getComponentRoles());
-    				} else {
-    					createEdge(targetSpaceID, outputBranchID, acceptNode1.getNodeID(), removedEdge.getHead().getNodeID());
-    				}
+    				createComponentEdge(targetSpaceID, outputBranchID, acceptNode1.getNodeID(), removedEdge.getHead().getNodeID(), removedEdge.getComponentIDs(), removedEdge.getComponentRoles());
     			}
     		}
     	}
@@ -1272,11 +1268,7 @@ public class DesignSpaceService {
     	}
     	for (Node acceptNode2 : acceptNodes2) {
     		for (Edge removedEdge : removedEdges) {
-    			if (removedEdge.hasComponentIDs() && removedEdge.hasComponentRoles()) {
-    				createComponentEdge(outputSpaceID, acceptNode2.getNodeID(), removedEdge.getHead().getNodeID(), removedEdge.getComponentIDs(), removedEdge.getComponentRoles());
-    			} else {
-    				createEdge(outputSpaceID, acceptNode2.getNodeID(), removedEdge.getHead().getNodeID());
-    			}
+    			createComponentEdge(outputSpaceID, acceptNode2.getNodeID(), removedEdge.getHead().getNodeID(), removedEdge.getComponentIDs(), removedEdge.getComponentRoles());
     		}
     	}
 
@@ -1305,56 +1297,56 @@ public class DesignSpaceService {
     	}
     }
     
-    public Map<String, Object> matchDesignSpaces(List<String> querySpaceIDs, List<String> queriedSpaceIDs) {
-    	List<DesignSpace> querySpaces = new ArrayList<DesignSpace>(querySpaceIDs.size());
-    	
-    	for (String querySpaceID : querySpaceIDs) {
-    		querySpaces.add(loadDesignSpace(querySpaceID, 2));
-    	}
-    	
-    	List<DesignSpace> queriedSpaces = new ArrayList<DesignSpace>(queriedSpaceIDs.size());
-    	
-    	for (String queriedSpaceID : queriedSpaceIDs) {
-    		queriedSpaces.add(loadDesignSpace(queriedSpaceID, 2));
-    	}
-    	
-    	List<List<DesignSpace>> allMatchSpaces = new ArrayList<List<DesignSpace>>(querySpaces.size());
-    	
-    	for (int i = 0; i < querySpaces.size(); i++) {
-    		allMatchSpaces.add(new ArrayList<DesignSpace>(queriedSpaces.size()));
-    		
-    		for (int j = 0; j < queriedSpaces.size(); j++) {
-    			List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(2);
-
-    			inputSpaces.add(queriedSpaces.get(j));
-
-    			inputSpaces.add(querySpaces.get(i));
-    			
-    			productOfNodeSpaces(inputSpaces, inputSpaces.get(0), 
-    					ProductType.TENSOR.getValue(), 0, false);
-
-    			allMatchSpaces.get(i).add(queriedSpaces.get(j));
-    		}
-    	}
-    	
-    	Map<String, Object> completeMatches = new HashMap<String, Object>();
-		
-		for (List<DesignSpace> matchSpaces : allMatchSpaces) {
-			for (DesignSpace matchSpace : matchSpaces) {
-				if (matchSpace.hasNodes()) {
-					Set<String> matchNodeIDs = new HashSet<String>();
-					
-					for (Node startNode : matchSpace.getStartNodes()) {
-						matchNodeIDs.add(startNode.getNodeID());
-					}
-					
-					completeMatches.put(matchSpace.getSpaceID(), matchNodeIDs);
-				}
-			}
-		}
-    	
-    	return completeMatches;
-    }
+//    public Map<String, Object> matchDesignSpaces(List<String> querySpaceIDs, List<String> queriedSpaceIDs) {
+//    	List<DesignSpace> querySpaces = new ArrayList<DesignSpace>(querySpaceIDs.size());
+//    	
+//    	for (String querySpaceID : querySpaceIDs) {
+//    		querySpaces.add(loadDesignSpace(querySpaceID, 2));
+//    	}
+//    	
+//    	List<DesignSpace> queriedSpaces = new ArrayList<DesignSpace>(queriedSpaceIDs.size());
+//    	
+//    	for (String queriedSpaceID : queriedSpaceIDs) {
+//    		queriedSpaces.add(loadDesignSpace(queriedSpaceID, 2));
+//    	}
+//    	
+//    	List<List<DesignSpace>> allMatchSpaces = new ArrayList<List<DesignSpace>>(querySpaces.size());
+//    	
+//    	for (int i = 0; i < querySpaces.size(); i++) {
+//    		allMatchSpaces.add(new ArrayList<DesignSpace>(queriedSpaces.size()));
+//    		
+//    		for (int j = 0; j < queriedSpaces.size(); j++) {
+//    			List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(2);
+//
+//    			inputSpaces.add(queriedSpaces.get(j));
+//
+//    			inputSpaces.add(querySpaces.get(i));
+//    			
+//    			productOfNodeSpaces(inputSpaces, inputSpaces.get(0), 
+//    					ProductType.TENSOR.getValue(), 0, false);
+//
+//    			allMatchSpaces.get(i).add(queriedSpaces.get(j));
+//    		}
+//    	}
+//    	
+//    	Map<String, Object> completeMatches = new HashMap<String, Object>();
+//		
+//		for (List<DesignSpace> matchSpaces : allMatchSpaces) {
+//			for (DesignSpace matchSpace : matchSpaces) {
+//				if (matchSpace.hasNodes()) {
+//					Set<String> matchNodeIDs = new HashSet<String>();
+//					
+//					for (Node startNode : matchSpace.getStartNodes()) {
+//						matchNodeIDs.add(startNode.getNodeID());
+//					}
+//					
+//					completeMatches.put(matchSpace.getSpaceID(), matchNodeIDs);
+//				}
+//			}
+//		}
+//    	
+//    	return completeMatches;
+//    }
     
     private void copyDesignSpaceToSnapshot(String inputSpaceID, String outputBranchID) {
 		designSpaceRepository.copyDesignSpaceToSnapshot(inputSpaceID, outputBranchID);

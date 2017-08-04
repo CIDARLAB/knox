@@ -241,7 +241,7 @@ public class SubSpace {
             if (nodes.get(i).hasEdges()) {
                 for (Edge edge : nodes.get(i).getEdges()) {
                     if (!outgoingEdges.contains(edge)) {
-                        if (edge.isComponentEdge()) {
+                        if (edge.hasComponentIDs() && edge.hasComponentRoles()) {
                             nodeCopies.get(i - copyIndex)
                                 .copyEdge(edge,
                                           nodeCopies.get(i + 1 - copyIndex));

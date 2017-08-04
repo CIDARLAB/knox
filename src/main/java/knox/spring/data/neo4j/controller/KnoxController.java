@@ -469,12 +469,12 @@ public class KnoxController {
         }
     }
 
-    @RequestMapping(value = "/designSpace/match", method = RequestMethod.GET)
-    public Map<String, Object> matchDesignSpaces(@RequestParam(value = "querySpaceIDs", required = true) List<String> querySpaceIDs,
-            @RequestParam(value = "queriedSpaceIDs", required = true) List<String> queriedSpaceIDs) {
-        return designSpaceService.matchDesignSpaces(querySpaceIDs,
-                queriedSpaceIDs);
-    }
+//    @RequestMapping(value = "/designSpace/match", method = RequestMethod.GET)
+//    public Map<String, Object> matchDesignSpaces(@RequestParam(value = "querySpaceIDs", required = true) List<String> querySpaceIDs,
+//            @RequestParam(value = "queriedSpaceIDs", required = true) List<String> queriedSpaceIDs) {
+//        return designSpaceService.matchDesignSpaces(querySpaceIDs,
+//                queriedSpaceIDs);
+//    }
     
     @RequestMapping(value = "/designSpace/union", method = RequestMethod.POST)
     public ResponseEntity<String> unionDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,

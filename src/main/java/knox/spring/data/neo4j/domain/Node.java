@@ -5,12 +5,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import knox.spring.data.neo4j.operations.Product;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
@@ -20,15 +24,17 @@ public class Node {
     String nodeID;
 
     @Relationship(type = "PRECEDES") Set<Edge> edges = new HashSet<>();
-
-//    String nodeType;
     
     ArrayList<String> nodeTypes;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(Node.class);
 
     public Node() {}
     
     public Node(String nodeID) {
     	this.nodeID = nodeID;
+    	
+    	this.nodeTypes = new ArrayList<String>();
     }
     
     public Node(String nodeID, ArrayList<String> nodeTypes) {
@@ -45,22 +51,18 @@ public class Node {
         edges.add(edge);
     }
     
-    public boolean deleteNodeType(String nodeType) {
-    	if (hasNodeTypes()) {
-    		boolean isDeleted = nodeTypes.remove(nodeType);
-    		
-    		if (nodeTypes.isEmpty()) {
-    			nodeTypes = null;
-    		}
-    		
-    		 return isDeleted;
-    	} else {
-    		return false;
+    public void addNodeType(String nodeType) { 
+    	if (!nodeTypes.contains(nodeType)) {
+    		nodeTypes.add(nodeType);
     	}
+    }
+    
+    public boolean deleteNodeType(String nodeType) {
+    	return nodeTypes.remove(nodeType);
     }
 
     public void clearNodeTypes() { 
-    	nodeTypes = null; 
+    	nodeTypes.clear();
     }
     
     public Node copy() {
@@ -74,42 +76,30 @@ public class Node {
     public Edge copyEdge(Edge edge, Node head) {
     	Set<Edge> parallelEdges = getEdges(head);
     	
-    	if (edge.hasComponentIDs()) {
+    	if (edge.isBlank()) {
+    		for (Edge parallelEdge : parallelEdges) {
+    			if (parallelEdge.isBlank()) {
+    				return parallelEdge;
+    			}
+    		}
+    		
+    		return createEdge(head);
+		} else {
 			for (Edge parallelEdge : parallelEdges) {
-    			if (parallelEdge.hasComponentIDs()) {
+    			if (!parallelEdge.isBlank()) {
     				parallelEdge.unionWithEdge(edge);
     				
     				return parallelEdge;
     			}
     		}
 			
-			if (edge.hasComponentRoles()) {
-				return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
-						new ArrayList<String>(edge.getComponentRoles()));
-			} else {
-				return createEdge(head, new ArrayList<String>(edge.getComponentIDs()));
-			}
-		} else {
-			for (Edge parallelEdge : parallelEdges) {
-    			if (!parallelEdge.hasComponentIDs()) {
-    				return parallelEdge;
-    			}
-    		}
-    		
-    		return createEdge(head);
+			return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
+					new ArrayList<String>(edge.getComponentRoles()));
 		}
     }
 
     public Edge createEdge(Node head) {
         Edge edge = new Edge(this, head);
-        
-        addEdge(edge);
-        
-        return edge;
-    }
-    
-    public Edge createEdge(Node head, ArrayList<String> compIDs) {
-        Edge edge = new Edge(this, head, compIDs);
         
         addEdge(edge);
         
@@ -137,7 +127,11 @@ public class Node {
     }
 
     public int getNumEdges() { 
-    	return edges.size(); 
+    	if (hasEdges()) {
+    		return edges.size(); 
+    	} else {
+    		return 0;
+    	}
     }
 
     public Set<Edge> getEdges() { 
@@ -254,23 +248,22 @@ public class Node {
     }
 
     public boolean hasNodeTypes() {
-    	return nodeTypes != null && !nodeTypes.isEmpty(); 
+    	return !nodeTypes.isEmpty(); 
     }
     
     public boolean hasConflictingType(Node node) {
-    	return hasNodeTypes() && node.hasNodeTypes() 
-    			&& ((nodeTypes.contains(NodeType.ACCEPT.getValue()) 
-    							&& node.getNodeTypes().contains(NodeType.START.getValue()))
-    					|| (nodeTypes.contains(NodeType.START.getValue())
-    							&& node.getNodeTypes().contains(NodeType.ACCEPT.getValue())));
+    	return (nodeTypes.contains(NodeType.ACCEPT.getValue()) 
+    					&& node.getNodeTypes().contains(NodeType.START.getValue())) 
+    					|| (nodeTypes.contains(NodeType.START.getValue()) 
+    								&& node.getNodeTypes().contains(NodeType.ACCEPT.getValue()));
     }
 
     public boolean isAcceptNode() {
-        return hasNodeTypes() && nodeTypes.contains(NodeType.ACCEPT.getValue());
+        return nodeTypes.contains(NodeType.ACCEPT.getValue());
     }
 
     public boolean isStartNode() {
-        return hasNodeTypes() && nodeTypes.contains(NodeType.START.getValue());
+        return nodeTypes.contains(NodeType.START.getValue());
     }
     
     public boolean isSinkNode() {
@@ -279,6 +272,46 @@ public class Node {
 
     public boolean isIdenticalTo(Node node) {
     	return node.getNodeID().equals(nodeID);
+    }
+    
+    public void mergeNodes(Set<Node> mergedNodes, HashMap<String, Set<Edge>> idToIncomingEdges) {
+    	mergedNodes.remove(this);
+    	
+    	for (Node mergedNode : mergedNodes) {
+			if (mergedNode.hasEdges()) {
+				for (Edge edge : mergedNode.getEdges()) {
+					addEdge(edge);
+					
+					edge.setTail(this);
+				}
+			}
+			
+			if (idToIncomingEdges.containsKey(mergedNode.getNodeID())) {
+				Set<Edge> reassignedEdges = new HashSet<Edge>();
+				
+				for (Edge edge : idToIncomingEdges.get(mergedNode.getNodeID())) {
+					edge.setHead(this);
+					
+					if (!idToIncomingEdges.containsKey(nodeID)) {
+						idToIncomingEdges.put(nodeID, new HashSet<Edge>());
+					}
+					
+					idToIncomingEdges.get(nodeID).add(edge);
+					
+					reassignedEdges.add(edge);
+				}
+				
+				idToIncomingEdges.get(mergedNode.getNodeID()).removeAll(reassignedEdges);
+			}
+			
+			if (mergedNode.isAcceptNode()) {
+				addNodeType(NodeType.ACCEPT.getValue());
+			}
+			
+			if (mergedNode.isStartNode()) {
+				addNodeType(NodeType.START.getValue());
+			}
+		}
     }
     
     public boolean deleteEdges(Set<Edge> edges) {
@@ -314,53 +347,5 @@ public class Node {
         public String getValue() {
         	return value; 
         }
-    }
-
-    public void addNodeType(String nodeType) { 
-    	if (!hasNodeTypes()) {
-    		nodeTypes = new ArrayList<String>();
-    	}
-    	
-    	nodeTypes.add(nodeType);
-    }
-    
-    public void mergeNodes(Set<Node> mergedNodes, HashMap<String, Set<Edge>> idToIncomingEdges) {
-    	mergedNodes.remove(this);
-    	
-    	for (Node mergedNode : mergedNodes) {
-			if (mergedNode.hasEdges()) {
-				for (Edge edge : mergedNode.getEdges()) {
-					addEdge(edge);
-					
-					edge.setTail(this);
-				}
-			}
-			
-			if (idToIncomingEdges.containsKey(mergedNode.getNodeID())) {
-				Set<Edge> reassignedEdges = new HashSet<Edge>();
-				
-				for (Edge edge : idToIncomingEdges.get(mergedNode.getNodeID())) {
-					edge.setHead(this);
-					
-					if (!idToIncomingEdges.containsKey(nodeID)) {
-						idToIncomingEdges.put(nodeID, new HashSet<Edge>());
-					}
-					
-					idToIncomingEdges.get(nodeID).add(edge);
-					
-					reassignedEdges.add(edge);
-				}
-				
-				idToIncomingEdges.get(mergedNode.getNodeID()).removeAll(reassignedEdges);
-			}
-			
-			if (mergedNode.isAcceptNode() && !isAcceptNode()) {
-				addNodeType(NodeType.ACCEPT.getValue());
-			}
-			
-			if (mergedNode.isStartNode()) {
-				addNodeType(NodeType.START.getValue());
-			}
-		}
     }
 }

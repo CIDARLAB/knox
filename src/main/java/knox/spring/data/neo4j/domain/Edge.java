@@ -27,37 +27,20 @@ public class Edge {
 
     double weight;
 
-    public Edge() {}
+    public Edge() {
+    	
+    }
 
     public Edge(Node tail, Node head) {
         this.tail = tail;
         
         this.head = head;
         
+        componentIDs = new ArrayList<String>();
+        
+        componentRoles = new ArrayList<String>();
+        
         this.weight = 1.0;
-    }
-
-    public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles,
-                double weight) {
-        this.tail = tail;
-        
-        this.head = head;
-        
-        this.componentIDs = componentIDs;
-        
-        this.componentRoles = componentRoles;
-        
-        this.weight = weight;
-    }
-    
-    public Edge(Node tail, Node head, ArrayList<String> componentIDs) {
-    	this.tail = tail;
-    	
-    	this.head = head;
-    	
-    	this.componentIDs = componentIDs;
-    	
-    	this.weight = 1.0;
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
@@ -72,12 +55,20 @@ public class Edge {
         this.weight = 1.0;
 	}
 
-    public void addComponent(String compID, String compRole) {
-        if (!hasComponentIDs()) {
-            componentIDs = new ArrayList<String>();
-            componentRoles = new ArrayList<String>();
-        }
+    public Edge(Node tail, Node head, ArrayList<String> componentIDs, ArrayList<String> componentRoles,
+                double weight) {
+        this.tail = tail;
+        
+        this.head = head;
+        
+        this.componentIDs = componentIDs;
+        
+        this.componentRoles = componentRoles;
+        
+        this.weight = weight;
+    }
 
+    public void addComponent(String compID, String compRole) {
         if (!componentIDs.contains(compID)) {
             componentIDs.add(compID);
         }
@@ -89,35 +80,21 @@ public class Edge {
 
     public void setComponent(String compID, String compRole) {
         componentIDs = new ArrayList<String>();
+        
         componentRoles = new ArrayList<String>();
 
         componentIDs.add(compID);
+        
         componentIDs.add(compRole);
     }
 
     public Edge copy(Node tail, Node head) {
-        if (hasComponentIDs() && hasComponentRoles()) {
-            return new Edge(tail, head, new ArrayList<String>(componentIDs),
-                            new ArrayList<String>(componentRoles));
-        } else {
-            return new Edge(tail, head);
-        }
+    	return new Edge(tail, head, new ArrayList<String>(componentIDs),
+    			new ArrayList<String>(componentRoles));
     }
 
     public boolean deleteComponent(String compID) {
-        if (hasComponentIDs()) {
-            boolean result = componentIDs.remove(compID);
-
-            if (componentIDs.size() == 0) {
-                componentIDs = null;
-                componentRoles = null;
-            }
-
-            return result;
-
-        } else {
-            return false;
-        }
+    	return componentIDs.remove(compID);
     }
 
     public Node getTail() {
@@ -135,7 +112,7 @@ public class Edge {
             return null;
         }
     }
-
+    
     public ArrayList<String> getComponentIDs() {
     	return componentIDs; 
     }
@@ -149,59 +126,33 @@ public class Edge {
     }
 
     public boolean hasComponentID(String compID) {
-        if (hasComponentIDs()) {
-            return componentIDs.contains(compID);
-        } else {
-            return false;
-        }
+    	return componentIDs.contains(compID);
     }
 
     public boolean hasComponentIDs() {
-        if (componentIDs == null) {
-            return false;
-        } else {
-            return componentIDs.size() > 0;
-        }
+    	return componentIDs.size() > 0;
     }
 
     public boolean hasComponentRole(String compRole) {
-        if (hasComponentRoles()) {
-            return componentRoles.contains(compRole);
-        } else {
-            return false;
-        }
+    	return componentRoles.contains(compRole);
     }
 
     public boolean hasComponentRoles() {
-        if (componentRoles == null) {
-            return false;
-        } else {
-            return componentRoles.size() > 0;
-        }
+    	return componentRoles.size() > 0;
     }
 
-    public boolean hasComponents() {
-        return hasComponentIDs() && hasComponentRoles();
-    }
+//    public boolean hasComponents() {
+//        return hasComponentIDs() && hasComponentRoles();
+//    }
 
     public void intersectWithEdge(Edge edge) {
-        if (hasComponentIDs() && edge.hasComponentIDs()) {
-            componentIDs.retainAll(edge.getComponentIDs());
-        }
+    	componentIDs.retainAll(edge.getComponentIDs());
 
-        if (hasComponentRoles() && edge.hasComponentRoles()) {
-            componentRoles.retainAll(edge.getComponentRoles());
-        }
-
-        if (componentIDs != null && componentIDs.isEmpty()) {
-            componentIDs = null;
-            
-            componentRoles = null;
-        }
+    	componentRoles.retainAll(edge.getComponentRoles());
     }
-
-    public boolean isComponentEdge() {
-        return hasComponentIDs() && hasComponentRoles();
+    
+    public boolean isBlank() {
+    	return !hasComponentIDs() && !hasComponentRoles();
     }
 
     public boolean isIdenticalTo(Edge edge) {
@@ -230,8 +181,8 @@ public class Edge {
             
             Set<String> compIDs2 = new HashSet<String>(edge.getComponentIDs());
 
-            return compIDs1.equals(compIDs2);
-        } else if (!hasComponentIDs() && !edge.hasComponentIDs()) {
+            return compIDs1.equals(compIDs2) && hasSameRoles(edge);
+        } else if (isBlank() && edge.isBlank()) {
         	return true;
         } else {
             return false;
@@ -246,8 +197,8 @@ public class Edge {
 
             compIDs1.retainAll(compIDs2);
 
-            return compIDs1.size() > 0;
-        } else if (!hasComponentIDs() && !edge.hasComponentIDs()) {
+            return compIDs1.size() > 0 && hasSharedRoles(edge);
+        } else if (isBlank() && edge.isBlank()) {
         	return true;
         } else {
             return false;
@@ -255,19 +206,13 @@ public class Edge {
     }
     
     public boolean hasSameRoles(Edge edge) {
-    	if (hasComponentIDs() && edge.hasComponentIDs()) {
-    		if (hasComponentRoles() && edge.hasComponentRoles()) {
-    			Set<String> compRoles1 = new HashSet<String>(componentRoles);
-    			
-    			Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
+    	if (hasComponentRoles() && edge.hasComponentRoles()) {
+    		Set<String> compRoles1 = new HashSet<String>(componentRoles);
 
-    			return compRoles1.equals(compRoles2);
-    		} else if (!hasComponentRoles() && !edge.hasComponentRoles()) {
-    			return true;
-    		} else {
-    			return false;
-    		}
-    	} else if (!hasComponentIDs() && !edge.hasComponentIDs()) {
+    		Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
+
+    		return compRoles1.equals(compRoles2);
+    	} else if (!hasComponentRoles() && !edge.hasComponentRoles()) {
         	return true;
         } else {
             return false;
@@ -275,8 +220,7 @@ public class Edge {
     }
 
     public boolean hasSharedRoles(Edge edge) {
-    	if (hasComponentIDs() && edge.hasComponentIDs()) {
-    		if (hasComponentRoles() && edge.hasComponentRoles()) {
+    	if (hasComponentRoles() && edge.hasComponentRoles()) {
     			Set<String> compRoles1 = new HashSet<String>(componentRoles);
     			
     			Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
@@ -284,10 +228,7 @@ public class Edge {
     			compRoles1.retainAll(compRoles2);
 
     			return compRoles1.size() > 0;
-    		} else {
-    			return false;
-    		}
-    	} else if (!hasComponentIDs() && !edge.hasComponentIDs()) {
+    	} else if (!hasComponentRoles() && !edge.hasComponentRoles()) {
     		return true;
     	} else {
     		return false;
@@ -309,34 +250,30 @@ public class Edge {
     public void unionWithEdge(Edge edge) {
         Set<String> mergedIDs = new HashSet<String>();
         
-        if (hasComponentIDs() && edge.hasComponentIDs()) {
-            mergedIDs.addAll(componentIDs);
+        mergedIDs.addAll(componentIDs);
 
-            for (String compID : edge.getComponentIDs()) {
-                if (!mergedIDs.contains(compID)) {
-                    componentIDs.add(compID);
-                    
-                    mergedIDs.add(compID);
-                }
-            }
+        for (String compID : edge.getComponentIDs()) {
+        	if (!mergedIDs.contains(compID)) {
+        		componentIDs.add(compID);
+
+        		mergedIDs.add(compID);
+        	}
         }
         
         Set<String> mergedRoles = new HashSet<String>();
+        
+        mergedRoles.addAll(componentRoles);
 
-        if (hasComponentRoles() && edge.hasComponentRoles()) {
-            mergedRoles.addAll(componentRoles);
+        for (String compRole : edge.getComponentRoles()) {
+        	if (!mergedRoles.contains(compRole)) {
+        		componentRoles.add(compRole);
 
-            for (String compRole : edge.getComponentRoles()) {
-                if (!mergedRoles.contains(compRole)) {
-                    componentRoles.add(compRole);
-                    
-                    mergedRoles.add(compRole);
-                }
-            }
+        		mergedRoles.add(compRole);
+        	}
         }
     }
 
-    public void setProbability(double weight) {
+    public void setWeight(double weight) {
         this.weight = weight;
     }
 
