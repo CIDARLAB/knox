@@ -11,7 +11,7 @@ public class Concatenation {
 	private NodeSpace concatenationSpace;
 	
 	public Concatenation() {
-		concatenationSpace = new NodeSpace();
+		concatenationSpace = new NodeSpace(0);
 	}
 	
 	public void connect(NodeSpace space) {

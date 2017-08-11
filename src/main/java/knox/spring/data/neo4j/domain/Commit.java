@@ -29,6 +29,8 @@ public class Commit {
 
     public Commit(String commitID) { 
     	this.commitID = commitID; 
+    	
+    	predecessors = new HashSet<Commit>();
     }
     
     public Commit copy() {
@@ -79,7 +81,7 @@ public class Commit {
     }
     
     public void clearPredecessors() {
-    	predecessors = null;
+    	predecessors.clear();
     }
     
     public void clearSnapshot() {
@@ -87,16 +89,13 @@ public class Commit {
     }
 
     public Commit findPredecessor(String predecessorID) {
-        if (hasPredecessors()) {
-            for (Commit predecessor : predecessors) {
-                if (predecessor.getCommitID().equals(predecessorID)) {
-                    return predecessor;
-                }
-            }
-            return null;
-        } else {
-            return null;
-        }
+    	for (Commit predecessor : predecessors) {
+    		if (predecessor.getCommitID().equals(predecessorID)) {
+    			return predecessor;
+    		}
+    	}
+    	
+    	return null;
     }
 
     public Set<Commit> getHistory() {
@@ -111,10 +110,8 @@ public class Commit {
 
             history.add(commit);
 
-            if (commit.hasPredecessors()) {
-                for (Commit predecessor : commit.getPredecessors()) {
-                    commitStack.push(predecessor);
-                }
+            for (Commit predecessor : commit.getPredecessors()) {
+            	commitStack.push(predecessor);
             }
         }
 
@@ -154,13 +151,10 @@ public class Commit {
     }
 
     public boolean hasPredecessors() {
-        return predecessors != null && predecessors.size() > 0;
+        return !predecessors.isEmpty();
     }
 
     public void addPredecessor(Commit predecessor) {
-        if (predecessors == null) {
-            predecessors = new HashSet<Commit>();
-        }
         predecessors.add(predecessor);
     }
 }

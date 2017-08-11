@@ -61,7 +61,7 @@ public class NodeSpace {
     }
 	
 	public NodeSpace copy() {
-		NodeSpace spaceCopy = new NodeSpace();
+		NodeSpace spaceCopy = new NodeSpace(0);
 		
 		spaceCopy.copyNodeSpace(this);
 		

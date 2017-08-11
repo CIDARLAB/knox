@@ -25,22 +25,16 @@ public class Branch {
     
     public Branch(String branchID) {
         this.branchID = branchID;
+        
+        commits = new HashSet<Commit>();
     }
 
     public void addCommit(Commit commit) {
-        if (!hasCommits()) {
-            commits = new HashSet<Commit>();
-        }
-        
         commits.add(commit);
     }
 
     public boolean containsCommit(Commit commit) {
-        if (hasCommits()) {
-            return commits.contains(commit);
-        } else {
-            return false;
-        }
+    	return commits.contains(commit);
     }
     
     public Branch copy() {
@@ -48,15 +42,15 @@ public class Branch {
     }
 
     public boolean deleteCommits(Set<Commit> deletedCommits) {
-        if (hasCommits()) {
-            return commits.removeAll(deletedCommits);
-        } else {
-            return false;
-        }
+    	return commits.removeAll(deletedCommits);
     }
 
     public Set<Commit> getCommits() { 
     	return commits; 
+    }
+    
+    public int getNumCommits() {
+    	return commits.size();
     }
 
     public void setCommits(Set<Commit> commits) {
@@ -72,7 +66,7 @@ public class Branch {
     }
     
     public void clearCommits() {
-    	commits = null;
+    	commits.clear();
     }
 
     public String getBranchID() { 
@@ -84,25 +78,19 @@ public class Branch {
     }
 
     public boolean hasCommits() {
-        if (commits == null) {
-            return false;
-        } else {
-            return commits.size() > 0;
-        }
+    	return !commits.isEmpty();
     }
 
     public Set<Commit> retainCommits(Set<Commit> retainedCommits) {
         Set<Commit> diffCommits = new HashSet<Commit>();
-
-        if (hasCommits()) {
-            for (Commit commit : commits) {
-                if (!retainedCommits.contains(commit)) {
-                    diffCommits.add(commit);
-                }
-            }
-
-            deleteCommits(diffCommits);
+        
+        for (Commit commit : commits) {
+        	if (!retainedCommits.contains(commit)) {
+        		diffCommits.add(commit);
+        	}
         }
+
+        deleteCommits(diffCommits);
 
         return diffCommits;
     }

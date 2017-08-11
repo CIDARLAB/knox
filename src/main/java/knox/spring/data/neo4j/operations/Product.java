@@ -25,7 +25,7 @@ public class Product {
 	private static final Logger LOG = LoggerFactory.getLogger(Product.class);
 	
 	public Product(NodeSpace rowSpace, NodeSpace colSpace) {
-		productSpace = new NodeSpace();
+		productSpace = new NodeSpace(0);
 		
 		this.rowNodes = rowSpace.depthFirstTraversal();
 		

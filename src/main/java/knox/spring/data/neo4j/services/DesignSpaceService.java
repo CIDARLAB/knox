@@ -353,7 +353,7 @@ public class DesignSpaceService {
 	
 	private void productOfNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
     		String type, int tolerance, boolean isModified) {
-		NodeSpace productSpace = new NodeSpace();
+		NodeSpace productSpace = new NodeSpace(0);
 		
     	for (NodeSpace inputSpace : inputSpaces) {
     		if (!productSpace.hasNodes()) {	
@@ -1011,7 +1011,7 @@ public class DesignSpaceService {
 
     public void resetBranch(DesignSpace targetSpace, Branch targetBranch,
                             List<String> commitPath) {
-        if (targetBranch != null && targetBranch.hasCommits()) {
+        if (targetBranch != null && targetBranch.getNumCommits() > 1) {
             Commit targetCommit = targetBranch.getLatestCommit();
 
             int i = 0;
@@ -1064,7 +1064,7 @@ public class DesignSpaceService {
 
     public void revertBranch(DesignSpace targetSpace, Branch targetBranch,
                              List<String> commitPath) {
-        if (targetBranch != null && targetBranch.hasCommits()) {
+        if (targetBranch != null && targetBranch.getNumCommits() > 1) {
             Commit targetCommit = targetBranch.getLatestCommit();
 
             int i = 0;

@@ -9,7 +9,9 @@ import org.neo4j.ogm.annotation.GraphId;
 public class Snapshot extends NodeSpace {
     @GraphId Long id;
 
-    public Snapshot() {}
+    public Snapshot() {
+    	
+    }
 
     public Snapshot(int nodeIndex) { 
     	super(nodeIndex); 

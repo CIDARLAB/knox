@@ -21,36 +21,36 @@ public class DesignSpace extends NodeSpace {
 
     int commitIndex;
 
-    public DesignSpace() {}
+    public DesignSpace() {
+    	
+    }
 
     public DesignSpace(String spaceID) {
         super(0);
 
         this.spaceID = spaceID;
+        
+        branches = new HashSet<Branch>();
     }
 
     public DesignSpace(String spaceID, int idIndex, int mergeIndex) {
         super(idIndex);
 
         this.spaceID = spaceID;
+        
+        branches = new HashSet<Branch>();
     }
 
     public void addBranch(Branch branch) {
-        if (branches == null) {
-            branches = new HashSet<Branch>();
-        }
-        
         branches.add(branch);
     }
 
     public boolean containsCommit(Commit commit) {
-        if (hasBranches()) {
-            for (Branch branch : branches) {
-                if (branch.containsCommit(commit)) {
-                    return true;
-                }
-            }
-        }
+    	for (Branch branch : branches) {
+    		if (branch.containsCommit(commit)) {
+    			return true;
+    		}
+    	}
 
         return false;
     }
@@ -90,43 +90,38 @@ public class DesignSpace extends NodeSpace {
     public Branch copyVersionHistory(DesignSpace space) {
     	Branch headBranchCopy = null;
     	
-    	if (space.hasBranches()) {
-        	HashMap<String, Commit> idToCommitCopy = new HashMap<String, Commit>();
+    	HashMap<String, Commit> idToCommitCopy = new HashMap<String, Commit>();
+
+    	for (Branch branch : space.getBranches()) {
+    		Branch branchCopy = branch.copy();
+
+    		for (Commit commit : branch.getCommits()) {
+    			if (!idToCommitCopy.containsKey(commit.getCommitID())) {
+    				idToCommitCopy.put(commit.getCommitID(), commit.copy());
+    			}
+
+    			branchCopy.addCommit(idToCommitCopy.get(commit.getCommitID()));
+    		}
+
+    		for (Commit commit : branch.getCommits()) {
+    			for (Commit predecessor : commit.getPredecessors()) {
+    				idToCommitCopy.get(commit.getCommitID())
+    				.addPredecessor(idToCommitCopy.get(predecessor.getCommitID()));
+    			}
+    		}
+
+    		if (branch.hasLatestCommit() 
+    				&& idToCommitCopy.containsKey(branch.getLatestCommit().getCommitID())) {
+    			branchCopy.setLatestCommit(idToCommitCopy.get(branch.getLatestCommit().getCommitID()));
+    		}
+
+    		addBranch(branchCopy);
+
+    		if (branch.isIdenticalTo(space.getHeadBranch())) {
+    			headBranchCopy = branchCopy;
+    		}
+    	}
         	
-        	for (Branch branch : space.getBranches()) {
-        		Branch branchCopy = branch.copy();
-        		
-        		if (branch.hasCommits()) {
-        			for (Commit commit : branch.getCommits()) {
-        				if (!idToCommitCopy.containsKey(commit.getCommitID())) {
-        					idToCommitCopy.put(commit.getCommitID(), commit.copy());
-        				}
-        				
-        				branchCopy.addCommit(idToCommitCopy.get(commit.getCommitID()));
-        			}
-        			
-        			for (Commit commit : branch.getCommits()) {
-        				if (commit.hasPredecessors()) {
-        					for (Commit predecessor : commit.getPredecessors()) {
-        						idToCommitCopy.get(commit.getCommitID())
-        								.addPredecessor(idToCommitCopy.get(predecessor.getCommitID()));
-        					}
-        				}
-        			}
-        			
-        			if (idToCommitCopy.containsKey(branch.getLatestCommit().getCommitID())) {
-        				branchCopy.setLatestCommit(idToCommitCopy.get(branch.getLatestCommit().getCommitID()));
-        			}
-        		}
-        		
-        		addBranch(branchCopy);
-        		
-        		if (branch.isIdenticalTo(space.getHeadBranch())) {
-          			headBranchCopy = branchCopy;
-          		}
-        	}
-        }
-    	
     	return headBranchCopy;
     }
 
@@ -175,20 +170,17 @@ public class DesignSpace extends NodeSpace {
     }
     
     public void clearBranches() {
-    	branches = null;
+    	branches.clear();
     }
 
     public Branch getBranch(String branchID) {
-        if (hasBranches()) {
-            for (Branch branch : branches) {
-                if (branch.getBranchID().equals(branchID)) {
-                    return branch;
-                }
-            }
-            return null;
-        } else {
-            return null;
-        }
+    	for (Branch branch : branches) {
+    		if (branch.getBranchID().equals(branchID)) {
+    			return branch;
+    		}
+    	}
+
+    	return null;
     }
 
     public Set<Branch> getBranches() { 
@@ -207,10 +199,6 @@ public class DesignSpace extends NodeSpace {
     	return headBranch.getLatestCommit().getSnapshot();
     }
 
-//    public int getMergeIndex() {
-//    	return mergeIndex; 
-//    }
-
     public String getSpaceID() { 
     	return spaceID; 
     }
@@ -220,11 +208,7 @@ public class DesignSpace extends NodeSpace {
     }
 
     public boolean hasBranches() {
-        if (branches == null) {
-            return false;
-        } else {
-            return branches.size() > 0;
-        }
+    	return !branches.isEmpty();
     }
 
     public void setHeadBranch(Branch headBranch) {
@@ -238,24 +222,18 @@ public class DesignSpace extends NodeSpace {
     public Set<Commit> getCommits() {
     	Set<Commit> commits = new HashSet<Commit>();
     	
-    	if (hasBranches()) {
-    		for (Branch branch : branches) {
-    			Stack<Commit> commitStack = new Stack<Commit>();
-    			
-    			if (branch.hasCommits()) {
-    				commitStack.push(branch.getLatestCommit());
+    	for (Branch branch : branches) {
+    		Stack<Commit> commitStack = new Stack<Commit>();
+    		
+    		commitStack.push(branch.getLatestCommit());
 
-    				while (!commitStack.isEmpty()) {
-    					Commit commit = commitStack.pop();
+    		while (!commitStack.isEmpty()) {
+    			Commit commit = commitStack.pop();
 
-    					commits.add(commit);
+    			commits.add(commit);
 
-    					if (commit.hasPredecessors()) {
-    						for (Commit predecessor : commit.getPredecessors()) {
-    							commitStack.push(predecessor);
-    						}
-    					}
-    				}
+    			for (Commit predecessor : commit.getPredecessors()) {
+    				commitStack.push(predecessor);
     			}
     		}
     	}

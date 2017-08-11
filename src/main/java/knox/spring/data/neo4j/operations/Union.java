@@ -14,7 +14,7 @@ public class Union {
 	}
 	
 	public Union(List<NodeSpace> spaces) {
-		unionSpace = new NodeSpace();
+		unionSpace = new NodeSpace(0);
 		
 		for (NodeSpace space : spaces) {
     		unionSpace.unionNodes(space);

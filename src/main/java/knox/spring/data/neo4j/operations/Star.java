@@ -11,7 +11,7 @@ public class Star {
 private NodeSpace starSpace;
 	
 	public Star(List<NodeSpace> spaces) {
-		this.starSpace = new NodeSpace();
+		this.starSpace = new NodeSpace(0);
 		
 		Concatenation concat = new Concatenation();
 		

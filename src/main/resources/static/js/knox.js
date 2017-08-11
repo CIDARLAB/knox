@@ -99,7 +99,7 @@
 
             var circles = nodesEnter.append("circle")
                 .attr("class", function(d) {
-                    if (d.nodeTypes == null) {
+                    if (d.nodeTypes.length == 0) {
                         return "node";
                     } else if (d.nodeTypes.indexOf("start") >= 0) {
                         return "start-node";
@@ -115,34 +115,36 @@
                 .attr("xlink:href", (d) => {
                     if (d.hasOwnProperty("componentRoles")) {
                         const sbolpath = "./img/sbol/";
-                        var role = d["componentRoles"][0];
-                        switch (role) {
-                        case "promoter":
-                        case "terminator":
-                        case "CDS":
-                        case "restriction_enzyme_assembly_scar":
-                        case "restriction_enzyme_recognition_site":
-                        case "protein_stability_element":
-                        case "blunt_end_restriction_enzyme_cleavage_site":
-                        case "ribonuclease_site":
-                        case "restriction_enzyme_five_prime_single_strand_overhang":
-                        case "ribosome_entry_site":
-                        case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
-                        case "RNA_stability_element":
-                        case "ribozyme":
-                        case "insulator":
-                        case "signature":
-                        case "operator":
-                        case "origin_of_replication":
-                        case "restriction_enzyme_three_prime_single_strand_overhang":
-                        case "primer_binding_site":
-                        case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
-                        case "protease_site":
-                            return sbolpath + role + ".svg";
+                        if (d["componentRoles"].length > 0) {
+                            var role = d["componentRoles"][0];
+                            switch (role) {
+                            case "promoter":
+                            case "terminator":
+                            case "CDS":
+                            case "restriction_enzyme_assembly_scar":
+                            case "restriction_enzyme_recognition_site":
+                            case "protein_stability_element":
+                            case "blunt_end_restriction_enzyme_cleavage_site":
+                            case "ribonuclease_site":
+                            case "restriction_enzyme_five_prime_single_strand_overhang":
+                            case "ribosome_entry_site":
+                            case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
+                            case "RNA_stability_element":
+                            case "ribozyme":
+                            case "insulator":
+                            case "signature":
+                            case "operator":
+                            case "origin_of_replication":
+                            case "restriction_enzyme_three_prime_single_strand_overhang":
+                            case "primer_binding_site":
+                            case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
+                            case "protease_site":
+                                return sbolpath + role + ".svg";
 
-                        default:
-                            return sbolpath + "user_defined.svg";
-                        };
+                            default:
+                                return sbolpath + "user_defined.svg";
+                            };
+                        }
                     }
                     return "";
                 }).attr("height", sbolImgSize)
