@@ -130,15 +130,23 @@ public class Edge {
     }
 
     public boolean hasComponentIDs() {
-    	return componentIDs.size() > 0;
+    	return componentIDs != null && !componentIDs.isEmpty();
     }
 
     public boolean hasComponentRole(String compRole) {
     	return componentRoles.contains(compRole);
     }
+    
+    public boolean hasComponentRole(Set<String> compRoles) {
+    	Set<String> tempRoles = new HashSet<String>(componentRoles);
+    	
+    	tempRoles.retainAll(compRoles);
+    	
+    	return !tempRoles.isEmpty();
+    }
 
     public boolean hasComponentRoles() {
-    	return componentRoles.size() > 0;
+    	return componentRoles != null && !componentRoles.isEmpty();
     }
 
 //    public boolean hasComponents() {
@@ -163,12 +171,12 @@ public class Edge {
         }
     }
     
-    public boolean isMatchingTo(Edge edge, int tolerance) {
-    	if (tolerance == 0 && hasSameComponents(edge)
-    			|| tolerance == 1 && hasSharedComponents(edge)
-				|| tolerance == 2 && hasSharedComponents(edge)
-				|| tolerance == 3 && hasSameRoles(edge)
-				|| tolerance == 4 && hasSharedRoles(edge)) {
+    public boolean isMatchingTo(Edge edge, int tolerance, Set<String> roles) {
+    	if ((roles.isEmpty() || hasComponentRole(roles) && edge.hasComponentRole(roles)) 
+    			&& (tolerance == 0 && hasSameComponents(edge)
+    					|| (tolerance == 1 || tolerance == 2) && hasSharedComponents(edge)
+    					|| tolerance == 3 && hasSameRoles(edge)
+    					|| tolerance == 4 && hasSharedRoles(edge))) {
 			return true;
 		} else {
 			return false;

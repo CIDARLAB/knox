@@ -151,7 +151,7 @@ public class Commit {
     }
 
     public boolean hasPredecessors() {
-        return !predecessors.isEmpty();
+        return predecessors != null && !predecessors.isEmpty();
     }
 
     public void addPredecessor(Commit predecessor) {

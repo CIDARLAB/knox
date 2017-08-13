@@ -171,11 +171,7 @@ public class Node {
     }
 
     public boolean hasEdges() {
-        if (edges == null) {
-            return false;
-        } else {
-            return edges.size() > 0;
-        }
+        return edges != null && !edges.isEmpty();
     }
     
     public Set<Edge> getEdges(Node head) {
@@ -206,31 +202,25 @@ public class Node {
     	}
     }
     
-    public boolean hasMatchingEdge(Edge edge, int tolerance) {
-    	if (hasEdges()) {
-    		for (Edge e : edges) {
-    			if (edge.isMatchingTo(e, tolerance)) {
-    				return true;
-    			}
+    public boolean hasMatchingEdge(Edge edge, int tolerance, Set<String> roles) {
+    	for (Edge e : edges) {
+    		if (edge.isMatchingTo(e, tolerance, roles)) {
+    			return true;
     		}
-    		
-    		return false;
-    	} else {
-    		return false;
     	}
+
+    	return false;
     }
     
-    public Set<Edge> getMatchingEdges(Edge edge, int tolerance) {
+    public Set<Edge> getMatchingEdges(Edge edge, int tolerance, Set<String> roles) {
     	Set<Edge> matchingEdges = new HashSet<Edge>();
     	
-    	if (hasEdges()) {
-    		for (Edge e : edges) {
-    			if (edge.isMatchingTo(e, tolerance)) {
-    				matchingEdges.add(e);
-    			}
+    	for (Edge e : edges) {
+    		if (edge.isMatchingTo(e, tolerance, roles)) {
+    			matchingEdges.add(e);
     		}
     	}
-    	
+
     	return matchingEdges;
     }
     
@@ -248,7 +238,7 @@ public class Node {
     }
 
     public boolean hasNodeTypes() {
-    	return !nodeTypes.isEmpty(); 
+    	return nodeTypes != null && !nodeTypes.isEmpty(); 
     }
     
     public boolean hasConflictingType(Node node) {

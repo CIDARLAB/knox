@@ -36,69 +36,16 @@ public class Product {
 		colToProductNodes = new HashMap<Integer, Set<Node>>();
 	}
 	
-	public void connect(String type, int tolerance, boolean isModified) {
-		if (type.equals(ProductType.TENSOR.getValue())) {
-			if (isModified) {
-				modifiedTensor(tolerance);
-			} else {
-				tensor(tolerance, false);
-			}
-		} else if (type.equals(ProductType.CARTESIAN.getValue())) {
-			cartesian();
-		} else if (type.equals(ProductType.STRONG.getValue())) {
-			if (isModified) {
-				modifiedStrong(tolerance);
-			} else {
-				strong(tolerance);
-			}
-		}
-	}
-	
-
     public NodeSpace getProductSpace() {
     	return productSpace;
     }
     
-    public List<Set<Edge>> cartesian() {
+    public void cartesian() {
     	for (int i = 0; i < rowNodes.size(); i++) {
     		for (int j = 0; j < colNodes.size(); j++) {
-    			crossNodes(i, j, false);
+    			crossNodes(i, j, 1);
     		}
     	}
-    	
-    	List<Set<Edge>> orthogonalEdges = new ArrayList<Set<Edge>>(2);
-    	
-    	orthogonalEdges.add(new HashSet<Edge>());
-
-		for (int i = 0; i < rowNodes.size(); i++) {
-			if (rowNodes.get(i).hasEdges()) {
-				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
-					int r = locateNode(rowEdge.getHead(), i, rowNodes);
-
-					for (int j = 0; j < colNodes.size(); j++) {
-						orthogonalEdges.get(0).add(getProductNode(i, j).copyEdge(rowEdge, 
-								getProductNode(r, j)));
-					}
-				}
-			}
-		}
-
-		orthogonalEdges.add(new HashSet<Edge>());
-
-		for (int j = 0; j < colNodes.size(); j++) {
-			if (colNodes.get(j).hasEdges()) {
-				for (Edge colEdge : colNodes.get(j).getEdges()) {
-					int c = locateNode(colEdge.getHead(), j, colNodes);
-
-					for (int i = 0; i < rowNodes.size(); i++) {
-						orthogonalEdges.get(1).add(getProductNode(i, j).copyEdge(colEdge, 
-								getProductNode(i, c)));
-					}
-				}
-			}
-		}
-		
-		return orthogonalEdges;
     }
     
     private Set<Node> projectRow(int i, HashMap<Integer, Node> rowToProductNode) {
@@ -145,8 +92,8 @@ public class Product {
 		return productNodes;
     }
     
-    public void modifiedStrong(int tolerance) {
-    	tensor(tolerance, true);
+    public void modifiedStrong(int tolerance, Set<String> roles) {
+    	tensor(tolerance, 1, roles);
     	
     	HashMap<Integer, Node> rowToProductNode = new HashMap<Integer, Node>();
 
@@ -187,52 +134,24 @@ public class Product {
     			}
     		}
     	}
-    	
-    	if (productSpace.getStartNodes().size() > 1) {
-    		Union union = new Union(productSpace);
-    		
-    		if (productSpace.isConnected()) {
-    			union.connect(false);
-    		} else {
-    			union.connect(true);
-    		}
-    	}
     }
     
-    public void modifiedTensor(int tolerance) {
-    	tensor(tolerance, true);
-    	
-    	productSpace.labelSourceNodesStart();
-    	
-    	productSpace.labelSinkNodesAccept();
-    	
-    	if (productSpace.getStartNodes().size() > 1) {
-    		Union union = new Union(productSpace);
-    		
-    		if (productSpace.isConnected()) {
-    			union.connect(false);
-    		} else {
-    			union.connect(true);
-    		}
-    	}
-    }
-    
-    public void strong(int tolerance) {
-    	tensor(tolerance, false);
+    public void strong(int tolerance, Set<String> roles) {
+    	tensor(tolerance, 1, roles);
     	
     	cartesian();
     }
     
-    public void tensor(int tolerance, boolean isAND) {
+    public void tensor(int tolerance, int degree, Set<String> roles) {
     	for (int i = 0; i < rowNodes.size(); i++) {
     		for (int j = 0; j < colNodes.size(); j++) {
     			if (rowNodes.get(i).hasEdges() 
     					&& colNodes.get(j).hasEdges()) {
     				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
     					for (Edge colEdge : colNodes.get(j).getEdges()) {
-    						if (rowEdge.isMatchingTo(colEdge, tolerance)) {
+    						if (rowEdge.isMatchingTo(colEdge, tolerance, roles)) {
     							if (!hasProductNode(i, j)) {
-    								crossNodes(i, j, isAND);
+    								crossNodes(i, j, degree);
     							}
 
     							int r = locateNode(rowEdge.getHead(), i, 
@@ -242,7 +161,7 @@ public class Product {
     									colNodes);
     							
     							if (!hasProductNode(r, c)) {
-    								crossNodes(r, c, isAND);
+    								crossNodes(r, c, degree);
     							}
     							
     							Edge productEdge = getProductNode(i, j).copyEdge(colEdge, 
@@ -275,7 +194,7 @@ public class Product {
     	colToProductNodes.get(j).add(productNode);
     }
     
-    private void crossNodes(int i, int j, boolean isAND) {
+    private void crossNodes(int i, int j, int degree) {
     	if (!hasProductNode(i, j)) {
 			Node productNode = productSpace.createNode();
 			
@@ -283,8 +202,9 @@ public class Product {
 				productNode.addNodeType(NodeType.START.getValue());
 			}
 			
-			if ((isAND && rowNodes.get(i).isAcceptNode() && colNodes.get(j).isAcceptNode())
-					|| (!isAND && (rowNodes.get(i).isAcceptNode() || colNodes.get(j).isAcceptNode()))) {
+			
+			if ((degree == 1 && (rowNodes.get(i).isAcceptNode() || colNodes.get(j).isAcceptNode()))
+					|| (degree == 2 && rowNodes.get(i).isAcceptNode() && colNodes.get(j).isAcceptNode())) {
 				productNode.addNodeType(NodeType.ACCEPT.getValue());
 			}
 			

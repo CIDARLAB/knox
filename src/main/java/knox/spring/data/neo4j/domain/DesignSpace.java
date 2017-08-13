@@ -104,9 +104,11 @@ public class DesignSpace extends NodeSpace {
     		}
 
     		for (Commit commit : branch.getCommits()) {
-    			for (Commit predecessor : commit.getPredecessors()) {
-    				idToCommitCopy.get(commit.getCommitID())
-    				.addPredecessor(idToCommitCopy.get(predecessor.getCommitID()));
+    			if (commit.hasPredecessors()) {
+    				for (Commit predecessor : commit.getPredecessors()) {
+    					idToCommitCopy.get(commit.getCommitID())
+    					.addPredecessor(idToCommitCopy.get(predecessor.getCommitID()));
+    				}
     			}
     		}
 
@@ -208,7 +210,7 @@ public class DesignSpace extends NodeSpace {
     }
 
     public boolean hasBranches() {
-    	return !branches.isEmpty();
+    	return branches != null && !branches.isEmpty();
     }
 
     public void setHeadBranch(Branch headBranch) {
@@ -232,8 +234,10 @@ public class DesignSpace extends NodeSpace {
 
     			commits.add(commit);
 
-    			for (Commit predecessor : commit.getPredecessors()) {
-    				commitStack.push(predecessor);
+    			if (commit.hasPredecessors()) {
+    				for (Commit predecessor : commit.getPredecessors()) {
+    					commitStack.push(predecessor);
+    				}
     			}
     		}
     	}

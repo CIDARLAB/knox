@@ -78,7 +78,7 @@ public class Branch {
     }
 
     public boolean hasCommits() {
-    	return !commits.isEmpty();
+    	return commits != null && !commits.isEmpty();
     }
 
     public Set<Commit> retainCommits(Set<Commit> retainedCommits) {
