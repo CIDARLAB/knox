@@ -74,6 +74,36 @@ public class NodeSpace {
 		nodes = new HashSet<Node>(space.getNodes());
 	}
 	
+	public Edge copyEdge(Edge edge, Node tail, Node head) {
+		Set<Edge> parallelEdges = tail.getEdges(head);
+
+		if (edge.isBlank()) {
+			for (Edge parallelEdge : parallelEdges) {
+				if (parallelEdge.isBlank()) {
+					return parallelEdge;
+				}
+			}
+
+			return tail.createEdge(head);
+		} else {
+			for (Edge parallelEdge : parallelEdges) {
+				if (!parallelEdge.isBlank()) {
+						Node headCopy = copyNode(head);
+						
+						Edge edgeCopy = tail.createEdge(headCopy, new ArrayList<String>(edge.getComponentIDs()),
+								new ArrayList<String>(edge.getComponentRoles()));
+
+						edgeCopy.intersectWithEdge(parallelEdge);
+
+						return edgeCopy;
+				}
+			}
+
+			return tail.createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
+					new ArrayList<String>(edge.getComponentRoles()));
+		}
+	}
+	
 	public void copyNodeSpace(NodeSpace space) {
 		HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
 

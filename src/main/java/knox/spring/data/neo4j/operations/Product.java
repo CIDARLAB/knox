@@ -48,14 +48,14 @@ public class Product {
     	}
     }
     
-    private Set<Node> projectRow(int i, HashMap<Integer, Node> rowToProductNode) {
-    	Set<Node> productNodes;
+    private Set<Node> projectRow(int i, int tolerance, HashMap<Integer, Node> rowToProductNode) {
+    	Set<Node> productNodes = new HashSet<Node>();
 
 		if (rowToProductNodes.containsKey(i)) {
-			productNodes = rowToProductNodes.get(i);
-		} else {
-			productNodes = new HashSet<Node>();
-
+			productNodes.addAll(rowToProductNodes.get(i));
+		}
+		
+		if (!rowToProductNodes.containsKey(i) || tolerance == 1){
 			if (rowToProductNode.containsKey(i)) {
 				productNodes.add(rowToProductNode.get(i));
 			} else {
@@ -70,14 +70,14 @@ public class Product {
 		return productNodes;
     }
     
-    private Set<Node> projectColumn(int j, HashMap<Integer, Node> colToProductNode) {
-    	Set<Node> productNodes;
+    private Set<Node> projectColumn(int j, int tolerance, HashMap<Integer, Node> colToProductNode) {
+    	Set<Node> productNodes = new HashSet<Node>();
 
 		if (colToProductNodes.containsKey(j)) {
 			productNodes = colToProductNodes.get(j);
-		} else {
-			productNodes = new HashSet<Node>();
-
+		}
+		
+		if (!colToProductNodes.containsKey(j) || tolerance == 1) {
 			if (colToProductNode.containsKey(j)) {
 				productNodes.add(colToProductNode.get(j));
 			} else {
@@ -99,16 +99,25 @@ public class Product {
 
     	for (int i = 0; i < rowNodes.size(); i++) {
     		if (rowNodes.get(i).hasEdges()) {
-    			Set<Node> productNodes = projectRow(i, rowToProductNode);
+    			Set<Node> productNodes = projectRow(i, tolerance, rowToProductNode);
     			
     			for (Edge rowEdge : rowNodes.get(i).getEdges()) {
     				int r = locateNode(rowEdge.getHead(), i, rowNodes);
 
-    				Set<Node> productHeads = projectRow(r, rowToProductNode);
+    				Set<Node> productHeads = projectRow(r, tolerance, rowToProductNode);
 
     				for (Node productNode : productNodes) {
     					for (Node productHead : productHeads) {
-    						productNode.copyEdge(rowEdge, productHead);
+//    						if (tolerance == 1) {
+//    							Edge edgeCopy = productSpace.copyEdge(rowEdge, productNode, 
+//    									productHead);
+//    							
+//    							if (!edgeCopy.getHead().equals(productHead)) {
+//    								rowToProductNode.put(r, edgeCopy.getHead());
+//    							}
+//    						} else {
+    							productNode.copyEdge(rowEdge, productHead);
+//    						}
     					}
     				}
     			}
@@ -119,16 +128,25 @@ public class Product {
 
     	for (int j = 0; j < colNodes.size(); j++) {
     		if (colNodes.get(j).hasEdges()) {
-    			Set<Node> productNodes = projectColumn(j, colToProductNode);
+    			Set<Node> productNodes = projectColumn(j, tolerance, colToProductNode);
     			
     			for (Edge colEdge : colNodes.get(j).getEdges()) {
     				int c = locateNode(colEdge.getHead(), j, colNodes);
 
-    				Set<Node> productHeads = projectColumn(c, colToProductNode);
+    				Set<Node> productHeads = projectColumn(c, tolerance, colToProductNode);
 
     				for (Node productNode : productNodes) {
     					for (Node productHead : productHeads) {
-    						productNode.copyEdge(colEdge, productHead);
+//    						if (tolerance == 1) {
+//    							Edge edgeCopy = productSpace.copyEdge(colEdge, productNode, 
+//    									productHead);
+//    							
+//    							if (!edgeCopy.getHead().equals(productHead)) {
+//    								colToProductNode.put(c, edgeCopy.getHead());
+//    							}
+//    						} else {
+    							productNode.copyEdge(colEdge, productHead);
+//    						}
     					}
     				}
     			}
@@ -167,11 +185,11 @@ public class Product {
     							Edge productEdge = getProductNode(i, j).copyEdge(colEdge, 
     									getProductNode(r, c));
 
-    							if (tolerance == 0 || tolerance > 1 && tolerance <= 4) {
-    								productEdge.unionWithEdge(rowEdge);
-    							} else if (tolerance == 1) {
+    							if (tolerance == 1) {
     								productEdge.intersectWithEdge(rowEdge);
-    							}
+    							} else if (tolerance != 0) {
+    								productEdge.unionWithEdge(rowEdge);
+    							} 
     						}
     					}
     				}
@@ -198,7 +216,12 @@ public class Product {
     	if (!hasProductNode(i, j)) {
 			Node productNode = productSpace.createNode();
 			
-			if (rowNodes.get(i).isStartNode() && colNodes.get(j).isStartNode()) {
+//			if (rowNodes.get(i).isStartNode() && colNodes.get(j).isStartNode()) {
+//				productNode.addNodeType(NodeType.START.getValue());
+//			}
+			
+			if ((degree == 1 && (rowNodes.get(i).isStartNode() || colNodes.get(j).isStartNode()))
+					|| (degree == 2 && rowNodes.get(i).isStartNode() && colNodes.get(j).isStartNode())) {
 				productNode.addNodeType(NodeType.START.getValue());
 			}
 			
