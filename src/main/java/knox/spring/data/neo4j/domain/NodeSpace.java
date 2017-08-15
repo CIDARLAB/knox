@@ -88,9 +88,7 @@ public class NodeSpace {
 		} else {
 			for (Edge parallelEdge : parallelEdges) {
 				if (!parallelEdge.isBlank()) {
-						Node headCopy = copyNode(head);
-						
-						Edge edgeCopy = tail.createEdge(headCopy, new ArrayList<String>(edge.getComponentIDs()),
+						Edge edgeCopy = tail.createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
 								new ArrayList<String>(edge.getComponentRoles()));
 
 						edgeCopy.intersectWithEdge(parallelEdge);
@@ -754,6 +752,10 @@ public class NodeSpace {
     	nodes.removeAll(removedNodes);
     	
     	return removedNodes;
+    }
+     
+    public boolean deleteNode(Node node) {
+    	return nodes.remove(node);
     }
     
     public void deleteNodesWithoutSameIDs(Collection<Node> nodes) {
