@@ -407,9 +407,9 @@ public class NodeSpace {
     				for (Edge edge : node.getEdges()) {
     					if (edge.isBlank()
     							&& !node.hasConflictingType(edge.getHead())
-    							&& !((idToIncomingEdges.get(edge.getHead().getNodeID()).size() > 1
-    									|| edge.getHead().isStartNode()) 
-    									&& node.getNumEdges() > 1)) {
+    							&& !(node.getNumEdges() > 1 
+    									&& (idToIncomingEdges.get(edge.getHead().getNodeID()).size() > 1
+    											|| edge.getHead().isStartNode()))) {
     						isMini = false;
 
     						deletedEdges.add(edge);

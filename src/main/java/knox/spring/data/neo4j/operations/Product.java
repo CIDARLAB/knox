@@ -48,105 +48,37 @@ public class Product {
     	}
     }
     
-    private void intersectIndices(int i, int j, Edge edge, List<Node> nodes, Set<String> roles, 
-    		HashMap<Integer, Set<Node>> indexToProductNodes, 
-    		HashMap<Integer, Node> indexToDiffNode) {
-    	for (Node productNode : indexToProductNodes.get(i)) {
-			for (Node productHead : indexToProductNodes.get(j)) {
-				for (Edge productEdge : productNode.getEdges(productHead)) {
-					if (!productEdge.isBlank() 
-							&& productEdge.isMatchingTo(edge, 1, roles)
-							&& !productEdge.isMatchingTo(edge, 0, roles)) {
-						Node diffHead;
-
-						if (indexToDiffNode.containsKey(j)) {
-							diffHead = indexToDiffNode.get(j);
-						} else {
-							diffHead = productSpace.copyNode(nodes.get(j));
-
-							indexToDiffNode.put(j, diffHead);
-						}
-
-						Edge diffEdge = productNode.copyEdge(edge, diffHead);
-
-						diffEdge.intersectWithEdge(productEdge);
-					}
-				}
-			}
-		}
-    }
-    
-    private Set<Node> projectIndex(int i, List<Node> nodes, HashMap<Integer, Set<Node>> indexToProductNodes, 
-    		HashMap<Integer, Node> indexToDiffNode, Set<Node> diffNodes) {
+    private Set<Node> projectNode(int i, List<Node> nodes, HashMap<Integer, 
+    		Set<Node>> indexToProductNodes) {
     	Set<Node> productNodes = new HashSet<Node>();
 
 		if (indexToProductNodes.containsKey(i)) {
 			productNodes.addAll(indexToProductNodes.get(i));
 		} else {
-			Node diffNode;
+			Node productNode = productSpace.copyNode(nodes.get(i));
 			
-			if (indexToDiffNode.containsKey(i)) {
-				diffNode = indexToDiffNode.get(i);
-			} else {
-				diffNode = productSpace.copyNode(nodes.get(i));
-
-				indexToDiffNode.put(i, diffNode);
-			}
+			indexToProductNodes.put(i, new HashSet<Node>());
 			
-			diffNodes.add(diffNode);
+			indexToProductNodes.get(i).add(productNode);
+			
+			productNodes.add(productNode);
 		}
 		
 		return productNodes;
     }
     
-    private void projectNodes(List<Node> nodes, HashMap<Integer, Set<Node>> indexToProductNodes,
-    		int tolerance, Set<String> roles) {
-    	HashMap<Integer, Node> indexToDiffNode = new HashMap<Integer, Node>();
-    	
-    	if (tolerance == 1) {
-    		for (int i = 0; i < nodes.size(); i++) {
-    			if (indexToProductNodes.containsKey(i)) {
-    				for (Edge edge : nodes.get(i).getEdges()) {
-    					int j = locateNode(edge.getHead(), i, nodes);
-
-    					if (indexToProductNodes.containsKey(j)) {
-    						intersectIndices(i, j, edge, nodes, roles, indexToProductNodes,
-    								indexToDiffNode);
-    					}
-    				}
-    			}
-    		}
-    	}
-
+    private void projectNodes(List<Node> nodes, HashMap<Integer, Set<Node>> indexToProductNodes) {
     	for (int i = 0; i < nodes.size(); i++) {
-    		Set<Node> diffNodes = new HashSet<Node>();
-
-    		Set<Node> productNodes = projectIndex(i, nodes, indexToProductNodes, 
-    				indexToDiffNode, diffNodes);
+    		Set<Node> productNodes = projectNode(i, nodes, indexToProductNodes);
 
     		for (Edge edge : nodes.get(i).getEdges()) {
     			int j = locateNode(edge.getHead(), i, nodes);
-
-    			Set<Node> diffHeads = new HashSet<Node>();
-
-    			Set<Node> productHeads = projectIndex(j, nodes, indexToProductNodes, 
-    					indexToDiffNode, diffHeads);
-
-    			for (Node diffNode : diffNodes) {
-    				for (Node productHead : productHeads) {
-    					diffNode.copyEdge(edge, productHead);
-    				}
-    			}
-
+    			
+    			Set<Node> productHeads = projectNode(j, nodes, indexToProductNodes);
+    			
     			for (Node productNode : productNodes) {
-    				for (Node diffHead : diffHeads) {
-    					productNode.copyEdge(edge, diffHead);
-    				}
-    			}
-
-    			for (Node diffNode : diffNodes) {
-    				for (Node diffHead : diffHeads) {
-    					diffNode.copyEdge(edge, diffHead);
+    				for (Node productHead : productHeads) {
+    					productNode.copyEdge(edge, productHead);
     				}
     			}
     		}
@@ -156,9 +88,15 @@ public class Product {
     public void modifiedStrong(int tolerance, Set<String> roles) {
     	tensor(tolerance, 1, roles);
     	
-    	projectNodes(rowNodes, rowToProductNodes, tolerance, roles);
+    	if (tolerance == 1) {
+    		tensor2();
+    	}
     	
-    	projectNodes(colNodes, colToProductNodes, tolerance, roles);
+    	tensor3(tolerance, roles);
+    	
+    	projectNodes(rowNodes, rowToProductNodes);
+    	
+    	projectNodes(colNodes, colToProductNodes);
     }
     
     public void strong(int tolerance, Set<String> roles) {
@@ -189,12 +127,90 @@ public class Product {
     								crossNodes(r, c, degree);
     							}
     							
-    							Edge productEdge = getProductNode(i, j).copyEdge(colEdge, 
+    							Node productNode = getProductNode(i, j);
+    							
+    							Edge productEdge = productNode.copyEdge(colEdge, 
     									getProductNode(r, c));
 
     							if (tolerance == 1) {
     								productEdge.intersectWithEdge(rowEdge);
     							} else if (tolerance != 0) {
+    								productEdge.unionWithEdge(rowEdge);
+    							} 
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+    }
+    
+    public void tensor2() {
+    	for (int i = 0; i < rowNodes.size(); i++) {
+    		for (int j = 0; j < colNodes.size(); j++) {
+    			if (rowNodes.get(i).hasEdges() 
+    					&& colNodes.get(j).hasEdges()) {
+    				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
+    					for (Edge colEdge : colNodes.get(j).getEdges()) {
+    						if (rowEdge.hasSharedComponents(colEdge)
+    								&& !rowEdge.hasSameComponents(colEdge)) {
+    							int r = locateNode(rowEdge.getHead(), i, 
+    									rowNodes);
+
+    							int c = locateNode(colEdge.getHead(), j,
+    									colNodes);
+
+    							Node productNode = getProductNode(i, j);
+    							
+    							Edge productEdge = productNode.getLabeledEdge();
+    							
+    							if (rowEdge.hasSharedComponents(productEdge)
+    									&& !rowEdge.hasSameComponents(productEdge)) {
+    								Node rowDiffHead = productSpace.copyNode(rowNodes.get(r));
+
+    								rowToProductNodes.get(r).add(rowDiffHead);
+
+    								Edge rowDiffEdge = productNode.copyEdge(rowEdge, rowDiffHead);
+
+    								rowDiffEdge.diffWithEdge(productEdge);
+    							}
+    							
+    							if (colEdge.hasSharedComponents(productEdge)
+    									&& !colEdge.hasSameComponents(productEdge)) {
+    								Node colDiffHead = productSpace.copyNode(colNodes.get(c));
+
+    								colToProductNodes.get(c).add(colDiffHead);
+
+    								Edge colDiffEdge = productNode.copyEdge(colEdge, colDiffHead);
+
+    								colDiffEdge.diffWithEdge(productEdge);
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+    }
+    	
+    public void tensor3(int tolerance, Set<String> roles) {
+    	for (int i = 0; i < rowNodes.size(); i++) {
+    		for (int j = 0; j < colNodes.size(); j++) {
+    			if (rowNodes.get(i).hasEdges() 
+    					&& colNodes.get(j).hasEdges()) {
+    				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
+    					for (Edge colEdge : colNodes.get(j).getEdges()) {
+    						if (!rowEdge.isMatchingTo(colEdge, tolerance, roles)) {
+    							int r = locateNode(rowEdge.getHead(), i, 
+    									rowNodes);
+
+    							int c = locateNode(colEdge.getHead(), j,
+    									colNodes);
+    							
+    							if (hasProductNode(i, j) && hasProductNode(r, c)) {
+    								Edge productEdge = getProductNode(i, j).copyEdge(colEdge, 
+        									getProductNode(r, c));
+    								
     								productEdge.unionWithEdge(rowEdge);
     							} 
     						}

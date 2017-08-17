@@ -162,7 +162,7 @@ public class KnoxController {
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
     		@RequestParam(value = "isComplete", required = false, defaultValue = "true") boolean isComplete,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "true") boolean isClosed,
+    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
     	Set<String> uniqueRoles = new HashSet<String>(roles);
     	
@@ -192,7 +192,7 @@ public class KnoxController {
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
     		@RequestParam(value = "isComplete", required = false, defaultValue = "true") boolean isComplete,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "true") boolean isClosed,
+    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		

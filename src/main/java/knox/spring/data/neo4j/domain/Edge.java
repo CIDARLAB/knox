@@ -96,6 +96,12 @@ public class Edge {
     public boolean deleteComponent(String compID) {
     	return componentIDs.remove(compID);
     }
+    
+    public void diffWithEdge(Edge edge) {
+    	componentIDs.removeAll(edge.getComponentIDs());
+
+    	componentRoles.removeAll(edge.getComponentRoles());
+    }
 
     public Node getTail() {
     	return tail; 
@@ -156,7 +162,7 @@ public class Edge {
     public void intersectWithEdge(Edge edge) {
     	componentIDs.retainAll(edge.getComponentIDs());
 
-    	componentRoles.retainAll(edge.getComponentRoles());
+//    	componentRoles.retainAll(edge.getComponentRoles());
     }
     
     public boolean isBlank() {
@@ -240,6 +246,14 @@ public class Edge {
     		return true;
     	} else {
     		return false;
+    	}
+    }
+    
+    public boolean hasSameBlankness(Edge edge) {
+    	if (isBlank()) {
+    		return edge.isBlank();
+    	} else {
+    		return !edge.isBlank();
     	}
     }
 

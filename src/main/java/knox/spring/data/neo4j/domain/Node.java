@@ -87,8 +87,6 @@ public class Node {
 		} else {
 			for (Edge parallelEdge : parallelEdges) {
     			if (!parallelEdge.isBlank()) {
-    				parallelEdge.unionWithEdge(edge);
-    				
     				return parallelEdge;
     			}
     		}
@@ -138,6 +136,18 @@ public class Node {
     	return edges; 
     }
     
+    public Edge getLabeledEdge() {
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+        		if (!edge.isBlank()) {
+        			return edge;
+        		}
+        	}
+    	}
+    	
+    	return null;
+    }
+    
     public Edge[] getEdgeArray() {
     	int numEdges = getNumEdges();
     	
@@ -179,7 +189,7 @@ public class Node {
     	
     	if (hasEdges()) {
     		for (Edge edge : edges) {
-    			if (edge.getHead().isIdenticalTo(head)) {
+    			if (edge.getHead().equals(head)) {
     				edgesWithHead.add(edge);
     			}
     		}

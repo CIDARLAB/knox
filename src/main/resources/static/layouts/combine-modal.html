@@ -19,14 +19,24 @@
                 $('#swal-cardinality-d').show();
             } else {
                 $('#swal-cardinality-d').hide();
+            }
+            if ($('#swal-select').val() === 'AND') {
+                $('#swal-complete-d').show();
+            } else {
+                $('#swal-complete-d').hide();
             } 
             if ($('#swal-select').val() === 'OR') {
-                $('#swal-closed-d').show();
+                $('#swal-closed-or-d').show();
             } else {
-                $('#swal-closed-d').hide();
+                $('#swal-closed-or-d').hide();
+            }
+            if ($('#swal-select').val() === 'AND' || $('#swal-select').val() === 'Merge') {
+                $('#swal-closed-product-d').show();
+            } else {
+                $('#swal-closed-product-d').hide();
             }
         })();">
-      <option value="Join">Join</option>
+      <option selected value="Join">Join</option>
       <option value="OR">OR</option>
       <option value="Repeat">Repeat</option>
       <option value="AND">AND</option>
@@ -36,22 +46,38 @@
   <br/>
   <div id="swal-tolerance-d" style="display: none;">
     Tolerance: <select id="swal-tolerance">
-      <option value=0>0</option>
+      <option selected value=0>0</option>
       <option value=1>1</option>
       <option value=2>2</option>
       <option value=3>3</option>
       <option value=4>4</option>
     </select>
   </div>
+  <br/>
   <div id="swal-cardinality-d" style="display: none;">
     Cardinality: <select id="swal-cardinality">
-      <option value=false>one-or-more</option>
+      <option selected value=false>one-or-more</option>
       <option value=true>zero-or-more</option>
     </select>
   </div>
-  <div id="swal-closed-d" style="display: none;">
-    Closed: <select id="swal-closed">
+  <br/>
+  <div id="swal-complete-d" style="display: none;">
+    Complete Only: <select id="swal-complete">
+      <option selected value=true>true</option>
+      <option value=false>false</option>
+    </select>
+  </div>
+  <br/>
+  <div id="swal-closed-product-d" style="display: none;">
+    Closed: <select id="swal-closed-product">
+      <option selected value=false>false</option>
       <option value=true>true</option>
+    </select>
+  </div>
+  <br/>
+  <div id="swal-closed-or-d" style="display: none;">
+    Closed: <select id="swal-closed-or">
+      <option selected value=true>true</option>
       <option value=false>false</option>
     </select>
   </div>
