@@ -100,7 +100,7 @@ public class Edge {
     public void diffWithEdge(Edge edge) {
     	componentIDs.removeAll(edge.getComponentIDs());
 
-    	componentRoles.removeAll(edge.getComponentRoles());
+//    	componentRoles.removeAll(edge.getComponentRoles());
     }
 
     public Node getTail() {
@@ -155,14 +155,10 @@ public class Edge {
     	return componentRoles != null && !componentRoles.isEmpty();
     }
 
-//    public boolean hasComponents() {
-//        return hasComponentIDs() && hasComponentRoles();
-//    }
-
     public void intersectWithEdge(Edge edge) {
     	componentIDs.retainAll(edge.getComponentIDs());
 
-//    	componentRoles.retainAll(edge.getComponentRoles());
+    	componentRoles.retainAll(edge.getComponentRoles());
     }
     
     public boolean isBlank() {
