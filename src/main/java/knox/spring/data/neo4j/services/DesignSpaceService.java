@@ -323,11 +323,11 @@ public class DesignSpaceService {
     			Product product = new Product(inputSpace, productSpace);
     			
     			if (isComplete) {
-    				product.tensor(tolerance, 2, roles);
+    				product.tensor2(tolerance, 2, roles);
     				
     				product.getProductSpace().deleteUnacceptableNodes();
     			} else {
-    				product.tensor(tolerance, 0, roles);
+    				product.tensor2(tolerance, 0, roles);
     				
     				product.getProductSpace().labelSourceNodesStart();
     		    	

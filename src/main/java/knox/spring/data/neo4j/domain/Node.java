@@ -87,6 +87,8 @@ public class Node {
 		} else {
 			for (Edge parallelEdge : parallelEdges) {
     			if (!parallelEdge.isBlank()) {
+    				parallelEdge.unionWithEdge(edge);
+    				
     				return parallelEdge;
     			}
     		}

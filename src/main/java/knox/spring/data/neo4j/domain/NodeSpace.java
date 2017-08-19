@@ -533,23 +533,23 @@ public class NodeSpace {
     	return null;
     }
     
-    public boolean isConnected() {
-    	Set<String> globalIDs = new HashSet<String>();
-
-    	int numPartitions = 0;
-
-    	for (Node startNode : getStartNodes()) {
-    		if (depthFirstTraversal(startNode, new LinkedList<Node>(), globalIDs)) {
-    			numPartitions++;
-    		}
-
-    		if (numPartitions > 1) {
-    			return false;
-    		}
-    	}
-    	
-    	return true;
-    }
+//    public boolean isConnected() {
+//    	Set<String> globalIDs = new HashSet<String>();
+//
+//    	int numPartitions = 0;
+//
+//    	for (Node startNode : getStartNodes()) {
+//    		if (depthFirstTraversal(startNode, new LinkedList<Node>(), globalIDs)) {
+//    			numPartitions++;
+//    		}
+//
+//    		if (numPartitions > 1) {
+//    			return false;
+//    		}
+//    	}
+//    	
+//    	return true;
+//    }
     
     public List<Node> reverseDepthFirstTraversal() {
     	HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
@@ -601,29 +601,59 @@ public class NodeSpace {
     	return isOrthogonal;
     }
     
+    public List<Set<Node>> partition() {
+    	List<Set<Node>> nodePartitions = new LinkedList<Set<Node>>();
+    	
+    	Set<Node> globalNodes = new HashSet<Node>();
+    	
+    	for (Node sourceNode : getSourceNodes()) {
+    		Set<Node> nodePartition = new HashSet<Node>();
+    		
+    		Set<Node> sharedNodes = depthFirstTraversal(sourceNode, nodePartition, globalNodes);
+    		
+    		for (int i = nodePartitions.size() - 1; i >= 0; i--) {
+    			boolean isConnected = false;
+    			
+    			Iterator<Node> sharedNoderator = sharedNodes.iterator();
+    			
+    			while (sharedNoderator.hasNext() && !isConnected) {
+    				isConnected = nodePartitions.get(i).contains(sharedNoderator.next());
+    			}
+    			
+    			if (isConnected) {
+    				nodePartition.addAll(nodePartitions.remove(i));
+    			}
+    		}
+    		
+    		nodePartitions.add(nodePartition);
+    	}
+
+    	return nodePartitions;
+    }
+    
     public List<Node> depthFirstTraversal() {
     	List<Node> traversalNodes = new ArrayList<Node>(nodes.size());
 
-    	Set<String> globalIDs = new HashSet<String>();
+    	Set<Node> globalNodes = new HashSet<Node>();
 
     	for (Node startNode : getStartNodes()) {
-    		depthFirstTraversal(startNode, traversalNodes, globalIDs);
+    		depthFirstTraversal(startNode, traversalNodes, globalNodes);
     	}
 
     	return traversalNodes;
     }
     
-    private boolean depthFirstTraversal(Node startNode, List<Node> traversalNodes, 
-    		Set<String> globalIDs) {
-    	boolean isOrthogonal = true;
+    private Set<Node> depthFirstTraversal(Node startNode, Collection<Node> traversalNodes, 
+    		Set<Node> globalNodes) {
+    	Set<Node> sharedNodes = new HashSet<Node>();
     	
     	Stack<Node> nodeStack = new Stack<Node>();
 
     	nodeStack.push(startNode);
 
-    	Set<String> localIDs = new HashSet<String>();
+    	Set<Node> localNodes = new HashSet<Node>();
     	
-    	localIDs.add(startNode.getNodeID());
+    	localNodes.add(startNode);
 
     	while (!nodeStack.isEmpty()) {
     		Node node = nodeStack.pop();
@@ -631,19 +661,19 @@ public class NodeSpace {
     		traversalNodes.add(node);
 
     		for (Edge edge : node.getEdges()) {
-    			if (globalIDs.contains(edge.getHead().getNodeID())) {
-    				isOrthogonal = false;
-    			} else if (!localIDs.contains(edge.getHead().getNodeID())) {
+    			if (globalNodes.contains(edge.getHead())) {
+    				sharedNodes.add(edge.getHead());
+    			} else if (!localNodes.contains(edge.getHead())) {
     				nodeStack.push(edge.getHead());
 
-    				localIDs.add(edge.getHead().getNodeID());
+    				localNodes.add(edge.getHead());
     			}
     		}
     	}
     	
-    	globalIDs.addAll(localIDs);
+    	globalNodes.addAll(localNodes);
     	
-    	return isOrthogonal;
+    	return sharedNodes;
     }
     
     public Set<Node> getOtherNodes(Set<Node> nodes) {
