@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import knox.spring.data.neo4j.operations.Product;
-
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -138,13 +136,11 @@ public class Node {
     	return edges; 
     }
     
-    public Edge getLabeledEdge() {
-    	if (hasEdges()) {
-    		for (Edge edge : edges) {
-        		if (!edge.isBlank()) {
-        			return edge;
-        		}
-        	}
+    public Edge getNonBlankEdge(Node head) {
+    	for (Edge edge : getEdges(head)) {
+    		if (!edge.isBlank()) {
+    			return edge;
+    		}
     	}
     	
     	return null;
@@ -214,14 +210,38 @@ public class Node {
     	}
     }
     
-    public boolean hasMatchingEdge(Edge edge, int tolerance, Set<String> roles) {
-    	for (Edge e : edges) {
+    public boolean hasEdgeWithSharedComponentIDs(Edge edge, Node head) {
+    	for (Edge e : getEdges(head)) {
+    		if (edge.hasSharedComponentIDs(e)) {
+    			return true;
+    		}
+    	}
+
+    	return false;
+    }
+    
+    public boolean hasMatchingEdge(Edge edge, Node head, int tolerance, Set<String> roles) {
+    	for (Edge e : getEdges(head)) {
     		if (edge.isMatchingTo(e, tolerance, roles)) {
     			return true;
     		}
     	}
 
     	return false;
+    }
+    
+    public boolean hasMatchingEdge(Edge edge, int tolerance, Set<String> roles) {
+    	if (hasEdges()) {
+    		for (Edge e : edges) {
+    			if (edge.isMatchingTo(e, tolerance, roles)) {
+    				return true;
+    			}
+    		}
+    		
+    		return false;
+    	} else {
+    		return false;
+    	}
     }
     
     public Set<Edge> getMatchingEdges(Edge edge, int tolerance, Set<String> roles) {

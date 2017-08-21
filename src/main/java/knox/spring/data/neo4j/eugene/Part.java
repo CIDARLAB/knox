@@ -36,7 +36,7 @@ public class Part {
         CDS("CDS"),
         TERMINATOR("terminator"),
         SCAR("restriction_enzyme_assembly_scar"),
-        REGION("engineered_region");
+        FEATURE("sequence_feature");
 
         private final String value;
 

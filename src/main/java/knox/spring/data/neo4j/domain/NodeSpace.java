@@ -556,27 +556,27 @@ public class NodeSpace {
     	
     	List<Node> traversalNodes = new ArrayList<Node>(nodes.size());
 
-    	Set<String> globalIDs = new HashSet<String>();
+    	Set<Node> globalNodes = new HashSet<Node>();
 
     	for (Node acceptNode : getAcceptNodes()) {
-    		reverseDepthFirstTraversal(acceptNode, traversalNodes, globalIDs,
-    				idToIncomingEdges);
+    		traversalNodes.addAll(reverseDepthFirstTraversal(acceptNode, globalNodes, 
+    				idToIncomingEdges));
     	}
 
     	return traversalNodes;
     }
     
-    private boolean reverseDepthFirstTraversal(Node acceptNode, List<Node> traversalNodes, 
-    		Set<String> globalIDs, HashMap<String, Set<Edge>> idToIncomingEdges) {
-    	boolean isOrthogonal = true;
+    private List<Node> reverseDepthFirstTraversal(Node acceptNode, 
+    		Set<Node> globalNodes, HashMap<String, Set<Edge>> idToIncomingEdges) {
+    	List<Node> traversalNodes = new LinkedList<Node>();
     	
     	Stack<Node> nodeStack = new Stack<Node>();
 
     	nodeStack.push(acceptNode);
 
-    	Set<String> localIDs = new HashSet<String>();
+    	Set<Node> localNodes = new HashSet<Node>();
     	
-    	localIDs.add(acceptNode.getNodeID());
+    	localNodes.add(acceptNode);
 
     	while (!nodeStack.isEmpty()) {
     		Node node = nodeStack.pop();
@@ -585,50 +585,19 @@ public class NodeSpace {
 
     		if (idToIncomingEdges.containsKey(node.getNodeID())) {
     			for (Edge edge : idToIncomingEdges.get(node.getNodeID())) {
-    				if (globalIDs.contains(edge.getTail().getNodeID())) {
-    					isOrthogonal = false;
-    				} else if (!localIDs.contains(edge.getTail().getNodeID())) {
+    				if (!globalNodes.contains(edge.getTail())
+    						&& !localNodes.contains(edge.getTail())) {
     					nodeStack.push(edge.getTail());
 
-    					localIDs.add(edge.getTail().getNodeID());
+    					localNodes.add(edge.getTail());
     				}
     			}
     		}
     	}
     	
-    	globalIDs.addAll(localIDs);
+    	globalNodes.addAll(localNodes);
     	
-    	return isOrthogonal;
-    }
-    
-    public List<Set<Node>> partition() {
-    	List<Set<Node>> nodePartitions = new LinkedList<Set<Node>>();
-    	
-    	Set<Node> globalNodes = new HashSet<Node>();
-    	
-    	for (Node sourceNode : getSourceNodes()) {
-    		Set<Node> nodePartition = new HashSet<Node>();
-    		
-    		Set<Node> sharedNodes = depthFirstTraversal(sourceNode, nodePartition, globalNodes);
-    		
-    		for (int i = nodePartitions.size() - 1; i >= 0; i--) {
-    			boolean isConnected = false;
-    			
-    			Iterator<Node> sharedNoderator = sharedNodes.iterator();
-    			
-    			while (sharedNoderator.hasNext() && !isConnected) {
-    				isConnected = nodePartitions.get(i).contains(sharedNoderator.next());
-    			}
-    			
-    			if (isConnected) {
-    				nodePartition.addAll(nodePartitions.remove(i));
-    			}
-    		}
-    		
-    		nodePartitions.add(nodePartition);
-    	}
-
-    	return nodePartitions;
+    	return traversalNodes;
     }
     
     public List<Node> depthFirstTraversal() {
@@ -637,15 +606,14 @@ public class NodeSpace {
     	Set<Node> globalNodes = new HashSet<Node>();
 
     	for (Node startNode : getStartNodes()) {
-    		depthFirstTraversal(startNode, traversalNodes, globalNodes);
+    		traversalNodes.addAll(depthFirstTraversal(startNode, globalNodes));
     	}
 
     	return traversalNodes;
     }
     
-    private Set<Node> depthFirstTraversal(Node startNode, Collection<Node> traversalNodes, 
-    		Set<Node> globalNodes) {
-    	Set<Node> sharedNodes = new HashSet<Node>();
+    private List<Node> depthFirstTraversal(Node startNode, Set<Node> globalNodes) {
+    	List<Node> traversalNodes = new LinkedList<Node>();
     	
     	Stack<Node> nodeStack = new Stack<Node>();
 
@@ -661,9 +629,8 @@ public class NodeSpace {
     		traversalNodes.add(node);
 
     		for (Edge edge : node.getEdges()) {
-    			if (globalNodes.contains(edge.getHead())) {
-    				sharedNodes.add(edge.getHead());
-    			} else if (!localNodes.contains(edge.getHead())) {
+    			if (!globalNodes.contains(edge.getHead()) 
+    					&& !localNodes.contains(edge.getHead())) {
     				nodeStack.push(edge.getHead());
 
     				localNodes.add(edge.getHead());
@@ -673,7 +640,7 @@ public class NodeSpace {
     	
     	globalNodes.addAll(localNodes);
     	
-    	return sharedNodes;
+    	return traversalNodes;
     }
     
     public Set<Node> getOtherNodes(Set<Node> nodes) {
@@ -799,7 +766,23 @@ public class NodeSpace {
     }
     
     public boolean retainNodes(Collection<Node> nodes) {
-    	return this.nodes.retainAll(nodes);
+    	boolean isChanged = this.nodes.retainAll(nodes);
+    	
+    	for (Node node : this.nodes) {
+    		if (node.hasEdges()) {
+    			Set<Edge> deletedEdges = new HashSet<Edge>();
+    			
+    			for (Edge edge : node.getEdges()) {
+    				if (!this.nodes.contains(edge.getHead())) {
+    					deletedEdges.add(edge);
+    				}
+    			}
+    			
+    			node.deleteEdges(deletedEdges);
+    		}
+    	}
+    	
+    	return isChanged;
     }
     
     public Set<Node> retainNodesByID(Set<String> nodeIDs) {

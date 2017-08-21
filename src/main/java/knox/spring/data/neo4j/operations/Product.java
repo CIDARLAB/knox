@@ -15,10 +15,6 @@ public class Product {
 	
 	private List<Node> colNodes;
 	
-//	private HashMap<Integer, Set<Node>> rowToProductNodes;
-//	
-//	private HashMap<Integer, Set<Node>> colToProductNodes;
-	
 	private NodeSpace productSpace;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(Product.class);
@@ -29,24 +25,19 @@ public class Product {
 		this.rowNodes = rowSpace.depthFirstTraversal();
 		
 		this.colNodes = colSpace.depthFirstTraversal();
-		
-//		rowToProductNodes = new HashMap<Integer, Set<Node>>();
-//		
-//		colToProductNodes = new HashMap<Integer, Set<Node>>();
 	}
 	
     public NodeSpace getProductSpace() {
     	return productSpace;
     }
     
-    public void cartesian() {
-    	for (int i = 0; i < rowNodes.size(); i++) {
-    		for (int j = 0; j < colNodes.size(); j++) {
-    			crossNodes(i, j, 1);
-    		}
-    	}
-    }
-    
+//    public void cartesian() {
+//    	for (int i = 0; i < rowNodes.size(); i++) {
+//    		for (int j = 0; j < colNodes.size(); j++) {
+//    			crossNodes(i, j, 1);
+//    		}
+//    	}
+//    }
     
     public List<Partition> unionNonOverlapPartitions(List<Partition> partitions) {
     	List<Partition> overlapPartitions = new LinkedList<Partition>();
@@ -89,41 +80,36 @@ public class Product {
     }
     
     
-    public void modifiedStrong(int tolerance, Set<String> roles) {
-    	List<Partition> partitions = tensor2(tolerance, 1, roles);
+    public void modifiedStrong(int tolerance, int degree, Set<String> roles) {
+    	List<Partition> partitions = tensor(tolerance, degree, roles);
     	
     	partitions = unionNonOverlapPartitions(partitions);
     	
     	for (Partition partition : partitions) {
-    		partition.projectNodes(rowNodes, colNodes);
+    		HashMap<Integer, Node> rowToDiffNode = new HashMap<Integer, Node>();
+    		
+    		HashMap<Integer, Node> colToDiffNode = new HashMap<Integer, Node>();
+    		
+    		if (tolerance == 1) {
+    			partition.prosectNodes(rowToDiffNode, colToDiffNode);
+    		}
+    		
+    		partition.projectNodes(rowToDiffNode, colToDiffNode);
     	}
-    	
-//    	List<Set<Node>> nodePartitions = productSpace.partition();
-    	
-//    	if (tolerance == 1) {
-//    		diffEdges();
-//    	}
-    	
-//    	joinProductNodes(tolerance, roles);
-    	
-//    	joinDiffNodes(rowNodes, rowToProductNodes);
+    }
+    
+//    public void strong(int tolerance, int degree, Set<String> roles) {
+//    	tensor(tolerance, degree, roles);
 //    	
-//    	joinDiffNodes(colNodes, colToProductNodes);
-    }
+//    	cartesian();
+//    }
     
-    public void strong(int tolerance, Set<String> roles) {
-//    	tensor(tolerance, 1, roles);
-    	
-    	cartesian();
-    }
-    
-    public List<Partition> tensor2(int tolerance, int degree, Set<String> roles) {
+    public List<Partition> tensor(int tolerance, int degree, Set<String> roles) {
     	List<Partition> partitions = new LinkedList<Partition>();
     	
     	for (int i = 0; i < rowNodes.size(); i++) {
     		for (int j = 0; j < colNodes.size(); j++) {
-    			if (rowNodes.get(i).hasEdges() 
-    					&& colNodes.get(j).hasEdges()) {
+    			if (rowNodes.get(i).hasEdges() && colNodes.get(j).hasEdges()) {
     				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
     					for (Edge colEdge : colNodes.get(j).getEdges()) {
     						if (rowEdge.isMatchingTo(colEdge, tolerance, roles)) {
@@ -133,9 +119,9 @@ public class Product {
     							int c = locateNode(colEdge.getHead(), j,
     									colNodes);
     							
-    							int p = locateProductPartition(i, j, partitions);
+    							int p = locatePartition(i, j, partitions);
     							
-    							int q = locateProductPartition(r, c, partitions);
+    							int q = locatePartition(r, c, partitions);
     							
     							Node productNode;
     							
@@ -144,14 +130,19 @@ public class Product {
     							if (p >= 0 && q >= 0) {
     								if (p > q) {
     									partitions.get(q).union(partitions.remove(p));
-    								} else if (p < q) {
-    									partitions.get(p).union(partitions.remove(q));
+    									
+    									productNode = partitions.get(q).getProductNode(i, j);
+    									
+    									productHead = partitions.get(q).getProductNode(r, c);
+    								} else {
+    									if (q > p) {
+    										partitions.get(p).union(partitions.remove(q));
+    									}
+    									
+    									productNode = partitions.get(p).getProductNode(i, j);
+    									
+    									productHead = partitions.get(p).getProductNode(r, c);
     								}
-    								
-    								productNode = partitions.get(p).getProductNode(i, j);
-									
-									productHead = partitions.get(p).getProductNode(r, c);
-    								
     							} else if (p >= 0 && q < 0) {
     								productNode = partitions.get(p).getProductNode(i, j);
     								
@@ -196,62 +187,7 @@ public class Product {
     	return partitions;
     }
     
-    public void tensor(int tolerance, int degree, Set<String> roles) {
-    	for (int i = 0; i < rowNodes.size(); i++) {
-    		for (int j = 0; j < colNodes.size(); j++) {
-    			if (rowNodes.get(i).hasEdges() 
-    					&& colNodes.get(j).hasEdges()) {
-    				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
-    					for (Edge colEdge : colNodes.get(j).getEdges()) {
-    						if (rowEdge.isMatchingTo(colEdge, tolerance, roles)) {
-//    							if (!hasProductNode(i, j)) {
-//    								crossNodes(i, j, degree);
-//    							}
-//
-//    							int r = locateNode(rowEdge.getHead(), i, 
-//    									rowNodes);
-//
-//    							int c = locateNode(colEdge.getHead(), j,
-//    									colNodes);
-//    							
-//    							if (!hasProductNode(r, c)) {
-//    								crossNodes(r, c, degree);
-//    							}
-//    							
-//    							Node productNode = getProductNode(i, j);
-//    							
-//    							Edge productEdge = productNode.copyEdge(colEdge, 
-//    									getProductNode(r, c));
-//
-//    							if (tolerance == 1) {
-//    								productEdge.intersectWithEdge(rowEdge);
-//    							} else if (tolerance != 0) {
-//    								productEdge.unionWithEdge(rowEdge);
-//    							} 
-    						}
-    					}
-    				}
-    			}
-    		}
-    	}
-    }
-    
-//    private void addProductNode(int i, int j, Node productNode) {
-//    	if (!rowToProductNodes.containsKey(i)) {
-//    		rowToProductNodes.put(i, new HashSet<Node>());
-//    	} 
-//    	
-//    	rowToProductNodes.get(i).add(productNode);
-//    	
-//    	if (!colToProductNodes.containsKey(j)) {
-//    		colToProductNodes.put(j, new HashSet<Node>());
-//    	}
-//    	
-//    	colToProductNodes.get(j).add(productNode);
-//    }
-    
     private Node crossNodes(int i, int j, int degree) {
-//    	if (!hasProductNode(i, j)) {
 			Node productNode = productSpace.createNode();
 			
 			if ((degree == 1 && (rowNodes.get(i).isStartNode() || colNodes.get(j).isStartNode()))
@@ -265,145 +201,8 @@ public class Product {
 				productNode.addNodeType(NodeType.ACCEPT.getValue());
 			}
 			
-//			addProductNode(i, j, productNode);
-//		}
 			return productNode;
     }
-    
-    private void diffEdge(Edge edge, int index, List<Node> nodes, Node productNode, 
-    		Edge productEdge, HashMap<Integer, Set<Node>> indexToProductNodes) {
-    	if (edge.hasSharedComponents(productEdge)
-				&& !edge.hasSameComponents(productEdge)) {
-    		Node diffHead = productSpace.copyNode(nodes.get(index));
-
-    		indexToProductNodes.get(index).add(diffHead);
-
-    		Edge diffEdge = productNode.copyEdge(edge, diffHead);
-
-    		diffEdge.diffWithEdge(productEdge);
-    	}
-    }
-    
-//    private void diffEdges() {
-//    	for (int i = 0; i < rowNodes.size(); i++) {
-//    		for (int j = 0; j < colNodes.size(); j++) {
-//    			if (rowNodes.get(i).hasEdges() 
-//    					&& colNodes.get(j).hasEdges()) {
-//    				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
-//    					for (Edge colEdge : colNodes.get(j).getEdges()) {
-//    						if (rowEdge.hasSharedComponents(colEdge)
-//    								&& !rowEdge.hasSameComponents(colEdge)) {
-//    							int r = locateNode(rowEdge.getHead(), i, 
-//    									rowNodes);
-//
-//    							int c = locateNode(colEdge.getHead(), j,
-//    									colNodes);
-//
-//    							Node productNode = getProductNode(i, j);
-//    							
-//    							Edge productEdge = productNode.getLabeledEdge();
-//    							
-//    							diffEdge(rowEdge, r, rowNodes, productNode, productEdge,
-//    									rowToProductNodes);
-//    							
-//    							diffEdge(colEdge, c, colNodes, productNode, productEdge,
-//    									colToProductNodes);
-//    						}
-//    					}
-//    				}
-//    			}
-//    		}
-//    	}
-//    }
-   
-//    private Node getProductNode(int i, int j) {
-//    	if (rowToProductNodes.containsKey(i) && colToProductNodes.containsKey(j)) {
-//    		Set<Node> productNodes = new HashSet<Node>(rowToProductNodes.get(i));
-//    		
-//        	productNodes.retainAll(colToProductNodes.get(j));
-//        	
-//        	return productNodes.iterator().next();
-//    	} else {
-//    		return null;
-//    	}
-//    }
-    
-//    private boolean hasProductNode(int i, int j) {
-//    	if (rowToProductNodes.containsKey(i) && colToProductNodes.containsKey(j)) {
-//    		Set<Node> productNodes = new HashSet<Node>(rowToProductNodes.get(i));
-//    		
-//        	productNodes.retainAll(colToProductNodes.get(j));
-//        	
-//        	return productNodes.size() == 1;
-//    	} else {
-//    		return false;
-//    	}
-//    }
-    
-//    private Set<Node> joinDiffNode(int i, List<Node> nodes, HashMap<Integer, 
-//    		Set<Node>> indexToProductNodes) {
-//    	Set<Node> productNodes = new HashSet<Node>();
-//
-//		if (indexToProductNodes.containsKey(i)) {
-//			productNodes.addAll(indexToProductNodes.get(i));
-//		} else {
-//			Node diffNode = productSpace.copyNode(nodes.get(i));
-//			
-//			indexToProductNodes.put(i, new HashSet<Node>());
-//			
-//			indexToProductNodes.get(i).add(diffNode);
-//			
-//			productNodes.add(diffNode);
-//		}
-//		
-//		return productNodes;
-//    }
-//    
-//    private void joinDiffNodes(List<Node> nodes, HashMap<Integer, Set<Node>> indexToProductNodes) {
-//    	for (int i = 0; i < nodes.size(); i++) {
-//    		Set<Node> productNodes = joinDiffNode(i, nodes, indexToProductNodes);
-//
-//    		for (Edge edge : nodes.get(i).getEdges()) {
-//    			int j = locateNode(edge.getHead(), i, nodes);
-//    			
-//    			Set<Node> productHeads = joinDiffNode(j, nodes, indexToProductNodes);
-//    			
-//    			for (Node productNode : productNodes) {
-//    				for (Node productHead : productHeads) {
-//    					productNode.copyEdge(edge, productHead);
-//    				}
-//    			}
-//    		}
-//    	}
-//    }
-    
-//    private void joinProductNodes(int tolerance, Set<String> roles) {
-//    	for (int i = 0; i < rowNodes.size(); i++) {
-//    		for (int j = 0; j < colNodes.size(); j++) {
-//    			if (rowNodes.get(i).hasEdges() 
-//    					&& colNodes.get(j).hasEdges()) {
-//    				for (Edge rowEdge : rowNodes.get(i).getEdges()) {
-//    					for (Edge colEdge : colNodes.get(j).getEdges()) {
-//    						if (!rowEdge.isMatchingTo(colEdge, tolerance, roles)) {
-//    							int r = locateNode(rowEdge.getHead(), i, 
-//    									rowNodes);
-//
-//    							int c = locateNode(colEdge.getHead(), j,
-//    									colNodes);
-//    							
-//    							if (hasProductNode(i, j) && hasProductNode(r, c)) {
-//    								Edge productEdge = getProductNode(i, j).copyEdge(colEdge, 
-//        									getProductNode(r, c));
-//    								
-//    								productEdge.unionWithEdge(rowEdge);
-//    							} 
-//    						}
-//    					}
-//    				}
-//    			}
-//    		}
-//    	}
-//    }
     
     private int locateNode(Node node, int k, List<Node> nodes) {
     	for (int i = k; i < nodes.size(); i++) {
@@ -421,7 +220,7 @@ public class Product {
     	return -1;
     }
     
-    private int locateProductPartition(int i, int j, List<Partition> partitions) {
+    private int locatePartition(int i, int j, List<Partition> partitions) {
     	for (int p = 0; p < partitions.size(); p++) {
     		if (partitions.get(p).hasProductNode(i, j)) {
     			return p;
@@ -433,135 +232,238 @@ public class Product {
     
     private class Partition {
     	private HashMap<Integer, Set<Node>> rowToProductNodes;
-    	
+
     	private HashMap<Integer, Set<Node>> colToProductNodes;
-    	
+
     	public Partition() {
     		rowToProductNodes = new HashMap<Integer, Set<Node>>();
-    		
+
     		colToProductNodes = new HashMap<Integer, Set<Node>>();
     	}
-    	
+
     	public void addProductNode(int i, int j, Node productNode) {
     		if (!rowToProductNodes.containsKey(i)) {
-        		rowToProductNodes.put(i, new HashSet<Node>());
-        	} 
-        	
-        	rowToProductNodes.get(i).add(productNode);
-        	
-        	if (!colToProductNodes.containsKey(j)) {
-        		colToProductNodes.put(j, new HashSet<Node>());
-        	}
-        	
-        	colToProductNodes.get(j).add(productNode);
-        }
+    			rowToProductNodes.put(i, new HashSet<Node>());
+    		} 
+
+    		rowToProductNodes.get(i).add(productNode);
+
+    		if (!colToProductNodes.containsKey(j)) {
+    			colToProductNodes.put(j, new HashSet<Node>());
+    		}
+
+    		colToProductNodes.get(j).add(productNode);
+    	}
+
+//    	private void connectProductNodes(int tolerance, Set<String> roles) {
+//    		for (int i = 0; i < rowNodes.size(); i++) {
+//    			for (int j = 0; j < colNodes.size(); j++) {
+//    				if (rowNodes.get(i).hasEdges() && colNodes.get(j).hasEdges()) {
+//    					for (Edge rowEdge : rowNodes.get(i).getEdges()) {
+//    						for (Edge colEdge : colNodes.get(j).getEdges()) {
+//    							if (!rowEdge.isMatchingTo(colEdge, tolerance, roles)) {
+//    								int r = locateNode(rowEdge.getHead(), i, rowNodes);
+//
+//    								int c = locateNode(colEdge.getHead(), j, colNodes);
+//
+//    								if (hasProductNode(i, j) && hasProductNode(r, c)) {
+//    									Edge productEdge = getProductNode(i, j).copyEdge(colEdge, 
+//    											getProductNode(r, c));
+//
+//    									productEdge.unionWithEdge(rowEdge);
+//    								} 
+//    							}
+//    						}
+//    					}
+//    				}
+//    			}
+//    		}
+//    	}
 
     	public Node getProductNode(int i, int j) {
     		if (rowToProductNodes.containsKey(i) && colToProductNodes.containsKey(j)) {
-        		Set<Node> productNodes = new HashSet<Node>(rowToProductNodes.get(i));
-        		
-            	productNodes.retainAll(colToProductNodes.get(j));
-            	
-            	return productNodes.iterator().next();
-        	} else {
-        		return null;
-        	}
+    			Set<Node> productNodes = new HashSet<Node>(rowToProductNodes.get(i));
+
+    			productNodes.retainAll(colToProductNodes.get(j));
+
+    			return productNodes.iterator().next();
+    		} else {
+    			return null;
+    		}
+    	}
+
+    	public Set<Node> getRowProductNodes(int i) {
+    		return rowToProductNodes.get(i);
     	}
     	
+    	public Set<Node> getColumnProductNodes(int j) {
+    		return colToProductNodes.get(j);
+    	}
+
     	public Set<Integer> getRowIndices() {
     		return new HashSet<Integer>(rowToProductNodes.keySet());
     	}
-    	
+
     	public Set<Integer> getColumnIndices() {
     		return new HashSet<Integer>(colToProductNodes.keySet());
     	}
-    	
-    	public HashMap<Integer, Set<Node>> getRowToProductNodes() {
-    		return rowToProductNodes;
-    	}
-    	
-    	public HashMap<Integer, Set<Node>> getColumnToProductNodes() {
-    		return colToProductNodes;
-    	}
-    	
+
     	public boolean hasOverlap(Partition partition) {
     		Set<Integer> rowIndices = partition.getRowIndices();
-    		
+
     		rowIndices.retainAll(rowToProductNodes.keySet());
-    		
+
     		if (!rowIndices.isEmpty()) {
     			return true;
     		}
-    		
+
     		Set<Integer> colIndices = partition.getColumnIndices();
-    		
+
     		colIndices.retainAll(colToProductNodes.keySet());
-    		
+
     		return !colIndices.isEmpty();
     	}
-    	
+
     	public boolean hasProductNode(int i, int j) {
     		if (rowToProductNodes.containsKey(i) && colToProductNodes.containsKey(j)) {
-        		Set<Node> productNodes = new HashSet<Node>(rowToProductNodes.get(i));
-        		
-            	productNodes.retainAll(colToProductNodes.get(j));
-            	
-            	return productNodes.size() == 1;
-        	} else {
-        		return false;
-        	}
+    			Set<Node> productNodes = new HashSet<Node>(rowToProductNodes.get(i));
+
+    			productNodes.retainAll(colToProductNodes.get(j));
+
+    			return productNodes.size() == 1;
+    		} else {
+    			return false;
+    		}
     	}
     	
-    	private Set<Node> projectNode(int i, List<Node> nodes, HashMap<Integer, 
-        		Set<Node>> indexToProductNodes) {
-        	Set<Node> productNodes = new HashSet<Node>();
+    	private void prosectNodes(HashMap<Integer, Node> rowToDiffNode, 
+    			HashMap<Integer, Node> colToDiffNode) {
+    		for (int i = 0; i < rowNodes.size(); i++) {
+    			for (int j = 0; j < colNodes.size(); j++) {
+    				if (rowNodes.get(i).hasEdges() && colNodes.get(j).hasEdges()) {
+    					for (Edge rowEdge : rowNodes.get(i).getEdges()) {
+    						for (Edge colEdge : colNodes.get(j).getEdges()) {
+    							if (rowEdge.hasSharedComponentIDs(colEdge)
+    									&& !rowEdge.hasSameComponentIDs(colEdge)) {
+    								int r = locateNode(rowEdge.getHead(), i, rowNodes);
 
-    		if (indexToProductNodes.containsKey(i)) {
-    			productNodes.addAll(indexToProductNodes.get(i));
+    								int c = locateNode(colEdge.getHead(), j, colNodes);
+
+    								Node productNode = getProductNode(i, j);
+    								
+    								Node productHead = getProductNode(r, c);
+
+    								Edge productEdge = productNode.getNonBlankEdge(productHead);
+
+    								diffEdges(rowEdge, productEdge, productNode,
+    										projectNode(r, rowNodes, rowToDiffNode));
+
+    								diffEdges(colEdge, productEdge, productNode,
+    										projectNode(c, colNodes, colToDiffNode));
+    							}
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+    	
+    	private void diffEdges(Edge edge, Edge productEdge, Node productNode, Node diffHead) {
+    		if (edge.hasSharedComponentIDs(productEdge) 
+    				&& !edge.hasSameComponentIDs(productEdge)) {
+
+    			Edge diffEdge = productNode.copyEdge(edge, diffHead);
+
+    			diffEdge.diffWithEdge(productEdge);
+    		}
+    	}
+    	
+    	private Node projectNode(int i, List<Node> nodes, 
+    			HashMap<Integer, Node> indexToDiffNode) {
+    		if (indexToDiffNode.containsKey(i)) {
+    			return indexToDiffNode.get(i);
     		} else {
     			Node diffNode = productSpace.copyNode(nodes.get(i));
     			
-    			indexToProductNodes.put(i, new HashSet<Node>());
+    			indexToDiffNode.put(i, diffNode);
     			
-    			indexToProductNodes.get(i).add(diffNode);
-    			
-    			productNodes.add(diffNode);
+    			return diffNode;
+    		}
+    	}
+
+    	private Set<Node> projectNode(int i, List<Node> nodes, 
+    			HashMap<Integer, Set<Node>> indexToProductNodes,
+    			HashMap<Integer, Node> indexToDiffNode) {
+    		Set<Node> productNodes;
+
+    		if (indexToProductNodes.containsKey(i)) {
+    			productNodes = indexToProductNodes.get(i);
+    		} else {
+    			productNodes = new HashSet<Node>();
+
+    			if (indexToDiffNode.containsKey(i)) {
+    				productNodes.add(indexToDiffNode.get(i));
+    			} else {
+    				Node diffNode = productSpace.copyNode(nodes.get(i));
+
+    				indexToDiffNode.put(i, diffNode);
+
+    				productNodes.add(diffNode);
+    			}
+    		}
+
+    		return productNodes;
+    	}
+    	
+    	public void projectNodes(HashMap<Integer, Node> rowToDiffNode, 
+    			HashMap<Integer, Node> colToDiffNode) {
+    		projectNodes(rowNodes, rowToProductNodes, rowToDiffNode);
+
+    		projectNodes(colNodes, colToProductNodes, colToDiffNode);
+    	}
+
+    	private void projectNodes(List<Node> nodes, HashMap<Integer, Set<Node>> indexToProductNodes,
+    			HashMap<Integer, Node> indexToDiffNode) {
+    		for (int i = 0; i < nodes.size(); i++) {
+    			Set<Node> productNodes = projectNode(i, nodes, indexToProductNodes,
+    					indexToDiffNode);
+
+    			for (Edge edge : nodes.get(i).getEdges()) {
+    				int ii = locateNode(edge.getHead(), i, nodes);
+
+    				Set<Node> productHeads = projectNode(ii, nodes, indexToProductNodes,
+    						indexToDiffNode);
+
+    				for (Node productNode : productNodes) {
+    					for (Node productHead : productHeads) {
+    						if (!productNode.hasEdgeWithSharedComponentIDs(edge, productHead)) {
+    							productNode.copyEdge(edge, productHead);
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+
+    	public void union(Partition partition) {
+    		for (int i : partition.getRowIndices()) {
+    			if (rowToProductNodes.containsKey(i)) {
+    				rowToProductNodes.get(i).addAll(partition.getRowProductNodes(i));
+    			} else {
+    				rowToProductNodes.put(i, partition.getRowProductNodes(i));
+    			}
     		}
     		
-    		return productNodes;
-        }
-    	
-    	public void projectNodes(List<Node> rowNodes, List<Node> colNodes) {
-    		projectNodes(rowNodes, rowToProductNodes);
-    		
-    		projectNodes(colNodes, colToProductNodes);
-    	}
-        
-        private void projectNodes(List<Node> nodes, HashMap<Integer, Set<Node>> indexToProductNodes) {
-        	for (int i = 0; i < nodes.size(); i++) {
-        		Set<Node> productNodes = projectNode(i, nodes, indexToProductNodes);
-
-        		for (Edge edge : nodes.get(i).getEdges()) {
-        			int j = locateNode(edge.getHead(), i, nodes);
-        			
-        			Set<Node> productHeads = projectNode(j, nodes, indexToProductNodes);
-        			
-        			for (Node productNode : productNodes) {
-        				for (Node productHead : productHeads) {
-        					productNode.copyEdge(edge, productHead);
-        				}
-        			}
-        		}
-        	}
-        }
-    	
-    	public void union(Partition partition) {
-    		rowToProductNodes.putAll(partition.getRowToProductNodes());
-    		
-    		colToProductNodes.putAll(partition.getColumnToProductNodes());
+    		for (int j : partition.getColumnIndices()) {
+    			if (colToProductNodes.containsKey(j)) {
+    				colToProductNodes.get(j).addAll(partition.getColumnProductNodes(j));
+    			} else {
+    				colToProductNodes.put(j, partition.getColumnProductNodes(j));
+    			}
+    		}
     	}
     }
-    
+
     public enum ProductType {
         TENSOR("tensor"),
         CARTESIAN("cartesian"),

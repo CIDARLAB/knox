@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.*;
 
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
-import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
@@ -214,6 +213,7 @@ public class KnoxController {
     public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
+    		@RequestParam(value = "isComplete", required = false, defaultValue = "false") boolean isComplete,
     		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
@@ -222,11 +222,11 @@ public class KnoxController {
     		long startTime = System.nanoTime();
     		
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, isClosed,
-    					uniqueRoles);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, isComplete,
+    					isClosed, uniqueRoles);
     		} else {
     			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, 
-    					isClosed, uniqueRoles);
+    					isComplete, isClosed, uniqueRoles);
     		}
     		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged after " +
@@ -243,6 +243,7 @@ public class KnoxController {
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
+    		@RequestParam(value = "isComplete", required = false, defaultValue = "false") boolean isComplete,
     		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) { 	
 		Set<String> uniqueRoles = new HashSet<String>(roles);
@@ -250,11 +251,11 @@ public class KnoxController {
 		long startTime = System.nanoTime();
 		
 		if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, isClosed,
-    				uniqueRoles); 
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, isComplete,
+    				isClosed, uniqueRoles); 
     	} else {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance,
-    				isClosed, uniqueRoles);
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
+    				tolerance, isComplete, isClosed, uniqueRoles);
     	}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged after " + 
