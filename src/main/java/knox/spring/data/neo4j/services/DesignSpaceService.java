@@ -1922,7 +1922,7 @@ public class DesignSpaceService {
 	}
 	
 	private void saveDesignSpace(DesignSpace space) {
-		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToOutgoingEdges();
+		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
 
 		space.clearEdges();
 
@@ -1932,7 +1932,7 @@ public class DesignSpaceService {
 
 		for (Commit commit : commits) {
 			commitIDToEdges.put(commit.getCommitID(), 
-					commit.getSnapshot().mapNodeIDsToOutgoingEdges());
+					commit.getSnapshot().mapNodeIDsToEdges());
 
 			commit.getSnapshot().clearEdges();
 		}

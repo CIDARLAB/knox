@@ -168,7 +168,7 @@ public class Edge {
     }
     
     public boolean isLabeled() {
-    	return hasComponentIDs() && hasComponentRoles();
+    	return hasComponentIDs() || hasComponentRoles();
     }
     
     public boolean isUnlabeled() {

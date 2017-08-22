@@ -349,7 +349,7 @@
                 var svg = document.getElementById("swal-svg");
                 var loading = document.getElementById("swal-loading");
                 loading.parentNode.removeChild(loading);
-                var yPitch = (data.length + 1) * celHeight;
+                var yPitch = 3.1*celHeight;
                 var xPitch = (longestListLength(data) + 1) * celWidth;
                 svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
                 svg.setAttribute("height", yPitch);

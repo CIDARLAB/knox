@@ -314,7 +314,7 @@ public class NodeSpace {
     	}
     }
     
-    public HashMap<String, Set<Edge>> mapNodeIDsToOutgoingEdges() {
+    public HashMap<String, Set<Edge>> mapNodeIDsToEdges() {
     	HashMap<String, Set<Edge>> nodeIDToOutgoingEdges = new HashMap<String, Set<Edge>>();
         
     	for (Node node : nodes) {
@@ -396,7 +396,7 @@ public class NodeSpace {
     					mergedNodes.add(deletedEdge.getHead());
     				}
 
-    				node.mergeNodes(mergedNodes, idToIncomingEdges);
+    				node.unionWithNodes(mergedNodes, idToIncomingEdges);
 
     				deletedNodes.addAll(mergedNodes);
     			}
@@ -740,17 +740,23 @@ public class NodeSpace {
     public boolean retainNodes(Collection<Node> nodes) {
     	boolean isChanged = this.nodes.retainAll(nodes);
     	
-    	for (Node node : this.nodes) {
-    		if (node.hasEdges()) {
-    			Set<Edge> deletedEdges = new HashSet<Edge>();
-    			
-    			for (Edge edge : node.getEdges()) {
-    				if (!this.nodes.contains(edge.getHead())) {
-    					deletedEdges.add(edge);
+    	if (isChanged) {
+    		if (hasNodes()) {
+    			for (Node node : this.nodes) {
+    				if (node.hasEdges()) {
+    					Set<Edge> deletedEdges = new HashSet<Edge>();
+
+    					for (Edge edge : node.getEdges()) {
+    						if (!this.nodes.contains(edge.getHead())) {
+    							deletedEdges.add(edge);
+    						}
+    					}
+
+    					node.deleteEdges(deletedEdges);
     				}
     			}
-    			
-    			node.deleteEdges(deletedEdges);
+    		} else {
+    			this.nodes = null;
     		}
     	}
     	

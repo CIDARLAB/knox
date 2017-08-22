@@ -3,6 +3,7 @@ package knox.spring.data.neo4j.domain;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -196,6 +197,30 @@ public class Node {
     	return edgesWithHead;
     }
     
+    public Set<Edge> getLabeledEdges(Node head) {
+    	Set<Edge> labeledEdgesWithHead = new HashSet<Edge>();
+    	
+    	for (Edge edge : getEdges(head)) {
+    		if (edge.isLabeled()) {
+    			labeledEdgesWithHead.add(edge);
+    		}
+    	}
+    	
+    	return labeledEdgesWithHead;
+    }
+    
+    public Set<Edge> getUnlabeledEdges(Node head) {
+    	Set<Edge> unlabeledEdgesWithHead = new HashSet<Edge>();
+    	
+    	for (Edge edge : getEdges(head)) {
+    		if (edge.isUnlabeled()) {
+    			unlabeledEdgesWithHead.add(edge);
+    		}
+    	}
+    	
+    	return unlabeledEdgesWithHead;
+    }
+    
     public boolean hasEdge(Node head) {
     	if (hasEdges()) {
     		for (Edge edge : edges) {
@@ -296,7 +321,83 @@ public class Node {
     	return node.getNodeID().equals(nodeID);
     }
     
-    public void mergeNodes(Set<Node> mergedNodes, HashMap<String, Set<Edge>> idToIncomingEdges) {
+    private Set<Edge> unionIncomingParallelEdges(HashMap<String, Set<Edge>> idToIncomingEdges) {
+    	Set<Edge> deletedEdges = new HashSet<Edge>();
+    	
+    	if (idToIncomingEdges.containsKey(nodeID)) {
+    		Set<Set<Edge>> allParallelEdges = new HashSet<Set<Edge>>();
+    		
+    		for (Edge edge : idToIncomingEdges.get(nodeID)) {
+    			Set<Edge> parallelEdges;
+    			
+    			if (edge.isLabeled()) {
+    				parallelEdges = edge.getTail().getLabeledEdges(this);
+    			} else {
+    				parallelEdges = edge.getTail().getUnlabeledEdges(this);
+    			}
+    			
+    			if (parallelEdges.size() == 2) {
+    				allParallelEdges.add(parallelEdges);
+    			}
+    		}
+    		
+    		for (Set<Edge> parallelEdges : allParallelEdges) {
+    			Iterator<Edge> edgerator = parallelEdges.iterator();
+    			
+    			Edge parallelEdge = edgerator.next();
+    			
+    			edgerator.next().unionWithEdge(parallelEdge);
+    			
+    			deletedEdges.add(parallelEdge);
+    		}
+    		
+    		if (!deletedEdges.isEmpty()) {
+    			deletedEdges.iterator().next().getTail().deleteEdges(deletedEdges);
+    			
+    			idToIncomingEdges.get(nodeID).removeAll(deletedEdges);
+    		}
+    	}
+    	
+    	return deletedEdges;
+    }
+    
+    private Set<Edge> unionParallelEdges() {
+    	Set<Edge> deletedEdges = new HashSet<Edge>();
+    	
+    	if (hasEdges()) {
+    		Set<Set<Edge>> allParallelEdges = new HashSet<Set<Edge>>();
+    		
+    		for (Edge edge : edges) {
+    			Set<Edge> parallelEdges;
+    			
+    			if (edge.isLabeled()) {
+    				parallelEdges = getLabeledEdges(edge.getHead());
+    			} else {
+    				parallelEdges = getUnlabeledEdges(edge.getHead());
+    			}
+    			
+    			if (parallelEdges.size() == 2) {
+    				allParallelEdges.add(parallelEdges);
+    			}
+    		}
+    		
+    		for (Set<Edge> parallelEdges : allParallelEdges) {
+    			Iterator<Edge> edgerator = parallelEdges.iterator();
+    			
+    			Edge parallelEdge = edgerator.next();
+    			
+    			edgerator.next().unionWithEdge(parallelEdge);
+    			
+    			deletedEdges.add(parallelEdge);
+    		}
+    		
+    		deleteEdges(deletedEdges);
+    	}
+    	
+    	return deletedEdges;
+    }
+    
+    public void unionWithNodes(Set<Node> mergedNodes, HashMap<String, Set<Edge>> idToIncomingEdges) {
     	mergedNodes.remove(this);
     	
     	for (Node mergedNode : mergedNodes) {
@@ -309,8 +410,6 @@ public class Node {
 			}
 			
 			if (idToIncomingEdges.containsKey(mergedNode.getNodeID())) {
-				Set<Edge> reassignedEdges = new HashSet<Edge>();
-				
 				for (Edge edge : idToIncomingEdges.get(mergedNode.getNodeID())) {
 					edge.setHead(this);
 					
@@ -319,11 +418,9 @@ public class Node {
 					}
 					
 					idToIncomingEdges.get(nodeID).add(edge);
-					
-					reassignedEdges.add(edge);
 				}
 				
-				idToIncomingEdges.get(mergedNode.getNodeID()).removeAll(reassignedEdges);
+				idToIncomingEdges.remove(mergedNode);
 			}
 			
 			if (mergedNode.isAcceptNode()) {
@@ -334,7 +431,29 @@ public class Node {
 				addNodeType(NodeType.START.getValue());
 			}
 		}
+    	
+    	Set<Edge> deletedEdges = unionParallelEdges();
+    	
+    	for (Edge deletedEdge : deletedEdges) {
+    		idToIncomingEdges.get(deletedEdge.getHead().getNodeID()).remove(deletedEdge);
+    	}
+    	
+    	unionIncomingParallelEdges(idToIncomingEdges);
     }
+    
+//    public boolean deleteEdge(Edge edge) {
+//    	if (hasEdges()) {
+//    		boolean isDeleted = this.edges.remove(edge);
+//    		
+//    		if (this.edges.isEmpty()) {
+//    			this.edges = null;
+//    		}
+//    		
+//    		return isDeleted;
+//    	} else {
+//    		return false;
+//    	}
+//    }
     
     public boolean deleteEdges(Set<Edge> edges) {
     	if (hasEdges()) {
