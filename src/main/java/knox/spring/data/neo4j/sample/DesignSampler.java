@@ -11,12 +11,15 @@ import java.util.*;
 
 public class DesignSampler {
 	private static final Logger LOG = LoggerFactory.getLogger(DesignSampler.class);
+	
 	private DesignSpace space;
-	private List<Node> starts;
+	
+	private List<Node> startNodes;
 	
 	public DesignSampler(DesignSpace space) {
 		this.space = space;
-		starts = new LinkedList<>(space.getStartNodes());
+		
+		startNodes = new LinkedList<Node>(space.getStartNodes());
 	}
 
     /*
@@ -38,7 +41,7 @@ public class DesignSampler {
 		while (designs.size() < numberOfDesigns) {
 			List<String> design = new LinkedList<String>();
 			
-			Node node = starts.get(rand.nextInt(starts.size()));
+			Node node = startNodes.get(rand.nextInt(startNodes.size()));
 			
             Edge edge = new Edge();
 
@@ -97,11 +100,11 @@ public class DesignSampler {
 			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
 								 the specific component ids.
 	 */
-	public Set<List<String>> enumerate(EnumerateType enumerateType, int requestedDesigns) {
-		if (enumerateType == EnumerateType.BFS) {
-			return bfsEnumerate(requestedDesigns);
+	public List<List<Map<String, Object>>> enumerate(int numDesigns, EnumerateType type) {
+		if (type == EnumerateType.BFS) {
+			return bfsEnumerate(numDesigns);
 		} else {
-			return dfsEnumerate(requestedDesigns);
+			return dfsEnumerate(numDesigns);
 		}
 	}
 
@@ -139,34 +142,34 @@ public class DesignSampler {
 			  copy represents specific information for a single n-1 permutation.
 
 	 */
-	private Set<List<String>> dfsEnumerate(int numberOfDesigns) {
-		Set<List<String>> allDesigns = new HashSet<>();
-		int currentNumberOfDesigns = 0;
-
-		for (Node start : starts) {
-			Set<List<String>> designs = new HashSet<>();
-			designs.add(new ArrayList<>());
-			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
-			LOG.info("generated designs size {}", generatedDesigns.size());
-			LOG.info("Node start {}", start.getNodeID());
-
-			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
-				allDesigns.addAll(generatedDesigns);
-				currentNumberOfDesigns += generatedDesigns.size();
-			} else {
-				int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
-				Iterator<List<String>> generatedDesignsIterator = generatedDesigns.iterator();
-				for (int i = 0; i < neededDesigns; i++) {
-					allDesigns.add(generatedDesignsIterator.next());
-				}
-
-				return allDesigns;
-			}
-
-		}
-
-		return allDesigns;
-	}
+//	private Set<List<String>> dfsEnumerate(int numberOfDesigns) {
+//		Set<List<String>> allDesigns = new HashSet<>();
+//		int currentNumberOfDesigns = 0;
+//
+//		for (Node start : startNodes) {
+//			Set<List<String>> designs = new HashSet<>();
+//			designs.add(new ArrayList<>());
+//			Set<List<String>> generatedDesigns = dfsEnumerateRecursive(start, designs);
+//			LOG.info("generated designs size {}", generatedDesigns.size());
+//			LOG.info("Node start {}", start.getNodeID());
+//
+//			if (generatedDesigns.size() + currentNumberOfDesigns < numberOfDesigns) {
+//				allDesigns.addAll(generatedDesigns);
+//				currentNumberOfDesigns += generatedDesigns.size();
+//			} else {
+//				int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
+//				Iterator<List<String>> generatedDesignsIterator = generatedDesigns.iterator();
+//				for (int i = 0; i < neededDesigns; i++) {
+//					allDesigns.add(generatedDesignsIterator.next());
+//				}
+//
+//				return allDesigns;
+//			}
+//
+//		}
+//
+//		return allDesigns;
+//	}
 
 	/*
 		This method is a helper method for a DFS algorithm. It is recursive and will call
@@ -181,104 +184,220 @@ public class DesignSampler {
 			- Set<List<String>>: The paths that are generated at a single from a single node to the end.
 
 	*/
-	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
-		if (!node.hasEdges() || node.isAcceptNode()) {
-			LOG.info("node done {}", node.getNodeID());
-			return designs;
-		}
-
-		Set<List<String>> allVisitedDesigns = new HashSet<>();
-		LOG.info("node id {}", node.getNodeID());
-
-		for (Edge edge : node.getEdges()) {
-			Set<List<String>> visitedDesigns = new HashSet<>();
-
-			if (edge.hasComponentRoles()) {
-				for (String componentRole : edge.getComponentRoles()) {
-					LOG.info("component role {}", componentRole);
-
-					for (List<String> design : designs) {
-						List<String> copiedDesign = new ArrayList<>(design);
-						copiedDesign.add(componentRole);
-						visitedDesigns.add(copiedDesign);
-					}
-				}
-			} else {
-				visitedDesigns = designs;
-			}
-
-			allVisitedDesigns.addAll(dfsEnumerateRecursive(edge.getHead(), visitedDesigns));
-			LOG.info("visited designs size {}", allVisitedDesigns.size());
-		}
-
-		return allVisitedDesigns;
-	}
-
-
-	private Set<List<String>> bfsEnumerate(int numberOfDesigns) {
-		Set<List<String>> allDesigns = new HashSet<>();
-		int currentNumberOfDesigns = 0;
+//	private Set<List<String>> dfsEnumerateRecursive(Node node, Set<List<String>> designs) {
+//		if (!node.hasEdges() || node.isAcceptNode()) {
+//			LOG.info("node done {}", node.getNodeID());
+//			return designs;
+//		}
+//
+//		Set<List<String>> allVisitedDesigns = new HashSet<>();
+//		LOG.info("node id {}", node.getNodeID());
+//
+//		for (Edge edge : node.getEdges()) {
+//			Set<List<String>> visitedDesigns = new HashSet<>();
+//
+//			if (edge.hasComponentRoles()) {
+//				for (String componentRole : edge.getComponentRoles()) {
+//					LOG.info("component role {}", componentRole);
+//
+//					for (List<String> design : designs) {
+//						List<String> copiedDesign = new ArrayList<>(design);
+//						copiedDesign.add(componentRole);
+//						visitedDesigns.add(copiedDesign);
+//					}
+//				}
+//			} else {
+//				visitedDesigns = designs;
+//			}
+//
+//			allVisitedDesigns.addAll(dfsEnumerateRecursive(edge.getHead(), visitedDesigns));
+//			LOG.info("visited designs size {}", allVisitedDesigns.size());
+//		}
+//
+//		return allVisitedDesigns;
+//	}
+	
+	private List<List<Map<String, Object>>> dfsEnumerate(int numDesigns) {
+		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
 		
-		for (Node start : starts) {
-			Set<List<String>> designs = new HashSet<>();
-			Stack<Edge> edgeStack = new Stack<>();
-			Stack<Set<List<String>>> designStack = new Stack<>();
+		int designCount = 0;
+		
+		for (Node startNode : startNodes) {
+			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
 			
-			if (start.hasEdges()) {
-				for (Edge edge : start.getEdges()) {
+			Stack<Edge> edgeStack = new Stack<Edge>();
+			
+			Stack<List<List<Map<String, Object>>>> designStack = new Stack<List<List<Map<String, Object>>>>();
+			
+			if (startNode.hasEdges()) {
+				for (Edge edge : startNode.getEdges()) {
 					edgeStack.push(edge);
 				}
 			}
 			
-			for (int i = 0; i < start.getNumEdges() - 1; i++) {
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
 				designStack.push(designs);
 			}
 			
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
-				if (edge.hasComponentRoles()) {
-					Set<List<String>> comboDesigns = new HashSet<>();
-					for (String compRole : edge.getComponentRoles()) {
+				
+				if (edge.isLabeled()) {
+					List<List<Map<String, Object>>> comboDesigns = new LinkedList<List<Map<String, Object>>>();
+					
+					for (String compID : edge.getComponentIDs()) {
+						Map<String, Object> comp = new HashMap<String, Object>();
+						
+						comp.put("id", compID);
+						
+						List<String> compRoles = new ArrayList<String>(edge.getComponentRoles());
+						
+						comp.put("roles", compRoles);
+						
 						if (designs.size() > 0) {
-							for (List<String> design : designs) {
-								List<String> comboDesign = new LinkedList<>(design);
-								comboDesign.add(compRole);
+							for (List<Map<String, Object>> design : designs) {
+								List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+								
+								comboDesign.add(comp);
+								
 								comboDesigns.add(comboDesign);
 							}
-							LOG.info("component role {}", compRole);
 						} else {
-							List<String> comboDesign = new LinkedList<String>();
-							comboDesign.add(compRole);
+							List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>();
+							
+							comboDesign.add(comp);
+							
 							comboDesigns.add(comboDesign);
 						}
 					}
+					
 					designs = comboDesigns;
 				}
 				
-				Node head = edge.getHead();
-				if (!head.hasEdges() || head.isAcceptNode()) {
-					if (designs.size() + currentNumberOfDesigns < numberOfDesigns) {
+				if (edge.getHead().isAcceptNode()) {
+					if (designs.size() + designCount < numDesigns) {
 						allDesigns.addAll(designs);
-						currentNumberOfDesigns += designs.size();
+						
+						designCount += designs.size();
 					} else {
-						int neededDesigns = numberOfDesigns - currentNumberOfDesigns;
-						Iterator<List<String>> generatedDesignsIterator = designs.iterator();
-						for (int i = 0; i < neededDesigns; i++) {
-							allDesigns.add(generatedDesignsIterator.next());
+						int diffDesignCount = numDesigns - designCount;
+						
+						Iterator<List<Map<String, Object>>> designerator = designs.iterator();
+						
+						for (int i = 0; i < diffDesignCount; i++) {
+							allDesigns.add(designerator.next());
 						}
+						
 						return allDesigns;
 					}
+					
 					if (!designStack.isEmpty()) {
 						designs = designStack.pop();
 					}
-
-				} else {
-					for (Edge headEdge : head.getEdges()) {
+				} else if (edge.getHead().hasEdges()) {
+					for (Edge headEdge : edge.getHead().getEdges()) {
 						edgeStack.push(headEdge);
 					}
-					for (int i = 0; i < head.getNumEdges() - 1; i++) {
+					
+					for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
 						designStack.push(designs);
 					}
+				} else if (!designStack.isEmpty()) {
+					designs = designStack.pop();
+				}
+			}
+		}
+		
+		return allDesigns;
+	}
+	
+	private List<List<Map<String, Object>>> bfsEnumerate(int numDesigns) {
+		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
+		
+		int designCount = 0;
+		
+		for (Node startNode : startNodes) {
+			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
+			
+			Stack<Edge> edgeStack = new Stack<Edge>();
+			
+			Stack<List<List<Map<String, Object>>>> designStack = new Stack<List<List<Map<String, Object>>>>();
+			
+			if (startNode.hasEdges()) {
+				for (Edge edge : startNode.getEdges()) {
+					edgeStack.push(edge);
+				}
+			}
+			
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
+				designStack.push(designs);
+			}
+			
+			while (!edgeStack.isEmpty()) {
+				Edge edge = edgeStack.pop();
+				
+				if (edge.isLabeled()) {
+					List<List<Map<String, Object>>> comboDesigns = new LinkedList<List<Map<String, Object>>>();
+					
+					for (String compID : edge.getComponentIDs()) {
+						Map<String, Object> comp = new HashMap<String, Object>();
+						
+						comp.put("id", compID);
+						
+						List<String> compRoles = new ArrayList<String>(edge.getComponentRoles());
+						
+						comp.put("roles", compRoles);
+						
+						if (designs.size() > 0) {
+							for (List<Map<String, Object>> design : designs) {
+								List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+								
+								comboDesign.add(comp);
+								
+								comboDesigns.add(comboDesign);
+							}
+						} else {
+							List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>();
+							
+							comboDesign.add(comp);
+							
+							comboDesigns.add(comboDesign);
+						}
+					}
+					
+					designs = comboDesigns;
+				}
+				
+				if (edge.getHead().isAcceptNode()) {
+					if (designs.size() + designCount < numDesigns) {
+						allDesigns.addAll(designs);
+						
+						designCount += designs.size();
+					} else {
+						int diffDesignCount = numDesigns - designCount;
+						
+						Iterator<List<Map<String, Object>>> designerator = designs.iterator();
+						
+						for (int i = 0; i < diffDesignCount; i++) {
+							allDesigns.add(designerator.next());
+						}
+						
+						return allDesigns;
+					}
+					
+					if (!designStack.isEmpty()) {
+						designs = designStack.pop();
+					}
+				} else if (edge.getHead().hasEdges()) {
+					for (Edge headEdge : edge.getHead().getEdges()) {
+						edgeStack.push(headEdge);
+					}
+					
+					for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
+						designStack.push(designs);
+					}
+				} else if (!designStack.isEmpty()) {
+					designs = designStack.pop();
 				}
 			}
 		}

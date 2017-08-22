@@ -74,9 +74,9 @@ public class Node {
     public Edge copyEdge(Edge edge, Node head) {
     	Set<Edge> parallelEdges = getEdges(head);
     	
-    	if (edge.isBlank()) {
+    	if (edge.isUnlabeled()) {
     		for (Edge parallelEdge : parallelEdges) {
-    			if (parallelEdge.isBlank()) {
+    			if (parallelEdge.isUnlabeled()) {
     				return parallelEdge;
     			}
     		}
@@ -84,7 +84,7 @@ public class Node {
     		return createEdge(head);
 		} else {
 			for (Edge parallelEdge : parallelEdges) {
-    			if (!parallelEdge.isBlank()) {
+    			if (parallelEdge.isLabeled()) {
     				parallelEdge.unionWithEdge(edge);
     				
     				return parallelEdge;
@@ -136,9 +136,9 @@ public class Node {
     	return edges; 
     }
     
-    public Edge getNonBlankEdge(Node head) {
+    public Edge getLabeledEdge(Node head) {
     	for (Edge edge : getEdges(head)) {
-    		if (!edge.isBlank()) {
+    		if (edge.isLabeled()) {
     			return edge;
     		}
     	}

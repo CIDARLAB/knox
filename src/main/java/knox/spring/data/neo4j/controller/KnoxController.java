@@ -629,28 +629,28 @@ public class KnoxController {
                 HttpStatus.NO_CONTENT);
     }
 
-    @RequestMapping(value = "/sample", method = RequestMethod.GET)
+    @RequestMapping(value = "/designSpace/sample", method = RequestMethod.GET)
     public Set<List<String>> sample(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numberOfDesigns", required = true, defaultValue = "1") int numberOfDesigns) {
-        return designSpaceService.sampleDesignSpace(targetSpaceID, numberOfDesigns);
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns) {
+        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns);
     }
 
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    @RequestMapping(value = "/designSpace/list", method = RequestMethod.GET)
     public List<String> listDesignSpaces() {
         return designSpaceService.listDesignSpaces();
     }
 
-    @RequestMapping(value = "/enumerate", method = RequestMethod.GET)
-    public Set<List<String>> enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numberOfDesigns", required = false, defaultValue = "1") int numberOfDesigns,
+    @RequestMapping(value = "/designSpace/enumerate", method = RequestMethod.GET)
+    public List<List<Map<String, Object>>> enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns,
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
-        return designSpaceService.enumerateDesignSpace(targetSpaceID, numberOfDesigns, enumerateType);
+        return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, enumerateType);
     }
 
-    @RequestMapping(value = "/partition", method = RequestMethod.GET)
-    public Set<List<String>> partition(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-        return designSpaceService.partitionDesignSpace(targetSpaceID);
-    }
+//    @RequestMapping(value = "/partition", method = RequestMethod.GET)
+//    public Set<List<String>> partition(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+//        return designSpaceService.partitionDesignSpace(targetSpaceID);
+//    }
 }

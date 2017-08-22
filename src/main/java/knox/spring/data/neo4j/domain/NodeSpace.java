@@ -74,34 +74,6 @@ public class NodeSpace {
 		nodes = new HashSet<Node>(space.getNodes());
 	}
 	
-	public Edge copyEdge(Edge edge, Node tail, Node head) {
-		Set<Edge> parallelEdges = tail.getEdges(head);
-
-		if (edge.isBlank()) {
-			for (Edge parallelEdge : parallelEdges) {
-				if (parallelEdge.isBlank()) {
-					return parallelEdge;
-				}
-			}
-
-			return tail.createEdge(head);
-		} else {
-			for (Edge parallelEdge : parallelEdges) {
-				if (!parallelEdge.isBlank()) {
-						Edge edgeCopy = tail.createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
-								new ArrayList<String>(edge.getComponentRoles()));
-
-						edgeCopy.intersectWithEdge(parallelEdge);
-
-						return edgeCopy;
-				}
-			}
-
-			return tail.createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
-					new ArrayList<String>(edge.getComponentRoles()));
-		}
-	}
-	
 	public void copyNodeSpace(NodeSpace space) {
 		HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
 
@@ -405,7 +377,7 @@ public class NodeSpace {
     				Set<Edge> deletedEdges = new HashSet<Edge>();
 
     				for (Edge edge : node.getEdges()) {
-    					if (edge.isBlank()
+    					if (edge.isUnlabeled()
     							&& !node.hasConflictingType(edge.getHead())
     							&& !(node.getNumEdges() > 1 
     									&& (idToIncomingEdges.get(edge.getHead().getNodeID()).size() > 1

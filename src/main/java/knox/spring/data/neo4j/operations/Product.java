@@ -353,7 +353,7 @@ public class Product {
     								
     								Node productHead = getProductNode(r, c);
 
-    								Edge productEdge = productNode.getNonBlankEdge(productHead);
+    								Edge productEdge = productNode.getLabeledEdge(productHead);
 
     								diffEdges(rowEdge, productEdge, productNode,
     										projectNode(r, rowNodes, rowToDiffNode));

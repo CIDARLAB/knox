@@ -1251,21 +1251,21 @@ public class DesignSpaceService {
         return mapDesignSpaceToD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
     }
     
-    public Set<List<String>> enumerateDesignSpace(String targetSpaceID, int numberOfDesigns, 
-    		EnumerateType enumerateType) {
-    	DesignSpace designSpace = loadDesignSpace(targetSpaceID, 5);
+    public List<List<Map<String, Object>>> enumerateDesignSpace(String targetSpaceID, 
+    		int numDesigns, EnumerateType enumerateType) {
+    	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        return designSampler.enumerate(enumerateType, numberOfDesigns);
+        return designSampler.enumerate(numDesigns, enumerateType);
     }
     
-    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numberOfDesigns) {
-    	DesignSpace designSpace = loadDesignSpace(targetSpaceID, 5);
+    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns) {
+    	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        return designSampler.sample(numberOfDesigns);
+        return designSampler.sample(numDesigns);
     }
     
     public void insertDesignSpace(String inputSpaceID1, String inputSpaceID2, String targetNodeID, String outputSpaceID)
@@ -1897,13 +1897,13 @@ public class DesignSpaceService {
     	}
     }
 	
-	public Set<List<String>> partitionDesignSpace(String targetSpaceID) {
-        DesignSpace designSpace = loadDesignSpace(targetSpaceID, 5);
-        
-        DesignSampler designSampler = new DesignSampler(designSpace);
-        
-        return designSampler.partition();
-    }
+//	public Set<List<String>> partitionDesignSpace(String targetSpaceID) {
+//        DesignSpace designSpace = loadDesignSpace(targetSpaceID, 5);
+//        
+//        DesignSampler designSampler = new DesignSampler(designSpace);
+//        
+//        return designSampler.partition();
+//    }
 	
 	private Set<Edge> removeOutgoingEdges(String targetSpaceID, String targetNodeID) {
 		Set<Edge> removedEdges = getOutgoingEdges(targetSpaceID, targetNodeID);

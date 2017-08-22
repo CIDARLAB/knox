@@ -167,10 +167,14 @@ public class Edge {
     	}
     }
     
-    public boolean isBlank() {
+    public boolean isLabeled() {
+    	return hasComponentIDs() && hasComponentRoles();
+    }
+    
+    public boolean isUnlabeled() {
     	return !hasComponentIDs() && !hasComponentRoles();
     }
-
+    
     public boolean isIdenticalTo(Edge edge) {
         if (tail.isIdenticalTo(edge.getTail()) && head.isIdenticalTo(edge.getHead())) {
             return hasSameComponentIDs(edge) && hasSameRoles(edge);
@@ -198,7 +202,7 @@ public class Edge {
              Set<String> compIDs2 = new HashSet<String>(edge.getComponentIDs());
 
              return compIDs1.equals(compIDs2);
-         } else if (isBlank() && edge.isBlank()) {
+         } else if (isUnlabeled() && edge.isUnlabeled()) {
          	return true;
          } else {
              return false;
@@ -214,7 +218,7 @@ public class Edge {
             compIDs1.retainAll(compIDs2);
 
             return !compIDs1.isEmpty();
-        } else if (isBlank() && edge.isBlank()) {
+        } else if (isUnlabeled() && edge.isUnlabeled()) {
         	return true;
         } else {
             return false;
@@ -228,7 +232,7 @@ public class Edge {
     		Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
 
     		return compRoles1.equals(compRoles2);
-    	} else if (isBlank() && edge.isBlank()) {
+    	} else if (isUnlabeled() && edge.isUnlabeled()) {
         	return true;
         } else {
             return false;
@@ -244,7 +248,7 @@ public class Edge {
     			compRoles1.retainAll(compRoles2);
 
     			return compRoles1.size() > 0;
-    	} else if (isBlank() && edge.isBlank()) {
+    	} else if (isUnlabeled() && edge.isUnlabeled()) {
     		return true;
     	} else {
     		return false;
