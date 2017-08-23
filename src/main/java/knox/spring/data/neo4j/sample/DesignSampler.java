@@ -1,6 +1,6 @@
 package knox.spring.data.neo4j.sample;
 
-import knox.spring.data.neo4j.domain.DesignSpace;
+import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 
@@ -12,11 +12,11 @@ import java.util.*;
 public class DesignSampler {
 	private static final Logger LOG = LoggerFactory.getLogger(DesignSampler.class);
 	
-	private DesignSpace space;
+	private NodeSpace space;
 	
 	private List<Node> startNodes;
 	
-	public DesignSampler(DesignSpace space) {
+	public DesignSampler(NodeSpace space) {
 		this.space = space;
 		
 		startNodes = new LinkedList<Node>(space.getStartNodes());
