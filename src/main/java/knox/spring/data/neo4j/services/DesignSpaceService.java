@@ -333,13 +333,17 @@ public class DesignSpaceService {
     				product.getProductSpace().labelSinkNodesAccept();
     			}
     			
-    			Union union = new Union(product.getProductSpace());
-        		
-        		union.connect(isClosed);
-    			
-    			productSpace.shallowCopyNodeSpace(union.getUnionSpace());
-    			
-    			productSpace.minimize();
+    			if (product.getProductSpace().hasNodes()) {
+    				Union union = new Union(product.getProductSpace());
+
+    				union.connect(isClosed);
+
+    				productSpace.shallowCopyNodeSpace(union.getUnionSpace());
+
+    				productSpace.minimize();
+    			} else {
+    				productSpace.shallowCopyNodeSpace(product.getProductSpace());
+    			}
     		}
     	}
     	

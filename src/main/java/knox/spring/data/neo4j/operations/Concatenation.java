@@ -15,7 +15,7 @@ public class Concatenation {
 	}
 	
 	public void connect(NodeSpace space) {
-		if (concatenationSpace.isEmpty()) {
+		if (!concatenationSpace.hasNodes()) {
 			concatenationSpace.unionNodes(space);
 		} else {
 			Set<Node> acceptNodes = concatenationSpace.getAcceptNodes();
