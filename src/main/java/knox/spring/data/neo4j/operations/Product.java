@@ -91,7 +91,7 @@ public class Product {
     		HashMap<Integer, Node> colToDiffNode = new HashMap<Integer, Node>();
     		
     		if (tolerance == 1) {
-    			partition.prosectNodes(rowToDiffNode, colToDiffNode);
+    			partition.prosectNodes(rowToDiffNode, colToDiffNode, roles);
     		}
     		
     		partition.projectNodes(rowToDiffNode, colToDiffNode, roles);
@@ -337,14 +337,15 @@ public class Product {
     	}
     	
     	private void prosectNodes(HashMap<Integer, Node> rowToDiffNode, 
-    			HashMap<Integer, Node> colToDiffNode) {
+    			HashMap<Integer, Node> colToDiffNode, Set<String> roles) {
     		for (int i = 0; i < rowNodes.size(); i++) {
     			for (int j = 0; j < colNodes.size(); j++) {
     				if (rowNodes.get(i).hasEdges() && colNodes.get(j).hasEdges()) {
     					for (Edge rowEdge : rowNodes.get(i).getEdges()) {
     						for (Edge colEdge : colNodes.get(j).getEdges()) {
-    							if (rowEdge.hasSharedComponentIDs(colEdge)
-    									&& !rowEdge.hasSameComponentIDs(colEdge)) {
+    							if (rowEdge.isLabeled() 
+    									&& rowEdge.isMatching(colEdge, 1, roles)
+    									&& !rowEdge.isMatching(colEdge, 0, roles)) {
     								int r = locateNode(rowEdge.getHead(), i, rowNodes);
 
     								int c = locateNode(colEdge.getHead(), j, colNodes);
@@ -353,13 +354,26 @@ public class Product {
     								
     								Node productHead = getProductNode(r, c);
 
-    								Edge productEdge = productNode.getLabeledEdge(productHead);
+    								Edge productEdge = productNode.getLabeledEdges(productHead,
+    										rowEdge.getOrientation()).iterator().next();
+    								
+    								if (rowEdge.isMatching(productEdge, 1, roles) 
+    					    				&& !rowEdge.isMatching(productEdge, 0, roles)) {
+    									Node diffHead = projectNode(r, rowNodes, rowToDiffNode);
+    									
+    									Edge diffEdge = productNode.copyEdge(rowEdge, diffHead);
 
-    								diffEdges(rowEdge, productEdge, productNode,
-    										projectNode(r, rowNodes, rowToDiffNode));
+    					    			diffEdge.diffWithEdge(productEdge);
+    								}
+    								
+    								if (colEdge.isMatching(productEdge, 1, roles) 
+    					    				&& !colEdge.isMatching(productEdge, 0, roles)) {
+    									Node diffHead = projectNode(c, colNodes, colToDiffNode);
+    									
+    									Edge diffEdge = productNode.copyEdge(colEdge, diffHead);
 
-    								diffEdges(colEdge, productEdge, productNode,
-    										projectNode(c, colNodes, colToDiffNode));
+    					    			diffEdge.diffWithEdge(productEdge);
+    								}
     							}
     						}
     					}
@@ -368,9 +382,10 @@ public class Product {
     		}
     	}
     	
-    	private void diffEdges(Edge edge, Edge productEdge, Node productNode, Node diffHead) {
-    		if (edge.hasSharedComponentIDs(productEdge) 
-    				&& !edge.hasSameComponentIDs(productEdge)) {
+    	private void diffEdges(Edge edge, Edge productEdge, Node productNode, Node diffHead,
+    			Set<String> roles) {
+    		if (edge.isMatching(productEdge, 1, roles) 
+    				&& !edge.isMatching(productEdge, 0, roles)) {
 
     			Edge diffEdge = productNode.copyEdge(edge, diffHead);
 
@@ -398,9 +413,11 @@ public class Product {
 
     		if (indexToProductNodes.containsKey(i)) {
     			productNodes.addAll(indexToProductNodes.get(i));
-    		} 
-    		
-    		if (indexToDiffNode.containsKey(i)) {
+    			
+    			if (indexToDiffNode.containsKey(i)) {
+        			productNodes.add(indexToDiffNode.get(i));
+        		}
+    		} else if (indexToDiffNode.containsKey(i)) {
     			productNodes.add(indexToDiffNode.get(i));
     		} else {
     			Node diffNode = productSpace.copyNode(nodes.get(i));

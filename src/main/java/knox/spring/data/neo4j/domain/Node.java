@@ -73,24 +73,22 @@ public class Node {
     }
 
     public Edge copyEdge(Edge edge, Node head) {
-    	Set<Edge> parallelEdges = getEdges(head);
-    	
     	if (!edge.isLabeled()) {
-    		for (Edge parallelEdge : parallelEdges) {
-    			if (!parallelEdge.isLabeled()) {
-    				return parallelEdge;
-    			}
+    		Set<Edge> parallelEdges = getUnlabeledEdges(head);
+    		
+    		if (!parallelEdges.isEmpty()) {
+    			return parallelEdges.iterator().next();
     		}
     		
     		return createEdge(head);
 		} else {
-			for (Edge parallelEdge : parallelEdges) {
-    			if (parallelEdge.isLabeled() && parallelEdge.hasSameOrientation(edge)) {
-    				parallelEdge.unionWithEdge(edge);
-    				
-    				return parallelEdge;
-    			}
-    		}
+			Set<Edge> parallelEdges = getLabeledEdges(head, edge.getOrientation());
+			
+			if (!parallelEdges.isEmpty()) {
+				Edge parallelEdge = parallelEdges.iterator().next();
+				
+				parallelEdge.unionWithEdge(edge);
+			}
 			
 			return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
 					new ArrayList<String>(edge.getComponentRoles()), edge.getOrientation());
@@ -146,16 +144,6 @@ public class Node {
     	return edges; 
     }
     
-    public Edge getLabeledEdge(Node head) {
-    	for (Edge edge : getEdges(head)) {
-    		if (edge.isLabeled()) {
-    			return edge;
-    		}
-    	}
-    	
-    	return null;
-    }
-    
     public Edge[] getEdgeArray() {
     	int numEdges = getNumEdges();
     	
@@ -206,6 +194,20 @@ public class Node {
     	return edgesWithHead;
     }
     
+    public Set<Edge> getLabeledEdges(String orientation) {
+    	Set<Edge> labeledEdges = new HashSet<Edge>();
+    	
+    	if(hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.isLabeled() && edge.hasOrientation(orientation)) {
+    				labeledEdges.add(edge);
+    			}
+    		}
+    	}
+    	
+    	return labeledEdges;
+    }
+    
     public Set<Edge> getLabeledEdges(Node head, String orientation) {
     	Set<Edge> labeledEdgesWithHead = new HashSet<Edge>();
     	
@@ -216,6 +218,20 @@ public class Node {
     	}
     	
     	return labeledEdgesWithHead;
+    }
+    
+    public Set<Edge> getUnlabeledEdges() {
+    	Set<Edge> unlabeledEdgesWithHead = new HashSet<Edge>();
+    	
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (!edge.isLabeled()) {
+    				unlabeledEdgesWithHead.add(edge);
+    			}
+    		}
+    	}
+    	
+    	return unlabeledEdgesWithHead;
     }
     
     public Set<Edge> getUnlabeledEdges(Node head) {
