@@ -339,7 +339,7 @@
             confirmButtonColor: "#F05F40"
         });
         var query = "/designSpace/enumerate?targetSpaceID="
-            + currentSpace + "&bfs=true&numDesigns=5";
+            + currentSpace + "&bfs=true";
         d3.json(query, (err, data) => {
             if (err) {
                 window.alert(err);

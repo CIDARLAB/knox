@@ -1256,12 +1256,12 @@ public class DesignSpaceService {
     }
     
     public List<List<Map<String, Object>>> enumerateDesignSpace(String targetSpaceID, 
-    		int numDesigns, EnumerateType enumerateType) {
+    		int numDesigns, int maxLength, EnumerateType enumerateType) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        return designSampler.enumerate(numDesigns, enumerateType);
+        return designSampler.enumerate(numDesigns, maxLength, enumerateType);
     }
     
     public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns) {
