@@ -382,17 +382,6 @@ public class Product {
     		}
     	}
     	
-    	private void diffEdges(Edge edge, Edge productEdge, Node productNode, Node diffHead,
-    			Set<String> roles) {
-    		if (edge.isMatching(productEdge, 1, roles) 
-    				&& !edge.isMatching(productEdge, 0, roles)) {
-
-    			Edge diffEdge = productNode.copyEdge(edge, diffHead);
-
-    			diffEdge.diffWithEdge(productEdge);
-    		}
-    	}
-    	
     	private Node projectNode(int i, List<Node> nodes, 
     			HashMap<Integer, Node> indexToDiffNode) {
     		if (indexToDiffNode.containsKey(i)) {
