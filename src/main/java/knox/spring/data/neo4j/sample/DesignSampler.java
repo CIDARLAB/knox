@@ -221,15 +221,17 @@ public class DesignSampler {
 //	}
 	
 	private List<List<Map<String, Object>>> multiplyDesigns(List<List<Map<String, Object>>> designs,
-			List<String> compIDs, List<String> compRoles) {
+			Edge edge) {
 		List<List<Map<String, Object>>> comboDesigns = new LinkedList<List<Map<String, Object>>>();
 		
-		for (String compID : compIDs) {
+		for (String compID : edge.getComponentIDs()) {
 			Map<String, Object> comp = new HashMap<String, Object>();
 			
 			comp.put("id", compID);
 			
-			comp.put("roles", compRoles);
+			comp.put("roles", edge.getComponentRoles());
+			
+			comp.put("orientation", edge.getOrientation());
 			
 			if (!designs.isEmpty()) {
 				for (List<Map<String, Object>> design : designs) {
@@ -278,10 +280,9 @@ public class DesignSampler {
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
 				
-				designs = multiplyDesigns(designs, edge.getComponentIDs(), 
-						edge.getComponentRoles());
+				designs = multiplyDesigns(designs, edge);
 				
-				if (!designs.isEmpty() && (maxLength < 1 || designs.get(0).size() > maxLength)) {
+				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
 						designs = designStack.pop();
 					}
@@ -303,8 +304,8 @@ public class DesignSampler {
 					} 
 
 					if (edge.getHead().hasEdges() 
-							&& (numDesigns > 0 || maxLength > 0 
-									|| !localNodes.contains(edge.getHead()))) {
+							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
+									|| maxLength > 0)) {
 						for (Edge headEdge : edge.getHead().getEdges()) {
 							edgeStack.push(headEdge);
 						}
@@ -351,10 +352,9 @@ public class DesignSampler {
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
 				
-				designs = multiplyDesigns(designs, edge.getComponentIDs(), 
-						edge.getComponentRoles());
+				designs = multiplyDesigns(designs, edge);
 				
-				if (!designs.isEmpty() && (maxLength < 1 || designs.get(0).size() > maxLength)) {
+				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
 						designs = designStack.pop();
 					}
@@ -376,8 +376,8 @@ public class DesignSampler {
 					} 
 
 					if (edge.getHead().hasEdges() 
-							&& (numDesigns > 0 || maxLength > 0 
-									|| !localNodes.contains(edge.getHead()))) {
+							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
+									|| maxLength > 0)) {
 						for (Edge headEdge : edge.getHead().getEdges()) {
 							edgeStack.push(headEdge);
 						}
