@@ -27,72 +27,50 @@ public class Before {
 	}
 	
 	public void apply() {
-		if (space.hasNodes()) {
-			String subjectID;
-			
-			String objectID;
-			
-			if (rule.isAfter()) {
-				subjectID = rule.getOperands().get(1);
-				
-				objectID = rule.getOperands().get(0);
-			} else {
-				subjectID = rule.getOperands().get(0);
-				
-				objectID = rule.getOperands().get(1);
-			}
-			
-			NodeSpace tempSpace = space.copy();
-			
-			for (Node node : tempSpace.getNodes()) {
-				if (node.hasEdges()) {
-					Set<Edge> deletedEdges = new HashSet<Edge>();
-					
-					for (Edge edge : node.getEdges()) {
-						if (edge.hasComponentID(subjectID)) {
-							edge.deleteComponentID(subjectID);
-							
-							if (!edge.hasComponentIDs()) {
-								deletedEdges.add(edge);
-							}
-						}
-					}
-					
-					node.deleteEdges(deletedEdges);
-				}
-				
-				if (node.isStartNode()) {
-					node.clearStartNodeType();
-				}
-			}
-			
-			Set<Node> originalNodes = new HashSet<Node>(space.getNodes());
+		String subjectID;
 
-			HashMap<String, Node> idToNodeCopy = space.unionNodes(tempSpace);
+		String objectID;
+
+		if (rule.isAfter()) {
+			subjectID = rule.getOperands().get(1);
+
+			objectID = rule.getOperands().get(0);
+		} else {
+			subjectID = rule.getOperands().get(0);
+
+			objectID = rule.getOperands().get(1);
+		}
+
+		NodeSpace constrainedSpace = space.copy();
+
+		if (constrainedSpace.hasNodes()) {
+			for (Node node : constrainedSpace.getNodes()) {
+				node.deleteComponentID(subjectID);
+				
+				node.deleteStartNodeType();
+			}
+		}
+
+		Set<Node> originalNodes;
+		
+		if (space.hasNodes()) {
+			originalNodes = new HashSet<Node>(space.getNodes());
+		} else {
+			originalNodes = new HashSet<Node>();
+		}
+		
+		HashMap<String, Node> idToNodeCopy = space.unionNodes(constrainedSpace);
+
+		for (Node node : originalNodes) {
+			node.deleteComponentID(objectID);
 			
-			for (Node node : originalNodes) {
-				if (node.hasEdges()) {
-					Set<Edge> deletedEdges = new HashSet<Edge>();
-					
-					for (Edge edge : node.getEdges()) {
-						if (edge.hasComponentID(objectID)) {
-							ArrayList<String> compIDs = new ArrayList<String>();
-							
-							compIDs.add(objectID);
-							
-							node.createEdge(idToNodeCopy.get(edge.getHead().getNodeID()),
-									compIDs, edge.getComponentRoles());
-							
-							edge.deleteComponentID(objectID);
-							
-							if (!edge.hasComponentIDs()) {
-								deletedEdges.add(edge);
-							}
-						}
-					}
-					
-					node.deleteEdges(deletedEdges);
-				}
+			for (Edge edge : node.getEdgesWithComponentID(objectID)) {
+				ArrayList<String> compIDs = new ArrayList<String>();
+
+				compIDs.add(objectID);
+
+				node.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()),
+						compIDs);
 			}
 		}
 		

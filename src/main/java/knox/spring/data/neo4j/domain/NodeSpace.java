@@ -76,6 +76,14 @@ public class NodeSpace {
 		return spaceCopy;
 	}
 	
+	public NodeSpace copy(Set<String> deletedCompIDs) {
+		NodeSpace spaceCopy = new NodeSpace(0);
+		
+		spaceCopy.copyNodeSpace(this, deletedCompIDs);
+		
+		return spaceCopy;
+	}
+	
 	public void shallowCopyNodeSpace(NodeSpace space) {
 		if (space.hasNodes()) {
 			nodeIndex = space.getNodeIndex();
@@ -110,6 +118,14 @@ public class NodeSpace {
 		nodeIndex = space.getNodeIndex();
 	}
 	
+	public void copyNodeSpace(NodeSpace space, Set<String> deletedCompIDs) {
+		copyNodeSpace(space);
+		
+		for (Edge edge : getEdges()) {
+			edge.deleteComponentIDs(deletedCompIDs);
+		}
+	}
+	
 	public Node copyNodeWithEdges(Node node) {
 		Node nodeCopy = copyNode(node);
 		
@@ -140,6 +156,20 @@ public class NodeSpace {
 		}
 		
 		return nodeCopy;
+	}
+	
+	public boolean clearStartNodeTypes() {
+		boolean isCleared = false;
+		
+		if (hasNodes()) {
+			for (Node node : nodes) {
+				if (node.deleteStartNodeType()) {
+					isCleared = true;
+				}
+			}
+		}
+		
+		return isCleared;
 	}
 	
 	public Node createNode() {
@@ -670,6 +700,20 @@ public class NodeSpace {
     			node.setNodeID("n" + nodeIndex++);
     		}
     	}
+    }
+    
+    public Set<Node> getOtherNodes(Node nodes) {
+    	Set<Node> otherNodes;
+    	
+    	if (hasNodes()) {
+    		otherNodes = new HashSet<Node>(this.nodes);
+    		
+    		otherNodes.remove(nodes);
+    	} else {
+    		otherNodes = new HashSet<Node>();
+    	}
+    	
+    	return otherNodes;
     }
 
     private Set<Edge> getOtherEdges(Node node, Set<Edge> edges) {

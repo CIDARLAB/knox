@@ -36,6 +36,11 @@ public class Rule {
 				|| constraint.equals(Constraint.SOME_AFTER.getValue());
 	}
 	
+	public boolean isSome() {
+		return constraint.equals(Constraint.SOME_BEFORE.getValue()) 
+				|| constraint.equals(Constraint.SOME_AFTER.getValue());
+	}
+	
 	public enum Constraint {
         BEFORE("BEFORE"),
         SOME_BEFORE("SOME_BEFORE"),

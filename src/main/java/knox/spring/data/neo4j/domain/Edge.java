@@ -140,6 +140,10 @@ public class Edge {
     	return componentIDs.remove(compID);
     }
     
+    public boolean deleteComponentIDs(Set<String> compIDs) {
+    	return componentIDs.removeAll(compIDs);
+    }
+    
     public void diffWithEdge(Edge edge) {
     	componentIDs.removeAll(edge.getComponentIDs());
     }

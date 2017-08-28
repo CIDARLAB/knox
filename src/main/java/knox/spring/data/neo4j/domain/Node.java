@@ -64,8 +64,8 @@ public class Node {
     	nodeTypes.clear();
     }
     
-    public void clearStartNodeType() {
-    	nodeTypes.remove(NodeType.START.getValue());
+    public boolean deleteStartNodeType() {
+    	return nodeTypes.remove(NodeType.START.getValue());
     }
     
     public Node copy() {
@@ -77,6 +77,10 @@ public class Node {
     }
 
     public Edge copyEdge(Edge edge, Node head) {
+    	return copyEdge(edge, head, edge.getComponentIDs());
+    }
+    
+    public Edge copyEdge(Edge edge, Node head, ArrayList<String> compIDs) {
     	if (!edge.isLabeled()) {
     		Set<Edge> parallelEdges = getUnlabeledEdges(head);
     		
@@ -165,6 +169,38 @@ public class Node {
     public ArrayList<String> getNodeTypes() {
     	return nodeTypes;
     }
+    
+    public void deleteComponentIDs(Set<String> compIDs) {
+    	if (hasEdges()) {
+    		Set<Edge> deletedEdges = new HashSet<Edge>();
+
+    		for (Edge edge : edges) {
+    			edge.deleteComponentIDs(compIDs);
+
+    			if (!edge.hasComponentIDs()) {
+    				deletedEdges.add(edge);
+    			}
+    		}
+
+    		deleteEdges(deletedEdges);
+    	}
+    }
+    
+    public void deleteComponentID(String compID) {
+    	if (hasEdges()) {
+    		Set<Edge> deletedEdges = new HashSet<Edge>();
+
+    		for (Edge edge : edges) {
+    			edge.deleteComponentID(compID);
+
+    			if (!edge.hasComponentIDs()) {
+    				deletedEdges.add(edge);
+    			}
+    		}
+
+    		deleteEdges(deletedEdges);
+    	}
+    }
 
     public boolean hasComponentID(String compID) {
         if (hasEdges()) {
@@ -178,6 +214,20 @@ public class Node {
         } else {
             return false;
         }
+    }
+    
+    public Set<Edge> getEdgesWithComponentID(String compID) {
+    	Set<Edge> edgesWithCompID = new HashSet<Edge>();
+    	
+    	if(hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.hasComponentID(compID)) {
+    				edgesWithCompID.add(edge);
+    			}
+    		}
+    	}
+    	
+    	return edgesWithCompID;
     }
 
     public boolean hasEdges() {
