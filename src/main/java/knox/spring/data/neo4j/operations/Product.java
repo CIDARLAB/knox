@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Product {
+	
 	private List<Node> rowNodes;
 	
 	private List<Node> colNodes;
@@ -483,4 +484,5 @@ public class Product {
         	return value; 
         }
     }
+    
 }

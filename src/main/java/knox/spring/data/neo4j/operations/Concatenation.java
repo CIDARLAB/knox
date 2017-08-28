@@ -41,4 +41,5 @@ public class Concatenation {
 	public NodeSpace getConcatenationSpace() {
 		return concatenationSpace;
 	}
+	
 }

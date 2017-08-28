@@ -8,7 +8,8 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
 public class Star {
-private NodeSpace starSpace;
+	
+	private NodeSpace starSpace;
 	
 	public Star(List<NodeSpace> spaces) {
 		this.starSpace = new NodeSpace(0);
@@ -57,4 +58,5 @@ private NodeSpace starSpace;
 	public NodeSpace getStarSpace() {
 		return starSpace;
 	}
+	
 }

@@ -64,6 +64,10 @@ public class Node {
     	nodeTypes.clear();
     }
     
+    public void clearStartNodeType() {
+    	nodeTypes.remove(NodeType.START.getValue());
+    }
+    
     public Node copy() {
     	return new Node(nodeID, new ArrayList<String>(nodeTypes));
     }

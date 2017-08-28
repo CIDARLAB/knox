@@ -7,6 +7,7 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
 public class Union {
+	
 	private NodeSpace unionSpace;
 	
 	public Union(NodeSpace unionSpace) {
@@ -48,4 +49,5 @@ public class Union {
 	public NodeSpace getUnionSpace() {
 		return unionSpace;
 	}
+	
 }

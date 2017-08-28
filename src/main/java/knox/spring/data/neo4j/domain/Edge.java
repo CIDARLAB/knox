@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import knox.spring.data.neo4j.eugene.Part;
-
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -138,7 +136,7 @@ public class Edge {
     			new ArrayList<String>(componentRoles), orientation, weight);
     }
 
-    public boolean deleteComponent(String compID) {
+    public boolean deleteComponentID(String compID) {
     	return componentIDs.remove(compID);
     }
     
@@ -210,10 +208,6 @@ public class Edge {
     	componentIDs.retainAll(edge.getComponentIDs());
 
     	componentRoles.retainAll(edge.getComponentRoles());
-    	
-    	if (componentRoles.isEmpty()) {
-    		componentRoles.add(Part.PartType.FEATURE.getValue());
-    	}
     }
     
     public boolean isLabeled() {
@@ -335,10 +329,6 @@ public class Edge {
         }
         
         componentRoles.retainAll(edge.getComponentRoles());
-    	
-    	if (componentRoles.isEmpty()) {
-    		componentRoles.add(Part.PartType.FEATURE.getValue());
-    	}
     }
     
     public String getOrientation() {
@@ -357,6 +347,7 @@ public class Edge {
     public double getWeight() { 
     	return weight; 
     }
+    
     
     public enum Orientation {
         INLINE("inline"),

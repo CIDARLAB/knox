@@ -91,16 +91,18 @@ public class NodeSpace {
 	public void copyNodeSpace(NodeSpace space) {
 		HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
 
-		for (Node node : space.getNodes()) {
-			idToNodeCopy.put(node.getNodeID(), copyNodeWithID(node));
-		}
+		if (space.hasNodes()) {
+			for (Node node : space.getNodes()) {
+				idToNodeCopy.put(node.getNodeID(), copyNodeWithID(node));
+			}
 
-		for (Node node : space.getNodes()) {
-			if (node.hasEdges()) {
-				Node nodeCopy = idToNodeCopy.get(node.getNodeID());
+			for (Node node : space.getNodes()) {
+				if (node.hasEdges()) {
+					Node nodeCopy = idToNodeCopy.get(node.getNodeID());
 
-				for (Edge edge : node.getEdges()) {
-					nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+					for (Edge edge : node.getEdges()) {
+						nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+					}
 				}
 			}
 		}
@@ -740,21 +742,25 @@ public class NodeSpace {
     	}
     }
     
-    public void unionNodes(NodeSpace space) {
+    public HashMap<String, Node> unionNodes(NodeSpace space) {
     	HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
 
-    	for (Node node : space.getNodes()) {
-    		idToNodeCopy.put(node.getNodeID(), copyNode(node));
-    	}
+    	if (space.hasNodes()) {
+    		for (Node node : space.getNodes()) {
+    			idToNodeCopy.put(node.getNodeID(), copyNode(node));
+    		}
+    		
+    		for (Node node : space.getNodes()) {
+    			if (node.hasEdges()) {
+    				Node nodeCopy = idToNodeCopy.get(node.getNodeID());
 
-    	for (Node node : space.getNodes()) {
-    		if (node.hasEdges()) {
-    			Node nodeCopy = idToNodeCopy.get(node.getNodeID());
-
-    			for (Edge edge : node.getEdges()) {
-    				nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
-    			}
-    		} 
+    				for (Edge edge : node.getEdges()) {
+    					nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+    				}
+    			} 
+    		}
     	}
+    	
+    	return idToNodeCopy;
     }
 }
