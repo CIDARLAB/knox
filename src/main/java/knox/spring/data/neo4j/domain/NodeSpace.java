@@ -645,12 +645,14 @@ public class NodeSpace {
 
     		traversalNodes.add(node);
 
-    		for (Edge edge : node.getEdges()) {
-    			if (!globalNodes.contains(edge.getHead()) 
-    					&& !localNodes.contains(edge.getHead())) {
-    				nodeStack.push(edge.getHead());
+    		if (node.hasEdges()) {
+    			for (Edge edge : node.getEdges()) {
+    				if (!globalNodes.contains(edge.getHead()) 
+    						&& !localNodes.contains(edge.getHead())) {
+    					nodeStack.push(edge.getHead());
 
-    				localNodes.add(edge.getHead());
+    					localNodes.add(edge.getHead());
+    				}
     			}
     		}
     	}

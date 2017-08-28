@@ -7,6 +7,8 @@ import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
+import knox.spring.data.neo4j.eugene.Before;
+import knox.spring.data.neo4j.eugene.Rule;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
@@ -72,6 +74,36 @@ public class DesignSpaceService {
     private static final Logger LOG = LoggerFactory.getLogger(DesignSpaceService.class);
 
     public static final String RESERVED_ID = "knox";
+    
+    public void constrainDesignSpace(String targetSpaceID, String outputSpaceID, boolean isClosed, 
+    		List<Rule> rules) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+    	
+    	DesignSpace outputSpace = new DesignSpace(outputSpaceID);
+    	
+    	constrainNodeSpace(targetSpace, outputSpace, isClosed, rules);
+    	
+    	saveDesignSpace(outputSpace);
+    }
+    
+    private void constrainNodeSpace(NodeSpace targetSpace, NodeSpace outputSpace, 
+    		boolean isClosed, List<Rule> rules) {
+    	List<NodeSpace> ruleSpaces = new ArrayList<NodeSpace>();
+    	
+    	ruleSpaces.add(targetSpace);
+    	
+    	for (Rule rule : rules) {
+    		if (rule.isBefore() || rule.isAfter()) {
+    			Before before = new Before(targetSpace.copy(), rule);
+        		
+    			before.apply();
+    			
+        		ruleSpaces.add(before.getNodeSpace());
+    		}
+    	}
+    	
+    	andNodeSpaces(ruleSpaces, outputSpace, 1, true, isClosed, new HashSet<String>());
+    }
     
     public void joinDesignSpaces(List<String> inputSpaceIDs) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 

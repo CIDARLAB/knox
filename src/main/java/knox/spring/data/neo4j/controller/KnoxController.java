@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.*;
 
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
+import knox.spring.data.neo4j.eugene.Rule;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,6 +40,25 @@ public class KnoxController {
 	public KnoxController(DesignSpaceService designSpaceService) {
 		this.designSpaceService = designSpaceService;
 	}
+	
+	@RequestMapping(value = "/designSpace/constrain", method = RequestMethod.POST)
+    public ResponseEntity<String> constrainDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
+    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
+    		@RequestBody List<Rule> rules) {
+        try {
+        	long startTime = System.nanoTime();
+        	
+            designSpaceService.constrainDesignSpace(targetSpaceID, outputSpaceID, isClosed, rules);
+
+            return new ResponseEntity<String>("{\"message\": \"Design spaces was successfully constrained after " + 
+            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+        } catch (ParameterEmptyException | DesignSpaceNotFoundException |
+                DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+            return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
 	
 	@RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
     public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
