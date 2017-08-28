@@ -263,6 +263,12 @@ public class DesignSampler {
 			
 			localNodes.add(startNode);
 			
+			Stack<Set<Node>> localNodeStack = new Stack<Set<Node>>();
+			
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
+				localNodeStack.push(new HashSet<Node>(localNodes));
+			}
+			
 			Stack<Edge> edgeStack = new Stack<Edge>();
 			
 			if (startNode.hasEdges()) {
@@ -284,6 +290,8 @@ public class DesignSampler {
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
+						localNodes = localNodeStack.pop();
+						
 						designs = designStack.pop();
 					}
 				} else { 
@@ -306,6 +314,12 @@ public class DesignSampler {
 					if (edge.getHead().hasEdges() 
 							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
 									|| maxLength > 0)) {
+						localNodes.add(edge.getHead());
+						
+						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
+							localNodeStack.push(new HashSet<Node>(localNodes));
+						}
+						
 						for (Edge headEdge : edge.getHead().getEdges()) {
 							edgeStack.push(headEdge);
 						}
@@ -313,9 +327,9 @@ public class DesignSampler {
 						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
 							designStack.push(designs);
 						}
-						
-						localNodes.add(edge.getHead());
 					} else if (!designStack.isEmpty()) {
+						localNodes = localNodeStack.pop();
+						
 						designs = designStack.pop();
 					}
 				}
@@ -335,6 +349,12 @@ public class DesignSampler {
 			
 			localNodes.add(startNode);
 			
+			Stack<Set<Node>> localNodeStack = new Stack<Set<Node>>();
+			
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
+				localNodeStack.push(new HashSet<Node>(localNodes));
+			}
+			
 			Stack<Edge> edgeStack = new Stack<Edge>();
 			
 			if (startNode.hasEdges()) {
@@ -356,6 +376,8 @@ public class DesignSampler {
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
+						localNodes = localNodeStack.pop();
+						
 						designs = designStack.pop();
 					}
 				} else { 
@@ -378,6 +400,12 @@ public class DesignSampler {
 					if (edge.getHead().hasEdges() 
 							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
 									|| maxLength > 0)) {
+						localNodes.add(edge.getHead());
+						
+						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
+							localNodeStack.push(new HashSet<Node>(localNodes));
+						}
+						
 						for (Edge headEdge : edge.getHead().getEdges()) {
 							edgeStack.push(headEdge);
 						}
@@ -385,9 +413,9 @@ public class DesignSampler {
 						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
 							designStack.push(designs);
 						}
-						
-						localNodes.add(edge.getHead());
 					} else if (!designStack.isEmpty()) {
+						localNodes = localNodeStack.pop();
+						
 						designs = designStack.pop();
 					}
 				}
