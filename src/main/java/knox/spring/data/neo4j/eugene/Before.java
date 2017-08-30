@@ -27,20 +27,14 @@ public class Before {
 	}
 	
 	public void apply() {
-		String subjectID;
-
-		String objectID;
-
-		if (rule.isAfter()) {
-			subjectID = rule.getOperands().get(1);
-
-			objectID = rule.getOperands().get(0);
-		} else {
-			subjectID = rule.getOperands().get(0);
-
-			objectID = rule.getOperands().get(1);
+		if (rule.isBefore()) {
+			apply(rule.getOperands().get(0), rule.getOperands().get(1));
+		} else if (rule.isAfter()) {
+			apply(rule.getOperands().get(1), rule.getOperands().get(0));
 		}
-
+	}
+	
+	private void apply(String subjectID, String objectID) {
 		NodeSpace constrainedSpace = space.copy();
 
 		if (constrainedSpace.hasNodes()) {
@@ -59,7 +53,7 @@ public class Before {
 			originalNodes = new HashSet<Node>();
 		}
 		
-		HashMap<String, Node> idToNodeCopy = space.unionNodes(constrainedSpace);
+		HashMap<String, Node> idToNodeCopy = space.union(constrainedSpace);
 
 		for (Node node : originalNodes) {
 			node.deleteComponentID(objectID);

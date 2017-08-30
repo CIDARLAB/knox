@@ -121,16 +121,6 @@ public class Edge {
         }
     }
 
-    public void setComponent(String compID, String compRole) {
-        componentIDs = new ArrayList<String>();
-        
-        componentRoles = new ArrayList<String>();
-
-        componentIDs.add(compID);
-        
-        componentIDs.add(compRole);
-    }
-
     public Edge copy(Node tail, Node head) {
     	return new Edge(tail, head, new ArrayList<String>(componentIDs),
     			new ArrayList<String>(componentRoles), orientation, weight);
@@ -309,6 +299,10 @@ public class Edge {
     	} else {
     		return true;
     	}
+    }
+    
+    public void setComponentIDs(ArrayList<String> compIDs) {
+    	componentIDs = compIDs;
     }
 
     public void setHead(Node head) {

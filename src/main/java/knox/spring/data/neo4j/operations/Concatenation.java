@@ -16,13 +16,13 @@ public class Concatenation {
 	
 	public void connect(NodeSpace space) {
 		if (!concatenationSpace.hasNodes()) {
-			concatenationSpace.unionNodes(space);
+			concatenationSpace.union(space);
 		} else {
 			Set<Node> acceptNodes = concatenationSpace.getAcceptNodes();
 			
 			Set<Node> startNodes = concatenationSpace.getStartNodes();
 			
-			concatenationSpace.unionNodes(space);
+			concatenationSpace.union(space);
 			
 			for (Node startNode : concatenationSpace.getStartNodes()) {
 				if (!startNodes.contains(startNode)) {

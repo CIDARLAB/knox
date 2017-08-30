@@ -28,10 +28,12 @@ public class NextTo {
 	}
 	
 	public void apply() {
-		String subjectID = rule.getOperands().get(0);
-
-		String objectID = rule.getOperands().get(1);
-		
+		if (rule.isNextTo()) {
+			apply(rule.getOperands().get(0), rule.getOperands().get(1));
+		}
+	}
+	
+	private void apply(String subjectID, String objectID) {
 		Set<Node> originalNodes;
 		
 		if (space.hasNodes()) {
@@ -46,11 +48,11 @@ public class NextTo {
 		
 		NodeSpace subjectObjectSpace = createDoublyConstrainedSpace(space, subjectID, objectID);
 		
-		HashMap<String, Node> idToNodeCopy1 = space.unionNodes(subjectSpace);
+		HashMap<String, Node> idToNodeCopy1 = space.union(subjectSpace);
 		
-		HashMap<String, Node> idToNodeCopy2 = space.unionNodes(objectSpace);
+		HashMap<String, Node> idToNodeCopy2 = space.union(objectSpace);
 		
-		HashMap<String, Node> idToNodeCopy3 = space.unionNodes(subjectObjectSpace);
+		HashMap<String, Node> idToNodeCopy3 = space.union(subjectObjectSpace);
 		
 		connectConstrainedSpace(originalNodes, objectID, subjectID, idToNodeCopy1, idToNodeCopy3);
 		

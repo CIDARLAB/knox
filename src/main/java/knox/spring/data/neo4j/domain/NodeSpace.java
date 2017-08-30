@@ -788,7 +788,37 @@ public class NodeSpace {
     	}
     }
     
-    public HashMap<String, Node> unionNodes(NodeSpace space) {
+    public void unionEdges(Collection<Edge> edges, HashMap<String, Node> idToNodeCopy) {
+    	for (Edge edge : edges) {
+    		Node tailCopy;
+    		
+    		if (idToNodeCopy.containsKey(edge.getTail().getNodeID())) {
+    			tailCopy = idToNodeCopy.get(edge.getTail().getNodeID());
+    		} else {
+    			tailCopy = copyNode(edge.getTail());
+    			
+    			idToNodeCopy.put(edge.getTail().getNodeID(), tailCopy);
+    		}
+    		
+    		Node headCopy;
+    		
+    		if (idToNodeCopy.containsKey(edge.getHead().getNodeID())) {
+    			headCopy = idToNodeCopy.get(edge.getHead().getNodeID());
+    		} else {
+    			headCopy = copyNode(edge.getHead());
+    			
+    			idToNodeCopy.put(edge.getHead().getNodeID(), headCopy);
+    		}
+    		
+    		tailCopy.copyEdge(edge, headCopy);
+    	}
+    }
+    
+    public void unionEdges(Collection<Edge> edges) {
+    	unionEdges(edges, new HashMap<String, Node>());
+    }
+    
+    public HashMap<String, Node> union(NodeSpace space) {
     	HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
 
     	if (space.hasNodes()) {
