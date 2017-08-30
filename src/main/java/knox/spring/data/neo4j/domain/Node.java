@@ -98,7 +98,7 @@ public class Node {
 				parallelEdge.unionWithEdge(edge);
 			}
 			
-			return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
+			return createEdge(head, new ArrayList<String>(compIDs),
 					new ArrayList<String>(edge.getComponentRoles()), edge.getOrientation());
 		}
     }
@@ -239,6 +239,10 @@ public class Node {
     	
     	if (hasEdges()) {
     		for (Edge edge : edges) {
+    			if (edge.getHead() == null) {
+    				LOG.info("booga {}", "booga");
+    			}
+    			
     			if (edge.getHead().equals(head)) {
     				edgesWithHead.add(edge);
     			}

@@ -97,13 +97,13 @@ public class NodeSpace {
 	}
 	
 	public void copyNodeSpace(NodeSpace space) {
-		HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
-
 		if (space.hasNodes()) {
+			HashMap<String, Node> idToNodeCopy = new HashMap<String, Node>();
+			
 			for (Node node : space.getNodes()) {
 				idToNodeCopy.put(node.getNodeID(), copyNodeWithID(node));
 			}
-
+			
 			for (Node node : space.getNodes()) {
 				if (node.hasEdges()) {
 					Node nodeCopy = idToNodeCopy.get(node.getNodeID());
@@ -793,7 +793,9 @@ public class NodeSpace {
 
     	if (space.hasNodes()) {
     		for (Node node : space.getNodes()) {
-    			idToNodeCopy.put(node.getNodeID(), copyNode(node));
+    			Node nodeCopy = copyNode(node);
+    			
+    			idToNodeCopy.put(node.getNodeID(), nodeCopy);
     		}
     		
     		for (Node node : space.getNodes()) {

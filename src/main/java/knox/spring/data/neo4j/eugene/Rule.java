@@ -26,6 +26,10 @@ public class Rule {
 		return operands;
 	}
 	
+	public boolean isNextTo() {
+		return constraint.equals(Constraint.NEXTTO.getValue());
+	}
+	
 	public boolean isBefore() {
 		return constraint.equals(Constraint.BEFORE.getValue()) 
 				|| constraint.equals(Constraint.SOME_BEFORE.getValue());
@@ -45,7 +49,8 @@ public class Rule {
         BEFORE("BEFORE"),
         SOME_BEFORE("SOME_BEFORE"),
         AFTER("AFTER"),
-        SOME_AFTER("SOME_AFTER");
+        SOME_AFTER("SOME_AFTER"),
+        NEXTTO("NEXTTO");
 
         private final String value;
         

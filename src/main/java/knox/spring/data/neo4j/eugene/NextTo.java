@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,12 +31,6 @@ public class NextTo {
 		String subjectID = rule.getOperands().get(0);
 
 		String objectID = rule.getOperands().get(1);
-
-		NodeSpace subjectConstrainedSpace = createConstrainedSpace(space, subjectID);
-		
-		NodeSpace objectConstrainedSpace = createConstrainedSpace(space, objectID);
-		
-		NodeSpace doublyConstrainedSpace = createDoublyConstrainedSpace(space, subjectID, objectID);
 		
 		Set<Node> originalNodes;
 		
@@ -45,26 +40,179 @@ public class NextTo {
 			originalNodes = new HashSet<Node>();
 		}
 		
-		connectConstrainedSpace(originalNodes, subjectConstrainedSpace, doublyConstrainedSpace,
-				objectID);
+		NodeSpace subjectSpace = createConstrainedSpace(space, subjectID);
 		
-		connectConstrainedSpace(originalNodes, objectConstrainedSpace, doublyConstrainedSpace,
-				subjectID);
-
+		NodeSpace objectSpace = createConstrainedSpace(space, objectID);
+		
+		NodeSpace subjectObjectSpace = createDoublyConstrainedSpace(space, subjectID, objectID);
+		
+		HashMap<String, Node> idToNodeCopy1 = space.unionNodes(subjectSpace);
+		
+		HashMap<String, Node> idToNodeCopy2 = space.unionNodes(objectSpace);
+		
+		HashMap<String, Node> idToNodeCopy3 = space.unionNodes(subjectObjectSpace);
+		
+		connectConstrainedSpace(originalNodes, objectID, subjectID, idToNodeCopy1, idToNodeCopy3);
+		
+		connectConstrainedSpace(originalNodes, subjectID, objectID, idToNodeCopy2, idToNodeCopy3);
+		
+		connectDoublyConstrainedSpace(originalNodes, objectID, subjectID, idToNodeCopy3);
+		
+		connectDoublyConstrainedSpace(originalNodes, subjectID, objectID, idToNodeCopy3);
+		
+		for (Node node : originalNodes) {
+			for (Edge edge : getEdgesWithComponentID(node, subjectID, idToNodeCopy1)) {
+				edge.deleteComponentID(subjectID);
+			}
+			
+			for (Edge edge : getEdgesWithComponentID(node, objectID, idToNodeCopy2)) {
+				edge.deleteComponentID(objectID);
+			}
+		}
+		
 		space.deleteUnreachableNodes();
 	}
 	
-	private void connectConstrainedSpace(Set<Node> nodes, NodeSpace constrainedSpace, 
-			NodeSpace doublyConstrainedSpace, String constraintID) {
-		HashMap<String, Node> idToNodeCopy = space.unionNodes(constrainedSpace);
+	private Set<Edge> getEdgesWithComponentID(Node node, String compID, 
+			HashMap<String, Node> idToNodeCopy) {
+		Set<Edge> edgesWithCompID = new HashSet<Edge>();
 		
+		for (Edge edge : node.getEdgesWithComponentID(compID)) {
+			if (idToNodeCopy.containsKey(edge.getHead().getNodeID())) {
+				edgesWithCompID.add(edge);
+			}
+		}
+		
+		return edgesWithCompID;
+	}
+	
+	private void connectDoublyConstrainedSpace(Set<Node> nodes, String subjectID, String objectID, 
+			HashMap<String, Node> idToNodeCopy) {
 		for (Node node : nodes) {
-			
+			for (Edge subjectEdge : getEdgesWithComponentID(node, subjectID, idToNodeCopy)) {
+				Set<Edge> objectEdges = getEdgesWithComponentID(subjectEdge.getHead(), objectID, 
+						idToNodeCopy);
+				
+				if (!objectEdges.isEmpty()) {
+					Node subjectHeadCopy = space.copyNode(subjectEdge.getHead());
+
+					ArrayList<String> subjectCompIDs = new ArrayList<String>();
+
+					subjectCompIDs.add(subjectID);
+
+					idToNodeCopy.get(node.getNodeID()).copyEdge(subjectEdge, subjectHeadCopy, 
+							subjectCompIDs);
+
+					for (Edge objectEdge : objectEdges) {
+						Node objectHeadCopy = space.copyNode(objectEdge.getHead());
+
+						ArrayList<String> objectCompIDs = new ArrayList<String>();
+
+						objectCompIDs.add(objectID);
+
+						subjectHeadCopy.copyEdge(objectEdge, objectHeadCopy, objectCompIDs);
+
+						extendNextTo(objectHeadCopy, getEdgesWithComponentID(objectEdge.getHead(), 
+								subjectID, idToNodeCopy), subjectID, objectID, idToNodeCopy);
+					}
+				}
+			}
 		}
 	}
 	
-	private void extendNext(Node node, NodeSpace constrainedSpace, NodeSpace doublyConstrainedSpace) {
+	private void connectConstrainedSpace(Set<Node> nodes, String subjectID, String objectID, 
+			HashMap<String, Node> idToNodeCopy, HashMap<String, Node> idToNodeCopy2) {
+		for (Node node : nodes) {
+			for (Edge subjectEdge : getEdgesWithComponentID(node, subjectID, idToNodeCopy)) {
+				Node subjectHeadCopy = space.copyNode(subjectEdge.getHead());
+				
+				ArrayList<String> subjectCompIDs = new ArrayList<String>();
+				
+				subjectCompIDs.add(subjectID);
+				
+				node.copyEdge(subjectEdge, subjectHeadCopy, subjectCompIDs);
+				
+				for (Edge objectEdge : getEdgesWithComponentID(subjectEdge.getHead(), objectID, 
+						idToNodeCopy)) {
+					Edge objectEdgeCopy = subjectHeadCopy.copyEdge(objectEdge, 
+							idToNodeCopy.get(objectEdge.getHead().getNodeID()));
+
+					objectEdgeCopy.deleteComponentID(objectID);
+
+					Node objectHeadCopy = space.copyNode(objectEdge.getHead());
+
+					ArrayList<String> objectCompIDs = new ArrayList<String>();
+
+					objectCompIDs.add(objectID);
+
+					subjectHeadCopy.copyEdge(objectEdge, objectHeadCopy, objectCompIDs);
+
+					extendNextTo(objectHeadCopy, getEdgesWithComponentID(objectEdge.getHead(), 
+							subjectID, idToNodeCopy), subjectID, objectID, idToNodeCopy2);
+				}
+			}
+		}
+	}
+	
+	private void extendNextTo(Node rootNodeCopy, Set<Edge> edges, String subjectID, String objectID,
+			HashMap<String, Node> idToNodeCopy) {
+		Stack<Node> nodeCopyStack = new Stack<Node>();
+
+		for (int i = 0; i < edges.size(); i++) {
+			nodeCopyStack.push(rootNodeCopy);
+		}
 		
+		Stack<Edge> edgeStack = new Stack<Edge>();
+		
+		for (Edge edge : edges) {
+			edgeStack.push(edge);
+		}
+		
+		boolean isSubjectEdge = true;
+		
+		while (!nodeCopyStack.isEmpty()) {
+			Node nodeCopy = nodeCopyStack.pop();
+			
+			Edge edge = edgeStack.pop();
+			
+			Node headCopy = space.copyNode(edge.getHead());
+			
+			ArrayList<String> compIDs = new ArrayList<String>();
+			
+			if (isSubjectEdge) {
+				compIDs.add(subjectID);
+			} else {
+				compIDs.add(objectID);
+			}
+			
+			nodeCopy.copyEdge(edge, headCopy, compIDs);
+			
+			Edge edgeCopy = nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+			
+			if (isSubjectEdge) {
+				edgeCopy.deleteComponentID(subjectID);
+			} else {
+				edgeCopy.deleteComponentID(objectID);
+			}
+			
+			Set<Edge> headEdges;
+			
+			if (isSubjectEdge) {
+				headEdges = getEdgesWithComponentID(edge.getHead(), objectID, idToNodeCopy);
+				
+				isSubjectEdge = false;
+			} else {
+				headEdges = getEdgesWithComponentID(edge.getHead(), subjectID, idToNodeCopy);
+				
+				isSubjectEdge = true;
+			}
+
+			for (Edge headEdge : headEdges) {
+				edgeStack.push(headEdge);
+
+				nodeCopyStack.push(headCopy);
+			}
+		}
 	}
 	
 	private NodeSpace createConstrainedSpace(NodeSpace space, String constraintID) {

@@ -8,6 +8,7 @@ import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.eugene.Before;
+import knox.spring.data.neo4j.eugene.NextTo;
 import knox.spring.data.neo4j.eugene.Rule;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
@@ -99,6 +100,12 @@ public class DesignSpaceService {
     			before.apply();
     			
         		ruleSpaces.add(before.getNodeSpace());
+    		} else if (rule.isNextTo()) {
+    			NextTo nextTo = new NextTo(targetSpace.copy(), rule);
+    			
+    			nextTo.apply();
+    			
+    			ruleSpaces.add(nextTo.getNodeSpace());
     		}
     	}
     	
