@@ -36,8 +36,22 @@ public class EndsWith {
 		HashMap<String, Set<Edge>> idToIncomingEdges = space.mapNodeIDsToIncomingEdges();
 		
 		for (Node acceptNode : space.getAcceptNodes()) {
-			
+			if (idToIncomingEdges.containsKey(acceptNode.getNodeID())) {
+				for (Edge edge : idToIncomingEdges.get(acceptNode.getNodeID())) {
+					if (edge.hasComponentID(objectID)) {
+						ArrayList<String> compIDs = new ArrayList<String>();
+						
+						compIDs.add(objectID);
+						
+						edge.setComponentIDs(compIDs);
+					} else {
+						edge.delete();
+					}
+				}
+			}
 		}
+		
+		space.deleteUnacceptableNodes();
 	}
 	
 	public NodeSpace getNodeSpace() {

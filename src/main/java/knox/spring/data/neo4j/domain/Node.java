@@ -485,6 +485,14 @@ public class Node {
     	unionIncomingParallelEdges(idToIncomingEdges);
     }
     
+    public boolean deleteEdge(Edge edge) {
+    	if (hasEdges()) {
+    		return edges.remove(edge);
+    	} else {
+    		return false;
+    	}
+    }
+    
     public boolean deleteEdges(Set<Edge> edges) {
     	if (hasEdges()) {
     		boolean isDeleted = this.edges.removeAll(edges);

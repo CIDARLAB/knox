@@ -125,6 +125,10 @@ public class Edge {
     	return new Edge(tail, head, new ArrayList<String>(componentIDs),
     			new ArrayList<String>(componentRoles), orientation, weight);
     }
+    
+    public void delete() {
+    	tail.deleteEdge(this);
+    }
 
     public boolean deleteComponentID(String compID) {
     	return componentIDs.remove(compID);
