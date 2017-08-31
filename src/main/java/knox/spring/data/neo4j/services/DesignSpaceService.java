@@ -112,6 +112,8 @@ public class DesignSpaceService {
     			
     			eq.apply();
     			
+//    			outputSpace.shallowCopyNodeSpace(eq.getNodeSpace());
+    			
     			ruleSpaces.add(eq.getNodeSpace());
     		}
     	}
