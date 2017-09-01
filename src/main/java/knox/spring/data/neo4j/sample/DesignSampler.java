@@ -253,7 +253,7 @@ public class DesignSampler {
 		return comboDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> dfsEnumerate(int numDesigns, int maxLength) {
+	private List<List<Map<String, Object>>> bfsEnumerate(int numDesigns, int maxLength) {
 		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -286,7 +286,12 @@ public class DesignSampler {
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
 				
+//				LOG.info("add {}", edge.getTail().getNodeID() + "-" 
+//						+ edge.getComponentIDs().toString() + "->" + edge.getHead().getNodeID());
+				
 				designs = multiplyDesigns(designs, edge);
+				
+//				LOG.info("designs {}", designs.toString());
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
@@ -298,6 +303,17 @@ public class DesignSampler {
 					if (edge.getHead().isAcceptNode()) {
 						if (numDesigns < 1 || allDesigns.size() + designs.size() < numDesigns) {
 							allDesigns.addAll(designs);
+							
+//							LOG.info("allDesigns {}", "+++++++++++++++++++++++++++++++++");
+//							for (List<Map<String, Object>> design : allDesigns) {
+//								String des = "";
+//								
+//								for (Map<String, Object> feature : design) {
+//									des = des + feature.get("id").toString() + " ";
+//								}
+//								
+//								LOG.info("* {}", des);
+//							}
 						} else {
 							int diffDesignCount = numDesigns - allDesigns.size();
 
@@ -310,6 +326,14 @@ public class DesignSampler {
 							return allDesigns;
 						}
 					} 
+					
+//					String local = "";
+//					
+//					for (Node localNode : localNodes) {
+//						local = local + localNode.getNodeID() + " ";
+//					}
+					
+//					LOG.info("local {}", local);
 
 					if (edge.getHead().hasEdges() 
 							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
@@ -328,6 +352,8 @@ public class DesignSampler {
 							designStack.push(designs);
 						}
 					} else if (!designStack.isEmpty()) {
+//						LOG.info("back {}", "track");
+						
 						localNodes = localNodeStack.pop();
 						
 						designs = designStack.pop();
@@ -336,10 +362,12 @@ public class DesignSampler {
 			}
 		}
 		
+//		LOG.info("size {}", allDesigns.size() + " ++++++++++++++++++++++++++++++++++++++");
+		
 		return allDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> bfsEnumerate(int numDesigns, int maxLength) {
+	private List<List<Map<String, Object>>> dfsEnumerate(int numDesigns, int maxLength) {
 		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {

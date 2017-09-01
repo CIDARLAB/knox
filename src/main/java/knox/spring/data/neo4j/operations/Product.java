@@ -80,6 +80,33 @@ public class Product {
     	return overlapPartitions;
     }
     
+    public void diff(int tolerance, Set<String> roles, boolean isRow) {
+    	List<Partition> partitions = tensor(tolerance, 0, roles);
+    	
+    	partitions = unionNonOverlapPartitions(partitions);
+    	
+    	Set<Node> diffNodes = new HashSet<Node>();
+    	
+    	for (Partition partition : partitions) {
+    		HashMap<Integer, Node> rowToDiffNode = new HashMap<Integer, Node>();
+    		
+    		HashMap<Integer, Node> colToDiffNode = new HashMap<Integer, Node>();
+    		
+    		if (tolerance == 1) {
+    			partition.prosectNodes(rowToDiffNode, colToDiffNode, roles);
+    		}
+    		
+    		partition.projectNodes(rowToDiffNode, colToDiffNode, roles);
+    		
+    		if (isRow) {
+    			diffNodes.addAll(rowToDiffNode.values());
+    		} else {
+    			diffNodes.addAll(colToDiffNode.values());
+    		}
+    	}
+    	
+    	productSpace.retainNodes(diffNodes);
+    }
     
     public void modifiedStrong(int tolerance, int degree, Set<String> roles) {
     	List<Partition> partitions = tensor(tolerance, degree, roles);

@@ -142,9 +142,9 @@ CREATE (d0b)-[:CONTAINS]->(n1b)
 CREATE (d0b)-[:CONTAINS]->(n2b)
 CREATE (d0b)-[:CONTAINS]->(n3b)
 
-CREATE (n0b)-[:PRECEDES {componentIDs: ["A","B"], componentRoles: ["CDS"], orientation: "inline"}]->(n1b)
-CREATE (n1b)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["CDS"], orientation: "inline"}]->(n2b)
-CREATE (n2b)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"], orientation: "inline"}]->(n3b)
+CREATE (n0b)-[:PRECEDES {componentIDs: ["A","X"], componentRoles: ["CDS"], orientation: "inline"}]->(n1b)
+CREATE (n1b)-[:PRECEDES {componentIDs: ["B","Y"], componentRoles: ["CDS"], orientation: "inline"}]->(n2b)
+CREATE (n2b)-[:PRECEDES {componentIDs: ["C","Z"], componentRoles: ["CDS"], orientation: "inline"}]->(n3b)
 
 CREATE (d0b)-[:ARCHIVES]->(b0b:Branch {branchID: "test2"})-[:CONTAINS]->(c0b:Commit {commitID: "c0"})-[:CONTAINS]->(s0b:Snapshot {nodeIndex: 4})
 CREATE (d0b)-[:SELECTS]->(b0b)-[:LATEST]->(c0b)
@@ -159,9 +159,9 @@ CREATE (s0b)-[:CONTAINS]->(sn1b)
 CREATE (s0b)-[:CONTAINS]->(sn2b)
 CREATE (s0b)-[:CONTAINS]->(sn3b)
 
-CREATE (sn0b)-[:PRECEDES {componentIDs: ["A","B"], componentRoles: ["CDS"], orientation: "inline"}]->(sn1b)
-CREATE (sn1b)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["CDS"], orientation: "inline"}]->(sn2b)
-CREATE (sn2b)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"], orientation: "inline"}]->(sn3b)
+CREATE (sn0b)-[:PRECEDES {componentIDs: ["A","X"], componentRoles: ["CDS"], orientation: "inline"}]->(sn1b)
+CREATE (sn1b)-[:PRECEDES {componentIDs: ["B","Y"], componentRoles: ["CDS"], orientation: "inline"}]->(sn2b)
+CREATE (sn2b)-[:PRECEDES {componentIDs: ["C","Z"], componentRoles: ["CDS"], orientation: "inline"}]->(sn3b)
 
 
 CREATE (d0c:DesignSpace {spaceID: "test3", nodeIndex: 4, commitIndex: 1})
@@ -176,9 +176,9 @@ CREATE (d0c)-[:CONTAINS]->(n1c)
 CREATE (d0c)-[:CONTAINS]->(n2c)
 CREATE (d0c)-[:CONTAINS]->(n3c)
 
-CREATE (n0c)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["CDS"], orientation: "inline"}]->(n1c)
-CREATE (n1c)-[:PRECEDES {componentIDs: ["Z"], componentRoles: ["CDS"], orientation: "inline"}]->(n2c)
-CREATE (n2c)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"], orientation: "inline"}]->(n3c)
+CREATE (n0c)-[:PRECEDES {componentIDs: ["X","M"], componentRoles: ["CDS"], orientation: "inline"}]->(n1c)
+CREATE (n1c)-[:PRECEDES {componentIDs: ["Y","N"], componentRoles: ["CDS"], orientation: "inline"}]->(n2c)
+CREATE (n2c)-[:PRECEDES {componentIDs: ["Z","O"], componentRoles: ["CDS"], orientation: "inline"}]->(n3c)
 
 CREATE (d0c)-[:ARCHIVES]->(b0c:Branch {branchID: "test3"})-[:CONTAINS]->(c0c:Commit {commitID: "c0"})-[:CONTAINS]->(s0c:Snapshot {nodeIndex: 4})
 CREATE (d0c)-[:SELECTS]->(b0c)-[:LATEST]->(c0c)
@@ -193,9 +193,9 @@ CREATE (s0c)-[:CONTAINS]->(sn1c)
 CREATE (s0c)-[:CONTAINS]->(sn2c)
 CREATE (s0c)-[:CONTAINS]->(sn3c)
 
-CREATE (sn0c)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["CDS"], orientation: "inline"}]->(sn1c)
-CREATE (sn1c)-[:PRECEDES {componentIDs: ["Z"], componentRoles: ["CDS"], orientation: "inline"}]->(sn2c)
-CREATE (sn2c)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["CDS"], orientation: "inline"}]->(sn3c)
+CREATE (sn0c)-[:PRECEDES {componentIDs: ["X","M"], componentRoles: ["CDS"], orientation: "inline"}]->(sn1c)
+CREATE (sn1c)-[:PRECEDES {componentIDs: ["Y","N"], componentRoles: ["CDS"], orientation: "inline"}]->(sn2c)
+CREATE (sn2c)-[:PRECEDES {componentIDs: ["Z","O"], componentRoles: ["CDS"], orientation: "inline"}]->(sn3c)
 
 
 CREATE (d0d:DesignSpace {spaceID: "test4", nodeIndex: 3, commitIndex: 1})

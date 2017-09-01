@@ -2,7 +2,6 @@ package knox.spring.data.neo4j.eugene;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.slf4j.Logger;

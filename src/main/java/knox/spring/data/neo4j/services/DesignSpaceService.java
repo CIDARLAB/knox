@@ -382,21 +382,105 @@ public class DesignSpaceService {
     				product.getProductSpace().labelSinkNodesAccept();
     			}
     			
-    			if (product.getProductSpace().hasNodes()) {
-    				Union union = new Union(product.getProductSpace());
-
-    				union.connect(isClosed);
-
-    				productSpace.shallowCopyNodeSpace(union.getUnionSpace());
-
-    				productSpace.minimize();
-    			} else {
-    				productSpace.shallowCopyNodeSpace(product.getProductSpace());
-    			}
+    			productSpace.shallowCopyNodeSpace(product.getProductSpace());
     		}
     	}
     	
-    	outputSpace.shallowCopyNodeSpace(productSpace);
+    	if (productSpace.hasNodes()) {
+			Union union = new Union(productSpace);
+
+			union.connect(isClosed);
+
+			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+
+			outputSpace.minimize();
+		} else {
+			outputSpace.shallowCopyNodeSpace(productSpace);
+		}
+    }
+	
+	public void diffDesignSpaces(List<String> inputSpaceIDs, int tolerance, boolean isClosed, 
+			Set<String> roles) 
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
+		diffDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isClosed,
+				roles);
+    }
+    
+    public void diffDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, 
+    		int tolerance, boolean isClosed, Set<String> roles)
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+    	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
+
+    	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
+    	
+    	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+    	
+    	diffNodeSpaces(inputSpaces, outputSpace, tolerance, isClosed, roles);
+    	
+    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+    	
+    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
+    			outputSpace, inputSnaps);
+    	
+    	diffNodeSpaces(inputSnaps, outputSnap, tolerance, isClosed, roles);
+
+    	saveDesignSpace(outputSpace);
+    }
+    
+    public void diffBranches(String targetSpaceID, List<String> inputBranchIDs, 
+    		int tolerance, boolean isClosed, Set<String> roles) {
+    	diffBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, isClosed, 
+    			roles);
+    }
+
+    public void diffBranches(String targetSpaceID, List<String> inputBranchIDs, 
+    		String outputBranchID, int tolerance, boolean isClosed, Set<String> roles) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+    	
+        List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
+        
+        Branch outputBranch = loadIOBranches(targetSpace, inputBranchIDs, outputBranchID,
+        		inputBranches);
+        
+        List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputBranches.size());
+        
+        NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, 
+        		inputSnaps);
+
+        diffNodeSpaces(inputSnaps, outputSnap, tolerance, isClosed, roles);
+    }
+	
+	private void diffNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
+    		int tolerance, boolean isClosed, Set<String> roles) {
+		NodeSpace productSpace = new NodeSpace(0);
+		
+    	for (NodeSpace inputSpace : inputSpaces) {
+    		if (!productSpace.hasNodes()) {	
+    			productSpace.copyNodeSpace(inputSpace);
+    		} else {
+    			Product product = new Product(inputSpace, productSpace);
+    			
+    			product.diff(tolerance, roles, true);
+    			
+    			product.getProductSpace().deleteUnacceptableNodes();
+    			
+    			productSpace.shallowCopyNodeSpace(product.getProductSpace());
+    		}
+    	}
+    	
+    	if (productSpace.hasNodes()) {
+			Union union = new Union(productSpace);
+
+			union.connect(isClosed);
+
+			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+
+			outputSpace.minimize();
+		} else {
+			outputSpace.shallowCopyNodeSpace(productSpace);
+		}
     }
 	
 	public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, boolean isComplete,
@@ -469,17 +553,21 @@ public class DesignSpaceService {
     				product.modifiedStrong(tolerance, 1, roles);
     			}
     			
-    			Union union = new Union(product.getProductSpace());
-        		
-        		union.connect(isClosed);
-    			
-    			productSpace.shallowCopyNodeSpace(union.getUnionSpace());
-    			
-    			productSpace.minimize();
+    			productSpace.shallowCopyNodeSpace(product.getProductSpace());
     		}
     	}
     	
-    	outputSpace.shallowCopyNodeSpace(productSpace);
+    	if (productSpace.hasNodes()) {
+			Union union = new Union(productSpace);
+
+			union.connect(isClosed);
+
+			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+
+			outputSpace.minimize();
+		} else {
+			outputSpace.shallowCopyNodeSpace(productSpace);
+		}
     }
 	
 	private DesignSpace loadIOSpaces(List<String> inputSpaceIDs, String outputSpaceID,
