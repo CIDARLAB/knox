@@ -224,29 +224,37 @@ public class DesignSampler {
 			Edge edge) {
 		List<List<Map<String, Object>>> comboDesigns = new LinkedList<List<Map<String, Object>>>();
 		
-		for (String compID : edge.getComponentIDs()) {
-			Map<String, Object> comp = new HashMap<String, Object>();
-			
-			comp.put("id", compID);
-			
-			comp.put("roles", edge.getComponentRoles());
-			
-			comp.put("orientation", edge.getOrientation());
-			
-			if (!designs.isEmpty()) {
-				for (List<Map<String, Object>> design : designs) {
-					List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
-					
+		if (!edge.hasComponentIDs()) {
+			for (List<Map<String, Object>> design : designs) {
+				List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+
+				comboDesigns.add(comboDesign);
+			}
+		} else {
+			for (String compID : edge.getComponentIDs()) {
+				Map<String, Object> comp = new HashMap<String, Object>();
+
+				comp.put("id", compID);
+
+				comp.put("roles", edge.getComponentRoles());
+
+				comp.put("orientation", edge.getOrientation());
+
+				if (!designs.isEmpty()) {
+					for (List<Map<String, Object>> design : designs) {
+						List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+
+						comboDesign.add(comp);
+
+						comboDesigns.add(comboDesign);
+					}
+				} else {
+					List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>();
+
 					comboDesign.add(comp);
-					
+
 					comboDesigns.add(comboDesign);
 				}
-			} else {
-				List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>();
-				
-				comboDesign.add(comp);
-				
-				comboDesigns.add(comboDesign);
 			}
 		}
 		
@@ -286,12 +294,7 @@ public class DesignSampler {
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
 				
-//				LOG.info("add {}", edge.getTail().getNodeID() + "-" 
-//						+ edge.getComponentIDs().toString() + "->" + edge.getHead().getNodeID());
-				
 				designs = multiplyDesigns(designs, edge);
-				
-//				LOG.info("designs {}", designs.toString());
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
@@ -303,17 +306,6 @@ public class DesignSampler {
 					if (edge.getHead().isAcceptNode()) {
 						if (numDesigns < 1 || allDesigns.size() + designs.size() < numDesigns) {
 							allDesigns.addAll(designs);
-							
-//							LOG.info("allDesigns {}", "+++++++++++++++++++++++++++++++++");
-//							for (List<Map<String, Object>> design : allDesigns) {
-//								String des = "";
-//								
-//								for (Map<String, Object> feature : design) {
-//									des = des + feature.get("id").toString() + " ";
-//								}
-//								
-//								LOG.info("* {}", des);
-//							}
 						} else {
 							int diffDesignCount = numDesigns - allDesigns.size();
 
@@ -326,14 +318,6 @@ public class DesignSampler {
 							return allDesigns;
 						}
 					} 
-					
-//					String local = "";
-//					
-//					for (Node localNode : localNodes) {
-//						local = local + localNode.getNodeID() + " ";
-//					}
-					
-//					LOG.info("local {}", local);
 
 					if (edge.getHead().hasEdges() 
 							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
@@ -352,8 +336,6 @@ public class DesignSampler {
 							designStack.push(designs);
 						}
 					} else if (!designStack.isEmpty()) {
-//						LOG.info("back {}", "track");
-						
 						localNodes = localNodeStack.pop();
 						
 						designs = designStack.pop();
@@ -361,8 +343,6 @@ public class DesignSampler {
 				}
 			}
 		}
-		
-//		LOG.info("size {}", allDesigns.size() + " ++++++++++++++++++++++++++++++++++++++");
 		
 		return allDesigns;
 	}
