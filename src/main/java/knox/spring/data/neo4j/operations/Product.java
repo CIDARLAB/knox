@@ -81,7 +81,7 @@ public class Product {
     }
     
     public void diff(int tolerance, Set<String> roles, boolean isRow) {
-    	List<Partition> partitions = tensor(tolerance, 0, roles);
+    	List<Partition> partitions = tensor(tolerance, 1, roles);
     	
     	partitions = unionNonOverlapPartitions(partitions);
     	
@@ -105,7 +105,7 @@ public class Product {
     		}
     	}
     	
-    	productSpace.retainNodes(diffNodes);
+    	productSpace.retainNodes(diffNodes, false);
     }
     
     public void modifiedStrong(int tolerance, int degree, Set<String> roles) {
@@ -387,18 +387,22 @@ public class Product {
     								
     								if (rowEdge.isMatching(productEdge, 1, roles) 
     					    				&& !rowEdge.isMatching(productEdge, 0, roles)) {
+    									Node diffNode = projectNode(i, rowNodes, rowToDiffNode);
+    									
     									Node diffHead = projectNode(r, rowNodes, rowToDiffNode);
     									
-    									Edge diffEdge = productNode.copyEdge(rowEdge, diffHead);
+    									Edge diffEdge = diffNode.copyEdge(rowEdge, diffHead);
 
     					    			diffEdge.diffWithEdge(productEdge);
     								}
     								
     								if (colEdge.isMatching(productEdge, 1, roles) 
     					    				&& !colEdge.isMatching(productEdge, 0, roles)) {
+    									Node diffNode = projectNode(i, rowNodes, colToDiffNode);
+    									
     									Node diffHead = projectNode(c, colNodes, colToDiffNode);
     									
-    									Edge diffEdge = productNode.copyEdge(colEdge, diffHead);
+    									Edge diffEdge = diffNode.copyEdge(colEdge, diffHead);
 
     					    			diffEdge.diffWithEdge(productEdge);
     								}
@@ -430,10 +434,6 @@ public class Product {
 
     		if (indexToProductNodes.containsKey(i)) {
     			productNodes.addAll(indexToProductNodes.get(i));
-    			
-    			if (indexToDiffNode.containsKey(i)) {
-        			productNodes.add(indexToDiffNode.get(i));
-        		}
     		} else if (indexToDiffNode.containsKey(i)) {
     			productNodes.add(indexToDiffNode.get(i));
     		} else {
@@ -462,7 +462,7 @@ public class Product {
 
     			for (Edge edge : nodes.get(i).getEdges()) {
     				int ii = locateNode(edge.getHead(), i, nodes);
-
+    				
     				Set<Node> productHeads = projectNode(ii, nodes, indexToProductNodes,
     						indexToDiffNode);
 

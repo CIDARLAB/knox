@@ -759,31 +759,39 @@ public class NodeSpace {
     public void deleteUnacceptableNodes() {
     	deleteUnreachableNodes();
     	
-    	retainNodes(reverseDepthFirstTraversal());
+    	retainNodes(reverseDepthFirstTraversal(), true);
     }
     
     public void deleteUnreachableNodes() {
-    	retainNodes(depthFirstTraversal());
+    	retainNodes(depthFirstTraversal(), true);
     }
     
-    public boolean retainNodes(Collection<Node> nodes) {
+    public boolean retainNodes(Collection<Node> nodes, boolean isDetach) {
     	if (hasNodes()) {
     		boolean isChanged = this.nodes.retainAll(nodes);
 
     		if (isChanged) {
+    			Set<Node> restoredNodes = new HashSet<Node>();
+    			
     			for (Node node : this.nodes) {
     				if (node.hasEdges()) {
     					Set<Edge> deletedEdges = new HashSet<Edge>();
 
     					for (Edge edge : node.getEdges()) {
     						if (!this.nodes.contains(edge.getHead())) {
-    							deletedEdges.add(edge);
+    							if (isDetach) {
+    								deletedEdges.add(edge);
+    							} else {
+    								restoredNodes.add(edge.getHead());
+    							}
     						}
     					}
 
     					node.deleteEdges(deletedEdges);
     				}
     			}
+    			
+    			this.nodes.addAll(restoredNodes);
     		}
     		
     		return isChanged;
