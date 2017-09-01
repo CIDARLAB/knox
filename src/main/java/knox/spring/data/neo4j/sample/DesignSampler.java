@@ -102,12 +102,12 @@ public class DesignSampler {
 			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
 								 the specific component ids.
 	 */
-	public List<List<Map<String, Object>>> enumerate(int numDesigns, int maxLength, 
-			EnumerateType type) {
+	public List<List<Map<String, Object>>> enumerate(int numDesigns, int minLength, 
+			int maxLength, EnumerateType type) {
 		if (type == EnumerateType.BFS) {
-			return bfsEnumerate(numDesigns, maxLength);
+			return bfsEnumerate(numDesigns, minLength, maxLength);
 		} else {
-			return dfsEnumerate(numDesigns, maxLength);
+			return dfsEnumerate(numDesigns, minLength, maxLength);
 		}
 	}
 
@@ -261,7 +261,7 @@ public class DesignSampler {
 		return comboDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> bfsEnumerate(int numDesigns, int maxLength) {
+	private List<List<Map<String, Object>>> bfsEnumerate(int numDesigns, int minLength, int maxLength) {
 		List<List<Map<String, Object>>> allDesigns = new LinkedList<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -304,12 +304,15 @@ public class DesignSampler {
 					}
 				} else { 
 					if (edge.getHead().isAcceptNode()) {
-						if (numDesigns < 1 || allDesigns.size() + designs.size() < numDesigns) {
-							allDesigns.addAll(designs);
+						List<List<Map<String, Object>>> overMinDesigns = filterOverMinDesigns(designs,
+								minLength);
+						
+						if (numDesigns < 1 || allDesigns.size() + overMinDesigns.size() < numDesigns) {
+							allDesigns.addAll(overMinDesigns);
 						} else {
 							int diffDesignCount = numDesigns - allDesigns.size();
 
-							Iterator<List<Map<String, Object>>> designerator = designs.iterator();
+							Iterator<List<Map<String, Object>>> designerator = overMinDesigns.iterator();
 
 							for (int i = 0; i < diffDesignCount; i++) {
 								allDesigns.add(designerator.next());
@@ -347,7 +350,7 @@ public class DesignSampler {
 		return allDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> dfsEnumerate(int numDesigns, int maxLength) {
+	private List<List<Map<String, Object>>> dfsEnumerate(int numDesigns, int minLength, int maxLength) {
 		List<List<Map<String, Object>>> allDesigns = new LinkedList<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -390,12 +393,15 @@ public class DesignSampler {
 					}
 				} else { 
 					if (edge.getHead().isAcceptNode()) {
-						if (numDesigns < 1 || allDesigns.size() + designs.size() < numDesigns) {
-							allDesigns.addAll(designs);
+						List<List<Map<String, Object>>> overMinDesigns = filterOverMinDesigns(designs,
+								minLength);
+						
+						if (numDesigns < 1 || allDesigns.size() + overMinDesigns.size() < numDesigns) {
+							allDesigns.addAll(overMinDesigns);
 						} else {
 							int diffDesignCount = numDesigns - allDesigns.size();
 
-							Iterator<List<Map<String, Object>>> designerator = designs.iterator();
+							Iterator<List<Map<String, Object>>> designerator = overMinDesigns.iterator();
 
 							for (int i = 0; i < diffDesignCount; i++) {
 								allDesigns.add(designerator.next());
@@ -431,6 +437,19 @@ public class DesignSampler {
 		}
 		
 		return allDesigns;
+	}
+	
+	private List<List<Map<String, Object>>> filterOverMinDesigns(List<List<Map<String, Object>>> designs,
+			int minLength) {
+		List<List<Map<String, Object>>> overMinDesigns = new LinkedList<List<Map<String, Object>>>();
+		
+		for (List<Map<String, Object>> design : designs) {
+			if (design.size() > minLength) {
+				overMinDesigns.add(design);
+			}
+		}
+		
+		return overMinDesigns;
 	}
 
     /*

@@ -715,11 +715,12 @@ public class KnoxController {
     @RequestMapping(value = "/designSpace/enumerate", method = RequestMethod.GET)
     public List<List<Map<String, Object>>> enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
+            @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
             @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
-        return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, maxLength, 
+        return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, 
         		enumerateType);
     }
 
