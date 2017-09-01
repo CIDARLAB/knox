@@ -304,15 +304,15 @@ public class DesignSampler {
 					}
 				} else { 
 					if (edge.getHead().isAcceptNode()) {
-						List<List<Map<String, Object>>> overMinDesigns = filterOverMinDesigns(designs,
+						List<List<Map<String, Object>>> atLeastMinDesigns = filterUnderMinDesigns(designs,
 								minLength);
 						
-						if (numDesigns < 1 || allDesigns.size() + overMinDesigns.size() < numDesigns) {
-							allDesigns.addAll(overMinDesigns);
+						if (numDesigns < 1 || allDesigns.size() + atLeastMinDesigns.size() < numDesigns) {
+							allDesigns.addAll(atLeastMinDesigns);
 						} else {
 							int diffDesignCount = numDesigns - allDesigns.size();
 
-							Iterator<List<Map<String, Object>>> designerator = overMinDesigns.iterator();
+							Iterator<List<Map<String, Object>>> designerator = atLeastMinDesigns.iterator();
 
 							for (int i = 0; i < diffDesignCount; i++) {
 								allDesigns.add(designerator.next());
@@ -393,15 +393,15 @@ public class DesignSampler {
 					}
 				} else { 
 					if (edge.getHead().isAcceptNode()) {
-						List<List<Map<String, Object>>> overMinDesigns = filterOverMinDesigns(designs,
+						List<List<Map<String, Object>>> atLeastMinDesigns = filterUnderMinDesigns(designs,
 								minLength);
 						
-						if (numDesigns < 1 || allDesigns.size() + overMinDesigns.size() < numDesigns) {
-							allDesigns.addAll(overMinDesigns);
+						if (numDesigns < 1 || allDesigns.size() + atLeastMinDesigns.size() < numDesigns) {
+							allDesigns.addAll(atLeastMinDesigns);
 						} else {
 							int diffDesignCount = numDesigns - allDesigns.size();
 
-							Iterator<List<Map<String, Object>>> designerator = overMinDesigns.iterator();
+							Iterator<List<Map<String, Object>>> designerator = atLeastMinDesigns.iterator();
 
 							for (int i = 0; i < diffDesignCount; i++) {
 								allDesigns.add(designerator.next());
@@ -439,17 +439,17 @@ public class DesignSampler {
 		return allDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> filterOverMinDesigns(List<List<Map<String, Object>>> designs,
+	private List<List<Map<String, Object>>> filterUnderMinDesigns(List<List<Map<String, Object>>> designs,
 			int minLength) {
-		List<List<Map<String, Object>>> overMinDesigns = new LinkedList<List<Map<String, Object>>>();
+		List<List<Map<String, Object>>> atLeastMinDesigns = new LinkedList<List<Map<String, Object>>>();
 		
 		for (List<Map<String, Object>> design : designs) {
-			if (design.size() > minLength) {
-				overMinDesigns.add(design);
+			if (design.size() >= minLength) {
+				atLeastMinDesigns.add(design);
 			}
 		}
 		
-		return overMinDesigns;
+		return atLeastMinDesigns;
 	}
 
     /*
