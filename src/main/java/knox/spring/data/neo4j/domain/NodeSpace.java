@@ -606,8 +606,10 @@ public class NodeSpace {
     	Set<Node> globalNodes = new HashSet<Node>();
 
     	for (Node acceptNode : getAcceptNodes()) {
-    		traversalNodes.addAll(reverseDepthFirstTraversal(acceptNode, globalNodes, 
-    				idToIncomingEdges));
+    		if (!globalNodes.contains(acceptNode)) {
+    			traversalNodes.addAll(reverseDepthFirstTraversal(acceptNode, globalNodes, 
+    					idToIncomingEdges));
+    		}
     	}
 
     	return traversalNodes;
