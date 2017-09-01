@@ -105,9 +105,9 @@ public class DesignSampler {
 	public List<List<Map<String, Object>>> enumerate(int numDesigns, int maxLength, 
 			EnumerateType type) {
 		if (type == EnumerateType.BFS) {
-			return bfsEnumerate(numDesigns, maxLength);
+			return new LinkedList<List<Map<String, Object>>>(bfsEnumerate(numDesigns, maxLength));
 		} else {
-			return dfsEnumerate(numDesigns, maxLength);
+			return new LinkedList<List<Map<String, Object>>>(dfsEnumerate(numDesigns, maxLength));
 		}
 	}
 
@@ -261,8 +261,8 @@ public class DesignSampler {
 		return comboDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> bfsEnumerate(int numDesigns, int maxLength) {
-		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
+	private Set<List<Map<String, Object>>> bfsEnumerate(int numDesigns, int maxLength) {
+		Set<List<Map<String, Object>>> allDesigns = new HashSet<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
 			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
@@ -347,8 +347,8 @@ public class DesignSampler {
 		return allDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> dfsEnumerate(int numDesigns, int maxLength) {
-		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
+	private Set<List<Map<String, Object>>> dfsEnumerate(int numDesigns, int maxLength) {
+		Set<List<Map<String, Object>>> allDesigns = new HashSet<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
 			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
