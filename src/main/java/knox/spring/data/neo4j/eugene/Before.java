@@ -45,26 +45,23 @@ public class Before {
 			}
 		}
 
-		Set<Node> originalNodes;
-		
 		if (space.hasNodes()) {
-			originalNodes = new HashSet<Node>(space.getNodes());
-		} else {
-			originalNodes = new HashSet<Node>();
-		}
-		
-		HashMap<String, Node> idToNodeCopy = space.union(constrainedSpace);
+			Set<Node> originalNodes = new HashSet<Node>(space.getNodes());
 
-		for (Node node : originalNodes) {
-			node.deleteComponentID(objectID);
-			
-			for (Edge edge : node.getEdgesWithComponentID(objectID)) {
-				ArrayList<String> compIDs = new ArrayList<String>();
+			HashMap<String, Node> idToNodeCopy = space.union(constrainedSpace);
 
-				compIDs.add(objectID);
+			for (Node node : originalNodes) {
+				Set<Edge> originalEdges = node.getEdgesWithComponentID(objectID);
+				
+				node.deleteComponentID(objectID);
+				
+				for (Edge edge : originalEdges) {
+					ArrayList<String> compIDs = new ArrayList<String>();
 
-				node.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()),
-						compIDs);
+					compIDs.add(objectID);
+
+					node.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()), compIDs);
+				}
 			}
 		}
 		
