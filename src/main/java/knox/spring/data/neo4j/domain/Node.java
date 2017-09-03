@@ -191,9 +191,7 @@ public class Node {
     		Set<Edge> deletedEdges = new HashSet<Edge>();
 
     		for (Edge edge : edges) {
-    			edge.deleteComponentID(compID);
-
-    			if (!edge.hasComponentIDs()) {
+    			if (edge.deleteComponentID(compID) && !edge.hasComponentIDs()) {
     				deletedEdges.add(edge);
     			}
     		}
