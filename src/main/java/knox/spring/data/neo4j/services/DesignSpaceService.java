@@ -466,8 +466,16 @@ public class DesignSpaceService {
     			List<Set<Node>> diffNodes = product.modifiedStrong(tolerance, 1, roles);
     			
     			if (isRow) {
+    				diffNodes.get(1).removeAll(diffNodes.get(0));
+    				
+    				product.getProductSpace().detachDeleteNodes(diffNodes.get(1));
+    				
     				product.getProductSpace().deleteUnconnectedNodes(diffNodes.get(0));
     			} else {
+    				diffNodes.get(0).removeAll(diffNodes.get(1));
+    				
+    				product.getProductSpace().detachDeleteNodes(diffNodes.get(0));
+    				
     				product.getProductSpace().deleteUnconnectedNodes(diffNodes.get(1));
     			}
     			

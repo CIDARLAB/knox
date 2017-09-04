@@ -224,7 +224,7 @@ public class NodeSpace {
 		return createTypedNode(NodeType.START.getValue());
 	}
 	
-	public boolean deleteNodes(Set<Node> deletedNodes) {
+	public boolean deleteNodes(Collection<Node> deletedNodes) {
 		if (hasNodes()) {
 			return nodes.removeAll(deletedNodes);
 		} else {
@@ -767,26 +767,40 @@ public class NodeSpace {
     }
     
     public void deleteUnconnectedNodes(Collection<Node> nodes) {
-    	Set<Node> sourceNodes = new HashSet<Node>();
-    	
-    	for (Node node : nodes) {
-    		if (!node.hasEdges()) {
-    			sourceNodes.add(node);
-    		}
-    	}
-    	
     	Set<Node> connectedNodes = new HashSet<Node>();
     	
     	HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
     	
-    	for (Node sourceNode : sourceNodes) {
-    		connectedNodes.addAll(depthFirstTraversal(sourceNode, connectedNodes));
+    	for (Node node : nodes) {
+    		connectedNodes.addAll(depthFirstTraversal(node, connectedNodes));
     		
-    		connectedNodes.addAll(reverseDepthFirstTraversal(sourceNode, connectedNodes,
+    		connectedNodes.addAll(reverseDepthFirstTraversal(node, connectedNodes,
     				idToIncomingEdges));
     	}
     	
     	retainNodes(connectedNodes);
+    }
+    
+    public boolean detachDeleteNodes(Collection<Node> nodes) {
+    	detachNodes(nodes);
+    	
+    	return deleteNodes(nodes);
+    }
+    
+    private void detachNodes(Collection<Node> nodes) {
+    	for (Node node : this.nodes) {
+			if (node.hasEdges()) {
+				Set<Edge> deletedEdges = new HashSet<Edge>();
+
+				for (Edge edge : node.getEdges()) {
+					if (nodes.contains(edge.getHead())) {
+						deletedEdges.add(edge);
+					}
+				}
+
+				node.deleteEdges(deletedEdges);
+			}
+		}
     }
     
     public boolean retainNodes(Collection<Node> nodes) {
