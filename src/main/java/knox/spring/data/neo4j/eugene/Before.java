@@ -65,7 +65,7 @@ public class Before {
 			}
 		}
 		
-		space.deleteUnreachableNodes();
+		space.deleteUnconnectedNodes();
 	}
 	
 	public NodeSpace getNodeSpace() {

@@ -80,35 +80,13 @@ public class Product {
     	return overlapPartitions;
     }
     
-    public void diff(int tolerance, Set<String> roles, boolean isRow) {
-    	List<Partition> partitions = tensor(tolerance, 1, roles);
+    public List<Set<Node>> modifiedStrong(int tolerance, int degree, Set<String> roles) {
+    	List<Set<Node>> diffNodes = new ArrayList<Set<Node>>(2);
     	
-    	partitions = unionNonOverlapPartitions(partitions);
+    	diffNodes.add(new HashSet<Node>());
     	
-    	Set<Node> diffNodes = new HashSet<Node>();
+    	diffNodes.add(new HashSet<Node>());
     	
-    	for (Partition partition : partitions) {
-    		HashMap<Integer, Node> rowToDiffNode = new HashMap<Integer, Node>();
-    		
-    		HashMap<Integer, Node> colToDiffNode = new HashMap<Integer, Node>();
-    		
-    		if (tolerance == 1) {
-    			partition.prosectNodes(rowToDiffNode, colToDiffNode, roles);
-    		}
-    		
-    		partition.projectNodes(rowToDiffNode, colToDiffNode, roles);
-    		
-    		if (isRow) {
-    			diffNodes.addAll(rowToDiffNode.values());
-    		} else {
-    			diffNodes.addAll(colToDiffNode.values());
-    		}
-    	}
-    	
-    	productSpace.retainNodes(diffNodes, false);
-    }
-    
-    public void modifiedStrong(int tolerance, int degree, Set<String> roles) {
     	List<Partition> partitions = tensor(tolerance, degree, roles);
     	
     	partitions = unionNonOverlapPartitions(partitions);
@@ -123,7 +101,13 @@ public class Product {
     		}
     		
     		partition.projectNodes(rowToDiffNode, colToDiffNode, roles);
+    		
+    		diffNodes.get(0).addAll(rowToDiffNode.values());
+    		
+    		diffNodes.get(1).addAll(colToDiffNode.values());
     	}
+    	
+    	return diffNodes;
     }
     
 //    public void strong(int tolerance, int degree, Set<String> roles) {

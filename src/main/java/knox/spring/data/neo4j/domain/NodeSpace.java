@@ -757,41 +757,56 @@ public class NodeSpace {
     }
     
     public void deleteUnacceptableNodes() {
-    	deleteUnreachableNodes();
+    	deleteUnconnectedNodes();
     	
-    	retainNodes(reverseDepthFirstTraversal(), true);
+    	retainNodes(reverseDepthFirstTraversal());
     }
     
-    public void deleteUnreachableNodes() {
-    	retainNodes(depthFirstTraversal(), true);
+    public void deleteUnconnectedNodes() {
+    	retainNodes(depthFirstTraversal());
     }
     
-    public boolean retainNodes(Collection<Node> nodes, boolean isDetach) {
+    public void deleteUnconnectedNodes(Collection<Node> nodes) {
+    	Set<Node> sourceNodes = new HashSet<Node>();
+    	
+    	for (Node node : nodes) {
+    		if (!node.hasEdges()) {
+    			sourceNodes.add(node);
+    		}
+    	}
+    	
+    	Set<Node> connectedNodes = new HashSet<Node>();
+    	
+    	HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
+    	
+    	for (Node sourceNode : sourceNodes) {
+    		connectedNodes.addAll(depthFirstTraversal(sourceNode, connectedNodes));
+    		
+    		connectedNodes.addAll(reverseDepthFirstTraversal(sourceNode, connectedNodes,
+    				idToIncomingEdges));
+    	}
+    	
+    	retainNodes(connectedNodes);
+    }
+    
+    public boolean retainNodes(Collection<Node> nodes) {
     	if (hasNodes()) {
     		boolean isChanged = this.nodes.retainAll(nodes);
 
     		if (isChanged) {
-    			Set<Node> restoredNodes = new HashSet<Node>();
-    			
     			for (Node node : this.nodes) {
     				if (node.hasEdges()) {
     					Set<Edge> deletedEdges = new HashSet<Edge>();
 
     					for (Edge edge : node.getEdges()) {
     						if (!this.nodes.contains(edge.getHead())) {
-    							if (isDetach) {
-    								deletedEdges.add(edge);
-    							} else {
-    								restoredNodes.add(edge.getHead());
-    							}
+    							deletedEdges.add(edge);
     						}
     					}
 
     					node.deleteEdges(deletedEdges);
     				}
     			}
-    			
-    			this.nodes.addAll(restoredNodes);
     		}
     		
     		return isChanged;

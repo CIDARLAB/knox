@@ -147,7 +147,7 @@ public class Equals {
 			originalStartNode.deleteStartNodeType();
 		}
 		
-		space.deleteUnreachableNodes();
+		space.deleteUnconnectedNodes();
 	}
 	
 	private void apply(int subjectIndex, int objectIndex) {

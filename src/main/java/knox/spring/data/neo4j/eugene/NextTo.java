@@ -72,7 +72,7 @@ public class NextTo {
 			}
 		}
 		
-		space.deleteUnreachableNodes();
+		space.deleteUnconnectedNodes();
 	}
 	
 	private Set<Edge> getEdgesWithComponentID(Node node, String compID, 

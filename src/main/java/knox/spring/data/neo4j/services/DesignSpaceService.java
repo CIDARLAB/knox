@@ -400,15 +400,15 @@ public class DesignSpaceService {
     }
 	
 	public void diffDesignSpaces(List<String> inputSpaceIDs, int tolerance, boolean isClosed, 
-			Set<String> roles) 
+			boolean isRow, Set<String> roles) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
-		diffDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isClosed,
+		diffDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isClosed, isRow,
 				roles);
     }
     
     public void diffDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, 
-    		int tolerance, boolean isClosed, Set<String> roles)
+    		int tolerance, boolean isClosed, boolean isRow, Set<String> roles)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -417,26 +417,27 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-    	diffNodeSpaces(inputSpaces, outputSpace, tolerance, isClosed, roles);
+    	diffNodeSpaces(inputSpaces, outputSpace, tolerance, isClosed, isRow, roles);
     	
     	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
     	
     	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
     			outputSpace, inputSnaps);
     	
-    	diffNodeSpaces(inputSnaps, outputSnap, tolerance, isClosed, roles);
+    	diffNodeSpaces(inputSnaps, outputSnap, tolerance, isClosed, isRow, roles);
 
     	saveDesignSpace(outputSpace);
     }
     
     public void diffBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		int tolerance, boolean isClosed, Set<String> roles) {
+    		int tolerance, boolean isClosed, boolean isRow, Set<String> roles) {
     	diffBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, isClosed, 
-    			roles);
+    			isRow, roles);
     }
 
     public void diffBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		String outputBranchID, int tolerance, boolean isClosed, Set<String> roles) {
+    		String outputBranchID, int tolerance, boolean isClosed, boolean isRow, 
+    		Set<String> roles) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
         List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
@@ -449,11 +450,11 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, 
         		inputSnaps);
 
-        diffNodeSpaces(inputSnaps, outputSnap, tolerance, isClosed, roles);
+        diffNodeSpaces(inputSnaps, outputSnap, tolerance, isClosed, isRow, roles);
     }
 	
 	private void diffNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-    		int tolerance, boolean isClosed, Set<String> roles) {
+    		int tolerance, boolean isClosed, boolean isRow, Set<String> roles) {
 		NodeSpace productSpace = new NodeSpace(0);
 		
     	for (NodeSpace inputSpace : inputSpaces) {
@@ -462,9 +463,13 @@ public class DesignSpaceService {
     		} else {
     			Product product = new Product(inputSpace, productSpace);
     			
-    			product.diff(tolerance, roles, true);
+    			List<Set<Node>> diffNodes = product.modifiedStrong(tolerance, 1, roles);
     			
-    			product.getProductSpace().deleteUnacceptableNodes();
+    			if (isRow) {
+    				product.getProductSpace().deleteUnconnectedNodes(diffNodes.get(0));
+    			} else {
+    				product.getProductSpace().deleteUnconnectedNodes(diffNodes.get(1));
+    			}
     			
     			productSpace.shallowCopyNodeSpace(product.getProductSpace());
     		}

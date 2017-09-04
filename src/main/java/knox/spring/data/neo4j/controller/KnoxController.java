@@ -235,6 +235,7 @@ public class KnoxController {
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
     		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
+    		@RequestParam(value = "isRow", required = false, defaultValue = "true") boolean isRow,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
     	Set<String> uniqueRoles = new HashSet<String>(roles);
     	
@@ -242,10 +243,11 @@ public class KnoxController {
     		long startTime = System.nanoTime();
     		
     		if (outputSpaceID == null) {
-    			designSpaceService.diffDesignSpaces(inputSpaceIDs, tolerance, isClosed, uniqueRoles);
+    			designSpaceService.diffDesignSpaces(inputSpaceIDs, tolerance, isClosed, isRow, 
+    					uniqueRoles);
     		} else {
     			designSpaceService.diffDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, isClosed,
-    					uniqueRoles);
+    					isRow, uniqueRoles);
     		}
 
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully diff-ed after " +
@@ -263,6 +265,7 @@ public class KnoxController {
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
     		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
+    		@RequestParam(value = "isRow", required = false, defaultValue = "true") boolean isRow,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -270,16 +273,15 @@ public class KnoxController {
 		
 		if (outputBranchID == null) {
     		designSpaceService.diffBranches(targetSpaceID, inputBranchIDs, tolerance, isClosed, 
-    				uniqueRoles);
+    				isRow, uniqueRoles);
 		} else {
 			designSpaceService.diffBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance,
-					isClosed, uniqueRoles);
+					isClosed, isRow, uniqueRoles);
 		}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully diff-ed after " + 
             		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
     }
-	
 	
 	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
     public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
