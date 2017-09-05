@@ -1,7 +1,11 @@
 package knox.spring.data.neo4j.operations;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Node.NodeType;
@@ -22,28 +26,16 @@ public class Union {
     	}
 	}
 	
-	public void connect(boolean isClosed) {
-		Node primaryStartNode = unionSpace.createStartNode();
-    	
-    	for (Node startNode : unionSpace.getStartNodes()) {
-    		if (!primaryStartNode.isIdenticalTo(startNode)) {
-    			primaryStartNode.createEdge(startNode);
-    			
-    			startNode.deleteNodeType(NodeType.START.getValue());
-    		}
-    	}
-    	
-    	if (isClosed) {
-    		Node primaryAcceptNode = unionSpace.createAcceptNode();
-    		
-    		for (Node acceptNode : unionSpace.getAcceptNodes()) {
-    			if (!primaryAcceptNode.isIdenticalTo(acceptNode)) {
-    				acceptNode.createEdge(primaryAcceptNode);
-    				
-    				acceptNode.deleteNodeType(NodeType.ACCEPT.getValue());
-    			}
-    		}
-    	}
+	public void apply() {
+		Set<Node> startNodes = unionSpace.getStartNodes();
+		
+		Set<Node> primaryStartNodes = new HashSet<Node>();
+		
+		primaryStartNodes.add(unionSpace.createStartNode());
+		
+		HashMap<String, Set<Edge>> idToIncomingEdges = unionSpace.mapNodeIDsToIncomingEdges();
+		
+		unionSpace.concatenateNodes(primaryStartNodes, startNodes, idToIncomingEdges);
 	}
 	
 	public NodeSpace getUnionSpace() {

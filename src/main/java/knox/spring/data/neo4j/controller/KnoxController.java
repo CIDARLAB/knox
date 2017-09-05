@@ -44,12 +44,11 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/constrain", method = RequestMethod.POST)
     public ResponseEntity<String> constrainDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
     		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestBody List<Rule> rules) {
         try {
         	long startTime = System.nanoTime();
         	
-            designSpaceService.constrainDesignSpace(targetSpaceID, outputSpaceID, isClosed, rules);
+            designSpaceService.constrainDesignSpace(targetSpaceID, outputSpaceID, rules);
 
             return new ResponseEntity<String>("{\"message\": \"Design spaces was successfully constrained after " + 
             		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
@@ -99,15 +98,14 @@ public class KnoxController {
 	
 	@RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
     public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-            @RequestParam(value = "isClosed", required = false, defaultValue = "true") boolean isClosed) {
+            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
         try {
         	long startTime = System.nanoTime();
         	
             if (outputSpaceID == null) {
-                designSpaceService.orDesignSpaces(inputSpaceIDs, isClosed);
+                designSpaceService.orDesignSpaces(inputSpaceIDs);
             } else {
-                designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID, isClosed);
+                designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID);
             }
 
             return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully OR-ed after " + 
@@ -122,15 +120,13 @@ public class KnoxController {
 	@RequestMapping(value = "/branch/or", method = RequestMethod.POST)
     public ResponseEntity<String> orBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
-            @RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-            @RequestParam(value = "isClosed", required = false, defaultValue = "true") boolean isClosed) {
+            @RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
         long startTime = System.nanoTime();
 		
 		if (outputBranchID == null) {
-            designSpaceService.orBranches(targetSpaceID, inputBranchIDs, isClosed);
+            designSpaceService.orBranches(targetSpaceID, inputBranchIDs);
         } else {
-            designSpaceService.orBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
-            		isClosed);
+            designSpaceService.orBranches(targetSpaceID, inputBranchIDs, outputBranchID);
         }
 
         return new ResponseEntity<String>("{\"message\": \"Branches were successfully OR-ed after " + 
@@ -182,7 +178,6 @@ public class KnoxController {
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
     		@RequestParam(value = "isComplete", required = false, defaultValue = "true") boolean isComplete,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
     	Set<String> uniqueRoles = new HashSet<String>(roles);
     	
@@ -190,11 +185,10 @@ public class KnoxController {
     		long startTime = System.nanoTime();
     		
     		if (outputSpaceID == null) {
-    			designSpaceService.andDesignSpaces(inputSpaceIDs, tolerance, isComplete, 
-    					isClosed, uniqueRoles);
+    			designSpaceService.andDesignSpaces(inputSpaceIDs, tolerance, isComplete, uniqueRoles);
     		} else {
     			designSpaceService.andDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, 
-    					isComplete, isClosed, uniqueRoles);
+    					isComplete, uniqueRoles);
     		}
 
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully AND-ed after " +
@@ -212,7 +206,6 @@ public class KnoxController {
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
     		@RequestParam(value = "isComplete", required = false, defaultValue = "true") boolean isComplete,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -220,10 +213,10 @@ public class KnoxController {
 		
 		if (outputBranchID == null) {
     		designSpaceService.andBranches(targetSpaceID, inputBranchIDs, tolerance, isComplete,
-    				isClosed, uniqueRoles);
+    				uniqueRoles);
 		} else {
 			designSpaceService.andBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance,
-					isComplete, isClosed, uniqueRoles);
+					isComplete, uniqueRoles);
 		}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully AND-ed after " + 
@@ -234,7 +227,6 @@ public class KnoxController {
     public ResponseEntity<String> diffDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "isRow", required = false, defaultValue = "true") boolean isRow,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
     	Set<String> uniqueRoles = new HashSet<String>(roles);
@@ -243,11 +235,11 @@ public class KnoxController {
     		long startTime = System.nanoTime();
     		
     		if (outputSpaceID == null) {
-    			designSpaceService.diffDesignSpaces(inputSpaceIDs, tolerance, isClosed, isRow, 
+    			designSpaceService.diffDesignSpaces(inputSpaceIDs, tolerance, isRow, 
     					uniqueRoles);
     		} else {
-    			designSpaceService.diffDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, isClosed,
-    					isRow, uniqueRoles);
+    			designSpaceService.diffDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, isRow, 
+    					uniqueRoles);
     		}
 
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully diff-ed after " +
@@ -264,7 +256,6 @@ public class KnoxController {
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "isRow", required = false, defaultValue = "true") boolean isRow,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
@@ -272,11 +263,11 @@ public class KnoxController {
 		long startTime = System.nanoTime();
 		
 		if (outputBranchID == null) {
-    		designSpaceService.diffBranches(targetSpaceID, inputBranchIDs, tolerance, isClosed, 
-    				isRow, uniqueRoles);
+    		designSpaceService.diffBranches(targetSpaceID, inputBranchIDs, tolerance, isRow, 
+    				uniqueRoles);
 		} else {
 			designSpaceService.diffBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance,
-					isClosed, isRow, uniqueRoles);
+					isRow, uniqueRoles);
 		}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully diff-ed after " + 
@@ -288,7 +279,6 @@ public class KnoxController {
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
     		@RequestParam(value = "isComplete", required = false, defaultValue = "false") boolean isComplete,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -296,11 +286,10 @@ public class KnoxController {
     		long startTime = System.nanoTime();
     		
     		if (outputSpaceID == null) {
-    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, isComplete,
-    					isClosed, uniqueRoles);
+    			designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, isComplete, uniqueRoles);
     		} else {
     			designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, 
-    					isComplete, isClosed, uniqueRoles);
+    					isComplete, uniqueRoles);
     		}
     		
     		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged after " +
@@ -318,7 +307,6 @@ public class KnoxController {
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
     		@RequestParam(value = "isComplete", required = false, defaultValue = "false") boolean isComplete,
-    		@RequestParam(value = "isClosed", required = false, defaultValue = "false") boolean isClosed,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) { 	
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -326,10 +314,10 @@ public class KnoxController {
 		
 		if (outputBranchID == null) {
     		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, isComplete,
-    				isClosed, uniqueRoles); 
+    				uniqueRoles); 
     	} else {
     		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
-    				tolerance, isComplete, isClosed, uniqueRoles);
+    				tolerance, isComplete, uniqueRoles);
     	}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged after " + 

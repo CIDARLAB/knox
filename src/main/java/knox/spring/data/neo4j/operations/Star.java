@@ -17,7 +17,7 @@ public class Star {
 		Concatenation concat = new Concatenation();
 		
 		for (NodeSpace space : spaces) {
-			concat.connect(space);
+			concat.apply(space);
 		}
 		
 		starSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());

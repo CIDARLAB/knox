@@ -337,6 +337,10 @@ public class NodeSpace {
 
     	return null;
     }
+    
+    public int getNumStartNodes() {
+    	return getStartNodes().size();
+    }
 
     public Set<Node> getStartNodes() {
         Set<Node> startNodes = new HashSet<Node>();
@@ -432,56 +436,6 @@ public class NodeSpace {
     	}
 
     	return nodeIDToNode;
-    }
-    
-    public void minimize() {
-    	HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
-
-    	boolean isMini;
-
-    	do {
-    		isMini = true;
-
-    		Set<Node> deletedNodes = new HashSet<Node>();
-
-    		if (hasNodes()) {
-    			for (Node node : nodes) {
-    				if (node.hasEdges()) {
-    					Set<Edge> deletedEdges = new HashSet<Edge>();
-
-    					for (Edge edge : node.getEdges()) {
-    						if (!edge.isLabeled()
-    								&& !node.hasConflictingType(edge.getHead())
-    								&& !(node.getNumEdges() > 1 
-    										&& (idToIncomingEdges.get(edge.getHead().getNodeID()).size() > 1
-    												|| edge.getHead().isStartNode()))) {
-    							isMini = false;
-
-    							deletedEdges.add(edge);
-    						}
-    					}
-
-    					node.deleteEdges(deletedEdges);
-
-    					Set<Node> mergedNodes = new HashSet<Node>();
-
-    					for (Edge deletedEdge : deletedEdges) {
-    						mergedNodes.add(deletedEdge.getHead());
-    					}
-
-    					node.unionWithNodes(mergedNodes, idToIncomingEdges);
-
-    					deletedNodes.addAll(mergedNodes);
-    				}
-    			}
-    		}
-
-    		deleteNodes(deletedNodes);
-    		
-    		if (getNumNodes() == 1) {
-    			clearNodes();
-    		}
-    	} while (!isMini);
     }
     
     public void labelSinkNodesAccept() {

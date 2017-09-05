@@ -14,7 +14,7 @@ public class Concatenation {
 		concatenationSpace = new NodeSpace(0);
 	}
 	
-	public void connect(NodeSpace space) {
+	public void apply(NodeSpace space) {
 		if (!concatenationSpace.hasNodes()) {
 			concatenationSpace.union(space);
 		} else {

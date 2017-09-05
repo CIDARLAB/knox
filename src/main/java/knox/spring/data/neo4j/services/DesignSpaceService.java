@@ -78,19 +78,17 @@ public class DesignSpaceService {
 
     public static final String RESERVED_ID = "knox";
     
-    public void constrainDesignSpace(String targetSpaceID, String outputSpaceID, boolean isClosed, 
-    		List<Rule> rules) {
+    public void constrainDesignSpace(String targetSpaceID, String outputSpaceID, List<Rule> rules) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
     	DesignSpace outputSpace = new DesignSpace(outputSpaceID);
     	
-    	constrainNodeSpace(targetSpace, outputSpace, isClosed, rules);
+    	constrainNodeSpace(targetSpace, outputSpace, rules);
     	
     	saveDesignSpace(outputSpace);
     }
     
-    private void constrainNodeSpace(NodeSpace targetSpace, NodeSpace outputSpace, 
-    		boolean isClosed, List<Rule> rules) {
+    private void constrainNodeSpace(NodeSpace targetSpace, NodeSpace outputSpace, List<Rule> rules) {
     	List<NodeSpace> ruleSpaces = new ArrayList<NodeSpace>();
     	
     	ruleSpaces.add(targetSpace);
@@ -123,7 +121,7 @@ public class DesignSpaceService {
     		}
     	}
     	
-    	andNodeSpaces(ruleSpaces, outputSpace, 1, true, isClosed, new HashSet<String>());
+    	andNodeSpaces(ruleSpaces, outputSpace, 1, true, new HashSet<String>());
     }
     
     public void joinDesignSpaces(List<String> inputSpaceIDs) 
@@ -179,21 +177,21 @@ public class DesignSpaceService {
 		Concatenation concat = new Concatenation();
 		
 		for (NodeSpace inputSpace : inputSpaces) {
-			concat.connect(inputSpace);
+			concat.apply(inputSpace);
 		}
 		
 		outputSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
     }
     
-    public void orDesignSpaces(List<String> inputSpaceIDs, boolean isClosed) 
+    public void orDesignSpaces(List<String> inputSpaceIDs) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateListParameter("inputSpaceIDs", inputSpaceIDs);
     	
-    	orDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), isClosed);
+    	orDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
     }
     
-    public void orDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, boolean isClosed) 
+    public void orDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -202,24 +200,24 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-    	orNodeSpaces(inputSpaces, outputSpace, isClosed);
+    	orNodeSpaces(inputSpaces, outputSpace);
     	
     	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
     	
     	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
     			outputSpace, inputSnaps);
     	
-    	orNodeSpaces(inputSnaps, outputSnap, isClosed);
+    	orNodeSpaces(inputSnaps, outputSnap);
 
     	saveDesignSpace(outputSpace);
     }
     
-    public void orBranches(String targetSpaceID, List<String> inputBranchIDs, boolean isClosed) {
-        orBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), isClosed);
+    public void orBranches(String targetSpaceID, List<String> inputBranchIDs) {
+        orBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0));
     }
 
     public void orBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		String outputBranchID, boolean isClosed) {
+    		String outputBranchID) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
         List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
@@ -231,17 +229,15 @@ public class DesignSpaceService {
         
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, inputSnaps);
 
-        orNodeSpaces(inputSnaps, outputSnap, isClosed);
+        orNodeSpaces(inputSnaps, outputSnap);
     }
     
-	private void orNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace, boolean isClosed) {
+	private void orNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
 		Union union = new Union(inputSpaces);
 		
-		union.connect(isClosed);
+		union.apply();
 		
 		outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
-		
-		outputSpace.minimize();
     }
 	
 	public void repeatDesignSpaces(List<String> inputSpaceIDs, boolean isOptional) 
@@ -300,20 +296,17 @@ public class DesignSpaceService {
 		star.connect(isOptional);
 		
 		outputSpace.shallowCopyNodeSpace(star.getStarSpace());
-		
-		outputSpace.minimize();
     }
     
     public void andDesignSpaces(List<String> inputSpaceIDs, int tolerance, boolean isComplete,
-    		boolean isClosed, Set<String> roles) 
+    		Set<String> roles) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
-    	andDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isComplete, isClosed,
-    			roles);
+    	andDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isComplete, roles);
     }
     
     public void andDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance,
-    		boolean isComplete, boolean isClosed, Set<String> roles)
+    		boolean isComplete, Set<String> roles)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -322,27 +315,26 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-    	andNodeSpaces(inputSpaces, outputSpace, tolerance, isComplete, isClosed, roles);
+    	andNodeSpaces(inputSpaces, outputSpace, tolerance, isComplete, roles);
     	
     	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
     	
     	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
     			outputSpace, inputSnaps);
     	
-    	andNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, isClosed, roles);
+    	andNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, roles);
 
     	saveDesignSpace(outputSpace);
     }
     
     public void andBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		int tolerance, boolean isComplete, boolean isClosed, Set<String> roles) {
+    		int tolerance, boolean isComplete, Set<String> roles) {
         andBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, 
-        		isComplete, isClosed, roles);
+        		isComplete, roles);
     }
 
     public void andBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		String outputBranchID, int tolerance, boolean isComplete, boolean isClosed, 
-    		Set<String> roles) {
+    		String outputBranchID, int tolerance, boolean isComplete, Set<String> roles) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
         List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
@@ -355,11 +347,11 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, 
         		inputSnaps);
 
-        andNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, isClosed, roles);
+        andNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, roles);
     }
 	
 	private void andNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-    		int tolerance, boolean isComplete, boolean isClosed, Set<String> roles) {
+    		int tolerance, boolean isComplete, Set<String> roles) {
 		NodeSpace productSpace = new NodeSpace(0);
 		
     	for (NodeSpace inputSpace : inputSpaces) {
@@ -384,29 +376,26 @@ public class DesignSpaceService {
     		}
     	}
     	
-    	if (productSpace.hasNodes()) {
+    	if (productSpace.getNumStartNodes() > 1) {
 			Union union = new Union(productSpace);
 
-			union.connect(isClosed);
+			union.apply();
 
 			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
-
-			outputSpace.minimize();
 		} else {
 			outputSpace.shallowCopyNodeSpace(productSpace);
 		}
     }
 	
-	public void diffDesignSpaces(List<String> inputSpaceIDs, int tolerance, boolean isClosed, 
-			boolean isRow, Set<String> roles) 
+	public void diffDesignSpaces(List<String> inputSpaceIDs, int tolerance, boolean isRow, 
+			Set<String> roles) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
-		diffDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isClosed, isRow,
-				roles);
+		diffDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isRow, roles);
     }
     
     public void diffDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, 
-    		int tolerance, boolean isClosed, boolean isRow, Set<String> roles)
+    		int tolerance, boolean isRow, Set<String> roles)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -415,27 +404,25 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-    	diffNodeSpaces(inputSpaces, outputSpace, tolerance, isClosed, isRow, roles);
+    	diffNodeSpaces(inputSpaces, outputSpace, tolerance, isRow, roles);
     	
     	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
     	
     	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
     			outputSpace, inputSnaps);
     	
-    	diffNodeSpaces(inputSnaps, outputSnap, tolerance, isClosed, isRow, roles);
+    	diffNodeSpaces(inputSnaps, outputSnap, tolerance, isRow, roles);
 
     	saveDesignSpace(outputSpace);
     }
     
     public void diffBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		int tolerance, boolean isClosed, boolean isRow, Set<String> roles) {
-    	diffBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, isClosed, 
-    			isRow, roles);
+    		int tolerance, boolean isRow, Set<String> roles) {
+    	diffBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, isRow, roles);
     }
 
     public void diffBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		String outputBranchID, int tolerance, boolean isClosed, boolean isRow, 
-    		Set<String> roles) {
+    		String outputBranchID, int tolerance, boolean isRow, Set<String> roles) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
         List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
@@ -448,11 +435,11 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, 
         		inputSnaps);
 
-        diffNodeSpaces(inputSnaps, outputSnap, tolerance, isClosed, isRow, roles);
+        diffNodeSpaces(inputSnaps, outputSnap, tolerance, isRow, roles);
     }
 	
 	private void diffNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-    		int tolerance, boolean isClosed, boolean isRow, Set<String> roles) {
+    		int tolerance, boolean isRow, Set<String> roles) {
 		NodeSpace productSpace = new NodeSpace(0);
 		
     	for (NodeSpace inputSpace : inputSpaces) {
@@ -481,29 +468,26 @@ public class DesignSpaceService {
     		}
     	}
     	
-    	if (productSpace.hasNodes()) {
+    	if (productSpace.getNumStartNodes() > 1) {
 			Union union = new Union(productSpace);
 
-			union.connect(isClosed);
+			union.apply();
 
 			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
-
-			outputSpace.minimize();
 		} else {
 			outputSpace.shallowCopyNodeSpace(productSpace);
 		}
     }
 	
 	public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, boolean isComplete,
-			boolean isClosed, Set<String> roles) 
+			Set<String> roles) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
-		mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isComplete, isClosed,
-				roles);
+		mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isComplete, roles);
     }
     
     public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, 
-    		int tolerance, boolean isComplete, boolean isClosed, Set<String> roles)
+    		int tolerance, boolean isComplete, Set<String> roles)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -512,27 +496,26 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-    	mergeNodeSpaces(inputSpaces, outputSpace, tolerance, isComplete, isClosed, roles);
+    	mergeNodeSpaces(inputSpaces, outputSpace, tolerance, isComplete, roles);
     	
     	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
     	
     	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
     			outputSpace, inputSnaps);
     	
-    	mergeNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, isClosed, roles);
+    	mergeNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, roles);
 
     	saveDesignSpace(outputSpace);
     }
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		int tolerance, boolean isComplete, boolean isClosed, Set<String> roles) {
-    	mergeBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, 
-        		isComplete, isClosed, roles);
+    		int tolerance, boolean isComplete, Set<String> roles) {
+    	mergeBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, isComplete, 
+    			roles);
     }
 
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		String outputBranchID, int tolerance, boolean isComplete, boolean isClosed, 
-    		Set<String> roles) {
+    		String outputBranchID, int tolerance, boolean isComplete, Set<String> roles) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
         List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
@@ -545,11 +528,11 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, 
         		inputSnaps);
 
-        mergeNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, isClosed, roles);
+        mergeNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, roles);
     }
 	
 	private void mergeNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
-    		int tolerance, boolean isComplete, boolean isClosed, Set<String> roles) {
+    		int tolerance, boolean isComplete, Set<String> roles) {
 		NodeSpace productSpace = new NodeSpace(0);
 		
     	for (NodeSpace inputSpace : inputSpaces) {
@@ -568,14 +551,12 @@ public class DesignSpaceService {
     		}
     	}
     	
-    	if (productSpace.hasNodes()) {
+    	if (productSpace.getNumStartNodes() > 1) {
 			Union union = new Union(productSpace);
 
-			union.connect(isClosed);
+			union.apply();
 
 			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
-
-			outputSpace.minimize();
 		} else {
 			outputSpace.shallowCopyNodeSpace(productSpace);
 		}
@@ -759,7 +740,7 @@ public class DesignSpaceService {
 
     			csvSpace.setSpaceID(outputSpacePrefix);
 
-    			mergeNodeSpaces(csvSpaces, csvSpace, 1, false, true, new HashSet<String>());
+    			mergeNodeSpaces(csvSpaces, csvSpace, 1, false, new HashSet<String>());
 
     			csvSpace.createHeadBranch(csvSpace.getSpaceID());
 
@@ -918,7 +899,7 @@ public class DesignSpaceService {
     	}
     	
     	if (compositeDefIDs.size() > 1) {
-    		orDesignSpaces(compositeDefIDs, outputSpaceID, true);
+    		orDesignSpaces(compositeDefIDs, outputSpaceID);
     	}
     }
     
