@@ -183,8 +183,6 @@ public class DesignSpaceService {
 		}
 		
 		outputSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
-		
-		outputSpace.minimize();
     }
     
     public void orDesignSpaces(List<String> inputSpaceIDs, boolean isClosed) 

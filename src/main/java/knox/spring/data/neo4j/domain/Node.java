@@ -68,6 +68,22 @@ public class Node {
     	return nodeTypes.remove(NodeType.START.getValue());
     }
     
+    public boolean deleteAcceptNodeType() {
+    	return nodeTypes.remove(NodeType.ACCEPT.getValue());
+    }
+    
+    public void addStartNodeType() {
+    	if (!isStartNode()) {
+    		nodeTypes.add(NodeType.START.getValue());
+    	}
+    }
+    
+    public void addAcceptNodeType() {
+    	if (!isAcceptNode()) {
+    		nodeTypes.add(NodeType.ACCEPT.getValue());
+    	}
+    }
+    
     public Node copy() {
     	return new Node(nodeID, new ArrayList<String>(nodeTypes));
     }

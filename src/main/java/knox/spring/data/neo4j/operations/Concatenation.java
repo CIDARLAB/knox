@@ -1,9 +1,9 @@
 package knox.spring.data.neo4j.operations;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import knox.spring.data.neo4j.domain.Node;
-import knox.spring.data.neo4j.domain.Node.NodeType;
 import knox.spring.data.neo4j.domain.NodeSpace;
 
 public class Concatenation {
@@ -20,21 +20,20 @@ public class Concatenation {
 		} else {
 			Set<Node> acceptNodes = concatenationSpace.getAcceptNodes();
 			
-			Set<Node> startNodes = concatenationSpace.getStartNodes();
+			Set<Node> originalStartNodes = concatenationSpace.getStartNodes();
 			
 			concatenationSpace.union(space);
 			
+			Set<Node> startNodes = new HashSet<Node>();
+			
 			for (Node startNode : concatenationSpace.getStartNodes()) {
-				if (!startNodes.contains(startNode)) {
-					for (Node acceptNode : acceptNodes) {
-						acceptNode.createEdge(startNode);
-						
-						acceptNode.deleteNodeType(NodeType.ACCEPT.getValue());
-					}
-					
-					startNode.deleteNodeType(NodeType.START.getValue());
+				if (!originalStartNodes.contains(startNode)) {
+					startNodes.add(startNode);
 				}
 			}
+			
+			concatenationSpace.concatenateNodes(acceptNodes, startNodes, 
+					concatenationSpace.mapNodeIDsToIncomingEdges());
 		}
 	}
 	

@@ -224,13 +224,20 @@ public class NodeSpace {
 		return createTypedNode(NodeType.START.getValue());
 	}
 	
+	public boolean deleteNode(Node deletedNode) {
+		if (hasNodes()) {
+			return nodes.remove(deletedNode);
+		} else {
+			return false;
+		} 
+	}
+	
 	public boolean deleteNodes(Collection<Node> deletedNodes) {
 		if (hasNodes()) {
 			return nodes.removeAll(deletedNodes);
 		} else {
 			return false;
 		}
-		
 	}
 	
 	public Set<Node> getAcceptNodes() {
@@ -882,4 +889,45 @@ public class NodeSpace {
     	
     	return idToNodeCopy;
     }
+    
+    public static boolean hasAcceptNode(Set<Node> nodes) {
+    	for (Node node : nodes) {
+    		if (node.isAcceptNode()) {
+    			return true;
+    		}
+    	}
+    	
+    	return false;
+    }
+    
+    public void concatenateNodes(Set<Node> tails, Set<Node> heads, 
+    		HashMap<String, Set<Edge>> idToIncomingEdges) {
+    	if (hasAcceptNode(heads)) {
+    		for (Node tail : tails) {
+    			tail.addAcceptNodeType();
+    		}
+    	} else {
+    		for (Node tail : tails) {
+    			tail.deleteAcceptNodeType();
+    		}
+    	}
+    	
+    	for (Node head : heads) {
+    		if (idToIncomingEdges.containsKey(head.getNodeID())) {
+				head.deleteStartNodeType();
+			} else {
+				deleteNode(head);
+			}
+    	}
+    	
+    	for (Node tail : tails) {
+    		for (Node head : heads) {
+    			if (head.hasEdges()) {
+    				for (Edge headEdge : head.getEdges()) {
+    					tail.copyEdge(headEdge);
+    				}
+    			}
+    		}
+    	}
+	}
 }
