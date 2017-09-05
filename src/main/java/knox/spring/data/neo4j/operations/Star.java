@@ -28,29 +28,15 @@ public class Star {
 		
 		Set<Node> acceptNodes = starSpace.getAcceptNodes();
 		
+		acceptNodes.removeAll(startNodes);
+		
 		for (Node acceptNode : acceptNodes) {
-			for (Node startNode : startNodes) {
-				acceptNode.createEdge(startNode);
-			}
+			acceptNode.unionEdges(startNodes);
 		}
 		
 		if (isOptional) {
-			Node primaryStartNode = starSpace.createStartNode();
-			
-			Node primaryAcceptNode = starSpace.createAcceptNode();
-			
-			primaryStartNode.createEdge(primaryAcceptNode);
-			
 			for (Node startNode : startNodes) {
-				primaryStartNode.createEdge(startNode);
-				
-				startNode.deleteNodeType(NodeType.START.getValue());
-			}
-			
-			for (Node acceptNode : acceptNodes) {
-				acceptNode.createEdge(primaryAcceptNode);
-				
-				acceptNode.deleteNodeType(NodeType.ACCEPT.getValue());
+				startNode.addAcceptNodeType();
 			}
 		}
 	}

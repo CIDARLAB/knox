@@ -875,13 +875,7 @@ public class NodeSpace {
     	}
     	
     	for (Node tail : tails) {
-    		for (Node head : heads) {
-    			if (head.hasEdges()) {
-    				for (Edge headEdge : head.getEdges()) {
-    					tail.copyEdge(headEdge);
-    				}
-    			}
-    		}
+    		tail.unionEdges(heads);
     	}
 	}
 }
