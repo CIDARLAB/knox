@@ -318,6 +318,18 @@ public class NodeSpace {
     	return nodes;
     }
     
+    public Set<String> getNodeIDs() {
+    	Set<String> nodeIDs = new HashSet<String>();
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			nodeIDs.add(node.getNodeID());
+    		}
+    	}
+    	
+    	return nodeIDs;
+    }
+    
     public int getNumNodes() {
     	if (hasNodes()) {
     		return nodes.size();

@@ -122,7 +122,7 @@ CREATE (d0c:DesignSpace {spaceID: "test3", nodeIndex: 4, commitIndex: 1})
 
 CREATE (n0c:Node {nodeID: "n0", nodeTypes: ["start"]})
 CREATE (n1c:Node {nodeID: "n1", nodeTypes: []})
-CREATE (n2c:Node {nodeID: "n2", nodeTypes: [})
+CREATE (n2c:Node {nodeID: "n2", nodeTypes: []})
 CREATE (n3c:Node {nodeID: "n3", nodeTypes: ["accept"]})
 
 CREATE (d0c)-[:CONTAINS]->(n0c)
