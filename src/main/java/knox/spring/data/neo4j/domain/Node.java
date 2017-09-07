@@ -112,6 +112,8 @@ public class Node {
 				Edge parallelEdge = parallelEdges.iterator().next();
 				
 				parallelEdge.unionWithEdge(edge);
+				
+				return parallelEdge;
 			}
 			
 			return createEdge(head, new ArrayList<String>(compIDs),
