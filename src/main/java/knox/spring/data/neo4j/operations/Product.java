@@ -101,7 +101,7 @@ public class Product {
     					iToDiffNodes, jToDiffNodes, roles));
     		}
     		
-    		globalDiffNodes.get(0).addAll(partition.projectRowNodes(iToDiffNodes, tolerance, roles));
+    		globalDiffNodes.get(0).addAll(partition.projectRowNodes(iToDiffNodes, roles));
     	}
     	
     	for (Partition partition : partitions) {
@@ -114,7 +114,7 @@ public class Product {
     					iToDiffNodes, jToDiffNodes, roles));
     		}
     		
-    		globalDiffNodes.get(1).addAll(partition.projectColNodes(iToDiffNodes, tolerance, roles));
+    		globalDiffNodes.get(1).addAll(partition.projectColNodes(iToDiffNodes, roles));
     	}
     	
     	return globalDiffNodes;
@@ -512,18 +512,16 @@ public class Product {
     		return productNodes;
     	}
     	
-    	public Set<Node> projectRowNodes(HashMap<Integer, Set<Node>> rowToDiffNodes, int tolerance, 
-    			Set<String> roles) {
-    		return projectNodes(rowNodes, rowToProductNodes, rowToDiffNodes, tolerance, roles);
+    	public Set<Node> projectRowNodes(HashMap<Integer, Set<Node>> rowToDiffNodes, Set<String> roles) {
+    		return projectNodes(rowNodes, rowToProductNodes, rowToDiffNodes, roles);
     	}
     	
-    	public Set<Node> projectColNodes(HashMap<Integer, Set<Node>> colToDiffNodes, int tolerance, 
-    			Set<String> roles) {
-    		return projectNodes(colNodes, colToProductNodes, colToDiffNodes, tolerance, roles);
+    	public Set<Node> projectColNodes(HashMap<Integer, Set<Node>> colToDiffNodes, Set<String> roles) {
+    		return projectNodes(colNodes, colToProductNodes, colToDiffNodes, roles);
     	}
 
     	private Set<Node> projectNodes(List<Node> iNodes, HashMap<Integer, Set<Node>> iToProductNodes,
-    			HashMap<Integer, Set<Node>> iToDiffNodes, int tolerance, Set<String> roles) {
+    			HashMap<Integer, Set<Node>> iToDiffNodes, Set<String> roles) {
     		Set<Node> localDiffNodes = new HashSet<Node>();
     		
     		for (int i = 0; i < iNodes.size(); i++) {
@@ -542,7 +540,7 @@ public class Product {
 
     				for (Node productNode : productNodes) {
     					for (Node productHead : productHeads) {
-    						if (!productNode.hasMatchingEdge(edge, tolerance, roles)) {
+    						if (!productNode.hasMatchingEdge(edge, 1, roles)) {
     							productNode.copyEdge(edge, productHead);
     							
     							localDiffNodes.add(productNode);
