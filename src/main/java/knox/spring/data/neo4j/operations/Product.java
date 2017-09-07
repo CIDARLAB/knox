@@ -97,8 +97,8 @@ public class Product {
     		HashMap<Integer, Set<Node>> jToDiffNodes = new HashMap<Integer, Set<Node>>();
     		
     		if (tolerance == 1) {
-    			globalDiffNodes.get(0).addAll(partition.prosectNodes(rowNodes, colNodes,
-    					iToDiffNodes, jToDiffNodes, roles));
+    			globalDiffNodes.get(0).addAll(partition.prosectRowNodes(iToDiffNodes, 
+    					jToDiffNodes, roles));
     		}
     		
     		globalDiffNodes.get(0).addAll(partition.projectRowNodes(iToDiffNodes, roles));
@@ -110,8 +110,8 @@ public class Product {
     		HashMap<Integer, Set<Node>> jToDiffNodes = new HashMap<Integer, Set<Node>>();
     		
     		if (tolerance == 1) {
-    			globalDiffNodes.get(1).addAll(partition.prosectNodes(colNodes, rowNodes,
-    					iToDiffNodes, jToDiffNodes, roles));
+    			globalDiffNodes.get(1).addAll(partition.prosectColNodes(iToDiffNodes, 
+    					jToDiffNodes, roles));
     		}
     		
     		globalDiffNodes.get(1).addAll(partition.projectColNodes(iToDiffNodes, roles));
@@ -301,12 +301,25 @@ public class Product {
     		
     		productSpace.deleteNode(diffNode);
     	}
-
+    	
     	public Node getProductNode(int i, int j) {
     		if (rowToProductNodes.containsKey(i) && colToProductNodes.containsKey(j)) {
     			Set<Node> productNodes = new HashSet<Node>(rowToProductNodes.get(i));
 
     			productNodes.retainAll(colToProductNodes.get(j));
+
+    			return productNodes.iterator().next();
+    		} else {
+    			return null;
+    		}
+    	}
+
+    	public Node getProductNode(int i, int j, HashMap<Integer, Set<Node>> iToProductNodes, 
+    			HashMap<Integer, Set<Node>> jToProductNodes) {
+    		if (iToProductNodes.containsKey(i) && jToProductNodes.containsKey(j)) {
+    			Set<Node> productNodes = new HashSet<Node>(iToProductNodes.get(i));
+
+    			productNodes.retainAll(jToProductNodes.get(j));
 
     			return productNodes.iterator().next();
     		} else {
@@ -371,7 +384,7 @@ public class Product {
     		}
     	}
     	
-    	public boolean hasDiffNode(int i, int j, HashMap<Integer, Set<Node>> iToDiffNodes,
+    	private boolean hasDiffNode(int i, int j, HashMap<Integer, Set<Node>> iToDiffNodes,
     			HashMap<Integer, Set<Node>> jToDiffNodes) {
     		if (iToDiffNodes.containsKey(i) && jToDiffNodes.containsKey(j)) {
     			Set<Node> diffNodes = new HashSet<Node>(iToDiffNodes.get(i));
@@ -384,8 +397,23 @@ public class Product {
     		}
     	}
     	
+    	public Set<Node> prosectRowNodes(HashMap<Integer, Set<Node>> iToDiffNodes, 
+    			HashMap<Integer, Set<Node>> jToDiffNodes, Set<String> roles) {
+    		return prosectNodes(rowNodes, colNodes, rowToProductNodes, colToProductNodes,
+    				iToDiffNodes, jToDiffNodes, roles);
+    	}
+    	
+    	public Set<Node> prosectColNodes(HashMap<Integer, Set<Node>> iToDiffNodes, 
+    			HashMap<Integer, Set<Node>> jToDiffNodes, Set<String> roles) {
+    		return prosectNodes(colNodes, rowNodes, colToProductNodes, rowToProductNodes,
+    				iToDiffNodes, jToDiffNodes, roles);
+    	}
+    	
     	private Set<Node> prosectNodes(List<Node> iNodes, List<Node> jNodes,
-    			HashMap<Integer, Set<Node>> iToDiffNodes, HashMap<Integer, Set<Node>> jToDiffNodes, 
+    			HashMap<Integer, Set<Node>> iToProductNodes, 
+    			HashMap<Integer, Set<Node>> jToProductNodes,
+    			HashMap<Integer, Set<Node>> iToDiffNodes, 
+    			HashMap<Integer, Set<Node>> jToDiffNodes, 
     			Set<String> roles) {
     		Set<Node> localDiffNodes = new HashSet<Node>();
     		
@@ -396,14 +424,16 @@ public class Product {
     						for (Edge jEdge : jNodes.get(j).getEdges()) {
     							if (iEdge.isMatching(jEdge, 1, roles)
     									&& !iEdge.isMatching(jEdge, 0, roles)) {
-    								int r = locateNode(iEdge.getHead(), i, iNodes);
+    								int ii = locateNode(iEdge.getHead(), i, iNodes);
 
-    								int c = locateNode(jEdge.getHead(), j, jNodes);
+    								int jj = locateNode(jEdge.getHead(), j, jNodes);
 
-    								Node productNode = getProductNode(i, j);
+    								Node productNode = getProductNode(i, j, iToProductNodes,
+    										jToProductNodes);
     								
-    								Node productHead = getProductNode(r, c);
-
+    								Node productHead = getProductNode(ii, jj, iToProductNodes,
+    										jToProductNodes);
+    								
     								Edge productEdge = productNode.getLabeledEdges(productHead,
     										iEdge.getOrientation()).iterator().next();
     							
@@ -412,7 +442,7 @@ public class Product {
     									Node diffNode = projectNode(i, j, iNodes.get(i),
     											iToDiffNodes, jToDiffNodes);
 
-    									Node diffHead = projectNode(r, c, iNodes.get(r),
+    									Node diffHead = projectNode(ii, jj, iNodes.get(ii),
     											iToDiffNodes, jToDiffNodes);
 
     									Edge diffEdge = diffNode.copyEdge(iEdge, diffHead);
@@ -438,7 +468,8 @@ public class Product {
     					Node diffNode = getDiffNode(i, j, iToDiffNodes, jToDiffNodes);
 
     					if (!diffNode.hasEdges()) {
-    						Node productNode = getProductNode(i, j);
+    						Node productNode = getProductNode(i, j, iToProductNodes,
+    								jToProductNodes);
 
     						for (Edge diffEdge : idToIncomingEdges.get(diffNode.getNodeID())) {
     							diffEdge.getTail().copyEdge(diffEdge, productNode);
@@ -452,7 +483,8 @@ public class Product {
 
     						localDiffNodes.add(productNode);
     					} else if (!idToIncomingEdges.containsKey(diffNode.getNodeID())) {
-    						Node productNode = getProductNode(i, j);
+    						Node productNode = getProductNode(i, j, iToProductNodes,
+    								jToProductNodes);
 
     						for (Edge diffEdge : diffNode.getEdges()) {
     							productNode.copyEdge(diffEdge);
