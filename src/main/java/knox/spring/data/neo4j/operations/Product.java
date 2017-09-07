@@ -80,14 +80,14 @@ public class Product {
     	return overlapPartitions;
     }
     
-    public List<Set<Node>> modifiedStrong(int tolerance, int degree, Set<String> roles) {
+    public List<Set<Node>> modifiedStrong(List<Partition> partitions, int tolerance, Set<String> roles) {
     	List<Set<Node>> globalDiffNodes = new ArrayList<Set<Node>>(2);
     	
     	globalDiffNodes.add(new HashSet<Node>());
     	
     	globalDiffNodes.add(new HashSet<Node>());
     	
-    	List<Partition> partitions = tensor(tolerance, degree, roles);
+//    	List<Partition> partitions = tensor(tolerance, degree, roles);
     	
     	partitions = unionNonOverlapPartitions(partitions);
     	
@@ -252,7 +252,7 @@ public class Product {
     	return -1;
     }
     
-    private class Partition {
+    public class Partition {
     	private HashMap<Integer, Set<Node>> rowToProductNodes;
 
     	private HashMap<Integer, Set<Node>> colToProductNodes;

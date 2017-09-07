@@ -19,6 +19,7 @@ import knox.spring.data.neo4j.exception.NodeNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
 import knox.spring.data.neo4j.operations.Concatenation;
 import knox.spring.data.neo4j.operations.Product;
+import knox.spring.data.neo4j.operations.Product.Partition;
 import knox.spring.data.neo4j.operations.Star;
 import knox.spring.data.neo4j.operations.Union;
 import knox.spring.data.neo4j.repositories.BranchRepository;
@@ -448,7 +449,11 @@ public class DesignSpaceService {
     		} else {
     			Product product = new Product(inputSpace, productSpace);
     			
-    			List<Set<Node>> diffNodes = product.modifiedStrong(tolerance, 1, roles);
+    			List<Partition> partitions = product.tensor(tolerance, 1, roles);
+    			
+    			product.getProductSpace().deleteUnacceptableNodes();
+    			
+    			List<Set<Node>> diffNodes = product.modifiedStrong(partitions, tolerance, roles);
     			
     			if (isRow) {
     				diffNodes.get(1).removeAll(diffNodes.get(0));
@@ -541,11 +546,13 @@ public class DesignSpaceService {
     		} else {
     			Product product = new Product(inputSpace, productSpace);
     			
+    			List<Partition> partitions = product.tensor(tolerance, 1, roles);
+    			
     			if (isComplete) {
-    				product.modifiedStrong(tolerance, 2, roles);
-    			} else {
-    				product.modifiedStrong(tolerance, 1, roles);
-    			}
+    				product.getProductSpace().deleteUnacceptableNodes();
+    			} 
+    			
+    			product.modifiedStrong(partitions, tolerance, roles);
     			
     			productSpace.shallowCopyNodeSpace(product.getProductSpace());
     		}
