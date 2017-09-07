@@ -455,13 +455,13 @@ public class DesignSpaceService {
     				
     				product.getProductSpace().detachDeleteNodes(diffNodes.get(1));
     				
-    				product.getProductSpace().deleteUnconnectedNodes(diffNodes.get(0));
+    				product.getProductSpace().deleteOrthogonalPaths(diffNodes.get(0));
     			} else {
     				diffNodes.get(0).removeAll(diffNodes.get(1));
     				
     				product.getProductSpace().detachDeleteNodes(diffNodes.get(0));
     				
-    				product.getProductSpace().deleteUnconnectedNodes(diffNodes.get(1));
+    				product.getProductSpace().deleteOrthogonalPaths(diffNodes.get(1));
     			}
     			
     			productSpace.shallowCopyNodeSpace(product.getProductSpace());

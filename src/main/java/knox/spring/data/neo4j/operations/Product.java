@@ -101,12 +101,7 @@ public class Product {
     					iToDiffNodes, jToDiffNodes, roles));
     		}
     		
-    		LOG.info("prosect {}", productSpace.getNodeIDs().toString());
-    		
-    		globalDiffNodes.get(0).addAll(partition.projectNodes(rowNodes, iToDiffNodes, jToDiffNodes,
-    				tolerance, roles));
-    		
-    		LOG.info("project {}", productSpace.getNodeIDs().toString());
+    		globalDiffNodes.get(0).addAll(partition.projectRowNodes(iToDiffNodes, tolerance, roles));
     	}
     	
     	for (Partition partition : partitions) {
@@ -119,8 +114,7 @@ public class Product {
     					iToDiffNodes, jToDiffNodes, roles));
     		}
     		
-    		globalDiffNodes.get(1).addAll(partition.projectNodes(colNodes, iToDiffNodes, jToDiffNodes,
-    				tolerance, roles));
+    		globalDiffNodes.get(1).addAll(partition.projectColNodes(iToDiffNodes, tolerance, roles));
     	}
     	
     	return globalDiffNodes;
@@ -393,7 +387,7 @@ public class Product {
     	private Set<Node> prosectNodes(List<Node> iNodes, List<Node> jNodes,
     			HashMap<Integer, Set<Node>> iToDiffNodes, HashMap<Integer, Set<Node>> jToDiffNodes, 
     			Set<String> roles) {
-    		Set<Node> diffNodes = new HashSet<Node>();
+    		Set<Node> localDiffNodes = new HashSet<Node>();
     		
     		for (int i = 0; i < iNodes.size(); i++) {
     			for (int j = 0; j < jNodes.size(); j++) {
@@ -425,9 +419,9 @@ public class Product {
 
     									diffEdge.diffWithEdge(productEdge);
 
-    									diffNodes.add(diffNode);
+    									localDiffNodes.add(diffNode);
 
-    									diffNodes.add(diffHead);
+    									localDiffNodes.add(diffHead);
     								}
     							}
     						}
@@ -454,9 +448,9 @@ public class Product {
 
     						deleteDiffNode(i, j, diffNode, iToDiffNodes, jToDiffNodes);
 
-    						diffNodes.remove(diffNode);
+    						localDiffNodes.remove(diffNode);
 
-    						diffNodes.add(productNode);
+    						localDiffNodes.add(productNode);
     					} else if (!idToIncomingEdges.containsKey(diffNode.getNodeID())) {
     						Node productNode = getProductNode(i, j);
 
@@ -466,15 +460,15 @@ public class Product {
 
     						deleteDiffNode(i, j, diffNode, iToDiffNodes, jToDiffNodes);
 
-    						diffNodes.remove(diffNode);
+    						localDiffNodes.remove(diffNode);
 
-    						diffNodes.add(productNode);
+    						localDiffNodes.add(productNode);
     					}
     				}
     			}
     		}
     		
-    		return diffNodes;
+    		return localDiffNodes;
     	}
    
     	private Node projectNode(int i, int j, Node node, HashMap<Integer, Set<Node>> iToDiffNodes,
@@ -517,8 +511,18 @@ public class Product {
 
     		return productNodes;
     	}
+    	
+    	public Set<Node> projectRowNodes(HashMap<Integer, Set<Node>> rowToDiffNodes, int tolerance, 
+    			Set<String> roles) {
+    		return projectNodes(rowNodes, rowToProductNodes, rowToDiffNodes, tolerance, roles);
+    	}
+    	
+    	public Set<Node> projectColNodes(HashMap<Integer, Set<Node>> colToDiffNodes, int tolerance, 
+    			Set<String> roles) {
+    		return projectNodes(colNodes, colToProductNodes, colToDiffNodes, tolerance, roles);
+    	}
 
-    	public Set<Node> projectNodes(List<Node> iNodes, HashMap<Integer, Set<Node>> iToProductNodes,
+    	private Set<Node> projectNodes(List<Node> iNodes, HashMap<Integer, Set<Node>> iToProductNodes,
     			HashMap<Integer, Set<Node>> iToDiffNodes, int tolerance, Set<String> roles) {
     		Set<Node> localDiffNodes = new HashSet<Node>();
     		
@@ -537,11 +541,11 @@ public class Product {
     						iToDiffNodes, diffHeads);
 
     				for (Node productNode : productNodes) {
-    					localDiffNodes.add(productNode);
-    					
     					for (Node productHead : productHeads) {
     						if (!productNode.hasMatchingEdge(edge, tolerance, roles)) {
     							productNode.copyEdge(edge, productHead);
+    							
+    							localDiffNodes.add(productNode);
     							
     							localDiffNodes.add(productHead);
     						}
@@ -551,6 +555,8 @@ public class Product {
     						for (Node diffHead : diffHeads) {
     							productNode.copyEdge(edge, diffHead);
     							
+    							localDiffNodes.add(productNode);
+    							
     							localDiffNodes.add(diffHead);
     						}
     					}
@@ -558,18 +564,20 @@ public class Product {
     				
     				if (productNodes.isEmpty()) {
     					for (Node diffNode : diffNodes) {
-    						localDiffNodes.add(diffNode);
-
     						if (productHeads.isEmpty()) {
     							for (Node diffHead : diffHeads) {
     								diffNode.copyEdge(edge, diffHead);
-
+    								
     								localDiffNodes.add(diffNode);
+
+    								localDiffNodes.add(diffHead);
     							}
     						}
 
     						for (Node productHead : productHeads) {
     							diffNode.copyEdge(edge, productHead);
+    							
+    							localDiffNodes.add(diffNode);
     							
     							localDiffNodes.add(productHead);
     						}

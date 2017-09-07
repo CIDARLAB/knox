@@ -739,19 +739,39 @@ public class NodeSpace {
     	retainNodes(depthFirstTraversal());
     }
     
-    public void deleteUnconnectedNodes(Collection<Node> nodes) {
-    	Set<Node> connectedNodes = new HashSet<Node>();
+    public void deleteOrthogonalPaths(Collection<Node> nodes) {
+    	Set<Node> pathTails = new HashSet<Node>();
+    	
+    	Set<Node> pathHeads = new HashSet<Node>();
+    	
+    	for (Node node : nodes) {
+    		if (node.hasEdges()) {
+    			for (Edge edge : node.getEdges()) {
+    				if (nodes.contains(edge.getHead())) {
+    					pathTails.add(node);
+    					
+    					pathHeads.add(edge.getHead());
+    				}
+    			}
+    		}
+    	}
+    	
+    	Set<Node> pathNodes = new HashSet<Node>(nodes);
     	
     	HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
     	
     	for (Node node : nodes) {
-    		connectedNodes.addAll(depthFirstTraversal(node, connectedNodes));
+    		if (pathTails.contains(node) && !pathHeads.contains(node)) {
+    			pathNodes.addAll(reverseDepthFirstTraversal(node, pathNodes,
+        				idToIncomingEdges));
+    		}
     		
-    		connectedNodes.addAll(reverseDepthFirstTraversal(node, connectedNodes,
-    				idToIncomingEdges));
+    		if (!pathTails.contains(node) && pathHeads.contains(node)) {
+    			pathNodes.addAll(depthFirstTraversal(node, pathNodes));
+    		}
     	}
     	
-    	retainNodes(connectedNodes);
+    	retainNodes(pathNodes);
     }
     
     public boolean detachDeleteNodes(Collection<Node> nodes) {
