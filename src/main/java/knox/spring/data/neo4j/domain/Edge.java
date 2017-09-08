@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.domain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -134,7 +135,17 @@ public class Edge {
     	return componentIDs.remove(compID);
     }
     
-    public boolean deleteComponentIDs(Set<String> compIDs) {
+    public boolean detachDeleteComponentID(String compID) {
+    	boolean isDeleted = componentIDs.remove(compID);
+    	
+    	if (componentIDs.isEmpty()) {
+    		delete();
+    	}
+    	
+    	return isDeleted;
+    }
+    
+    public boolean deleteComponentIDs(Collection<String> compIDs) {
     	return componentIDs.removeAll(compIDs);
     }
     
@@ -173,6 +184,16 @@ public class Edge {
     public boolean hasComponentID(String compID) {
     	return componentIDs.contains(compID);
     }
+    
+    public boolean hasComponentID(Collection<String> compIDs) {
+    	for (String compID : compIDs) {
+    		if (hasComponentID(compID)) {
+    			return true;
+    		}
+    	}
+    	
+    	return false;
+    }
 
     public boolean hasComponentIDs() {
     	return componentIDs != null && !componentIDs.isEmpty();
@@ -208,29 +229,17 @@ public class Edge {
     	componentRoles.retainAll(edge.getComponentRoles());
     }
     
-    public boolean isLabeled() {
-    	return hasComponentIDs() || hasComponentRoles();
+    public boolean isRoleCompatible(Edge edge, Set<String> roles) {
+    	return roles.isEmpty() || hasRole(roles) && edge.hasRole(roles);
     }
     
-    public boolean hasMatchingComponents(Edge edge, int tolerance, Set<String> roles) {
+    public boolean isMatching(Edge edge, int tolerance, Set<String> roles) {
     	return hasSameOrientation(edge) 
     			&& (tolerance == 0 && hasSameComponentIDs(edge) && hasSameRoles(edge, roles)
     					|| (tolerance == 1 || tolerance == 2) && hasSharedComponentIDs(edge) 
     							&& hasSharedRoles(edge, roles)
     					|| tolerance == 3 && hasSameRoles(edge, roles)
     					|| tolerance == 4 && hasSharedRoles(edge, roles));
-    }
-    
-    public boolean isRoleCompatible(Edge edge, Set<String> roles) {
-    	return roles.isEmpty() || hasRole(roles) && edge.hasRole(roles);
-    }
-    
-    public boolean isMatching(Edge edge, int tolerance, Set<String> roles) {
-    	if (!isLabeled() && !edge.isLabeled() || hasMatchingComponents(edge, tolerance, roles)) {
-			return true;
-		} else {
-			return false;
-		}
     }
     
     public boolean hasSameOrientation(Edge edge) {

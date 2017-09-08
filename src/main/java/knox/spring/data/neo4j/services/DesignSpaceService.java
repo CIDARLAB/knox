@@ -8,7 +8,6 @@ import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.eugene.Before;
-import knox.spring.data.neo4j.eugene.EndsWith;
 import knox.spring.data.neo4j.eugene.Equals;
 import knox.spring.data.neo4j.eugene.NextTo;
 import knox.spring.data.neo4j.eugene.Rule;
@@ -107,18 +106,12 @@ public class DesignSpaceService {
     			nextTo.apply();
     			
     			ruleSpaces.add(nextTo.getNodeSpace());
-    		} else if (rule.isStartsWith() || rule.isEquals()) {
+    		} else if (rule.isEndsWith() || rule.isStartsWith() || rule.isEquals()) {
     			Equals eq = new Equals(targetSpace.copy(), rule);
     			
     			eq.apply();
     			
     			ruleSpaces.add(eq.getNodeSpace());
-    		} else if (rule.isEndsWith()) {
-    			EndsWith endsWith = new EndsWith(targetSpace.copy(), rule);
-    			
-    			endsWith.apply();
-    			
-    			ruleSpaces.add(endsWith.getNodeSpace());
     		}
     	}
     	

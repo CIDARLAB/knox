@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.eugene;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +29,9 @@ public class Equals {
 	}
 	
 	public void apply() {
-		if (rule.isStartsWith()) {
+		if (rule.isEndsWith()) {
+			apply(rule.getOperands().get(0));
+		} else if (rule.isStartsWith()) {
 			apply(0, rule.getOperands().get(0));
 		} else if (rule.isEquals()) {
 			String subjectIndex = rule.getOperands().get(0);
@@ -45,36 +48,96 @@ public class Equals {
 		}
 	}
 	
-	private void copyPath(List<Edge> path, String objectID, int copyIndex, List<Node> nodeCopies) {
-		if (nodeCopies.isEmpty()) {
-			nodeCopies.add(space.copyNode(path.get(0).getTail()));
-		}
+	private void apply(String objectID) {
+		Set<Node> originalStartNodes = space.getStartNodes();
 		
-		for (int i = copyIndex; i < path.size(); i ++) {
-			Node headCopy = space.copyNode(path.get(i).getHead());
+		for (Node startNode : originalStartNodes) {
+			List<Edge> path = new LinkedList<Edge>();
 			
-			if (i + 1 < nodeCopies.size()) {
-				nodeCopies.remove(i + 1);
+			Set<Edge> backEdges = new HashSet<Edge>();
+			
+			Stack<List<Edge>> pathStack = new Stack<List<Edge>>();
+			
+			Stack<Set<Edge>> backStack = new Stack<Set<Edge>>();
+			
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
+				pathStack.push(path);
+				
+				backStack.push(backEdges);
 			}
 			
-			nodeCopies.add(i + 1, headCopy);
+			int copyIndex = 0;
 			
-			if (i == path.size() - 1) {
-				ArrayList<String> compIDs = new ArrayList<String>();
+			List<Node> nodeCopies = new LinkedList<Node>();
+			
+			Stack<Edge> edgeStack = new Stack<Edge>();
+			
+			if (startNode.hasEdges()) {
+				for (Edge edge : startNode.getEdges()) {
+					edgeStack.push(edge);
+				}
+			}
+
+			while (!edgeStack.isEmpty()) {
+				Edge edge = edgeStack.pop();
 				
-				compIDs.add(objectID);
+				path = new LinkedList<Edge>(path);
 				
-				nodeCopies.get(i).copyEdge(path.get(i), headCopy, compIDs);
+				path.add(edge);
 				
-				if (path.get(i).getHead().hasEdges()) {
-					for (Edge edge : path.get(i).getHead().getEdges()) {
-						headCopy.copyEdge(edge);
+				backEdges = new HashSet<Edge>(backEdges);
+				
+				backEdges.add(edge);
+				
+				if (edge.hasComponentID(objectID) && edge.getHead().isAcceptNode()) {
+					copyPath(path, objectID, copyIndex, nodeCopies);
+				} 
+				
+				if (edge.getHead().hasEdges()) {
+					int numEdges = 0;
+
+					for (Edge headEdge : edge.getHead().getEdges()) {
+						if (!backEdges.contains(headEdge)) {
+							edgeStack.push(headEdge);
+							
+							numEdges++;
+						}
+					}
+					
+					for (int i = 0; i < numEdges - 1; i++) {
+						pathStack.push(path);
+						
+						backStack.push(backEdges);
+					}
+				} else if (!pathStack.isEmpty()) {
+					path = pathStack.pop();
+					
+					backEdges = backStack.pop();
+
+					if (path.size() < copyIndex) {
+						copyIndex = path.size();
 					}
 				}
-			} else {
-				nodeCopies.get(i).copyEdge(path.get(i), headCopy);
 			}
 		}
+		
+		for (Node originalStartNode : originalStartNodes) {
+			originalStartNode.deleteStartNodeType();
+		}
+		
+		if (space.hasNodes()) {
+			for (Node node : space.getNodes()) {
+				if (node.hasEdges()) {
+					for (Edge edge : node.getEdges()) {
+						if (edge.getHead().isAcceptNode() && !edge.hasComponentID(objectID)) {
+							edge.getHead().deleteAcceptNodeType();
+						}
+					}
+				}
+			}
+		}
+		
+		space.deleteUnacceptableNodes();
 	}
 	
 	private void apply(int subjectIndex, String objectID) {
@@ -116,9 +179,6 @@ public class Equals {
 					for (Edge headEdge : edge.getHead().getEdges()) {
 						edgeStack.push(headEdge);
 					}
-					
-//					LOG.info("add {}", edge.getComponentIDs().toString() + " length " + path.size()
-//							+ " forks " + pathStack.size());
 				} else if (edge.hasComponentID(objectID) && path.size() == subjectIndex + 1) {
 					copyPath(path, objectID, copyIndex, nodeCopies);
 
@@ -127,18 +187,12 @@ public class Equals {
 
 						copyIndex = path.size();
 					} 
-					
-//					LOG.info("copy on {}", edge.getComponentIDs().toString() + " forks "
-//							+ pathStack.size() + " copy " + copyIndex);
 				} else if (!pathStack.isEmpty()) {
 					path = pathStack.pop();
 
 					if (path.size() < copyIndex) {
 						copyIndex = path.size();
 					}
-					
-//					LOG.info("backtrack on {}", edge.getComponentIDs().toString() + " forks "
-//							+ pathStack.size() + " copy " + copyIndex);
 				}
 			}
 		}
@@ -152,6 +206,34 @@ public class Equals {
 	
 	private void apply(int subjectIndex, int objectIndex) {
 		
+	}
+	
+	private void copyPath(List<Edge> path, String objectID, int copyIndex, List<Node> nodeCopies) {
+		if (nodeCopies.isEmpty()) {
+			nodeCopies.add(space.copyNode(path.get(0).getTail()));
+		}
+		
+		for (int i = copyIndex; i < path.size(); i ++) {
+			if (i == path.size() - 1) {
+				ArrayList<String> compIDs = new ArrayList<String>();
+				
+				compIDs.add(objectID);
+				
+				Edge edgeCopy = nodeCopies.get(i).copyEdge(path.get(i));
+				
+				edgeCopy.setComponentIDs(compIDs);
+			} else {
+				Node headCopy = space.copyNode(path.get(i).getHead());
+				
+				if (i + 1 < nodeCopies.size()) {
+					nodeCopies.remove(i + 1);
+				}
+				
+				nodeCopies.add(i + 1, headCopy);
+				
+				nodeCopies.get(i).copyEdge(path.get(i), headCopy);
+			}
+		}
 	}
 	
 	public NodeSpace getNodeSpace() {

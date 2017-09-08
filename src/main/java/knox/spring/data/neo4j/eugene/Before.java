@@ -60,7 +60,10 @@ public class Before {
 
 					compIDs.add(objectID);
 
-					node.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()), compIDs);
+					Edge edgeCopy = node.copyEdge(edge, 
+							idToNodeCopy.get(edge.getHead().getNodeID()));
+					
+					edgeCopy.setComponentIDs(compIDs);
 				}
 			}
 		}

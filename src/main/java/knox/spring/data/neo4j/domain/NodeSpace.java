@@ -76,14 +76,6 @@ public class NodeSpace {
 		return spaceCopy;
 	}
 	
-	public NodeSpace copy(Set<String> deletedCompIDs) {
-		NodeSpace spaceCopy = new NodeSpace(0);
-		
-		spaceCopy.copyNodeSpace(this, deletedCompIDs);
-		
-		return spaceCopy;
-	}
-	
 	public void shallowCopyNodeSpace(NodeSpace space) {
 		if (space.hasNodes()) {
 			nodeIndex = space.getNodeIndex();
@@ -116,14 +108,6 @@ public class NodeSpace {
 		}
 		
 		nodeIndex = space.getNodeIndex();
-	}
-	
-	public void copyNodeSpace(NodeSpace space, Set<String> deletedCompIDs) {
-		copyNodeSpace(space);
-		
-		for (Edge edge : getEdges()) {
-			edge.deleteComponentIDs(deletedCompIDs);
-		}
 	}
 	
 	public Node copyNodeWithEdges(Node node) {

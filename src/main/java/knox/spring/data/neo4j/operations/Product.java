@@ -449,7 +449,7 @@ public class Product {
     									Node productHead = getProductNode(ii, jj, iToProductNodes,
     											jToProductNodes);
 
-    									Edge productEdge = productNode.getLabeledEdges(productHead,
+    									Edge productEdge = productNode.getEdges(productHead,
     											iEdge.getOrientation()).iterator().next();
 
     									if (iEdge.isMatching(productEdge, 1, roles) 

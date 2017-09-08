@@ -64,15 +64,28 @@ public class NextTo {
 		
 		for (Node node : originalNodes) {
 			for (Edge edge : getEdgesWithComponentID(node, subjectID, idToNodeCopy1)) {
-				edge.deleteComponentID(subjectID);
+				edge.detachDeleteComponentID(subjectID);
 			}
 			
 			for (Edge edge : getEdgesWithComponentID(node, objectID, idToNodeCopy2)) {
-				edge.deleteComponentID(objectID);
+				edge.detachDeleteComponentID(objectID);
 			}
 		}
 		
 		space.deleteUnconnectedNodes();
+	}
+	
+	private Set<Edge> getEdgesWithoutComponentID(Node node, String compID, 
+			HashMap<String, Node> idToNodeCopy) {
+		Set<Edge> edgesWithoutCompID = new HashSet<Edge>();
+		
+		for (Edge edge : node.getEdgesWithoutComponentID(compID)) {
+			if (idToNodeCopy.containsKey(edge.getHead().getNodeID())) {
+				edgesWithoutCompID.add(edge);
+			}
+		}
+		
+		return edgesWithoutCompID;
 	}
 	
 	private Set<Edge> getEdgesWithComponentID(Node node, String compID, 
@@ -102,8 +115,10 @@ public class NextTo {
 
 					subjectCompIDs.add(subjectID);
 
-					idToNodeCopy.get(node.getNodeID()).copyEdge(subjectEdge, subjectHeadCopy, 
-							subjectCompIDs);
+					Edge subjectEdgeCopy = idToNodeCopy.get(node.getNodeID()).copyEdge(subjectEdge, 
+							subjectHeadCopy);
+					
+					subjectEdgeCopy.setComponentIDs(subjectCompIDs);
 
 					for (Edge objectEdge : objectEdges) {
 						Node objectHeadCopy = space.copyNode(objectEdge.getHead());
@@ -112,10 +127,16 @@ public class NextTo {
 
 						objectCompIDs.add(objectID);
 
-						subjectHeadCopy.copyEdge(objectEdge, objectHeadCopy, objectCompIDs);
+						Edge objectEdgeCopy = subjectHeadCopy.copyEdge(objectEdge, objectHeadCopy);
+						
+						objectEdgeCopy.setComponentIDs(objectCompIDs);
 
 						extendNextTo(objectHeadCopy, getEdgesWithComponentID(objectEdge.getHead(), 
 								subjectID, idToNodeCopy), subjectID, objectID, idToNodeCopy);
+						
+						for (Edge edge : getEdgesWithoutComponentID(objectEdge.getHead(), subjectID, idToNodeCopy)) {
+							objectHeadCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+						}
 					}
 				}
 			}
@@ -123,23 +144,29 @@ public class NextTo {
 	}
 	
 	private void connectConstrainedSpace(Set<Node> nodes, String subjectID, String objectID, 
-			HashMap<String, Node> idToNodeCopy, HashMap<String, Node> idToNodeCopy2) {
+			HashMap<String, Node> idToNodeCopy1, HashMap<String, Node> idToNodeCopy2) {
 		for (Node node : nodes) {
-			for (Edge subjectEdge : getEdgesWithComponentID(node, subjectID, idToNodeCopy)) {
+			for (Edge subjectEdge : getEdgesWithComponentID(node, subjectID, idToNodeCopy1)) {
 				Node subjectHeadCopy = space.copyNode(subjectEdge.getHead());
 				
 				ArrayList<String> subjectCompIDs = new ArrayList<String>();
 				
 				subjectCompIDs.add(subjectID);
 				
-				node.copyEdge(subjectEdge, subjectHeadCopy, subjectCompIDs);
+				Edge subjectEdgeCopy = node.copyEdge(subjectEdge, subjectHeadCopy);
+				
+				subjectEdgeCopy.setComponentIDs(subjectCompIDs);
 				
 				for (Edge objectEdge : getEdgesWithComponentID(subjectEdge.getHead(), objectID, 
-						idToNodeCopy)) {
-					Edge objectEdgeCopy = subjectHeadCopy.copyEdge(objectEdge, 
-							idToNodeCopy.get(objectEdge.getHead().getNodeID()));
+						idToNodeCopy1)) {
+					LOG.info("++++++++++++++ {}", subjectID + ", " + objectID);
+					
+					if (objectEdge.getNumComponentIDs() > 1) {
+						Edge objectEdgeCopy = subjectHeadCopy.copyEdge(objectEdge, 
+								idToNodeCopy1.get(objectEdge.getHead().getNodeID()));
 
-					objectEdgeCopy.deleteComponentID(objectID);
+						objectEdgeCopy.deleteComponentID(objectID);
+					}
 
 					Node objectHeadCopy = space.copyNode(objectEdge.getHead());
 
@@ -147,10 +174,21 @@ public class NextTo {
 
 					objectCompIDs.add(objectID);
 
-					subjectHeadCopy.copyEdge(objectEdge, objectHeadCopy, objectCompIDs);
+					Edge objectEdgeCopy = subjectHeadCopy.copyEdge(objectEdge, objectHeadCopy);
+					
+					objectEdgeCopy.setComponentIDs(objectCompIDs);
+					
+					if (getEdgesWithComponentID(objectEdge.getHead(), 
+							subjectID, idToNodeCopy1).size() > 0) {
+						LOG.info("+ {}", subjectID);
+					}
 
 					extendNextTo(objectHeadCopy, getEdgesWithComponentID(objectEdge.getHead(), 
-							subjectID, idToNodeCopy), subjectID, objectID, idToNodeCopy2);
+							subjectID, idToNodeCopy1), subjectID, objectID, idToNodeCopy2);
+					
+					for (Edge edge : getEdgesWithoutComponentID(objectEdge.getHead(), subjectID, idToNodeCopy1)) {
+						objectHeadCopy.copyEdge(edge, idToNodeCopy2.get(edge.getHead().getNodeID()));
+					}
 				}
 			}
 		}
@@ -187,24 +225,32 @@ public class NextTo {
 				compIDs.add(objectID);
 			}
 			
-			nodeCopy.copyEdge(edge, headCopy, compIDs);
-			
-			Edge edgeCopy = nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
-			
-			if (isSubjectEdge) {
-				edgeCopy.deleteComponentID(subjectID);
-			} else {
-				edgeCopy.deleteComponentID(objectID);
+			if (edge.getNumComponentIDs() > 1) {
+				Edge edgeCopy = nodeCopy.copyEdge(edge, idToNodeCopy.get(edge.getHead().getNodeID()));
+				
+				edgeCopy.deleteComponentIDs(compIDs);
 			}
+			
+			Edge edgeCopy = nodeCopy.copyEdge(edge, headCopy);
+			
+			edgeCopy.setComponentIDs(compIDs);
 			
 			Set<Edge> headEdges;
 			
 			if (isSubjectEdge) {
 				headEdges = getEdgesWithComponentID(edge.getHead(), objectID, idToNodeCopy);
 				
+				for (Edge exitEdge : getEdgesWithoutComponentID(edge.getHead(), objectID, idToNodeCopy)) {
+					headCopy.copyEdge(exitEdge, idToNodeCopy.get(exitEdge.getHead().getNodeID()));
+				}
+				
 				isSubjectEdge = false;
 			} else {
 				headEdges = getEdgesWithComponentID(edge.getHead(), subjectID, idToNodeCopy);
+				
+				for (Edge exitEdge : getEdgesWithoutComponentID(edge.getHead(), subjectID, idToNodeCopy)) {
+					headCopy.copyEdge(exitEdge, idToNodeCopy.get(exitEdge.getHead().getNodeID()));
+				}
 				
 				isSubjectEdge = true;
 			}
@@ -222,7 +268,13 @@ public class NextTo {
 		
 		constraintIDs.add(constraintID);
 		
-		NodeSpace constrainedSpace = space.copy(constraintIDs);
+		NodeSpace constrainedSpace = space.copy();
+		
+		if (constrainedSpace.hasNodes()) {
+			for (Node node : constrainedSpace.getNodes()) {
+				node.deleteComponentID(constraintID);
+			}
+		}
 
 		constrainedSpace.clearStartNodeTypes();
 		
@@ -237,7 +289,13 @@ public class NextTo {
 		
 		constraintIDs.add(constraintID2);
 		
-		NodeSpace constrainedSpace = space.copy(constraintIDs);
+		NodeSpace constrainedSpace = space.copy();
+		
+		if (constrainedSpace.hasNodes()) {
+			for (Node node : constrainedSpace.getNodes()) {
+				node.deleteComponentIDs(constraintIDs);
+			}
+		}
 
 		constrainedSpace.clearStartNodeTypes();
 		
