@@ -159,8 +159,6 @@ public class NextTo {
 				
 				for (Edge objectEdge : getEdgesWithComponentID(subjectEdge.getHead(), objectID, 
 						idToNodeCopy1)) {
-					LOG.info("++++++++++++++ {}", subjectID + ", " + objectID);
-					
 					if (objectEdge.getNumComponentIDs() > 1) {
 						Edge objectEdgeCopy = subjectHeadCopy.copyEdge(objectEdge, 
 								idToNodeCopy1.get(objectEdge.getHead().getNodeID()));
@@ -178,11 +176,6 @@ public class NextTo {
 					
 					objectEdgeCopy.setComponentIDs(objectCompIDs);
 					
-					if (getEdgesWithComponentID(objectEdge.getHead(), 
-							subjectID, idToNodeCopy1).size() > 0) {
-						LOG.info("+ {}", subjectID);
-					}
-
 					extendNextTo(objectHeadCopy, getEdgesWithComponentID(objectEdge.getHead(), 
 							subjectID, idToNodeCopy1), subjectID, objectID, idToNodeCopy2);
 					
