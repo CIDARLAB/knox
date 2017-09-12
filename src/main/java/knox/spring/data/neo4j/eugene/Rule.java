@@ -75,6 +75,14 @@ public class Rule {
 				|| constraint.equals(Constraint.SOME_AFTER.getValue());
 	}
 	
+	public boolean isForward() {
+		return getNumOperands() <= 1 && constraint.equals(Constraint.FORWARD.getValue());
+	}
+	
+	public boolean isReverse() {
+		return getNumOperands() <= 1 && constraint.equals(Constraint.REVERSE.getValue());
+	}
+	
 	public static boolean isIndex(String s) {
 		if (s.startsWith("[") && s.endsWith("]")) {
 			return isInteger(s.substring(1, s.length() - 1));
@@ -117,7 +125,9 @@ public class Rule {
         NEXTTO("NEXTTO"),
         STARTSWITH("STARTSWITH"),
         ENDSWITH("ENDSWITH"),
-        EQUALS("EQUALS");
+        EQUALS("EQUALS"),
+        FORWARD("FORWARD"),
+        REVERSE("REVERSE");
 
         private final String value;
         

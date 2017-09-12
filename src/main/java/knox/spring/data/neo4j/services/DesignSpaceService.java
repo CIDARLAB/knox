@@ -9,6 +9,7 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.eugene.Before;
 import knox.spring.data.neo4j.eugene.Equals;
+import knox.spring.data.neo4j.eugene.Forward;
 import knox.spring.data.neo4j.eugene.NextTo;
 import knox.spring.data.neo4j.eugene.Rule;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
@@ -112,6 +113,12 @@ public class DesignSpaceService {
     			eq.apply();
     			
     			ruleSpaces.add(eq.getNodeSpace());
+    		} else if (rule.isForward() || rule.isReverse()) {
+    			Forward forward = new Forward(targetSpace.copy(), rule);
+    			
+    			forward.apply();
+    			
+    			ruleSpaces.add(forward.getNodeSpace());
     		}
     	}
     	

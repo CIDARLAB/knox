@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import knox.spring.data.neo4j.domain.Edge.Orientation;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -178,6 +180,20 @@ public class Node {
     	return nodeTypes;
     }
     
+    public void deleteEdgesWithOrientation(String orientation) {
+    	if (hasEdges()) {
+    		Set<Edge> deletedEdges = new HashSet<Edge>();
+
+    		for (Edge edge : edges) {
+    			if (edge.hasOrientation(orientation)) {
+    				deletedEdges.add(edge);
+    			}
+    		}
+
+    		deleteEdges(deletedEdges);
+    	}
+    }
+    
     public void deleteComponentIDs(Set<String> compIDs) {
     	if (hasEdges()) {
     		Set<Edge> deletedEdges = new HashSet<Edge>();
@@ -200,6 +216,21 @@ public class Node {
 
     		for (Edge edge : edges) {
     			if (edge.deleteComponentID(compID) && !edge.hasComponentIDs()) {
+    				deletedEdges.add(edge);
+    			}
+    		}
+
+    		deleteEdges(deletedEdges);
+    	}
+    }
+    
+    public void deleteComponentID(String compID, String orientation) {
+    	if (hasEdges()) {
+    		Set<Edge> deletedEdges = new HashSet<Edge>();
+
+    		for (Edge edge : edges) {
+    			if (edge.hasOrientation(orientation) && edge.deleteComponentID(compID) 
+    					&& !edge.hasComponentIDs()) {
     				deletedEdges.add(edge);
     			}
     		}
