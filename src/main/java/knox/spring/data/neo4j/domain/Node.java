@@ -93,21 +93,17 @@ public class Node {
     public Edge copyEdge(Edge edge) {
     	return copyEdge(edge, edge.getHead());
     }
-
-//    public Edge copyEdge(Edge edge, Node head) {
-//    	return copyEdge(edge, head, edge.getComponentIDs());
-//    }
     
     public Edge copyEdge(Edge edge, Node head) {
-    	Set<Edge> parallelEdges = getEdges(head, edge.getOrientation());
-
-    	if (!parallelEdges.isEmpty()) {
-    		Edge parallelEdge = parallelEdges.iterator().next();
-
-    		parallelEdge.unionWithEdge(edge);
-
-    		return parallelEdge;
-    	}
+//    	Set<Edge> parallelEdges = getEdges(head, edge.getOrientation());
+//
+//    	if (!parallelEdges.isEmpty()) {
+//    		Edge parallelEdge = parallelEdges.iterator().next();
+//
+//    		parallelEdge.unionWithEdge(edge);
+//
+//    		return parallelEdge;
+//    	}
 
     	return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
     			new ArrayList<String>(edge.getComponentRoles()), edge.getOrientation());
@@ -400,6 +396,39 @@ public class Node {
         if (hasEdges()) {
             edges = null;
         }
+    }
+    
+    public void minimizeEdges() {
+    	if (hasEdges()) {
+    		HashMap<String, Set<Edge>> codeToIncomingEdges = new HashMap<String, Set<Edge>>();
+    		
+    		for (Edge edge : edges) {
+    			String code = edge.getHead().getNodeID() + edge.getOrientation();
+    			
+    			if (!codeToIncomingEdges.containsKey(code)) {
+    				codeToIncomingEdges.put(code, new HashSet<Edge>());
+    			}
+    			
+    			codeToIncomingEdges.get(code).add(edge);
+    		}
+    		
+    		for (String code : codeToIncomingEdges.keySet()) {
+    			if (codeToIncomingEdges.containsKey(code)
+    					&& codeToIncomingEdges.get(code).size() > 1) {
+    				Iterator<Edge> edgerator = codeToIncomingEdges.get(code).iterator();
+    				
+    				Edge edge = edgerator.next();
+    				
+    				while (edgerator.hasNext()) {
+    					Edge deletedEdge = edgerator.next();
+    					
+    					edge.unionWithEdge(deletedEdge);
+    					
+    					deleteEdge(deletedEdge);
+    				}
+    			}
+    		}
+    	}
     }
 
     public enum NodeType {

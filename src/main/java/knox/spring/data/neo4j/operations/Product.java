@@ -23,9 +23,9 @@ public class Product {
 	public Product(NodeSpace rowSpace, NodeSpace colSpace) {
 		productSpace = new NodeSpace(0);
 		
-		this.rowNodes = rowSpace.depthFirstTraversal();
+		this.rowNodes = rowSpace.depthFirstNodeTraversal();
 		
-		this.colNodes = colSpace.depthFirstTraversal();
+		this.colNodes = colSpace.depthFirstNodeTraversal();
 	}
 	
     public NodeSpace getProductSpace() {
