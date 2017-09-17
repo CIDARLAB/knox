@@ -181,6 +181,8 @@ public class DesignSpaceService {
 			concat.apply(inputSpace);
 		}
 		
+		
+		
 		outputSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
     }
     
@@ -453,21 +455,15 @@ public class DesignSpaceService {
     			
     			product.getProductSpace().deleteUnacceptableNodes();
     			
-    			List<Set<Node>> diffNodes = product.modifiedStrong(partitions, tolerance, roles);
-    			
+    			List<Set<Edge>> diffEdges = product.modifiedStrong(partitions, tolerance, roles);
+    	
     			if (isRow) {
-    				diffNodes.get(1).removeAll(diffNodes.get(0));
-    				
-    				product.getProductSpace().detachDeleteNodes(diffNodes.get(1));
-    				
-    				product.getProductSpace().deleteOrthogonalPaths(diffNodes.get(0));
+    				product.getProductSpace().deleteOrthogonalPaths(diffEdges.get(0));
     			} else {
-    				diffNodes.get(0).removeAll(diffNodes.get(1));
-    				
-    				product.getProductSpace().detachDeleteNodes(diffNodes.get(0));
-    				
-    				product.getProductSpace().deleteOrthogonalPaths(diffNodes.get(1));
+    				product.getProductSpace().deleteOrthogonalPaths(diffEdges.get(1));
     			}
+    			
+    			product.getProductSpace().minimizeEdges();
     			
     			productSpace.shallowCopyNodeSpace(product.getProductSpace());
     		}
@@ -477,7 +473,7 @@ public class DesignSpaceService {
 			Union union = new Union(productSpace);
 
 			union.apply();
-
+			
 			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
 		} else {
 			outputSpace.shallowCopyNodeSpace(productSpace);
@@ -553,6 +549,8 @@ public class DesignSpaceService {
     			} 
     			
     			product.modifiedStrong(partitions, tolerance, roles);
+    			
+    			product.getProductSpace().minimizeEdges();
     			
     			productSpace.shallowCopyNodeSpace(product.getProductSpace());
     		}

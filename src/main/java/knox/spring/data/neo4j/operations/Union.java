@@ -33,9 +33,7 @@ public class Union {
 		
 		primaryStartNodes.add(unionSpace.createStartNode());
 		
-		HashMap<String, Set<Edge>> idToIncomingEdges = unionSpace.mapNodeIDsToIncomingEdges();
-		
-		unionSpace.concatenateNodes(primaryStartNodes, startNodes, idToIncomingEdges);
+		unionSpace.concatenateNodes(primaryStartNodes, startNodes);
 	}
 	
 	public NodeSpace getUnionSpace() {

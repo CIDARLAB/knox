@@ -32,8 +32,7 @@ public class Concatenation {
 				}
 			}
 			
-			concatenationSpace.concatenateNodes(acceptNodes, startNodes, 
-					concatenationSpace.mapNodeIDsToIncomingEdges());
+			concatenationSpace.concatenateNodes(acceptNodes, startNodes);
 		}
 	}
 	
