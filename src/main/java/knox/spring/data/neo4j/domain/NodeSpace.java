@@ -871,8 +871,6 @@ public class NodeSpace {
     	if (hasNodes()) {
     		boolean isChanged = false;
     		
-    		
-    		
     		for (Node node : this.nodes) {
     			if (node.hasEdges()) {
     				Set<Edge> deletedEdges = new HashSet<Edge>();
@@ -897,7 +895,7 @@ public class NodeSpace {
     			Set<Node> deletedNodes = new HashSet<Node>();
     			
     			for (Node node : this.nodes) {
-    				if (!node.hasEdges() && idToIncomingEdges.containsKey(node.getNodeID())) {
+    				if (!node.hasEdges() && !idToIncomingEdges.containsKey(node.getNodeID())) {
     					deletedNodes.add(node);
     				}
     			}
