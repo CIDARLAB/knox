@@ -297,9 +297,19 @@ public class Product {
     			HashMap<Integer, Set<Node>> jToDiffNodes) {
     		iToDiffNodes.get(i).remove(diffNode);
     		
-    		jToDiffNodes.remove(j).remove(diffNode);
+    		jToDiffNodes.get(j).remove(diffNode);
     		
     		productSpace.deleteNode(diffNode);
+    	}
+    	
+    	public void deleteProductNodes(Set<Node> productNodes) {
+    		for (Integer row : rowToProductNodes.keySet()) {
+    			rowToProductNodes.get(row).removeAll(productNodes);
+    		}
+    		
+    		for (Integer col : colToProductNodes.keySet()) {
+    			colToProductNodes.get(col).removeAll(productNodes);
+    		}
     	}
     	
     	public Node getProductNode(int i, int j) {
@@ -378,7 +388,8 @@ public class Product {
 
     			productNodes.retainAll(colToProductNodes.get(j));
 
-    			return productNodes.size() == 1;
+    			return productNodes.size() == 1 
+    					&& productSpace.hasNode(productNodes.iterator().next());
     		} else {
     			return false;
     		}
@@ -391,7 +402,8 @@ public class Product {
 
     			productNodes.retainAll(jToProductNodes.get(j));
 
-    			return productNodes.size() == 1;
+    			return productNodes.size() == 1 
+    					&& productSpace.hasNode(productNodes.iterator().next());
     		} else {
     			return false;
     		}
@@ -404,7 +416,8 @@ public class Product {
 
     			diffNodes.retainAll(jToDiffNodes.get(j));
 
-    			return diffNodes.size() == 1;
+    			return diffNodes.size() == 1
+    					&& productSpace.hasNode(diffNodes.iterator().next());
     		} else {
     			return false;
     		}
@@ -449,22 +462,26 @@ public class Product {
     									Node productHead = getProductNode(ii, jj, iToProductNodes,
     											jToProductNodes);
 
-    									Edge productEdge = productNode.getEdges(productHead,
-    											iEdge.getOrientation()).iterator().next();
+    									Set<Edge> productEdges = productNode.getEdges(productHead,
+    											iEdge.getOrientation());
+    									
+    									if (!productEdges.isEmpty()) {
+    										Edge productEdge = productEdges.iterator().next();
+    										
+    										if (iEdge.isMatching(productEdge, 1, roles) 
+        											&& !iEdge.isMatching(productEdge, 0, roles)) {
+        										Node diffNode = projectNode(i, j, iNodes.get(i),
+        												iToDiffNodes, jToDiffNodes);
 
-    									if (iEdge.isMatching(productEdge, 1, roles) 
-    											&& !iEdge.isMatching(productEdge, 0, roles)) {
-    										Node diffNode = projectNode(i, j, iNodes.get(i),
-    												iToDiffNodes, jToDiffNodes);
+        										Node diffHead = projectNode(ii, jj, iNodes.get(ii),
+        												iToDiffNodes, jToDiffNodes);
 
-    										Node diffHead = projectNode(ii, jj, iNodes.get(ii),
-    												iToDiffNodes, jToDiffNodes);
+        										Edge diffEdge = diffNode.copyEdge(iEdge, diffHead);
 
-    										Edge diffEdge = diffNode.copyEdge(iEdge, diffHead);
+        										diffEdge.diffWithEdge(productEdge);
 
-    										diffEdge.diffWithEdge(productEdge);
-
-    										localDiffEdges.add(diffEdge);
+        										localDiffEdges.add(diffEdge);
+        									}
     									}
     								}
     							}
@@ -497,7 +514,7 @@ public class Product {
     					} else if (!idToIncomingEdges.containsKey(diffNode.getNodeID())) {
     						Node productNode = getProductNode(i, j, iToProductNodes,
     								jToProductNodes);
-
+    				
     						for (Edge diffEdge : diffNode.getEdges()) {
     							Edge edgeCopy = productNode.copyEdge(diffEdge);
     							
@@ -506,8 +523,6 @@ public class Product {
     							localDiffEdges.add(edgeCopy);
     							
     							localDiffEdges.remove(diffEdge);
-    							
-    							diffEdge.delete();
     						}
 
     						deleteDiffNode(i, j, diffNode, iToDiffNodes, jToDiffNodes);

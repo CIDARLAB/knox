@@ -44,7 +44,7 @@ public class Forward {
 				node.deleteEdgesWithOrientation(orientation);
 			}
 			
-			space.deleteUnacceptableNodes();
+			space.deleteUnconnectedNodes();
 		}
 		
 		
@@ -56,7 +56,7 @@ public class Forward {
 				node.deleteComponentID(objectID, orientation);
 			}
 			
-			space.deleteUnacceptableNodes();
+			space.deleteUnconnectedNodes();
 		}
 	}
 	

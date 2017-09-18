@@ -137,7 +137,7 @@ public class Equals {
 			}
 		}
 		
-		space.deleteUnacceptableNodes();
+		space.deleteUnconnectedNodes();
 	}
 	
 	private void apply(int subjectIndex, String objectID) {

@@ -370,6 +370,10 @@ public class NodeSpace {
     	return nodes != null && !nodes.isEmpty();
     }
     
+    public boolean hasNode(Node node) {
+    	return hasNodes() && nodes.contains(node);
+    }
+    
     public void loadEdges(HashMap<String, Set<Edge>> nodeIDToEdges) { 
     	if (hasNodes()) {
     		for (Node node : nodes) {
