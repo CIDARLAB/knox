@@ -240,6 +240,8 @@ public class DesignSpaceService {
 		
 		union.apply();
 		
+		union.getUnionSpace().minimizeEdges();
+		
 		outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
     }
 	
@@ -383,6 +385,8 @@ public class DesignSpaceService {
 			Union union = new Union(productSpace);
 
 			union.apply();
+			
+			union.getUnionSpace().minimizeEdges();
 
 			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
 		} else {
@@ -474,6 +478,8 @@ public class DesignSpaceService {
 
 			union.apply();
 			
+			union.getUnionSpace().minimizeEdges();
+			
 			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
 		} else {
 			outputSpace.shallowCopyNodeSpace(productSpace);
@@ -560,6 +566,8 @@ public class DesignSpaceService {
 			Union union = new Union(productSpace);
 
 			union.apply();
+			
+			union.getUnionSpace().minimizeEdges();
 
 			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
 		} else {

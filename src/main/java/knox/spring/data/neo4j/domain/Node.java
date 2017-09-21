@@ -333,6 +333,21 @@ public class Node {
     	}
     }
     
+    public boolean hasMatchingEdge(Edge edge, int tolerance, Set<String> roles, 
+    		Set<Edge> excludedEdges) {
+    	if (hasEdges()) {
+    		for (Edge e : edges) {
+    			if (edge.isMatching(e, tolerance, roles) && !excludedEdges.contains(e)) {
+    				return true;
+    			}
+    		}
+    		
+    		return false;
+    	} else {
+    		return false;
+    	}
+    }
+    
     public Set<Edge> getMatchingEdges(Edge edge, int tolerance, Set<String> roles) {
     	Set<Edge> matchingEdges = new HashSet<Edge>();
     	
@@ -413,8 +428,7 @@ public class Node {
     		}
     		
     		for (String code : codeToIncomingEdges.keySet()) {
-    			if (codeToIncomingEdges.containsKey(code)
-    					&& codeToIncomingEdges.get(code).size() > 1) {
+    			if (codeToIncomingEdges.get(code).size() > 1) {
     				Iterator<Edge> edgerator = codeToIncomingEdges.get(code).iterator();
     				
     				Edge edge = edgerator.next();

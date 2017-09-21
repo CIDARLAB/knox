@@ -603,7 +603,7 @@ public class Product {
 
     				for (Node productNode : productNodes) {
     					for (Node productHead : productHeads) {
-    						if (!productNode.hasMatchingEdge(edge, 1, roles)) {
+    						if (!productNode.hasMatchingEdge(edge, 1, roles, localDiffEdges)) {
     							localDiffEdges.add(productNode.copyEdge(edge, productHead));
     						}
     					}
