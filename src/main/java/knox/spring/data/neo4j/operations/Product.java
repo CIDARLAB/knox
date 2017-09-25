@@ -435,6 +435,105 @@ public class Product {
     				iToDiffNodes, jToDiffNodes, roles);
     	}
     	
+//    	private Set<Edge> prosectNodes(List<Node> iNodes, List<Node> jNodes,
+//    			HashMap<Integer, Set<Node>> iToProductNodes, 
+//    			HashMap<Integer, Set<Node>> jToProductNodes,
+//    			HashMap<Integer, Set<Node>> iToDiffNodes, 
+//    			HashMap<Integer, Set<Node>> jToDiffNodes, 
+//    			Set<String> roles) {
+//    		Set<Edge> localDiffEdges = new HashSet<Edge>();
+//    		
+//    		for (int i = 0; i < iNodes.size(); i++) {
+//    			for (int j = 0; j < jNodes.size(); j++) {
+//    				if (iNodes.get(i).hasEdges() && jNodes.get(j).hasEdges()) {
+//    					for (Edge iEdge : iNodes.get(i).getEdges()) {
+//    						for (Edge jEdge : jNodes.get(j).getEdges()) {
+//    							if (iEdge.isMatching(jEdge, 1, roles)
+//    									&& !iEdge.isMatching(jEdge, 0, roles)
+//    									&& hasProductNode(i, j, iToProductNodes, jToProductNodes)) {
+//    								int ii = locateNode(iEdge.getHead(), i, iNodes);
+//
+//    								int jj = locateNode(jEdge.getHead(), j, jNodes);
+//
+//    								if (hasProductNode(ii, jj, iToProductNodes, jToProductNodes)) {
+//    									Node productNode = getProductNode(i, j, iToProductNodes,
+//    											jToProductNodes);
+//
+//    									Node productHead = getProductNode(ii, jj, iToProductNodes,
+//    											jToProductNodes);
+//
+//    									Set<Edge> productEdges = productNode.getEdges(productHead,
+//    											iEdge.getOrientation());
+//    									
+//    									if (!productEdges.isEmpty()) {
+//    										Edge productEdge = productEdges.iterator().next();
+//    										
+//    										if (iEdge.isMatching(productEdge, 1, roles) 
+//        											&& !iEdge.isMatching(productEdge, 0, roles)) {
+//        										Node diffNode = projectNode(i, j, iNodes.get(i),
+//        												iToDiffNodes, jToDiffNodes);
+//
+//        										Node diffHead = projectNode(ii, jj, iNodes.get(ii),
+//        												iToDiffNodes, jToDiffNodes);
+//
+//        										Edge diffEdge = diffNode.copyEdge(iEdge, diffHead);
+//
+//        										diffEdge.diffWithEdge(productEdge);
+//
+//        										localDiffEdges.add(diffEdge);
+//        									}
+//    									}
+//    								}
+//    							}
+//    						}
+//    					}
+//    				}
+//    			}
+//    		}
+//    		
+//    		HashMap<String, Set<Edge>> idToIncomingEdges = productSpace.mapNodeIDsToIncomingEdges();
+//    		
+//    		for (int i = 0; i < iNodes.size(); i++) {
+//    			for (int j = 0; j < jNodes.size(); j++) {
+//    				if (hasDiffNode(i, j, iToDiffNodes, jToDiffNodes)) {
+//    					Node diffNode = getDiffNode(i, j, iToDiffNodes, jToDiffNodes);
+//
+//    					if (!diffNode.hasEdges()) {
+//    						Node productHead = getProductNode(i, j, iToProductNodes,
+//    								jToProductNodes);
+//
+//    						for (Edge diffEdge : idToIncomingEdges.get(diffNode.getNodeID())) {
+//    							localDiffEdges.add(diffEdge.getTail().copyEdge(diffEdge, productHead));
+//    							
+//    							localDiffEdges.remove(diffEdge);
+//    							
+//    							diffEdge.delete();
+//    						}
+//
+//    						deleteDiffNode(i, j, diffNode, iToDiffNodes, jToDiffNodes);
+//    					} else if (!idToIncomingEdges.containsKey(diffNode.getNodeID())) {
+//    						Node productNode = getProductNode(i, j, iToProductNodes,
+//    								jToProductNodes);
+//    				
+//    						for (Edge diffEdge : diffNode.getEdges()) {
+//    							Edge edgeCopy = productNode.copyEdge(diffEdge);
+//    							
+//    							idToIncomingEdges.get(diffEdge.getHead().getNodeID()).add(edgeCopy);
+//    							
+//    							localDiffEdges.add(edgeCopy);
+//    							
+//    							localDiffEdges.remove(diffEdge);
+//    						}
+//
+//    						deleteDiffNode(i, j, diffNode, iToDiffNodes, jToDiffNodes);
+//    					}
+//    				}
+//    			}
+//    		}
+//    		
+//    		return localDiffEdges;
+//    	}
+    	
     	private Set<Edge> prosectNodes(List<Node> iNodes, List<Node> jNodes,
     			HashMap<Integer, Set<Node>> iToProductNodes, 
     			HashMap<Integer, Set<Node>> jToProductNodes,
@@ -448,40 +547,31 @@ public class Product {
     				if (iNodes.get(i).hasEdges() && jNodes.get(j).hasEdges()) {
     					for (Edge iEdge : iNodes.get(i).getEdges()) {
     						for (Edge jEdge : jNodes.get(j).getEdges()) {
-    							if (iEdge.isMatching(jEdge, 1, roles)
-    									&& !iEdge.isMatching(jEdge, 0, roles)
-    									&& hasProductNode(i, j, iToProductNodes, jToProductNodes)) {
-    								int ii = locateNode(iEdge.getHead(), i, iNodes);
+    							if (hasProductNode(i, j, iToProductNodes, jToProductNodes)) {
+    								Node productNode = getProductNode(i, j, iToProductNodes,
+    										jToProductNodes);
 
-    								int jj = locateNode(jEdge.getHead(), j, jNodes);
+    								Set<Edge> productEdges = productNode.getEdges(iEdge.getOrientation());
 
-    								if (hasProductNode(ii, jj, iToProductNodes, jToProductNodes)) {
-    									Node productNode = getProductNode(i, j, iToProductNodes,
-    											jToProductNodes);
+    								if (!productEdges.isEmpty()) {
+    									Edge diffEdge = iEdge.copy();
 
-    									Node productHead = getProductNode(ii, jj, iToProductNodes,
-    											jToProductNodes);
+    									for (Edge productEdge : productEdges) {
+    										diffEdge.diffWithEdge(productEdge);
+    									}
 
-    									Set<Edge> productEdges = productNode.getEdges(productHead,
-    											iEdge.getOrientation());
-    									
-    									if (!productEdges.isEmpty()) {
-    										Edge productEdge = productEdges.iterator().next();
-    										
-    										if (iEdge.isMatching(productEdge, 1, roles) 
-        											&& !iEdge.isMatching(productEdge, 0, roles)) {
-        										Node diffNode = projectNode(i, j, iNodes.get(i),
-        												iToDiffNodes, jToDiffNodes);
+    									if (diffEdge.hasComponentIDs()) {
+    										int ii = locateNode(iEdge.getHead(), i, iNodes);
 
-        										Node diffHead = projectNode(ii, jj, iNodes.get(ii),
-        												iToDiffNodes, jToDiffNodes);
+    										int jj = locateNode(jEdge.getHead(), j, jNodes);
 
-        										Edge diffEdge = diffNode.copyEdge(iEdge, diffHead);
+    										diffEdge.setTail(projectNode(i, j, iNodes.get(i),
+    												iToDiffNodes, jToDiffNodes));
 
-        										diffEdge.diffWithEdge(productEdge);
+    										diffEdge.setHead(projectNode(ii, jj, iNodes.get(ii),
+    												iToDiffNodes, jToDiffNodes));
 
-        										localDiffEdges.add(diffEdge);
-        									}
+    										localDiffEdges.add(diffEdge);
     									}
     								}
     							}

@@ -295,6 +295,20 @@ public class Node {
     	return edgesWithHead;
     }
     
+    public Set<Edge> getEdges(String orientation) {
+    	Set<Edge> edgesWithHead = new HashSet<Edge>();
+    	
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.hasOrientation(orientation)) {
+    				edgesWithHead.add(edge);
+    			}
+    		}
+    	} 
+    	
+    	return edgesWithHead;
+    }
+    
     public Set<Edge> getEdges(Node head, String orientation) {
     	Set<Edge> edgesWithHead = new HashSet<Edge>();
     	

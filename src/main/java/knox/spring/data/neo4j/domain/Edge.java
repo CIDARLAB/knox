@@ -99,18 +99,29 @@ public class Edge {
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
     		ArrayList<String> componentRoles, String orientation, double weight) {
-    this.tail = tail;
+    	this.tail = tail;
+
+    	this.head = head;
+
+    	this.componentIDs = componentIDs;
+
+    	this.componentRoles = componentRoles;
+
+    	this.orientation = orientation;
+
+    	this.weight = weight;
+    }
     
-    this.head = head;
-    
-    this.componentIDs = componentIDs;
-    
-    this.componentRoles = componentRoles;
-    
-    this.orientation = orientation;
-    
-    this.weight = weight;
-}
+    public Edge(ArrayList<String> componentIDs, ArrayList<String> componentRoles, String orientation, 
+    		double weight) {
+    	this.componentIDs = componentIDs;
+
+    	this.componentRoles = componentRoles;
+
+    	this.orientation = orientation;
+
+    	this.weight = weight;
+    }
 
     public void addComponent(String compID, String compRole) {
         if (!componentIDs.contains(compID)) {
@@ -120,6 +131,11 @@ public class Edge {
         if (!componentRoles.contains(compRole)) {
             componentRoles.add(compRole);
         }
+    }
+    
+    public Edge copy() {
+    	return new Edge(new ArrayList<String>(componentIDs),
+    			new ArrayList<String>(componentRoles), orientation, weight);
     }
 
     public Edge copy(Node tail, Node head) {
