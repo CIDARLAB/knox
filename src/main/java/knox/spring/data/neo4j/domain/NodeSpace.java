@@ -125,10 +125,12 @@ public class NodeSpace {
 	public Node copyNodeWithID(Node node) {
 		Node nodeCopy = createNode(node.getNodeID());
 		
-		for (String nodeType : node.getNodeTypes()) {
-			nodeCopy.addNodeType(nodeType);
+		if (node.hasNodeTypes()) {
+			for (String nodeType : node.getNodeTypes()) {
+				nodeCopy.addNodeType(nodeType);
+			}
 		}
-		
+
 		return nodeCopy;
 	}
 	

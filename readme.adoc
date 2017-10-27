@@ -6,8 +6,8 @@
 . http://neo4j.com/download[Download, install and start Neo4j Server].
 . open the Neo4j web interface at http://localhost:7474
 . configure "*kn0x*" as password
-. copy and paste Cypher statement from knox\src\main\examples\cypher.txt and click the Play arrow to insert a test dataset
+. copy and paste Cypher statement from knox\src\main\examples\transcriptional_unit.txt and click the Play arrow to insert a test dataset
 . run this project from the command line with `mvn spring-boot:run`.
 . open Knox web interface at http://localhost:8080
-. quick demo: type "test1" and click Search, type "test2" and click Search, then type "test3" and click Join
+. quick demo: (1) click explore, (2) search for "test1", (3) click combine arrow at bottom of screen, (4) type "test2" into "Combine with" and "test3" into "Output ID", (5) click OK to Join
 . to reset the data in the Neo4j server, copy and paste "MATCH (n) DETACH DELETE n" into the Neo4j web interface and click the Play arrow, then follow step 5
