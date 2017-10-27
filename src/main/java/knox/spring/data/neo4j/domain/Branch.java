@@ -28,17 +28,37 @@ public class Branch {
         
         commits = new HashSet<Commit>();
     }
+    
+    public Branch(String branchID, Commit latestCommit) {
+        this.branchID = branchID;
+        
+        this.latestCommit = latestCommit;
+        
+        commits = new HashSet<Commit>();
+    }
 
     public void addCommit(Commit commit) {
         commits.add(commit);
+    }
+    
+    public void addAllCommits(Set<Commit> commits) {
+        commits.addAll(commits);
     }
 
     public boolean containsCommit(Commit commit) {
     	return commits.contains(commit);
     }
     
-    public Branch copy() {
+    public Branch shallowCopy() {
     	return new Branch(branchID);
+    }
+    
+    public Branch copy() {
+    	Branch branchCopy = new Branch(branchID, latestCommit);
+    	
+    	branchCopy.addAllCommits(commits);
+    	
+    	return branchCopy;
     }
 
     public boolean deleteCommits(Set<Commit> deletedCommits) {

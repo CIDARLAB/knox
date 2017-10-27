@@ -172,6 +172,8 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, inputSnaps);
 
         joinNodeSpaces(inputSnaps, outputSnap);
+        
+        saveDesignSpace(targetSpace);
     }
     
 	private void joinNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
@@ -180,8 +182,6 @@ public class DesignSpaceService {
 		for (NodeSpace inputSpace : inputSpaces) {
 			concat.apply(inputSpace);
 		}
-		
-		
 		
 		outputSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
     }
@@ -233,6 +233,8 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, inputSnaps);
 
         orNodeSpaces(inputSnaps, outputSnap);
+        
+        saveDesignSpace(targetSpace);
     }
     
 	private void orNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
@@ -292,6 +294,8 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, inputSnaps);
 
         repeatNodeSpaces(inputSnaps, outputSnap, isOptional);
+        
+        saveDesignSpace(targetSpace);
     }
     
 	private void repeatNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace, 
@@ -353,6 +357,8 @@ public class DesignSpaceService {
         		inputSnaps);
 
         andNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, roles);
+        
+        saveDesignSpace(targetSpace);
     }
 	
 	private void andNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
@@ -443,6 +449,8 @@ public class DesignSpaceService {
         		inputSnaps);
 
         diffNodeSpaces(inputSnaps, outputSnap, tolerance, isRow, roles);
+        
+        saveDesignSpace(targetSpace);
     }
 	
 	private void diffNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
@@ -536,6 +544,8 @@ public class DesignSpaceService {
         		inputSnaps);
 
         mergeNodeSpaces(inputSnaps, outputSnap, tolerance, isComplete, roles);
+        
+        saveDesignSpace(targetSpace);
     }
 	
 	private void mergeNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace,
@@ -1025,27 +1035,76 @@ public class DesignSpaceService {
     }
 
     public void copyHeadBranch(String targetSpaceID, String outputBranchID) {
-        designSpaceRepository.copyHeadBranch(targetSpaceID, outputBranchID);
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+    	
+    	targetSpace.addBranch(targetSpace.getHeadBranch().copy());
+    	
+    	saveDesignSpace(targetSpace);
+    	
+//        designSpaceRepository.copyHeadBranch(targetSpaceID, outputBranchID);
     }
 
     public void checkoutBranch(String targetSpaceID, String targetBranchID) {
-        deleteAllNodes(targetSpaceID);
-        designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
-        deleteNodeCopyIndices(targetSpaceID);
+//        deleteAllNodes(targetSpaceID);
+//        designSpaceRepository.checkoutBranch(targetSpaceID, targetBranchID);
+//        deleteNodeCopyIndices(targetSpaceID);
+    	
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+    	
+    	targetSpace.clearNodes();
+    	
+    	targetSpace.copyNodeSpace(targetSpace.getHeadSnapshot());
+    	
+    	saveDesignSpace(targetSpace);
     }
 
     public void commitToBranch(String targetSpaceID, String targetBranchID) {
-        createCommit(targetSpaceID, targetBranchID);
-        copyDesignSpaceToSnapshot(targetSpaceID, targetBranchID);
+//        createCommit(targetSpaceID, targetBranchID);
+//        copyDesignSpaceToSnapshot(targetSpaceID, targetBranchID);
+    	
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+    	
+    	Branch targetBranch = targetSpace.getBranch(targetBranchID);
+    	
+    	commitToBranch(targetSpace, targetBranch);
     }
 
     public void commitToHeadBranch(String targetSpaceID) {
-        String headBranchID = getHeadBranchID(targetSpaceID);
-        createCommit(targetSpaceID, headBranchID);
-        copyDesignSpaceToSnapshot(targetSpaceID, headBranchID);
+//        String headBranchID = getHeadBranchID(targetSpaceID);
+//        createCommit(targetSpaceID, headBranchID);
+//        copyDesignSpaceToSnapshot(targetSpaceID, headBranchID);
+    	
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+    	
+    	commitToBranch(targetSpace, targetSpace.getHeadBranch());
+    }
+    
+    public void commitToBranch(DesignSpace targetSpace, Branch targetBranch) {
+    	Commit commit = targetSpace.createCommit(targetBranch);
+    	
+    	targetBranch.setLatestCommit(commit);
+    	
+    	commit.getSnapshot().copyNodeSpace(targetSpace);
+    	
+    	saveDesignSpace(targetSpace);
+    }
+    
+    public void resetBranch(String targetSpaceID, String targetBranchID,
+    		List<String> commitPath) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+
+    	Branch targetBranch = targetSpace.getBranch(targetBranchID);
+
+    	resetBranch(targetSpace, targetBranch, commitPath);
     }
 
-    public void resetBranch(DesignSpace targetSpace, Branch targetBranch,
+    public void resetHeadBranch(String targetSpaceID, List<String> commitPath) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+
+    	resetBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
+    }
+
+    private void resetBranch(DesignSpace targetSpace, Branch targetBranch,
                             List<String> commitPath) {
         if (targetBranch != null && targetBranch.getNumCommits() > 1) {
             Commit targetCommit = targetBranch.getLatestCommit();
@@ -1082,23 +1141,23 @@ public class DesignSpaceService {
             saveDesignSpace(targetSpace);
         }
     }
+    
+    public void revertBranch(String targetSpaceID, String targetBranchID,
+    		List<String> commitPath) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
 
-    public void resetBranch(String targetSpaceID, String targetBranchID,
-                            List<String> commitPath) {
-        DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+    	Branch targetBranch = targetSpace.getBranch(targetBranchID);
 
-        Branch targetBranch = targetSpace.getBranch(targetBranchID);
-
-        resetBranch(targetSpace, targetBranch, commitPath);
+    	revertBranch(targetSpace, targetBranch, commitPath);
     }
 
-    public void resetHeadBranch(String targetSpaceID, List<String> commitPath) {
-        DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
+    public void revertHeadBranch(String targetSpaceID, List<String> commitPath) {
+    	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
 
-        resetBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
+    	revertBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
     }
 
-    public void revertBranch(DesignSpace targetSpace, Branch targetBranch,
+    private void revertBranch(DesignSpace targetSpace, Branch targetBranch,
                              List<String> commitPath) {
         if (targetBranch != null && targetBranch.getNumCommits() > 1) {
             Commit targetCommit = targetBranch.getLatestCommit();
@@ -1122,22 +1181,6 @@ public class DesignSpaceService {
 
             saveDesignSpace(targetSpace);
         }
-    }
-
-    public void revertBranch(String targetSpaceID, String targetBranchID,
-                             List<String> commitPath) {
-        DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
-
-        Branch targetBranch = targetSpace.getBranch(targetBranchID);
-
-        revertBranch(targetSpace, targetBranch, commitPath);
-    }
-
-    public void revertHeadBranch(String targetSpaceID,
-                                 List<String> commitPath) {
-        DesignSpace targetSpace = loadDesignSpace(targetSpaceID, 5);
-
-        revertBranch(targetSpace, targetSpace.getHeadBranch(), commitPath);
     }
 
     public Map<String, Object> d3GraphBranches(String targetSpaceID) {

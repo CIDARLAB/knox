@@ -93,7 +93,7 @@ public class DesignSpace extends NodeSpace {
     	HashMap<String, Commit> idToCommitCopy = new HashMap<String, Commit>();
 
     	for (Branch branch : space.getBranches()) {
-    		Branch branchCopy = branch.copy();
+    		Branch branchCopy = branch.shallowCopy();
 
     		for (Commit commit : branch.getCommits()) {
     			if (!idToCommitCopy.containsKey(commit.getCommitID())) {

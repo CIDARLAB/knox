@@ -81,15 +81,15 @@ public class Product {
     }
     
     public List<Set<Edge>> modifiedStrong(List<Partition> partitions, int tolerance, Set<String> roles) {
+//    	List<Partition> partitions = tensor(tolerance, degree, roles);
+    	
+    	partitions = unionNonOverlapPartitions(partitions);
+    	
     	List<Set<Edge>> globalDiffEdges = new ArrayList<Set<Edge>>(2);
     	
     	globalDiffEdges.add(new HashSet<Edge>());
     	
     	globalDiffEdges.add(new HashSet<Edge>());
-    	
-//    	List<Partition> partitions = tensor(tolerance, degree, roles);
-    	
-    	partitions = unionNonOverlapPartitions(partitions);
     	
     	for (Partition partition : partitions) {
     		HashMap<Integer, Set<Node>> iToDiffNodes = new HashMap<Integer, Set<Node>>();
