@@ -233,8 +233,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
     @Query(
         "MATCH (target:DesignSpace {spaceID: {targetSpaceID}}) "
         + "OPTIONAL MATCH (target)-[:CONTAINS]->(n:Node) "
-        +
-        "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) "
+        + "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) "
         + "OPTIONAL MATCH (s)-[:CONTAINS]->(sn:Node) "
         + "DETACH DELETE target "
         + "DETACH DELETE n "

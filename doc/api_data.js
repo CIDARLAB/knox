@@ -371,7 +371,7 @@ define({ "api": [
             "optional": false,
             "field": "isOptional",
             "defaultValue": "false",
-            "description": "<p>If true, then the input design spaces are repeated zero-or-more times; otherwise, they are repeated one-or-more times.</p>"
+            "description": "<p>If true, then designs from the input branches are repeated zero-or-more times; otherwise, they are repeated one-or-more times.</p>"
           }
         ]
       }
@@ -529,7 +529,7 @@ define({ "api": [
             "optional": false,
             "field": "isComplete",
             "defaultValue": "true",
-            "description": "<p>If true, then only edges belonging to paths for designs common to all input design spaces are retained.</p>"
+            "description": "<p>If true, then only the matching edges that belong to paths for designs common to all input design spaces are retained.</p>"
           },
           {
             "group": "Parameter",
@@ -542,6 +542,30 @@ define({ "api": [
       }
     },
     "description": "<p>Intersects designs from input design spaces. Based on tensor product of graphs.</p>",
+    "version": "0.0.0",
+    "filename": "./src/main/java/knox/spring/data/neo4j/controller/KnoxController.java",
+    "groupTitle": "DesignSpace"
+  },
+  {
+    "type": "post",
+    "url": "/designSpace/delete",
+    "title": "Delete",
+    "name": "deletDesignSpace",
+    "group": "DesignSpace",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "targetSpaceID",
+            "description": "<p>ID for the target design space to be deleted.</p>"
+          }
+        ]
+      }
+    },
+    "description": "<p>Deletes the target design space.</p>",
     "version": "0.0.0",
     "filename": "./src/main/java/knox/spring/data/neo4j/controller/KnoxController.java",
     "groupTitle": "DesignSpace"
@@ -621,7 +645,7 @@ define({ "api": [
             "optional": false,
             "field": "isComplete",
             "defaultValue": "false",
-            "description": "<p>If true, then only edges belonging to paths for designs common to all input design spaces are retained.</p>"
+            "description": "<p>If true, then only the matching edges that belong to paths for designs common to all input design spaces are retained prior to adding the non-matching edges from these spaces.</p>"
           },
           {
             "group": "Parameter",
@@ -698,7 +722,7 @@ define({ "api": [
             "optional": false,
             "field": "isOptional",
             "defaultValue": "false",
-            "description": "<p>If true, then the input design spaces are repeated zero-or-more times; otherwise, they are repeated one-or-more times.</p>"
+            "description": "<p>If true, then designs from the input spaces are repeated zero-or-more times; otherwise, they are repeated one-or-more times.</p>"
           }
         ]
       }

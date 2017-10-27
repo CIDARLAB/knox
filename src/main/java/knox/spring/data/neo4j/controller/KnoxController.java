@@ -390,8 +390,8 @@ public class KnoxController {
 	 * roles. If tolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
 	 * labeled with the same orientation. If tolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
 	 * unioned.
-	 * @apiParam {Boolean} isComplete=true If true, then only edges belonging to paths for designs common to all input design 
-	 * spaces are retained.
+	 * @apiParam {Boolean} isComplete=true If true, then only the matching edges that belong to paths for designs common to all 
+	 * input design spaces are retained.
 	 * @apiParam {String[]} [roles] If specified, then only edges labeled with at least one of these roles will be AND-ed.
 	 * 
 	 * @apiDescription Intersects designs from input design spaces. Based on tensor product of graphs.
@@ -422,6 +422,32 @@ public class KnoxController {
 			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
 					HttpStatus.BAD_REQUEST);
 		}
+	}
+	
+	/**
+	 * @api {post} /designSpace/delete Delete
+	 * @apiName deletDesignSpace
+	 * @apiGroup DesignSpace
+	 * 
+	 * @apiParam {String} targetSpaceID ID for the target design space to be deleted.
+	 * 
+	 * @apiDescription Deletes the target design space.
+	 */
+
+	@RequestMapping(value = "/designSpace", method = RequestMethod.DELETE)
+	public ResponseEntity<String> deleteDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+	    try {
+	    	long startTime = System.nanoTime();
+	    	
+	        designSpaceService.deleteDesignSpace(targetSpaceID);
+	        
+	        return new ResponseEntity<String>("{\"message\": \"Design space was deleted successfully after " +
+					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+	    } catch (DesignSpaceNotFoundException ex) {
+	        return new ResponseEntity<String>(
+	                "{\"message\": \"" + ex.getMessage() + "\"}",
+	                HttpStatus.BAD_REQUEST);
+	    }
 	}
 
 	/**
@@ -471,8 +497,8 @@ public class KnoxController {
 	 * roles. If tolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
 	 * labeled with the same orientation. If tolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
 	 * unioned.
-	 * @apiParam {Boolean} isComplete=false If true, then only edges belonging to paths for designs common to all input design 
-	 * spaces are retained.
+	 * @apiParam {Boolean} isComplete=false If true, then only the matching edges that belong to paths for designs common to all 
+	 * input design spaces are retained prior to adding the non-matching edges from these spaces.
 	 * @apiParam {String[]} [roles] If specified, then only edges labeled with at least one of these roles will be AND-ed.
 	 * 
 	 * @apiDescription Merges designs from input design spaces. Based on strong product of graphs.
@@ -743,20 +769,6 @@ public class KnoxController {
         return new ResponseEntity<String>(
                 "{\"message\": \"Branch was successfully inserted.\"}",
                 HttpStatus.NO_CONTENT);
-    }
-
-    @RequestMapping(value = "/designSpace", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-        try {
-            designSpaceService.deleteDesignSpace(targetSpaceID);
-            return new ResponseEntity<String>(
-                    "Design space was deleted successfully.",
-                    HttpStatus.NO_CONTENT);
-        } catch (DesignSpaceNotFoundException ex) {
-            return new ResponseEntity<String>(
-                    "{\"message\": \"" + ex.getMessage() + "\"}",
-                    HttpStatus.BAD_REQUEST);
-        }
     }
 
     @RequestMapping(value = "/designSpace", method = RequestMethod.POST)
