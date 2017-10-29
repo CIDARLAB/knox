@@ -149,7 +149,16 @@
                     return "";
                 }).attr("height", sbolImgSize)
                 .attr("width", sbolImgSize)
-                .attr("class", "sbol-gfx");
+                .attr("class", "sboltip")
+                .attr("title", (d) => {
+                    if (d.hasOwnProperty("componentIDs")) {
+                        return d["componentIDs"].toString();
+                    }
+                });
+
+            $('.sboltip').tooltipster({
+                theme: 'tooltipster-shadow'
+            });
             
             force.on("tick", function () {
                 links.attr('d', function(d) {

@@ -1806,6 +1806,10 @@ public class DesignSpaceService {
 	        	link.put("componentRoles", row.get("componentRoles"));
 	        }
 	        
+	        if (row.containsKey("componentIDs") && row.get("componentIDs") != null) {
+	        	link.put("componentIDs", row.get("componentIDs"));
+	        }
+	        
 	        links.add(link);
 	    }
 	    

@@ -481,7 +481,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
         + "WHERE target.spaceID = {targetSpaceID} "
         +
         "RETURN target.spaceID as spaceID, m.nodeID as tailID, m.nodeTypes as tailTypes, e.componentRoles as componentRoles, "
-        + "n.nodeID as headID, n.nodeTypes as headTypes")
+        + "e.componentIDs as componentIDs, n.nodeID as headID, n.nodeTypes as headTypes")
     List<Map<String, Object>> mapDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 
     @Query(

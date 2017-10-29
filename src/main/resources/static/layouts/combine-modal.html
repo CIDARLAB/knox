@@ -30,20 +30,6 @@
             } else {
                 $('#br-complete-d').hide();
                 $('#swal-complete-d').hide();
-            } 
-            if ($('#swal-select').val() === 'OR') {
-                $('#br-closed-or-d').show();
-                $('#swal-closed-or-d').show();
-            } else {
-                $('#br-closed-or-d').hide();
-                $('#swal-closed-or-d').hide();
-            }
-            if ($('#swal-select').val() === 'AND' || $('#swal-select').val() === 'Merge') {
-                $('#br-closed-product-d').show();
-                $('#swal-closed-product-d').show();
-            } else {
-                $('#br-closed-product-d').hide();
-                $('#swal-closed-product-d').hide();
             }
         })();">
       <option selected value="Join">Join</option>
@@ -73,20 +59,6 @@
   <br/ id="br-complete-d" style="display: none;">
   <div id="swal-complete-d" style="display: none;">
     Complete Matches Only: <select id="swal-complete">
-      <option selected value=true>true</option>
-      <option value=false>false</option>
-    </select>
-  </div>
-  <br/ id="br-closed-product-d" style="display: none;">
-  <div id="swal-closed-product-d" style="display: none;">
-    Closed: <select id="swal-closed-product">
-      <option selected value=false>false</option>
-      <option value=true>true</option>
-    </select>
-  </div>
-  <br/ id="br-closed-or-d" style="display: none;">
-  <div id="swal-closed-or-d" style="display: none;">
-    Closed: <select id="swal-closed-or">
       <option selected value=true>true</option>
       <option value=false>false</option>
     </select>
