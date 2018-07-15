@@ -6,16 +6,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import knox.spring.data.neo4j.domain.Edge.Orientation;
-
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
@@ -27,8 +23,6 @@ public class Node {
     @Relationship(type = "PRECEDES") Set<Edge> edges = new HashSet<>();
     
     ArrayList<String> nodeTypes;
-    
-    private static final Logger LOG = LoggerFactory.getLogger(Node.class);
 
     public Node() {}
     
@@ -61,29 +55,13 @@ public class Node {
     public boolean deleteNodeType(String nodeType) {
     	return nodeTypes.remove(nodeType);
     }
-
-    public void clearNodeTypes() { 
-    	nodeTypes.clear();
-    }
     
     public boolean deleteStartNodeType() {
-    	return nodeTypes.remove(NodeType.START.getValue());
+    	return deleteNodeType(NodeType.START.getValue());
     }
     
     public boolean deleteAcceptNodeType() {
-    	return nodeTypes.remove(NodeType.ACCEPT.getValue());
-    }
-    
-    public void addStartNodeType() {
-    	if (!isStartNode()) {
-    		nodeTypes.add(NodeType.START.getValue());
-    	}
-    }
-    
-    public void addAcceptNodeType() {
-    	if (!isAcceptNode()) {
-    		nodeTypes.add(NodeType.ACCEPT.getValue());
-    	}
+    	return deleteNodeType(NodeType.ACCEPT.getValue());
     }
     
     public Node copy() {
@@ -95,16 +73,6 @@ public class Node {
     }
     
     public Edge copyEdge(Edge edge, Node head) {
-//    	Set<Edge> parallelEdges = getEdges(head, edge.getOrientation());
-//
-//    	if (!parallelEdges.isEmpty()) {
-//    		Edge parallelEdge = parallelEdges.iterator().next();
-//
-//    		parallelEdge.unionWithEdge(edge);
-//
-//    		return parallelEdge;
-//    	}
-
     	return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
     			new ArrayList<String>(edge.getComponentRoles()), edge.getOrientation());
     }
@@ -134,10 +102,6 @@ public class Node {
         return edge;
     }
 
-    public Long getGraphID() { 
-    	return id; 
-    }
-
     public String getNodeID() { 
     	return nodeID; 
     }
@@ -158,123 +122,12 @@ public class Node {
     	return edges; 
     }
     
-    public Edge[] getEdgeArray() {
-    	int numEdges = getNumEdges();
-    	
-    	if (numEdges > 0) {
-    		return edges.toArray(new Edge[numEdges]);
-    	} else {
-    		return new Edge[0];
-    	}
-    }
-    
     public void setEdges(Set<Edge> edges) {
     	this.edges = edges;
     }
 
     public ArrayList<String> getNodeTypes() {
     	return nodeTypes;
-    }
-    
-    public void deleteEdgesWithOrientation(String orientation) {
-    	if (hasEdges()) {
-    		Set<Edge> deletedEdges = new HashSet<Edge>();
-
-    		for (Edge edge : edges) {
-    			if (edge.hasOrientation(orientation)) {
-    				deletedEdges.add(edge);
-    			}
-    		}
-
-    		deleteEdges(deletedEdges);
-    	}
-    }
-    
-    public void deleteComponentIDs(Set<String> compIDs) {
-    	if (hasEdges()) {
-    		Set<Edge> deletedEdges = new HashSet<Edge>();
-
-    		for (Edge edge : edges) {
-    			edge.deleteComponentIDs(compIDs);
-
-    			if (!edge.hasComponentIDs()) {
-    				deletedEdges.add(edge);
-    			}
-    		}
-
-    		deleteEdges(deletedEdges);
-    	}
-    }
-    
-    public void deleteComponentID(String compID) {
-    	if (hasEdges()) {
-    		Set<Edge> deletedEdges = new HashSet<Edge>();
-
-    		for (Edge edge : edges) {
-    			if (edge.deleteComponentID(compID) && !edge.hasComponentIDs()) {
-    				deletedEdges.add(edge);
-    			}
-    		}
-
-    		deleteEdges(deletedEdges);
-    	}
-    }
-    
-    public void deleteComponentID(String compID, String orientation) {
-    	if (hasEdges()) {
-    		Set<Edge> deletedEdges = new HashSet<Edge>();
-
-    		for (Edge edge : edges) {
-    			if (edge.hasOrientation(orientation) && edge.deleteComponentID(compID) 
-    					&& !edge.hasComponentIDs()) {
-    				deletedEdges.add(edge);
-    			}
-    		}
-
-    		deleteEdges(deletedEdges);
-    	}
-    }
-
-    public boolean hasComponentID(String compID) {
-        if (hasEdges()) {
-            for (Edge edge : edges) {
-                if (edge.hasComponentID(compID)) {
-                    return true;
-                }
-            }
-
-            return false;
-        } else {
-            return false;
-        }
-    }
-    
-    public Set<Edge> getEdgesWithoutComponentID(String compID) {
-    	Set<Edge> edgesWithoutCompID = new HashSet<Edge>();
-    	
-    	if(hasEdges()) {
-    		for (Edge edge : edges) {
-    			if (!edge.hasComponentID(compID)) {
-    				edgesWithoutCompID.add(edge);
-    			}
-    		}
-    	}
-    	
-    	return edgesWithoutCompID;
-    }
-    
-    public Set<Edge> getEdgesWithComponentID(String compID) {
-    	Set<Edge> edgesWithCompID = new HashSet<Edge>();
-    	
-    	if(hasEdges()) {
-    		for (Edge edge : edges) {
-    			if (edge.hasComponentID(compID)) {
-    				edgesWithCompID.add(edge);
-    			}
-    		}
-    	}
-    	
-    	return edgesWithCompID;
     }
 
     public boolean hasEdges() {
@@ -309,30 +162,6 @@ public class Node {
     	return edgesWithHead;
     }
     
-    public Set<Edge> getEdges(Node head, String orientation) {
-    	Set<Edge> edgesWithHead = new HashSet<Edge>();
-    	
-    	if (hasEdges()) {
-    		for (Edge edge : edges) {
-    			if (edge.getHead().equals(head) && edge.hasOrientation(orientation)) {
-    				edgesWithHead.add(edge);
-    			}
-    		}
-    	} 
-    	
-    	return edgesWithHead;
-    }
-    
-    public boolean hasMatchingEdge(Edge edge, Node head, int tolerance, Set<String> roles) {
-    	for (Edge e : getEdges(head)) {
-    		if (edge.isMatching(e, tolerance, roles)) {
-    			return true;
-    		}
-    	}
-
-    	return false;
-    }
-    
     public boolean hasMatchingEdge(Edge edge, int tolerance, Set<String> roles) {
     	if (hasEdges()) {
     		for (Edge e : edges) {
@@ -346,41 +175,9 @@ public class Node {
     		return false;
     	}
     }
-    
-    public boolean hasMatchingEdge(Edge edge, int tolerance, Set<String> roles, 
-    		Set<Edge> excludedEdges) {
-    	if (hasEdges()) {
-    		for (Edge e : edges) {
-    			if (edge.isMatching(e, tolerance, roles) && !excludedEdges.contains(e)) {
-    				return true;
-    			}
-    		}
-    		
-    		return false;
-    	} else {
-    		return false;
-    	}
-    }
-    
-    public Set<Edge> getMatchingEdges(Edge edge, int tolerance, Set<String> roles) {
-    	Set<Edge> matchingEdges = new HashSet<Edge>();
-    	
-    	for (Edge e : edges) {
-    		if (edge.isMatching(e, tolerance, roles)) {
-    			matchingEdges.add(e);
-    		}
-    	}
 
-    	return matchingEdges;
-    }
-
-    public boolean hasNodeTypes() {
+    public boolean hasNodeType() {
     	return nodeTypes != null && !nodeTypes.isEmpty(); 
-    }
-    
-    public boolean hasConflictingType(Node node) {
-    	return isAcceptNode() && node.isStartNode()
-    			|| isStartNode() && node.isAcceptNode();
     }
 
     public boolean isAcceptNode() {
@@ -389,10 +186,6 @@ public class Node {
 
     public boolean isStartNode() {
         return nodeTypes.contains(NodeType.START.getValue());
-    }
-    
-    public boolean isSinkNode() {
-    	return hasEdges();
     }
 
     public boolean isIdenticalTo(Node node) {
@@ -405,6 +198,14 @@ public class Node {
     	} else {
     		return false;
     	}
+    }
+    
+    public boolean deleteBlankEdges() {
+    	return deleteEdges(getBlankEdges());
+    }
+    
+    public boolean deleteEdges(Node head) {
+    	return deleteEdges(getEdges(head));
     }
     
     public boolean deleteEdges(Set<Edge> edges) {
@@ -474,13 +275,31 @@ public class Node {
         }
     }
     
-    public void unionEdges(Set<Node> nodes) {
-    	for (Node node : nodes) {
-			if (node.hasEdges()) {
-				for (Edge edge : node.getEdges()) {
-					copyEdge(edge);
-				}
+    public void copyEdges(Node node) {
+    	if (node.hasEdges()) {
+			for (Edge edge : node.getEdges()) {
+				copyEdge(edge);
 			}
 		}
+    }
+    
+    public void copyEdges(Set<Node> nodes) {
+    	for (Node node : nodes) {
+			copyEdges(node);
+		}
+    }
+    
+    public Set<Edge> getBlankEdges() {
+    	Set<Edge> blankEdges = new HashSet<Edge>();
+    	
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.isBlank()) {
+    				blankEdges.add(edge);
+    			}
+    		}
+    	}
+    	
+    	return blankEdges;
     }
 }

@@ -33,14 +33,6 @@ public class DesignSpace extends NodeSpace {
         branches = new HashSet<Branch>();
     }
 
-    public DesignSpace(String spaceID, int idIndex, int mergeIndex) {
-        super(idIndex);
-
-        this.spaceID = spaceID;
-        
-        branches = new HashSet<Branch>();
-    }
-
     public void addBranch(Branch branch) {
         branches.add(branch);
     }
@@ -53,12 +45,6 @@ public class DesignSpace extends NodeSpace {
     	}
 
         return false;
-    }
-    
-    public void copyDesignSpace(DesignSpace space) {
-    	copyNodeSpace(space);
-    	
-    	copyVersionHistory(space);
     }
     
     public void updateCommitIDs() {
@@ -126,18 +112,6 @@ public class DesignSpace extends NodeSpace {
         	
     	return headBranchCopy;
     }
-
-    public DesignSpace copy(String copyID) {
-    	DesignSpace spaceCopy = new DesignSpace(copyID);
-
-    	spaceCopy.copyNodeSpace(this);
-    	
-    	spaceCopy.setNodeIndex(nodeIndex);
-
-    	spaceCopy.copyVersionHistory(this);
-
-        return spaceCopy;
-    }
     
     public Branch createBranch(String branchID) {
     	Branch branch = new Branch(branchID);
@@ -169,10 +143,6 @@ public class DesignSpace extends NodeSpace {
         branch.addCommit(commit);
 
         return commit;
-    }
-    
-    public void clearBranches() {
-    	branches.clear();
     }
 
     public Branch getBranch(String branchID) {
@@ -243,9 +213,5 @@ public class DesignSpace extends NodeSpace {
     	}
     	
     	return commits;
-    }
-    
-    public boolean isIdenticalTo(DesignSpace space) {
-    	return space.getSpaceID().equals(spaceID);
     }
 }

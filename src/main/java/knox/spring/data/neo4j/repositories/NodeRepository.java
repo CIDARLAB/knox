@@ -11,6 +11,4 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
  * @since 12.14.15
  */
 @RepositoryRestResource(collectionResourceRel = "knox", path = "knox")
-public interface NodeRepository extends GraphRepository<Node> {
-    Node findByNodeID(@Param("nodeID") String nodeID);
-}
+public interface NodeRepository extends GraphRepository<Node> {}

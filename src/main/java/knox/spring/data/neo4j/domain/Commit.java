@@ -79,14 +79,6 @@ public class Commit {
         snapshot = new Snapshot(idIndex);
         return snapshot;
     }
-    
-    public void clearPredecessors() {
-    	predecessors.clear();
-    }
-    
-    public void clearSnapshot() {
-    	snapshot = null;
-    }
 
     public Commit findPredecessor(String predecessorID) {
     	for (Commit predecessor : predecessors) {

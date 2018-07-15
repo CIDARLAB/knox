@@ -1,7 +1,6 @@
 package knox.spring.data.neo4j.domain;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,8 +28,6 @@ public class Edge {
     ArrayList<String> componentRoles;
     
     String orientation;
-    
-    private static final Logger LOG = LoggerFactory.getLogger(Edge.class);
 
     double weight;
 
@@ -47,7 +44,7 @@ public class Edge {
         
         componentRoles = new ArrayList<String>();
         
-        orientation = Orientation.INLINE.getValue();
+        orientation = Orientation.NONE.getValue();
         
         weight = 1.0;
     }
@@ -62,8 +59,12 @@ public class Edge {
 		
 		this.componentRoles = componentRoles;
 		
-		orientation = Orientation.INLINE.getValue();
-        
+		if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
+			orientation = Orientation.INLINE.getValue();
+		} else {
+			orientation = Orientation.NONE.getValue();
+		}
+		
         weight = 1.0;
 	}
     
@@ -77,25 +78,14 @@ public class Edge {
 		
 		this.componentRoles = componentRoles;
 		
-		this.orientation = orientation;
+		if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
+			this.orientation = orientation;
+		} else {
+			this.orientation = Orientation.NONE.getValue();
+		}
         
         weight = 1.0;
 	}
-
-    public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
-    		ArrayList<String> componentRoles, double weight) {
-        this.tail = tail;
-        
-        this.head = head;
-        
-        this.componentIDs = componentIDs;
-        
-        this.componentRoles = componentRoles;
-        
-        orientation = Orientation.INLINE.getValue();
-        
-        this.weight = weight;
-    }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
     		ArrayList<String> componentRoles, String orientation, double weight) {
@@ -107,7 +97,11 @@ public class Edge {
 
     	this.componentRoles = componentRoles;
 
-    	this.orientation = orientation;
+    	if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
+			this.orientation = orientation;
+		} else {
+			this.orientation = Orientation.NONE.getValue();
+		}
 
     	this.weight = weight;
     }
@@ -118,23 +112,22 @@ public class Edge {
 
     	this.componentRoles = componentRoles;
 
-    	this.orientation = orientation;
+    	if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
+			this.orientation = orientation;
+		} else {
+			this.orientation = Orientation.NONE.getValue();
+		}
 
     	this.weight = weight;
-    }
-
-    public void addComponent(String compID, String compRole) {
-        if (!componentIDs.contains(compID)) {
-            componentIDs.add(compID);
-        }
-
-        if (!componentRoles.contains(compRole)) {
-            componentRoles.add(compRole);
-        }
     }
     
     public Edge copy() {
     	return new Edge(new ArrayList<String>(componentIDs),
+    			new ArrayList<String>(componentRoles), orientation, weight);
+    }
+    
+    public Edge copy(Node head) {
+    	return new Edge(tail, head, new ArrayList<String>(componentIDs),
     			new ArrayList<String>(componentRoles), orientation, weight);
     }
 
@@ -145,24 +138,6 @@ public class Edge {
     
     public void delete() {
     	tail.deleteEdge(this);
-    }
-
-    public boolean deleteComponentID(String compID) {
-    	return componentIDs.remove(compID);
-    }
-    
-    public boolean detachDeleteComponentID(String compID) {
-    	boolean isDeleted = componentIDs.remove(compID);
-    	
-    	if (componentIDs.isEmpty()) {
-    		delete();
-    	}
-    	
-    	return isDeleted;
-    }
-    
-    public boolean deleteComponentIDs(Collection<String> compIDs) {
-    	return componentIDs.removeAll(compIDs);
     }
     
     public void diffWithEdge(Edge edge) {
@@ -176,39 +151,21 @@ public class Edge {
     public Node getHead() { 
     	return head; 
     }
-
-    public String getComponentID(int i) {
-        if (i >= 0 && i < componentIDs.size()) {
-            return componentIDs.get(i);
-        } else {
-            return null;
-        }
+    
+    public String getTailID() {
+    	return tail.getNodeID();
+    }
+    
+    public String getHeadID() {
+    	return head.getNodeID();
     }
     
     public ArrayList<String> getComponentIDs() {
     	return componentIDs; 
     }
 
-    public int getNumComponentIDs() { 
-    	return componentIDs.size(); 
-    }
-
     public ArrayList<String> getComponentRoles() { 
     	return componentRoles; 
-    }
-
-    public boolean hasComponentID(String compID) {
-    	return componentIDs.contains(compID);
-    }
-    
-    public boolean hasComponentID(Collection<String> compIDs) {
-    	for (String compID : compIDs) {
-    		if (hasComponentID(compID)) {
-    			return true;
-    		}
-    	}
-    	
-    	return false;
     }
 
     public boolean hasComponentIDs() {
@@ -232,11 +189,11 @@ public class Edge {
     }
     
     public boolean hasOrientation() {
-    	return orientation != null;
+    	return isInline() || isReverseComplement();
     }
     
     public boolean hasOrientation(String orientation) {
-    	return this.orientation != null && this.orientation.equals(orientation);
+    	return hasOrientation() && this.orientation.equals(orientation);
     }
 
     public void intersectWithEdge(Edge edge) {
@@ -245,21 +202,16 @@ public class Edge {
     	componentRoles.retainAll(edge.getComponentRoles());
     }
     
-    public boolean isRoleCompatible(Edge edge, Set<String> roles) {
-    	return roles.isEmpty() || hasRole(roles) && edge.hasRole(roles);
-    }
-    
     public boolean isMatching(Edge edge, int tolerance, Set<String> roles) {
     	return hasSameOrientation(edge) 
     			&& (tolerance == 0 && hasSameComponentIDs(edge) && hasSameRoles(edge, roles)
-    					|| (tolerance == 1 || tolerance == 2) && hasSharedComponentIDs(edge) 
-    							&& hasSharedRoles(edge, roles)
-    					|| tolerance == 3 && hasSameRoles(edge, roles)
-    					|| tolerance == 4 && hasSharedRoles(edge, roles));
+    					|| (tolerance == 1 || tolerance == 2) && hasSharedComponentIDs(edge) && hasSharedRoles(edge, roles)
+    					|| tolerance == 2 && hasSameRoles(edge, roles)
+    					|| tolerance == 3 && hasSharedRoles(edge, roles));
     }
     
     public boolean hasSameOrientation(Edge edge) {
-    	return isInline() && edge.isInline() || !isInline() && !edge.isInline();
+    	return hasOrientation(edge.getOrientation());
     }
     
     public boolean hasSameComponentIDs(Edge edge) {
@@ -317,17 +269,17 @@ public class Edge {
     		return !hasComponentRoles() && !edge.hasComponentRoles() && roles.isEmpty();
     	}
     }
-
-    public boolean isCyclic() { 
-    	return tail.isIdenticalTo(head);
-    }
     
     public boolean isInline() {
-    	if (hasOrientation()) {
-    		return orientation.equals(Orientation.INLINE.getValue());
-    	} else {
-    		return true;
-    	}
+    	return orientation.equals(Orientation.INLINE.getValue());
+    }
+    
+    public boolean isReverseComplement() {
+    	return orientation.equals(Orientation.REVERSE_COMPLEMENT.getValue());
+    }
+    
+    public boolean isBlank() {
+    	return !hasComponentIDs() && !hasComponentRoles() && !hasOrientation();
     }
     
     public void setComponentIDs(ArrayList<String> compIDs) {
@@ -359,12 +311,7 @@ public class Edge {
     }
     
     public String getOrientation() {
-    	if (hasOrientation()) {
-    		return orientation;
-    	} else {
-    		return Orientation.INLINE.getValue();
-    	}
-    	
+    	return orientation;
     }
 
     public void setWeight(double weight) {
@@ -375,10 +322,10 @@ public class Edge {
     	return weight; 
     }
     
-    
     public enum Orientation {
         INLINE("inline"),
-        REVERSE_COMPLEMENT("reverseComplement");
+        REVERSE_COMPLEMENT("reverseComplement"),
+        NONE("none");
 
         private final String value;
         

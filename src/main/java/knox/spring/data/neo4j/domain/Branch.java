@@ -80,14 +80,6 @@ public class Branch {
     public Commit getLatestCommit() { 
     	return latestCommit; 
     }
-    
-    public void clearLatestCommit() {
-    	latestCommit = null;
-    }
-    
-    public void clearCommits() {
-    	commits.clear();
-    }
 
     public String getBranchID() { 
     	return branchID; 

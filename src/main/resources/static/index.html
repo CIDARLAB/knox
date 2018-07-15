@@ -95,13 +95,11 @@
         </div>
         <div id="SBOL" class="tab-pane fade">
           <form method="POST" enctype="multipart/form-data"
-                action="merge/sbol" class="navbar-form navbar-left" ng-show="isSBOLMode">
+                action="sbol/import" class="navbar-form navbar-left" ng-show="isSBOLMode">
             <input type="file" name="inputSBOLFiles[]" multiple>
             <input type="text" name="outputSpaceID" placeholder="Space ID"
                    class="form-control" aria-label="..." size="10">
-            <input type="text" name="authority" placeholder="Authority"
-                   class="form-control" aria-label="..." size="10">
-            <input type="submit" value="Merge">
+            <input type="submit" value="Import">
           </form>
         </div>
       </div>

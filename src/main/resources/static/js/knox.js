@@ -443,7 +443,6 @@
                     break;
 
                 case "OR":
-                    query += encodeQueryParameter("isClosed", $("#swal-closed-or").val(), query);
                     request.open("POST", "/designSpace/or" + query, false);
                     break;
 
@@ -455,13 +454,11 @@
                 case "AND":
                     query += encodeQueryParameter("tolerance", $("#swal-tolerance").val(), query);
                     query += encodeQueryParameter("isComplete", $("#swal-complete").val(), query);
-                    query += encodeQueryParameter("isClosed", $("#swal-closed-product").val(), query);
                     request.open("POST", "/designSpace/and" + query, false);
                     break;
 
                 case "Merge":
                     query += encodeQueryParameter("tolerance", $("#swal-tolerance").val(), query);
-                    query += encodeQueryParameter("isClosed", $("#swal-closed-product").val(), query);
                     request.open("POST", "/designSpace/merge" + query, false);
                     break;
                 }

@@ -5,22 +5,21 @@ import java.io.InputStream;
 import java.util.*;
 
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
-import knox.spring.data.neo4j.eugene.Rule;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
-import knox.spring.data.neo4j.exception.NodeNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
 import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import org.sbolstandard.core2.SBOLConversionException;
+import org.sbolstandard.core2.SBOLDocument;
+import org.sbolstandard.core2.SBOLReader;
 import org.sbolstandard.core2.SBOLValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -222,8 +221,6 @@ public class KnoxController {
 	 * roles. If tolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
 	 * labeled with the same orientation. If tolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
 	 * unioned.
-	 * @apiParam {Boolean} isComplete=false If true, then only edges belonging to paths for designs common to all input design 
-	 * spaces are retained.
 	 * @apiParam {String[]} [roles] If specified, then only edges labeled with at least one of these roles will be merged.
 	 * 
 	 * @apiDescription Merges designs from input design spaces. Based on strong product of graphs.
@@ -241,11 +238,10 @@ public class KnoxController {
 		long startTime = System.nanoTime();
 		
 		if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, isComplete,
-    				uniqueRoles); 
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, uniqueRoles); 
     	} else {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, 
-    				tolerance, isComplete, uniqueRoles);
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance, 
+    				uniqueRoles);
     	}
     	
     	return new ResponseEntity<String>("{\"message\": \"Branches were successfully merged after " + 
@@ -497,8 +493,6 @@ public class KnoxController {
 	 * roles. If tolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
 	 * labeled with the same orientation. If tolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
 	 * unioned.
-	 * @apiParam {Boolean} isComplete=false If true, then only the matching edges that belong to paths for designs common to all 
-	 * input design spaces are retained prior to adding the non-matching edges from these spaces.
 	 * @apiParam {String[]} [roles] If specified, then only edges labeled with at least one of these roles will be AND-ed.
 	 * 
 	 * @apiDescription Merges designs from input design spaces. Based on strong product of graphs.
@@ -508,7 +502,6 @@ public class KnoxController {
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
-			@RequestParam(value = "isComplete", required = false, defaultValue = "false") boolean isComplete,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -516,10 +509,9 @@ public class KnoxController {
 			long startTime = System.nanoTime();
 			
 			if (outputSpaceID == null) {
-				designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, isComplete, uniqueRoles);
+				designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, uniqueRoles);
 			} else {
-				designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, 
-						isComplete, uniqueRoles);
+				designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, uniqueRoles);
 			}
 			
 			return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged after " +
@@ -600,77 +592,6 @@ public class KnoxController {
 	    }
 	}
 
-	@RequestMapping(value = "/designSpace/constrain", method = RequestMethod.POST)
-    public ResponseEntity<String> constrainDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
-    		@RequestBody List<Rule> rules) {
-        try {
-        	long startTime = System.nanoTime();
-        	
-            designSpaceService.constrainDesignSpace(targetSpaceID, outputSpaceID, rules);
-
-            return new ResponseEntity<String>("{\"message\": \"Design spaces was successfully constrained after " + 
-            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
-        } catch (ParameterEmptyException | DesignSpaceNotFoundException |
-                DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
-            return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
-                    HttpStatus.BAD_REQUEST);
-        }
-    }
-	
-	@RequestMapping(value = "/designSpace/diff", method = RequestMethod.POST)
-    public ResponseEntity<String> diffDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-    		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
-    		@RequestParam(value = "isRow", required = false, defaultValue = "true") boolean isRow,
-    		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
-    	Set<String> uniqueRoles = new HashSet<String>(roles);
-    	
-		try {
-    		long startTime = System.nanoTime();
-    		
-    		if (outputSpaceID == null) {
-    			designSpaceService.diffDesignSpaces(inputSpaceIDs, tolerance, isRow, 
-    					uniqueRoles);
-    		} else {
-    			designSpaceService.diffDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, isRow, 
-    					uniqueRoles);
-    		}
-
-    		return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully diff-ed after " +
-    				(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
-    	} catch (ParameterEmptyException | DesignSpaceNotFoundException | 
-    			DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
-    		return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
-    				HttpStatus.BAD_REQUEST);
-    	}
-    }
-	
-	@RequestMapping(value = "/branch/diff", method = RequestMethod.POST)
-    public ResponseEntity<String> diffBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
-    		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
-    		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
-    		@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
-    		@RequestParam(value = "isRow", required = false, defaultValue = "true") boolean isRow,
-    		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
-		Set<String> uniqueRoles = new HashSet<String>(roles);
-		
-		long startTime = System.nanoTime();
-		
-		if (outputBranchID == null) {
-    		designSpaceService.diffBranches(targetSpaceID, inputBranchIDs, tolerance, isRow, 
-    				uniqueRoles);
-		} else {
-			designSpaceService.diffBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance,
-					isRow, uniqueRoles);
-		}
-    	
-    	return new ResponseEntity<String>("{\"message\": \"Branches were successfully diff-ed after " + 
-            		(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
-    }
-	
-	
-
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
     		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
@@ -713,23 +634,16 @@ public class KnoxController {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
-    @RequestMapping(value = "/import/eugene", method = RequestMethod.POST)
-    public ResponseEntity<String> importEugene(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputEugeneFiles) {
-        designSpaceService.importEugene();
-
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
-    }
-
-    @RequestMapping(value = "/merge/sbol", method = RequestMethod.POST)
-    public ResponseEntity<String> mergeSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
-    		@RequestParam(value = "authority", required = false) String authority) {
-    	List<InputStream> inputSBOLStreams = new ArrayList<InputStream>();
+    @RequestMapping(value = "/sbol/import", method = RequestMethod.POST)
+    public ResponseEntity<String> importSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
+    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
+    	List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
+    	
     	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
     		if (!inputSBOLFile.isEmpty()) {
     			try {
-    				inputSBOLStreams.add(inputSBOLFile.getInputStream());
-				} catch (IOException e) {
+    				sbolDocs.add(SBOLReader.read(inputSBOLFile.getInputStream()));
+				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -737,14 +651,8 @@ public class KnoxController {
     	}
     	
     	try {
-			designSpaceService.importSBOL(inputSBOLStreams, outputSpaceID, authority);
-		} catch (SBOLValidationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SBOLConversionException e) {
+			designSpaceService.importSBOL(sbolDocs, outputSpaceID);
+		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -755,20 +663,6 @@ public class KnoxController {
     @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
     public Map<String, Object> d3GraphBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
         return designSpaceService.d3GraphBranches(targetSpaceID);
-    }
-
-    @RequestMapping(value = "/branch/insert", method = RequestMethod.POST)
-    public ResponseEntity<String> insertBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "inputBranchID1", required = true) String inputBranchID1,
-            @RequestParam(value = "inputBranchID2", required = true) String inputBranchID2,
-            @RequestParam(value = "targetNodeID", required = true) String targetNodeID,
-            @RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
-        designSpaceService.insertBranch(targetSpaceID, inputBranchID1,
-                inputBranchID2, targetNodeID,
-                outputBranchID);
-        return new ResponseEntity<String>(
-                "{\"message\": \"Branch was successfully inserted.\"}",
-                HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value = "/designSpace", method = RequestMethod.POST)
@@ -806,157 +700,6 @@ public class KnoxController {
         return designSpaceService.d3GraphDesignSpace(targetSpaceID);
     }
 
-    @RequestMapping(value = "/designSpace/insert", method = RequestMethod.POST)
-    public ResponseEntity<String> insertDesignSpace(@RequestParam(value = "inputSpaceID1", required = true) String inputSpaceID1,
-            @RequestParam(value = "inputSpaceID2", required = true) String inputSpaceID2,
-            @RequestParam(value = "targetNodeID", required = true) String targetNodeID,
-            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-        if (outputSpaceID == null) {
-            outputSpaceID = inputSpaceID1;
-        }
-        try {
-            designSpaceService.insertDesignSpace(inputSpaceID1, inputSpaceID2,
-                    targetNodeID, outputSpaceID);
-            return new ResponseEntity<String>(
-                    "{\"message\": \"Design space was successfully inserted.\"}",
-                    HttpStatus.NO_CONTENT);
-        } catch (NodeNotFoundException | DesignSpaceNotFoundException |
-                DesignSpaceConflictException |
-                DesignSpaceBranchesConflictException ex) {
-            return new ResponseEntity<String>(
-                    "{\"message\": \"" + ex.getMessage() + "\"}",
-                    HttpStatus.BAD_REQUEST);
-        }
-    }
-
-//    @RequestMapping(value = "/designSpace/match", method = RequestMethod.GET)
-//    public Map<String, Object> matchDesignSpaces(@RequestParam(value = "querySpaceIDs", required = true) List<String> querySpaceIDs,
-//            @RequestParam(value = "queriedSpaceIDs", required = true) List<String> queriedSpaceIDs) {
-//        return designSpaceService.matchDesignSpaces(querySpaceIDs,
-//                queriedSpaceIDs);
-//    }
-    
-    @RequestMapping(value = "/designSpace/union", method = RequestMethod.POST)
-    public ResponseEntity<String> unionDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-            @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
-        try {
-            if (outputSpaceID == null) {
-                designSpaceService.unionDesignSpaces(inputSpaceIDs);
-            } else {
-                designSpaceService.unionDesignSpaces(inputSpaceIDs,
-                        outputSpaceID);
-            }
-
-            return new ResponseEntity<String>(
-                    "{\"message\": \"Design spaces were successfully unioned.\"}",
-                    HttpStatus.NO_CONTENT);
-        } catch (ParameterEmptyException | DesignSpaceNotFoundException |
-                DesignSpaceConflictException |
-                DesignSpaceBranchesConflictException ex) {
-            return new ResponseEntity<String>(
-                    "{\"message\": \"" + ex.getMessage() + "\"}",
-                    HttpStatus.BAD_REQUEST);
-        }
-    }
-
-//    @RequestMapping(value = "/designSpace/minimize", method = RequestMethod.POST)
-//    public ResponseEntity<String>
-//    minimizeDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-//        try {
-//            designSpaceService.minimizeDesignSpace(targetSpaceID);
-//
-//            return new ResponseEntity<String>(
-//                    "{\"message\": \"Design space was successfully minimized.\"}",
-//                    HttpStatus.NO_CONTENT);
-//        } catch (DesignSpaceNotFoundException ex) {
-//            return new ResponseEntity<String>(
-//                    "{\"message\": \"" + ex.getMessage() + "\"}",
-//                    HttpStatus.BAD_REQUEST);
-//        }
-//    }
-
-    
-
-//    @RequestMapping(value = "/designSpace/partition",
-//            method = RequestMethod.POST)
-//    public ResponseEntity<String>
-//    partitionDesignSpace(@RequestParam(value = "inputSpaceID",
-//            required = true) String inputSpaceID,
-//                         @RequestParam(value = "outputSpacePrefix",
-//                                 required = true)
-//                                 String outputSpacePrefix) {
-//        //    	try {
-//        designSpaceService.partitionDesignSpace(inputSpaceID,
-//                outputSpacePrefix);
-//
-//        return new ResponseEntity<String>(
-//                "{\"message\": \"Design space was successfully partitioned.\"}",
-//                HttpStatus.NO_CONTENT);
-//        //    	} catch
-//        //    (ParameterEmptyException|DesignSpaceNotFoundException|DesignSpaceConflictException|DesignSpaceBranchesConflictException
-//        //    ex) {
-//        //    		return new ResponseEntity<String>("{\"message\": \"" +
-//        //    ex.getMessage() + "\"}",
-//        //    				HttpStatus.BAD_REQUEST);
-//        //    	}
-//    }
-
-    @RequestMapping(value = "/edge", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteEdge(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "targetTailID", required = true) String targetTailID,
-            @RequestParam(value = "targetHeadID", required = true) String targetHeadID) {
-        designSpaceService.deleteEdge(targetSpaceID, targetTailID,
-                targetHeadID);
-
-        return new ResponseEntity<String>("Edge was deleted successfully.",
-                HttpStatus.NO_CONTENT);
-    }
-
-    @RequestMapping(value = "/edge", method = RequestMethod.POST)
-    public ResponseEntity<String> createEdge(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "targetTailID", required = true) String targetTailID,
-            @RequestParam(value = "targetHeadID", required = false) String targetHeadID,
-            @RequestParam(value = "componentIDs", required = false) List<String> compIDs,
-            @RequestParam(value = "componentRoles", required = false) List<String> compRoles) {
-        if (targetHeadID == null) {
-            targetHeadID = designSpaceService.createNode(targetSpaceID);
-        }
-
-        if (compIDs != null && compRoles != null) {
-            try {
-                designSpaceService.createComponentEdge(
-                        targetSpaceID, targetTailID, targetHeadID,
-                        new ArrayList<String>(compIDs),
-                        new ArrayList<String>(compRoles));
-                return new ResponseEntity<String>(
-                        "Edge was created successfully.", HttpStatus.NO_CONTENT);
-            } catch (DesignSpaceNotFoundException ex) {
-                return new ResponseEntity<String>(
-                        "{\"message\": \"" + ex.getMessage() + "\"}",
-                        HttpStatus.BAD_REQUEST);
-            }
-        } else {
-            try {
-                designSpaceService.createEdge(targetSpaceID, targetTailID,
-                        targetHeadID);
-                return new ResponseEntity<String>(
-                        "Edge was created successfully.", HttpStatus.NO_CONTENT);
-            } catch (DesignSpaceNotFoundException ex) {
-                return new ResponseEntity<String>(
-                        "{\"message\": \"" + ex.getMessage() + "\"}",
-                        HttpStatus.BAD_REQUEST);
-            }
-        }
-    }
-
-    @RequestMapping(value = "/node", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteNode(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "targetNodeID", required = true) String targetNodeID) {
-        designSpaceService.deleteNode(targetSpaceID, targetNodeID);
-        return new ResponseEntity<String>("Node was deleted successfully.",
-                HttpStatus.NO_CONTENT);
-    }
-
     @RequestMapping(value = "/designSpace/sample", method = RequestMethod.GET)
     public Set<List<String>> sample(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns) {
@@ -979,9 +722,4 @@ public class KnoxController {
         return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, 
         		enumerateType);
     }
-
-//    @RequestMapping(value = "/partition", method = RequestMethod.GET)
-//    public Set<List<String>> partition(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
-//        return designSpaceService.partitionDesignSpace(targetSpaceID);
-//    }
 }
