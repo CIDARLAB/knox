@@ -17,7 +17,7 @@ public class Star {
 			concat.apply(space);
 		}
 		
-		starSpace = concat.getConcatenationSpace().shallowCopy();
+		starSpace = concat.getSpace().shallowCopy();
 	}
 	
 	public void apply(boolean isOptional) {

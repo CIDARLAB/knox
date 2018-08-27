@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.operations;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -24,7 +25,9 @@ public class Union {
     	}
 	}
 	
-	public void apply() {
+	public Set<Edge> apply() {
+		Set<Edge> blankEdges = new HashSet<Edge>();
+		
 		if (unionSpace.hasNodes()) {
 			Set<Node> startNodes = unionSpace.getStartNodes();
 
@@ -33,43 +36,28 @@ public class Union {
 			for (Node startNode : startNodes) {
 				startNode.deleteStartNodeType();
 			}
-
+			
 			for (Node startNode : startNodes) {
-				primaryStartNode.createEdge(startNode);
+				blankEdges.add(primaryStartNode.createEdge(startNode));
+			}
+			
+			Set<Node> acceptNodes = unionSpace.getAcceptNodes();
+			
+			for (Node acceptNode : acceptNodes) {
+				acceptNode.deleteAcceptNodeType();
 			}
 
-			HashMap<String, Set<Edge>> nodeIDToIncomingEdges = unionSpace.mapNodeIDsToIncomingEdges();
-			
-			if (startNodes.size() == 1) {
-				Node startNode = startNodes.iterator().next();
-				
-				for (Edge edge : nodeIDToIncomingEdges.get(startNode.getNodeID())) {
-					edge.getTail().copyEdge(edge, primaryStartNode);
-					
-					edge.delete();
-				}
-				
-				primaryStartNode.deleteEdges(startNode);
-				
-				primaryStartNode.copyEdges(startNode);
-				
-				unionSpace.deleteNode(startNode);
-			} else {
-				for (Node startNode : startNodes) {
-					if (nodeIDToIncomingEdges.containsKey(startNode.getNodeID())
-							&& nodeIDToIncomingEdges.get(startNode.getNodeID()).size() == 1) {
-						primaryStartNode.deleteEdges(startNode);
+			Node primaryAcceptNode = unionSpace.createAcceptNode();
 
-						primaryStartNode.copyEdges(startNode);
-
-						unionSpace.deleteNode(startNode);
-					}
-				}
+			for (Node acceptNode : acceptNodes) {
+				blankEdges.add(acceptNode.createEdge(primaryAcceptNode));
 			}
 		}
+		
+		return blankEdges;
 	}
 	
-	public NodeSpace getUnionSpace() {
+	public NodeSpace getSpace() {
 		return unionSpace;
 	}
 	

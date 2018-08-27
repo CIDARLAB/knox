@@ -31,7 +31,7 @@ public class Product {
 		this.productSpace = productSpace;
 	}
 	
-    public NodeSpace getProductSpace() {
+    public NodeSpace getSpace() {
     	return productSpace;
     }
     
@@ -125,6 +125,8 @@ public class Product {
 	    		productSpace.labelSourceNodesStart();
 
 	    		productSpace.labelSinkNodesAccept();
+	    	} else if (degree == 2) {
+	    		productSpace.deleteUnacceptableNodes();
 	    	}
 	    	
 	    	return rowSpace;
@@ -133,7 +135,9 @@ public class Product {
 		}
     }
     
-    public void applyModifiedStrong(NodeSpace colSpace, int tolerance, Set<String> roles) {
+    public Set<Edge> applyModifiedStrong(NodeSpace colSpace, int tolerance, Set<String> roles) {
+    	Set<Edge> blankEdges = new HashSet<Edge>();
+    	
     	NodeSpace rowSpace = applyTensor(colSpace, tolerance, 1, roles);
     	
     	rowIDToDiffNode = new HashMap<String, Node>();
@@ -142,43 +146,53 @@ public class Product {
     	for (Edge rowEdge : rowSpace.getEdges()) {
     		String rowIDs = rowEdge.getTailID() + rowEdge.getHeadID();
 
-    		diffProductEdges(rowIDsToProductEdges.get(rowIDs), rowEdge, tolerance, roles, rowIDToProductNodes,
-    				rowIDToDiffNode);
+    		blankEdges.addAll(diffProductEdges(rowIDsToProductEdges.get(rowIDs), rowEdge, tolerance, roles, 
+    				rowIDToProductNodes, rowIDToDiffNode));
     	}
 
     	for (Edge colEdge : colSpace.getEdges()) {
     		String colIDs = colEdge.getTailID() + colEdge.getHeadID();
 
-    		diffProductEdges(colIDsToProductEdges.get(colIDs), colEdge, tolerance, roles, colIDToProductNodes,
-    				colIDToDiffNode);
+    		blankEdges.addAll(diffProductEdges(colIDsToProductEdges.get(colIDs), colEdge, tolerance, roles,
+    				colIDToProductNodes, colIDToDiffNode));
     	}
     	
     	if (tolerance == 1) {
     		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = productSpace.mapNodeIDsToIncomingEdges();
     		
     		for (String rowID : rowIDToProductNodes.keySet()) {
-    			linkDiffNode(rowIDToDiffNode.get(rowID), rowIDToProductNodes.get(rowID), nodeIDToIncomingEdges);
+    			blankEdges.addAll(linkDiffNode(rowIDToDiffNode.get(rowID), rowIDToProductNodes.get(rowID), 
+    					nodeIDToIncomingEdges));
     		}
     		
     		for (String colID : colIDToProductNodes.keySet()) {
-    			linkDiffNode(colIDToDiffNode.get(colID), colIDToProductNodes.get(colID), nodeIDToIncomingEdges);
+    			blankEdges.addAll(linkDiffNode(colIDToDiffNode.get(colID), colIDToProductNodes.get(colID), 
+    					nodeIDToIncomingEdges));
     		}
     	}
+    	
+    	return blankEdges;
     }
     
-    private void linkDiffNode(Node diffNode, Set<Node> productNodes, 
+    private Set<Edge> linkDiffNode(Node diffNode, Set<Node> productNodes, 
     		HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    	Set<Edge> blankEdges = new HashSet<Edge>();
+    	
     	for (Node productNode : productNodes) {
     		if (!diffNode.hasEdges()) {
-    			diffNode.createEdge(productNode);
+    			blankEdges.add(diffNode.createEdge(productNode));
     		} else if (!nodeIDToIncomingEdges.containsKey(diffNode.getNodeID())) {
-    			productNode.createEdge(diffNode);
+    			blankEdges.add(productNode.createEdge(diffNode));
     		}
     	}
+    	
+    	return blankEdges;
     }
     
-    private void diffProductEdges(Set<Edge> productEdges, Edge edge, int tolerance, Set<String> roles,
+    private Set<Edge> diffProductEdges(Set<Edge> productEdges, Edge edge, int tolerance, Set<String> roles,
     		HashMap<String, Set<Node>> idToProductNodes, HashMap<String, Node> idToDiffNode) {
+    	Set<Edge> blankEdges = new HashSet<Edge>();
+    	
     	if (tolerance == 0 || tolerance == 1) {
     		Edge diffEdge = edge.copy();
 
@@ -222,13 +236,13 @@ public class Product {
     			if (productEdges.isEmpty()) {
     				if (idToProductNodes.containsKey(edge.getTailID())) {
     					for (Node productNode : idToProductNodes.get(edge.getTailID())) {
-    						productNode.createEdge(diffTail);
+    						blankEdges.add(productNode.createEdge(diffTail));
     					}
     				}
     				
     				if (idToProductNodes.containsKey(edge.getHeadID())) {
     					for (Node productNode : idToProductNodes.get(edge.getHeadID())) {
-    						diffHead.createEdge(productNode);
+    						blankEdges.add(diffHead.createEdge(productNode));
     					}
     				}
     			}
@@ -247,7 +261,6 @@ public class Product {
 
     			if (idToDiffNode.containsKey(edge.getTailID())) {
     				diffTail = idToDiffNode.get(edge.getTailID());
-    				
     			} else {
     				if (productEdges.isEmpty()) {
     					diffTail = productSpace.copyNode(edge.getTail());
@@ -263,7 +276,6 @@ public class Product {
 
     			if (idToDiffNode.containsKey(edge.getHeadID())) {
     				diffHead = idToDiffNode.get(edge.getHeadID());
-    				
     			} else {
     				if (productEdges.isEmpty()) {
     					diffHead = productSpace.copyNode(edge.getHead());
@@ -278,6 +290,8 @@ public class Product {
     			diffTail.copyEdge(edge, diffHead);
     		}
     	}
+    	
+    	return blankEdges;
     }
     
     private Node crossNodes(Node rowNode, Node colNode, int degree) {

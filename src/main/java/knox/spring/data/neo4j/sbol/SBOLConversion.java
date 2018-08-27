@@ -76,9 +76,9 @@ public class SBOLConversion {
 
 			union.apply();
 
-			union.getUnionSpace().minimizeEdges();
+			union.getSpace().minimizeEdges();
 			
-			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+			outputSpace.shallowCopyNodeSpace(union.getSpace());
 		} else {
 			outputSpace.shallowCopyNodeSpace(unionSpace);
 		}

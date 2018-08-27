@@ -12,6 +12,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
@@ -23,6 +25,8 @@ public class Node {
     @Relationship(type = "PRECEDES") Set<Edge> edges = new HashSet<>();
     
     ArrayList<String> nodeTypes;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(Node.class);
 
     public Node() {}
     
@@ -179,6 +183,18 @@ public class Node {
     public boolean hasNodeType() {
     	return nodeTypes != null && !nodeTypes.isEmpty(); 
     }
+    
+    public boolean hasDiffNodeType(Node node) {
+    	if (!hasNodeType() || !node.hasNodeType()) {
+    		return false;
+    	} else {
+    		Set<String> sharedNodeTypes = new HashSet<String>(nodeTypes);
+
+    		sharedNodeTypes.retainAll(node.getNodeTypes());
+
+    		return sharedNodeTypes.isEmpty();
+    	}
+    }
 
     public boolean isAcceptNode() {
         return nodeTypes.contains(NodeType.ACCEPT.getValue());
@@ -228,7 +244,7 @@ public class Node {
         }
     }
     
-    public void minimizeEdges() {
+    public void mergeEdges() {
     	if (hasEdges()) {
     		HashMap<String, Set<Edge>> codeToIncomingEdges = new HashMap<String, Set<Edge>>();
     		
@@ -275,18 +291,28 @@ public class Node {
         }
     }
     
-    public void copyEdges(Node node) {
+    public Set<Edge> copyEdges(Node node) {
+    	Set<Edge> edgeCopies = new HashSet<Edge>();
+    	
     	if (node.hasEdges()) {
 			for (Edge edge : node.getEdges()) {
-				copyEdge(edge);
+				edgeCopies.add(copyEdge(edge));
 			}
 		}
+    	
+    	return edgeCopies;
     }
     
     public void copyEdges(Set<Node> nodes) {
     	for (Node node : nodes) {
 			copyEdges(node);
 		}
+    }
+    
+    public void copyNodeType(Node node) {
+    	nodeTypes = new ArrayList<String>();
+    	
+    	nodeTypes.addAll(node.getNodeTypes());
     }
     
     public Set<Edge> getBlankEdges() {

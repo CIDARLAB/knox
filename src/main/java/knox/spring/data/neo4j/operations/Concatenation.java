@@ -16,71 +16,45 @@ public class Concatenation {
 		concatenationSpace = new NodeSpace(0);
 	}
 	
-	public void apply(NodeSpace space) {
-		if (!concatenationSpace.hasNodes()) {
-			concatenationSpace.union(space);
-		} else if (space.hasNodes()){
-			Set<Node> acceptNodes = concatenationSpace.getAcceptNodes();
-			
-			Set<Node> originalStartNodes = concatenationSpace.getStartNodes();
-			
-			concatenationSpace.union(space);
-			
-			Set<Node> startNodes = new HashSet<Node>();
-			
-			for (Node startNode : concatenationSpace.getStartNodes()) {
-				if (!originalStartNodes.contains(startNode)) {
-					startNodes.add(startNode);
-				}
-			}
-			
-			Node startNode = startNodes.iterator().next();
-
-			for (Node acceptNode : acceptNodes) {
-				acceptNode.deleteAcceptNodeType();
-			}
-			
-			startNode.deleteStartNodeType();
-
-			for (Node acceptNode : acceptNodes) {
-				acceptNode.createEdge(startNode);
-			}
-			
-			HashMap<String, Set<Edge>> nodeIDToIncomingEdges = concatenationSpace.mapNodeIDsToIncomingEdges();
-			
-			if (acceptNodes.size() == 1) {
-				Node acceptNode = acceptNodes.iterator().next();
-
-				if (acceptNode.getNumEdges() > 1) {
-					acceptNode.deleteEdges(startNode);
-
-					startNode.copyEdges(acceptNode);
-				}
-				
-				for (Edge edge : nodeIDToIncomingEdges.get(acceptNode.getNodeID())) {
-					edge.getTail().copyEdge(edge, startNode);
-					
-					edge.delete();
-				}
-				
-				concatenationSpace.deleteNode(acceptNode);
+	public Set<Edge> apply(NodeSpace space) {
+		Set<Edge> blankEdges = new HashSet<Edge>();
+		
+		if (space.hasNodes()) {
+			if (!concatenationSpace.hasNodes()) {
+				concatenationSpace.union(space);
 			} else {
-				for (Node acceptNode : acceptNodes) {
-					if (acceptNode.getNumEdges() == 1) {
-						for (Edge edge : nodeIDToIncomingEdges.get(acceptNode.getNodeID())) {
-							edge.getTail().copyEdge(edge, startNode);
+				Set<Node> acceptNodes = concatenationSpace.getAcceptNodes();
 
-							edge.delete();
-						}
+				Set<Node> originalStartNodes = concatenationSpace.getStartNodes();
 
-						concatenationSpace.deleteNode(acceptNode);
+				concatenationSpace.union(space);
+
+				Set<Node> startNodes = new HashSet<Node>();
+
+				for (Node startNode : concatenationSpace.getStartNodes()) {
+					if (!originalStartNodes.contains(startNode)) {
+						startNodes.add(startNode);
 					}
+				}
+
+				Node startNode = startNodes.iterator().next();
+
+				for (Node acceptNode : acceptNodes) {
+					acceptNode.deleteAcceptNodeType();
+				}
+
+				startNode.deleteStartNodeType();
+
+				for (Node acceptNode : acceptNodes) {
+					blankEdges.add(acceptNode.createEdge(startNode));
 				}
 			}
 		}
+		
+		return blankEdges;
 	}
 	
-	public NodeSpace getConcatenationSpace() {
+	public NodeSpace getSpace() {
 		return concatenationSpace;
 	}
 	

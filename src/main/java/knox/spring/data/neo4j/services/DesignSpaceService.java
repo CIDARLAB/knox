@@ -119,13 +119,15 @@ public class DesignSpaceService {
 	private void joinNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
 		Concatenation concat = new Concatenation();
 		
+		Set<Edge> blankEdges = new HashSet<Edge>();
+		
 		for (NodeSpace inputSpace : inputSpaces) {
-			concat.apply(inputSpace);
+			blankEdges.addAll(concat.apply(inputSpace));
 		}
 		
-		concat.getConcatenationSpace().minimizeEdges();
+		concat.getSpace().deleteBlankEdges(blankEdges);
 		
-		outputSpace.shallowCopyNodeSpace(concat.getConcatenationSpace());
+		outputSpace.shallowCopyNodeSpace(concat.getSpace());
     }
     
     public void orDesignSpaces(List<String> inputSpaceIDs) 
@@ -182,11 +184,11 @@ public class DesignSpaceService {
 	private void orNodeSpaces(List<NodeSpace> inputSpaces, NodeSpace outputSpace) {
 		Union union = new Union(inputSpaces);
 		
-		union.apply();
+		Set<Edge> blankEdges = union.apply();
 		
-		union.getUnionSpace().minimizeEdges();
+		union.getSpace().deleteBlankEdges(blankEdges);
 		
-		outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+		outputSpace.shallowCopyNodeSpace(union.getSpace());
     }
 	
 	public void repeatDesignSpaces(List<String> inputSpaceIDs, boolean isOptional) 
@@ -311,22 +313,22 @@ public class DesignSpaceService {
     		if (isComplete) {
     			product.applyTensor(inputSpaces.get(i), tolerance, 2, roles);
 
-    			product.getProductSpace().deleteUnacceptableNodes();
+    			product.getSpace().deleteUnacceptableNodes();
     		} else {
     			product.applyTensor(inputSpaces.get(i), tolerance, 0, roles);
     		}
     	}
     	
-    	if (product.getProductSpace().getNumStartNodes() > 1) {
-			Union union = new Union(product.getProductSpace());
+    	if (product.getSpace().getNumStartNodes() > 1) {
+			Union union = new Union(product.getSpace());
 
 			union.apply();
 			
-			union.getUnionSpace().minimizeEdges();
+			union.getSpace().minimizeEdges();
 
-			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+			outputSpace.shallowCopyNodeSpace(union.getSpace());
 		} else {
-			outputSpace.shallowCopyNodeSpace(product.getProductSpace());
+			outputSpace.shallowCopyNodeSpace(product.getSpace());
 		}
     }
 	
@@ -386,20 +388,22 @@ public class DesignSpaceService {
 			Set<String> roles) {
 		Product product = new Product(inputSpaces.get(0));
 		
-    	for (int i = 1; i < inputSpaces.size(); i++) {
-    		product.applyModifiedStrong(inputSpaces.get(i), tolerance, roles);
-    	}
+		for (int i = 1; i < inputSpaces.size(); i++) {
+			Set<Edge> blankEdges = product.applyModifiedStrong(inputSpaces.get(i), tolerance, roles);
+
+    		product.getSpace().deleteBlankEdges(blankEdges);
+		}
     	
-    	if (product.getProductSpace().getNumStartNodes() > 1) {
-			Union union = new Union(product.getProductSpace());
+    	if (product.getSpace().getNumStartNodes() > 1) {
+			Union union = new Union(product.getSpace());
 
-			union.apply();
+			Set<Edge> blankEdges = union.apply();
 			
-			union.getUnionSpace().minimizeEdges();
+			union.getSpace().deleteBlankEdges(blankEdges);
 
-			outputSpace.shallowCopyNodeSpace(union.getUnionSpace());
+			outputSpace.shallowCopyNodeSpace(union.getSpace());
 		} else {
-			outputSpace.shallowCopyNodeSpace(product.getProductSpace());
+			outputSpace.shallowCopyNodeSpace(product.getSpace());
 		}
     }
 	
