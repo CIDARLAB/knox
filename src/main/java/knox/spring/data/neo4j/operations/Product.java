@@ -135,8 +135,10 @@ public class Product {
 		}
     }
     
-    public Set<Edge> applyModifiedStrong(NodeSpace colSpace, int tolerance, Set<String> roles) {
-    	Set<Edge> blankEdges = new HashSet<Edge>();
+    public List<Set<Edge>> applyModifiedStrong(NodeSpace colSpace, int tolerance, Set<String> roles) {
+    	List<Set<Edge>> blankEdges = new LinkedList<Set<Edge>>();
+    	blankEdges.add(new HashSet<Edge>());
+    	blankEdges.add(new HashSet<Edge>());
     	
     	NodeSpace rowSpace = applyTensor(colSpace, tolerance, 1, roles);
     	
@@ -146,71 +148,70 @@ public class Product {
     	for (Edge rowEdge : rowSpace.getEdges()) {
     		String rowIDs = rowEdge.getTailID() + rowEdge.getHeadID();
 
-    		blankEdges.addAll(diffProductEdges(rowIDsToProductEdges.get(rowIDs), rowEdge, tolerance, roles, 
-    				rowIDToProductNodes, rowIDToDiffNode));
+    		diffProductEdges(rowIDsToProductEdges.get(rowIDs), rowEdge, tolerance, roles, 
+    				rowIDToProductNodes, rowIDToDiffNode, blankEdges.get(0), blankEdges.get(1));
     	}
 
     	for (Edge colEdge : colSpace.getEdges()) {
     		String colIDs = colEdge.getTailID() + colEdge.getHeadID();
 
-    		blankEdges.addAll(diffProductEdges(colIDsToProductEdges.get(colIDs), colEdge, tolerance, roles,
-    				colIDToProductNodes, colIDToDiffNode));
+    		diffProductEdges(colIDsToProductEdges.get(colIDs), colEdge, tolerance, roles,
+    				colIDToProductNodes, colIDToDiffNode, blankEdges.get(0), blankEdges.get(1));
     	}
     	
     	if (tolerance == 1) {
     		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = productSpace.mapNodeIDsToIncomingEdges();
     		
     		for (String rowID : rowIDToProductNodes.keySet()) {
-    			blankEdges.addAll(linkDiffNode(rowIDToDiffNode.get(rowID), rowIDToProductNodes.get(rowID), 
-    					nodeIDToIncomingEdges));
+    			if (rowIDToDiffNode.containsKey(rowID) && rowIDToProductNodes.containsKey(rowID)) {
+    				linkDiffNode(rowIDToDiffNode.get(rowID), rowIDToProductNodes.get(rowID), 
+    						nodeIDToIncomingEdges, blankEdges.get(0));
+    			}
     		}
     		
     		for (String colID : colIDToProductNodes.keySet()) {
-    			blankEdges.addAll(linkDiffNode(colIDToDiffNode.get(colID), colIDToProductNodes.get(colID), 
-    					nodeIDToIncomingEdges));
+    			if (colIDToDiffNode.containsKey(colID) && colIDToProductNodes.containsKey(colID)) {
+    				linkDiffNode(colIDToDiffNode.get(colID), colIDToProductNodes.get(colID), 
+    						nodeIDToIncomingEdges, blankEdges.get(0));
+    			}
     		}
     	}
     	
     	return blankEdges;
     }
     
-    private Set<Edge> linkDiffNode(Node diffNode, Set<Node> productNodes, 
-    		HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
-    	Set<Edge> blankEdges = new HashSet<Edge>();
-    	
+    private void linkDiffNode(Node diffNode, Set<Node> productNodes, 
+    		HashMap<String, Set<Edge>> nodeIDToIncomingEdges, Set<Edge> linkerEdges) {
     	for (Node productNode : productNodes) {
     		if (!diffNode.hasEdges()) {
-    			blankEdges.add(diffNode.createEdge(productNode));
+    			linkerEdges.add(diffNode.createEdge(productNode));
     		} else if (!nodeIDToIncomingEdges.containsKey(diffNode.getNodeID())) {
-    			blankEdges.add(productNode.createEdge(diffNode));
+    			linkerEdges.add(productNode.createEdge(diffNode));
     		}
     	}
-    	
-    	return blankEdges;
     }
     
-    private Set<Edge> diffProductEdges(Set<Edge> productEdges, Edge edge, int tolerance, Set<String> roles,
-    		HashMap<String, Set<Node>> idToProductNodes, HashMap<String, Node> idToDiffNode) {
-    	Set<Edge> blankEdges = new HashSet<Edge>();
-    	
+    private void diffProductEdges(Set<Edge> productEdges, Edge edge, int tolerance, Set<String> roles,
+    		HashMap<String, Set<Node>> idToProductNodes, HashMap<String, Node> idToDiffNode,
+    		Set<Edge> linkerEdges, Set<Edge> blankEdges) {
     	if (tolerance == 0 || tolerance == 1) {
     		Edge diffEdge = edge.copy();
 
-    		for (Edge productEdge : productEdges) {
-    			diffEdge.diffWithEdge(productEdge);
+    		if (edge.isBlank()) {
+    			blankEdges.add(diffEdge);
+    		} else {
+    			for (Edge productEdge : productEdges) {
+    				diffEdge.diffWithEdge(productEdge);
+    			}
     		}
 
-    		if (diffEdge.hasComponentIDs()) {
+    		if (diffEdge.hasComponentIDs() || edge.isBlank()) {
     			Node diffTail;
 
     			if (idToDiffNode.containsKey(edge.getTailID())) {
     				diffTail = idToDiffNode.get(edge.getTailID());
     			} else {
-    				if (productEdges.isEmpty()) {
-    					diffTail = productSpace.copyNode(edge.getTail());
-    				} else {
-    					diffTail = productSpace.createNode();
-    				}
+    				diffTail = productSpace.copyNode(edge.getTail());
     				
     				idToDiffNode.put(edge.getTailID(), diffTail);
     			}
@@ -221,11 +222,7 @@ public class Product {
     			if (idToDiffNode.containsKey(edge.getHeadID())) {
     				diffHead = idToDiffNode.get(edge.getHeadID());
     			} else {
-    				if (productEdges.isEmpty()) {
-    					diffHead = productSpace.copyNode(edge.getHead());
-    				} else {
-    					diffHead = productSpace.createNode();
-    				}
+    				diffHead = productSpace.copyNode(edge.getHead());
     				
     				idToDiffNode.put(edge.getHeadID(), diffHead);
     			}
@@ -233,16 +230,16 @@ public class Product {
     			
     			diffTail.addEdge(diffEdge);
     			
-    			if (productEdges.isEmpty()) {
+    			if (productEdges.isEmpty() || edge.isBlank()) {
     				if (idToProductNodes.containsKey(edge.getTailID())) {
     					for (Node productNode : idToProductNodes.get(edge.getTailID())) {
-    						blankEdges.add(productNode.createEdge(diffTail));
+    						linkerEdges.add(productNode.createEdge(diffTail));
     					}
     				}
     				
     				if (idToProductNodes.containsKey(edge.getHeadID())) {
     					for (Node productNode : idToProductNodes.get(edge.getHeadID())) {
-    						blankEdges.add(diffHead.createEdge(productNode));
+    						linkerEdges.add(diffHead.createEdge(productNode));
     					}
     				}
     			}
@@ -290,8 +287,6 @@ public class Product {
     			diffTail.copyEdge(edge, diffHead);
     		}
     	}
-    	
-    	return blankEdges;
     }
     
     private Node crossNodes(Node rowNode, Node colNode, int degree) {

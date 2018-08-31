@@ -389,9 +389,11 @@ public class DesignSpaceService {
 		Product product = new Product(inputSpaces.get(0));
 		
 		for (int i = 1; i < inputSpaces.size(); i++) {
-			Set<Edge> blankEdges = product.applyModifiedStrong(inputSpaces.get(i), tolerance, roles);
-
-    		product.getSpace().deleteBlankEdges(blankEdges);
+			List<Set<Edge>> blankEdges = product.applyModifiedStrong(inputSpaces.get(i), tolerance, roles);
+			
+			for (int j = 0; j < blankEdges.size(); j++) {
+				product.getSpace().deleteBlankEdges(blankEdges.get(j));
+			}	
 		}
     	
     	if (product.getSpace().getNumStartNodes() > 1) {

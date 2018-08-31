@@ -275,6 +275,18 @@ public class Node {
     		}
     	}
     }
+    
+    public Set<Edge> removeEdges() {
+    	Set<Edge> removedEdges = new HashSet<Edge>();
+    	
+    	for (Edge edge : edges) {
+    		removedEdges.add(edge);
+    	}
+    	
+    	edges.removeAll(removedEdges);
+    	
+    	return removedEdges;
+    }
 
     public enum NodeType {
         START("start"),

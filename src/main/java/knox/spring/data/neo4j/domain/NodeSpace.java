@@ -742,9 +742,11 @@ public class NodeSpace {
     }
     
     public void deleteBlankEdges(Set<Edge> edges) {
-    	HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
+    	Set<Edge> leftEdges = new HashSet<Edge>();
 		
 		Set<Node> mergeNodes = new HashSet<Node>();
+		
+		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
 		
 		for (Edge edge : edges) {
 			if (deleteBlankEdge(edge, nodeIDToIncomingEdges)) {
@@ -755,6 +757,18 @@ public class NodeSpace {
 						mergeNodes.add(incomingEdge.getTail());
 					}
 				}
+			} else {
+				leftEdges.add(edge);
+			}
+		}
+		
+		for (Edge leftEdge : leftEdges) {
+			if (leftEdge.getTail().isStartNode() && leftEdge.getHead().isStartNode()) {
+				leftEdge.getHead().deleteStartNodeType();
+			}
+			
+			if (leftEdge.getTail().isAcceptNode() && leftEdge.getHead().isAcceptNode()) {
+				leftEdge.getTail().deleteAcceptNodeType();
 			}
 		}
 		
@@ -764,12 +778,21 @@ public class NodeSpace {
     }
     
     public boolean deleteBlankEdge(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
-    	if ((nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1 || edge.getTail().getNumEdges() == 1) && !edge.getTail().hasDiffNodeType(edge.getHead())
-    			&& (!edge.getTail().isAcceptNode() || nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
-    			&& (!edge.getHead().isStartNode() || edge.getTail().getNumEdges() == 1)) {
+    	if ((nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1 || edge.getTail().getNumEdges() == 1) 
+    			&& !edge.getTail().hasDiffNodeType(edge.getHead())
+    			&& (!edge.getTail().isAcceptNode() || edge.getHead().isAcceptNode() 
+    					|| nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
+    			&& (!edge.getHead().isStartNode() || edge.getTail().isStartNode() 
+    					|| edge.getTail().getNumEdges() == 1)) {
     		edge.delete();
     		
-    		Set<Edge> headEdgeCopies = edge.getTail().copyEdges(edge.getHead());
+    		Set<Edge> headEdges = edge.getHead().removeEdges();
+    		
+    		for (Edge headEdge : headEdges) {
+    			edge.getTail().addEdge(headEdge);
+    			
+    			headEdge.setTail(edge.getTail());
+    		}
     		
     		Set<Edge> incomingHeadEdges = new HashSet<Edge>();
     		
@@ -791,14 +814,6 @@ public class NodeSpace {
     		
     		if (edge.getHead().hasNodeType()) {
     			edge.getTail().copyNodeType(edge.getHead());
-    		}
-    		
-    		for (Edge headEdge : edge.getHead().getEdges()) {
-    			nodeIDToIncomingEdges.get(headEdge.getHeadID()).remove(headEdge);
-    		}
-    		
-    		for (Edge headEdgeCopy : headEdgeCopies) {
-    			nodeIDToIncomingEdges.get(headEdgeCopy.getHeadID()).add(headEdgeCopy);
     		}
     		
     		deleteNode(edge.getHead());
