@@ -3,9 +3,11 @@
 == Quickstart
 
 . clone this project from GitHub
-. http://neo4j.com/download[Download, install and start Neo4j Server].
+. http://neo4j.com/download[Download the Neo4j Server]
+. Open the Desktop app and add a new project
+. Within the project, click "Add Graph", then create a local graph using "*kn0x*" as password
+. Click "Start"
 . open the Neo4j web interface at http://localhost:7474
-. configure "*kn0x*" as password
 . copy and paste Cypher statement from knox\src\main\examples\transcriptional_unit.txt and click the Play arrow to insert a test dataset
 . run this project from the command line with `mvn spring-boot:run`.
 . open Knox web interface at http://localhost:8080
