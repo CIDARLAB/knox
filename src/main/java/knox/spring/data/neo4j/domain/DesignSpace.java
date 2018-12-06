@@ -1,5 +1,6 @@
 package knox.spring.data.neo4j.domain;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +32,14 @@ public class DesignSpace extends NodeSpace {
         this.spaceID = spaceID;
         
         branches = new HashSet<Branch>();
+    }
+    
+    public DesignSpace(String spaceID, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
+    	super(componentIDs, componentRoles);
+    	
+    	this.spaceID = spaceID;
+    	
+    	branches = new HashSet<Branch>();
     }
 
     public void addBranch(Branch branch) {

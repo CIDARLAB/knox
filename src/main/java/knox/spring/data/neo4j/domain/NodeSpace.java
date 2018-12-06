@@ -43,6 +43,16 @@ public class NodeSpace {
 		this.nodes = new HashSet<Node>();
 	}
 	
+	public NodeSpace(ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
+		this(0);
+		
+		Node startNode = createStartNode();
+		
+		Node acceptNode = createAcceptNode();
+		
+		startNode.createEdge(acceptNode, componentIDs, componentRoles);
+	}
+	
 	public void addNode(Node node) {
 		if (nodes == null) {
 			nodes = new HashSet<Node>();
@@ -235,6 +245,22 @@ public class NodeSpace {
 		return edges;
 	}
 	
+	public Set<Edge> getBlankEdges() {
+		return getBlankEdges(getEdges());
+	}
+	
+	public Set<Edge> getBlankEdges(Set<Edge> edges) {
+		Set<Edge> blankEdges = new HashSet<Edge>();
+		
+		for (Edge edge : edges) {
+			if (edge.isBlank()) {
+				blankEdges.add(edge);
+			}
+		}
+
+		return blankEdges;
+	}
+	
 	public int getNodeIndex() {
 		return nodeIndex;
 	}
@@ -281,6 +307,20 @@ public class NodeSpace {
         return startNodes;
     }
     
+    public Set<Node> getNonStartNodes() {
+        Set<Node> nonStartNodes = new HashSet<Node>();
+
+        if (hasNodes()) {
+        	for (Node node : nodes) {
+        		if (!node.isStartNode()) {
+        			nonStartNodes.add(node);
+        		}
+        	}
+        }
+
+        return nonStartNodes;
+    }
+    
     public boolean hasNodes() {
     	return nodes != null && !nodes.isEmpty();
     }
@@ -324,15 +364,17 @@ public class NodeSpace {
         
         if (hasNodes()) {
         	for (Node node : nodes) {
+        		if (!nodeIDToIncomingEdges.containsKey(node.getNodeID())) {
+					nodeIDToIncomingEdges.put(node.getNodeID(), new HashSet<Edge>());
+				}
+        		
         		if (node.hasEdges()) {
         			for (Edge edge : node.getEdges()) {
-        				Node successor = edge.getHead();
-
-        				if (!nodeIDToIncomingEdges.containsKey(successor.getNodeID())) {
-        					nodeIDToIncomingEdges.put(successor.getNodeID(), new HashSet<Edge>());
+        				if (!nodeIDToIncomingEdges.containsKey(edge.getHeadID())) {
+        					nodeIDToIncomingEdges.put(edge.getHeadID(), new HashSet<Edge>());
         				}
 
-        				nodeIDToIncomingEdges.get(successor.getNodeID()).add(edge);
+        				nodeIDToIncomingEdges.get(edge.getHeadID()).add(edge);
         			}
         		}
         	}
@@ -396,19 +438,14 @@ public class NodeSpace {
     }
     
     public List<Edge> reverseDepthFirstEdgeTraversal() {
-    	HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
+    	HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
     	
     	List<Edge> traversalEdges = new LinkedList<Edge>();
-
-    	Set<Edge> globalEdges = new HashSet<Edge>();
-
+    	
     	for (Node acceptNode : getAcceptNodes()) {
-    		if (idToIncomingEdges.containsKey(acceptNode.getNodeID())) {
-    			for (Edge acceptEdge : idToIncomingEdges.get(acceptNode.getNodeID())) {
-    				if (!globalEdges.contains(acceptEdge)) {
-    	    			traversalEdges.addAll(reverseDepthFirstEdgeTraversal(acceptEdge, globalEdges, 
-    	    					idToIncomingEdges));
-    	    		}
+    		for (Edge acceptEdge : nodeIDToIncomingEdges.get(acceptNode.getNodeID())) {
+    			if (!traversalEdges.contains(acceptEdge)) {
+    				traversalEdges.addAll(reverseDepthFirstEdgeTraversal(acceptEdge, nodeIDToIncomingEdges));
     			}
     		}
     	}
@@ -417,41 +454,34 @@ public class NodeSpace {
     }
     
     private List<Edge> reverseDepthFirstEdgeTraversal(Edge acceptEdge, 
-    		Set<Edge> globalEdges, HashMap<String, Set<Edge>> idToIncomingEdges) {
-    	List<Edge> traversalEdges = new LinkedList<Edge>();
-
+    		HashMap<String, Set<Edge>> idToIncomingEdges) {
     	Stack<Edge> edgeStack = new Stack<Edge>();
 
     	edgeStack.push(acceptEdge);
 
-    	Set<Edge> localEdges = new HashSet<Edge>();
-
-    	localEdges.add(acceptEdge);
+    	List<Edge> traversalEdges = new LinkedList<Edge>();
+    	Set<Edge> visitedEdges = new HashSet<Edge>();
 
     	while (!edgeStack.isEmpty()) {
     		Edge edge = edgeStack.pop();
-
+    		
     		traversalEdges.add(edge);
+        	visitedEdges.add(edge);
 
     		if (idToIncomingEdges.containsKey(edge.getTail().getNodeID())) {
     			for (Edge tailEdge : idToIncomingEdges.get(edge.getTail().getNodeID())) {
-    				if (!globalEdges.contains(tailEdge)
-    						&& !localEdges.contains(tailEdge)) {
+    				if (!visitedEdges.contains(tailEdge)) {
     					edgeStack.push(tailEdge);
-
-    					localEdges.add(tailEdge);
     				}
     			}
     		}
     	}
 
-    	globalEdges.addAll(localEdges);
-
     	return traversalEdges;
     }
     
     public List<Node> reverseDepthFirstNodeTraversal() {
-    	HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
+    	HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
     	
     	List<Node> traversalNodes = new ArrayList<Node>(getNumNodes());
 
@@ -460,7 +490,7 @@ public class NodeSpace {
     	for (Node acceptNode : getAcceptNodes()) {
     		if (!globalNodes.contains(acceptNode)) {
     			traversalNodes.addAll(reverseDepthFirstNodeTraversal(acceptNode, globalNodes, 
-    					idToIncomingEdges));
+    					nodeIDToIncomingEdges));
     		}
     	}
 
@@ -504,13 +534,11 @@ public class NodeSpace {
     public List<Edge> depthFirstEdgeTraversal() {
     	List<Edge> traversalEdges = new LinkedList<Edge>();
 
-    	Set<Edge> globalEdges = new HashSet<Edge>();
-
     	for (Node startNode : getStartNodes()) {
     		if (startNode.hasEdges()) {
         		for (Edge startEdge : startNode.getEdges()) {
-        			if (!globalEdges.contains(startEdge)) {
-            			traversalEdges.addAll(depthFirstEdgeTraversal(startEdge, globalEdges));
+        			if (!traversalEdges.contains(startEdge)) {
+            			traversalEdges.addAll(depthFirstEdgeTraversal(startEdge, true));
             		}
         		}
         	}
@@ -520,35 +548,30 @@ public class NodeSpace {
     	return traversalEdges;
     }
     
-    private List<Edge> depthFirstEdgeTraversal(Edge startEdge, Set<Edge> globalEdges) {
-    	List<Edge> traversalEdges = new LinkedList<Edge>();
-    	
+    private List<Edge> depthFirstEdgeTraversal(Edge startEdge, boolean includeStart) {
     	Stack<Edge> edgeStack = new Stack<Edge>();
 
     	edgeStack.push(startEdge);
 
-    	Set<Edge> localEdges = new HashSet<Edge>();
-    	
-    	localEdges.add(startEdge);
+    	List<Edge> traversalEdges = new LinkedList<Edge>();
+    	Set<Edge> visitedEdges = new HashSet<Edge>();
 
     	while (!edgeStack.isEmpty()) {
     		Edge edge = edgeStack.pop();
-
-    		traversalEdges.add(edge);
-
+    		
+    		if (includeStart || edge != startEdge || !traversalEdges.isEmpty()) {
+    			traversalEdges.add(edge);
+    			visitedEdges.add(edge);
+    		}
+    		
     		if (edge.getHead().hasEdges()) {
     			for (Edge headEdge : edge.getHead().getEdges()) {
-    				if (!globalEdges.contains(headEdge) 
-    						&& !localEdges.contains(headEdge)) {
+    				if (!visitedEdges.contains(headEdge)) {
     					edgeStack.push(headEdge);
-
-    					localEdges.add(headEdge);
     				}
     			}
     		}
     	}
-    	
-    	globalEdges.addAll(localEdges);
     	
     	return traversalEdges;
     }
@@ -599,79 +622,88 @@ public class NodeSpace {
     	
     	return traversalNodes;
     }
-
-    private Set<Edge> getOtherEdges(Node node, Set<Edge> edges) {
-        Set<Edge> diffEdges = new HashSet<Edge>();
-
-        if (node.hasEdges()) {
-            for (Edge edge : node.getEdges()) {
-                if (!edges.contains(edge)) {
-                    diffEdges.add(edge);
-                }
-            }
-        }
-
-        return diffEdges;
-    }
-
-    public Set<Edge> retainEdges(Set<Edge> retainedEdges) {
-    	Set<Edge> diffEdges = new HashSet<Edge>();
+    
+    public Set<Edge> getFeedbackEdges(HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    	Set<Edge> feedbackEdges = new HashSet<Edge>();
     	
-    	if (hasNodes()) {
-    		for (Node node : nodes) {
-    			Set<Edge> localDiffEdges = getOtherEdges(node, retainedEdges);
-
-    			if (localDiffEdges.size() > 0) {
-    				node.deleteEdges(localDiffEdges);
-
-    				diffEdges.addAll(localDiffEdges);
+    	for (Edge edge : getEdges()) {
+    		if (!feedbackEdges.contains(edge)) {
+    			List<Edge> traversalEdges = depthFirstEdgeTraversal(edge, false);
+    			
+    			if (traversalEdges.contains(edge)) {
+    				traversalEdges.retainAll(reverseDepthFirstEdgeTraversal(edge, nodeIDToIncomingEdges));
+    				
+    				feedbackEdges.addAll(traversalEdges);
     			}
     		}
     	}
     	
-    	return diffEdges;
+    	return feedbackEdges;
     }
+
+//    private Set<Edge> getOtherEdges(Node node, Set<Edge> edges) {
+//        Set<Edge> diffEdges = new HashSet<Edge>();
+//
+//        if (node.hasEdges()) {
+//            for (Edge edge : node.getEdges()) {
+//                if (!edges.contains(edge)) {
+//                    diffEdges.add(edge);
+//                }
+//            }
+//        }
+//
+//        return diffEdges;
+//    }
+
+//    public Set<Edge> retainEdges(Set<Edge> retainedEdges) {
+//    	Set<Edge> diffEdges = new HashSet<Edge>();
+//    	
+//    	if (hasNodes()) {
+//    		for (Node node : nodes) {
+//    			Set<Edge> localDiffEdges = getOtherEdges(node, retainedEdges);
+//
+//    			if (localDiffEdges.size() > 0) {
+//    				node.deleteEdges(localDiffEdges);
+//
+//    				diffEdges.addAll(localDiffEdges);
+//    			}
+//    		}
+//    	}
+//    	
+//    	return diffEdges;
+//    }
     
     public void deleteUnacceptableNodes() {
-    	retainEdges(depthFirstEdgeTraversal());
+    	Set<Edge> traversalEdges = new HashSet<Edge>(depthFirstEdgeTraversal());
     	
-    	retainEdges(reverseDepthFirstEdgeTraversal());
+    	retainEdges(traversalEdges);
+    	
+    	Set<Edge> reverseTraversalEdges = new HashSet<Edge>(reverseDepthFirstEdgeTraversal());
+    	
+    	retainEdges(reverseTraversalEdges);
     }
     
-    public void deleteOrthogonalPaths(Collection<Edge> edges) {
-    	Set<Node> tails = new HashSet<Node>();
-    	
-    	Set<Node> heads = new HashSet<Node>();
-    	
-    	for (Edge edge : edges) {
-    		tails.add(edge.getTail());
+    public void deleteUnconnectedNodes() {
+    	if (hasNodes()) {
+    		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
     		
-    		heads.add(edge.getHead());
-    	}
-    	
-    	Set<Edge> pathEdges = new HashSet<Edge>();
-    	
-    	HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
-    	
-    	for (Edge edge : edges) {
-    		if (!heads.contains(edge.getTail())) {
-    			pathEdges.addAll(reverseDepthFirstEdgeTraversal(edge, pathEdges,
-        				idToIncomingEdges));
+    		Set<Node> deletedNodes = new HashSet<Node>();
+
+    		for (Node node : nodes) {
+    			if (!node.hasEdges() && nodeIDToIncomingEdges.get(node.getNodeID()).isEmpty()) {
+    				deletedNodes.add(node);
+    			}
     		}
     		
-    		if (!tails.contains(edge.getHead())) {
-    			pathEdges.addAll(depthFirstEdgeTraversal(edge, pathEdges));
-    		}
+    		deleteNodes(deletedNodes);
     	}
-    	
-    	retainEdges(pathEdges);
     }
     
-    public boolean retainEdges(Collection<Edge> retainedEdges) {
+    public boolean retainEdges(Set<Edge> retainedEdges) {
     	if (hasNodes()) {
     		boolean isChanged = false;
     		
-    		for (Node node : this.nodes) {
+    		for (Node node : nodes) {
     			if (node.hasEdges()) {
     				Set<Edge> deletedEdges = new HashSet<Edge>();
 
@@ -683,23 +715,25 @@ public class NodeSpace {
     				
     				if (!deletedEdges.isEmpty()) {
     					isChanged = true;
+    					
+    					node.deleteEdges(deletedEdges);
     				}
-
-    				node.deleteEdges(deletedEdges);
     			}
     		}
     		
-    		if (isChanged) {
-    			HashMap<String, Set<Edge>> idToIncomingEdges = mapNodeIDsToIncomingEdges();
-    			
-    			Set<Node> deletedNodes = new HashSet<Node>();
-    			
-    			for (Node node : this.nodes) {
-    				if (!node.hasEdges() && !idToIncomingEdges.containsKey(node.getNodeID())) {
-    					deletedNodes.add(node);
-    				}
+    		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
+
+    		Set<Node> deletedNodes = new HashSet<Node>();
+
+    		for (Node node : nodes) {
+    			if (!node.hasEdges() && nodeIDToIncomingEdges.get(node.getNodeID()).isEmpty()) {
+    				deletedNodes.add(node);
     			}
-    			
+    		}
+
+    		if (!deletedNodes.isEmpty()) {
+    			isChanged = true;
+
     			deleteNodes(deletedNodes);
     		}
     		
@@ -752,10 +786,8 @@ public class NodeSpace {
 			if (deleteBlankEdge(edge, nodeIDToIncomingEdges)) {
 				mergeNodes.add(edge.getTail());
 				
-				if (nodeIDToIncomingEdges.containsKey(edge.getTailID())) {
-					for (Edge incomingEdge : nodeIDToIncomingEdges.get(edge.getTailID())) {
-						mergeNodes.add(incomingEdge.getTail());
-					}
+				for (Edge incomingEdge : nodeIDToIncomingEdges.get(edge.getTailID())) {
+					mergeNodes.add(incomingEdge.getTail());
 				}
 			} else {
 				leftEdges.add(edge);
@@ -783,7 +815,10 @@ public class NodeSpace {
     			&& (!edge.getTail().isAcceptNode() || edge.getHead().isAcceptNode() 
     					|| nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
     			&& (!edge.getHead().isStartNode() || edge.getTail().isStartNode() 
-    					|| edge.getTail().getNumEdges() == 1)) {
+    					|| edge.getTail().getNumEdges() == 1)
+    			&& (!edge.getTail().isStartNode() 
+    					|| nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1
+    					|| !nodeIDToIncomingEdges.get(edge.getTailID()).isEmpty())) {
     		edge.delete();
     		
     		Set<Edge> headEdges = edge.getHead().removeEdges();
@@ -797,7 +832,7 @@ public class NodeSpace {
     		Set<Edge> incomingHeadEdges = new HashSet<Edge>();
     		
     		for (Edge incomingHeadEdge : nodeIDToIncomingEdges.get(edge.getHeadID())) {
-    			if (!incomingHeadEdge.equals(edge)) {
+    			if (incomingHeadEdge != edge) {
     				incomingHeadEdge.setHead(edge.getTail());
     				
     				incomingHeadEdges.add(incomingHeadEdge);

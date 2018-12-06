@@ -21,7 +21,9 @@ import org.slf4j.LoggerFactory;
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
-import knox.spring.data.neo4j.operations.Product;
+import knox.spring.data.neo4j.operations.JoinOperator;
+import knox.spring.data.neo4j.operations.OROperator;
+import knox.spring.data.neo4j.operations.RepeatOperator;
 import knox.spring.data.neo4j.operations.Union;
 
 public class SBOLConversion {
@@ -32,6 +34,44 @@ public class SBOLConversion {
 	
 	public SBOLConversion(List<SBOLDocument> sbolDocs) {
 		this.sbolDocs = sbolDocs;
+	}
+	
+	public DesignSpace convertCombinatorialSBOLToSpace(String outputSpaceID) {
+		// Create a list of component IDs and a list of component roles and use them to create a node space with a single edge for each atom
+		// Should replace with code that extracts this information from sbolDocs
+		
+		ArrayList<String> atom1IDs = new ArrayList<String>();
+		atom1IDs.add("pTac");
+		
+		ArrayList<String> atom1Roles = new ArrayList<String>();
+		atom1Roles.add("promoter");
+		
+		ArrayList<String> atom2IDs = new ArrayList<String>();
+		atom1IDs.add("gfp");
+		
+		ArrayList<String> atom2Roles = new ArrayList<String>();
+		atom1Roles.add("CDS");
+		
+		List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
+		
+		inputSpaces.add(new NodeSpace(atom1IDs, atom1Roles));
+		inputSpaces.add(new NodeSpace(atom2IDs, atom2Roles));
+		
+		// Create output space and apply operators based on combinatorial SBOL
+		// Should replace with code that extracts this information from sbolDocs
+		// The final output should be a design space rather than a node space so that version history can be added to it
+		
+		DesignSpace outputSpace = new DesignSpace(outputSpaceID);
+		
+		JoinOperator.apply(inputSpaces, outputSpace); // Note that an input space can also be the output space of an operator - its graph will be overwritten by the result of applying the operator
+		
+		// Create version history for output design space - single branch and single commit that captures result of conversion
+		
+		outputSpace.createHeadBranch(outputSpaceID);
+		
+		outputSpace.commitToHead();
+		
+		return outputSpace;
 	}
 	
 	public DesignSpace convertSBOLToSpace(String outputSpaceID) {

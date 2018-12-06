@@ -3,7 +3,11 @@ package knox.spring.data.neo4j.domain;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -144,6 +148,42 @@ public class Edge {
     public void diffWithEdge(Edge edge) {
     	componentIDs.removeAll(edge.getComponentIDs());
     }
+    
+    public List<List<Edge>> getBlankPaths() {
+    	List<List<Edge>> blankPaths = new LinkedList<List<Edge>>();
+    	blankPaths.add(new LinkedList<Edge>());
+    	
+    	Stack<Edge> edgeStack = new Stack<Edge>();
+    	edgeStack.push(this);
+    	
+    	int k = 0;
+    	
+    	while (!edgeStack.isEmpty()) {
+    		int edgeCount = edgeStack.size();
+    		
+    		Edge tempEdge = edgeStack.pop();
+    		
+    		blankPaths.get(k).add(tempEdge);
+    		
+    		if (tempEdge.getHead().hasEdges()) {
+    			for (int i = 1; i < tempEdge.getHead().getEdges().size(); i++) {
+    				blankPaths.add(new LinkedList<Edge>(blankPaths.get(k)));
+    			}
+    			
+    			for (Edge headEdge : tempEdge.getHead().getEdges()) {
+    				if (headEdge.isBlank()) {
+    					edgeStack.add(headEdge);
+    				}
+    			}
+    		}
+    		
+    		if (edgeStack.size() < edgeCount) {
+    			k = k + 1;
+    		}
+    	}
+    	
+    	return blankPaths;
+    }
 
     public Node getTail() {
     	return tail; 
@@ -223,7 +263,7 @@ public class Edge {
 
              return compIDs1.equals(compIDs2);
          } else {
-             return !hasComponentIDs() && !edge.hasComponentIDs();
+             return false;
          }
     }
 
@@ -237,7 +277,7 @@ public class Edge {
 
             return !compIDs1.isEmpty();
         } else {
-        	return !hasComponentIDs() && !edge.hasComponentIDs();
+        	return false;
         }
    }
     
@@ -249,7 +289,7 @@ public class Edge {
 
     		return compRoles1.equals(compRoles2) && hasRole(roles);
     	} else {
-    		return !hasComponentRoles() && !edge.hasComponentRoles() && roles.isEmpty();
+    		return false;
         }
     }
 
@@ -267,7 +307,7 @@ public class Edge {
 
     			return !compRoles1.isEmpty();
     	} else {
-    		return !hasComponentRoles() && !edge.hasComponentRoles() && roles.isEmpty();
+    		return false;
     	}
     }
     

@@ -1,0 +1,77 @@
+
+CREATE (d1:DesignSpace {spaceID: "zom1", nodeIndex: 4, commitIndex: 1})
+
+CREATE (n11:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n12:Node {nodeID: "n1", nodeTypes: []})
+CREATE (n13:Node {nodeID: "n2", nodeTypes: []})
+CREATE (n14:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (d1)-[:CONTAINS]->(n11)
+CREATE (d1)-[:CONTAINS]->(n12)
+CREATE (d1)-[:CONTAINS]->(n13)
+CREATE (d1)-[:CONTAINS]->(n14)
+
+CREATE (n11)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(n12)
+CREATE (n12)-[:PRECEDES {componentIDs: ["A","B"], componentRoles: ["gene"], orientation: "inline"}]->(n13)
+CREATE (n13)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(n12)
+CREATE (n13)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(n14)
+CREATE (n11)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(n14)
+
+CREATE (d1)-[:ARCHIVES]->(b1:Branch {branchID: "zom1"})-[:CONTAINS]->(c1:Commit {commitID: "c0"})-[:CONTAINS]->(s1:Snapshot {nodeIndex: 4})
+CREATE (d1)-[:SELECTS]->(b1)-[:LATEST]->(c1)
+
+CREATE (o11:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (o12:Node {nodeID: "n1", nodeTypes: []})
+CREATE (o13:Node {nodeID: "n2", nodeTypes: []})
+CREATE (o14:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (s1)-[:CONTAINS]->(o11)
+CREATE (s1)-[:CONTAINS]->(o12)
+CREATE (s1)-[:CONTAINS]->(o13)
+CREATE (s1)-[:CONTAINS]->(o14)
+
+CREATE (o11)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(o12)
+CREATE (o12)-[:PRECEDES {componentIDs: ["A","B"], componentRoles: ["gene"], orientation: "inline"}]->(o13)
+CREATE (o13)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(o12)
+CREATE (o13)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(o14)
+CREATE (o11)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(o14)
+
+
+CREATE (d2:DesignSpace {spaceID: "zom2", nodeIndex: 4, commitIndex: 1})
+
+CREATE (n21:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n22:Node {nodeID: "n1", nodeTypes: []})
+CREATE (n23:Node {nodeID: "n2", nodeTypes: []})
+CREATE (n24:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (d2)-[:CONTAINS]->(n21)
+CREATE (d2)-[:CONTAINS]->(n22)
+CREATE (d2)-[:CONTAINS]->(n23)
+CREATE (d2)-[:CONTAINS]->(n24)
+
+CREATE (n21)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(n22)
+CREATE (n22)-[:PRECEDES {componentIDs: ["B","X"], componentRoles: ["gene"], orientation: "inline"}]->(n23)
+CREATE (n23)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(n22)
+CREATE (n23)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(n24)
+CREATE (n21)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(n24)
+
+CREATE (d2)-[:ARCHIVES]->(b2:Branch {branchID: "zom2"})-[:CONTAINS]->(c2:Commit {commitID: "c0"})-[:CONTAINS]->(s2:Snapshot {nodeIndex: 4})
+CREATE (d2)-[:SELECTS]->(b2)-[:LATEST]->(c2)
+
+CREATE (o21:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (o22:Node {nodeID: "n1", nodeTypes: []})
+CREATE (o23:Node {nodeID: "n2", nodeTypes: []})
+CREATE (o24:Node {nodeID: "n3", nodeTypes: ["accept"]})
+
+CREATE (s2)-[:CONTAINS]->(o21)
+CREATE (s2)-[:CONTAINS]->(o22)
+CREATE (s2)-[:CONTAINS]->(o23)
+CREATE (s2)-[:CONTAINS]->(o24)
+
+CREATE (o21)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(o22)
+CREATE (o22)-[:PRECEDES {componentIDs: ["B","X"], componentRoles: ["gene"], orientation: "inline"}]->(o23)
+CREATE (o23)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(o22)
+CREATE (o23)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(o24)
+CREATE (o21)-[:PRECEDES {componentIDs: [], componentRoles: [], orientation: "none"}]->(o24)
+
+;

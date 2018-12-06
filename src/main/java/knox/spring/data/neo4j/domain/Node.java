@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -138,12 +140,36 @@ public class Node {
         return edges != null && !edges.isEmpty();
     }
     
+    public boolean hasEdge(Node head) {
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.getHead() == head) {
+    				return true;
+    			}
+    		}
+    	}
+    	
+    	return false;
+    }
+    
+    public boolean hasBlankEdge() {  
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (edge.isBlank()) {
+    				return true;
+    			}
+    		}
+    	}
+
+		return false;
+    }
+    
     public Set<Edge> getEdges(Node head) {
     	Set<Edge> edgesWithHead = new HashSet<Edge>();
     	
     	if (hasEdges()) {
     		for (Edge edge : edges) {
-    			if (edge.getHead().equals(head)) {
+    			if (edge.getHead() == head) {
     				edgesWithHead.add(edge);
     			}
     		}
@@ -247,19 +273,35 @@ public class Node {
     public void mergeEdges() {
     	if (hasEdges()) {
     		HashMap<String, Set<Edge>> codeToIncomingEdges = new HashMap<String, Set<Edge>>();
+    		HashMap<String, Set<List<Edge>>> codeToIncomingPaths = new HashMap<String, Set<List<Edge>>>();
     		
     		for (Edge edge : edges) {
-    			String code = edge.getHead().getNodeID() + edge.getOrientation();
-    			
-    			if (!codeToIncomingEdges.containsKey(code)) {
-    				codeToIncomingEdges.put(code, new HashSet<Edge>());
+    			if (!edge.isBlank()) {
+    				String code = edge.getHeadID() + edge.getOrientation();
+
+    				if (!codeToIncomingEdges.containsKey(code)) {
+    					codeToIncomingEdges.put(code, new HashSet<Edge>());
+    				}
+
+    				codeToIncomingEdges.get(code).add(edge);
+    			} else {
+    				List<List<Edge>> blankPaths = edge.getBlankPaths();
+
+    				for (List<Edge> blankPath : blankPaths) {
+    					String code = blankPath.get(blankPath.size() - 1).getHead().getNodeID() + edge.getOrientation();
+
+    					if (!codeToIncomingPaths.containsKey(code)) {
+    						codeToIncomingPaths.put(code, new HashSet<List<Edge>>());
+    					}
+
+    					codeToIncomingPaths.get(code).add(blankPath);
+    				}
     			}
-    			
-    			codeToIncomingEdges.get(code).add(edge);
     		}
     		
     		for (String code : codeToIncomingEdges.keySet()) {
     			if (codeToIncomingEdges.get(code).size() > 1) {
+    				
     				Iterator<Edge> edgerator = codeToIncomingEdges.get(code).iterator();
     				
     				Edge edge = edgerator.next();
@@ -273,17 +315,47 @@ public class Node {
     				}
     			}
     		}
+    		
+    		for (String code : codeToIncomingPaths.keySet()) {
+    			if (codeToIncomingPaths.get(code).size() > 1) {
+    				Set<List<Edge>> paths = codeToIncomingPaths.get(code);
+    				
+    				List<Edge> longestPath = paths.iterator().next();
+    				
+    				for (List<Edge> path : paths) {
+    					if (path.size() > longestPath.size()) {
+    						longestPath = path;
+    					}
+    				}
+    				
+    				if (longestPath.size() == 1) {
+    					for (List<Edge> path : paths) {
+        					if (path != longestPath) {
+            					deleteEdge(path.get(0));
+        					}
+        				}
+    				} else if (longestPath.size() > 1){
+    					for (List<Edge> path : paths) {
+    						if (path.size() == 1) {
+    							deleteEdge(path.get(0));
+    						}
+    					}
+    				}
+    			}
+    		}
     	}
     }
     
     public Set<Edge> removeEdges() {
     	Set<Edge> removedEdges = new HashSet<Edge>();
     	
-    	for (Edge edge : edges) {
-    		removedEdges.add(edge);
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			removedEdges.add(edge);
+    		}
+    		
+    		edges.removeAll(removedEdges);
     	}
-    	
-    	edges.removeAll(removedEdges);
     	
     	return removedEdges;
     }
