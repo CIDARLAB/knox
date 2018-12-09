@@ -775,37 +775,35 @@ public class NodeSpace {
     	}
     }
     
-    public void deleteBlankEdges(Set<Edge> edges) {
-    	Set<Edge> leftEdges = new HashSet<Edge>();
-		
+    public void deleteBlankEdges(Set<Edge> blankEdges) {
 		Set<Node> mergeNodes = new HashSet<Node>();
 		
 		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
 		
-		for (Edge edge : edges) {
-			if (deleteBlankEdge(edge, nodeIDToIncomingEdges)) {
-				mergeNodes.add(edge.getTail());
+		for (Edge blankEdge : blankEdges) {
+			if (deleteBlankEdge(blankEdge, nodeIDToIncomingEdges)) {
+				mergeNodes.add(blankEdge.getTail());
 				
-				for (Edge incomingEdge : nodeIDToIncomingEdges.get(edge.getTailID())) {
+				for (Edge incomingEdge : nodeIDToIncomingEdges.get(blankEdge.getTailID())) {
 					mergeNodes.add(incomingEdge.getTail());
 				}
-			} else {
-				leftEdges.add(edge);
-			}
-		}
-		
-		for (Edge leftEdge : leftEdges) {
-			if (leftEdge.getTail().isStartNode() && leftEdge.getHead().isStartNode()) {
-				leftEdge.getHead().deleteStartNodeType();
-			}
-			
-			if (leftEdge.getTail().isAcceptNode() && leftEdge.getHead().isAcceptNode()) {
-				leftEdge.getTail().deleteAcceptNodeType();
 			}
 		}
 		
 		for (Node node : mergeNodes) {
 			node.mergeEdges();
+		}
+		
+		for (Edge edge : getEdges()) {
+			if (edge.isBlank()) {
+				if (edge.getTail().isStartNode() && edge.getHead().isStartNode()) {
+					edge.getHead().deleteStartNodeType();
+				}
+
+				if (edge.getTail().isAcceptNode() && edge.getHead().isAcceptNode()) {
+					edge.getTail().deleteAcceptNodeType();
+				}
+			}
 		}
     }
     

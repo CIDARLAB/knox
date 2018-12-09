@@ -405,8 +405,6 @@ public class Product {
     	insertProductShims(rowIDToProductNodes, blankProductEdges.get(1), nodeIDToIncomingEdges);
     	insertProductShims(colIDToProductNodes, blankProductEdges.get(1), nodeIDToIncomingEdges);
     	
-    	Set<Edge> feedbackProductEdges = productSpace.getFeedbackEdges(nodeIDToIncomingEdges);
-    	
     	rowIDToDiffNode = new HashMap<String, Node>();
     	colIDToDiffNode = new HashMap<String, Node>();
     	
@@ -431,6 +429,8 @@ public class Product {
     	diffBlankEdges(blankColEdges, colIDsToProductEdges, colIDToDiffNode, blankProductEdges.get(1));
     	
     	nodeIDToIncomingEdges = productSpace.mapNodeIDsToIncomingEdges();
+    	
+    	Set<Edge> feedbackProductEdges = productSpace.getFeedbackEdges(nodeIDToIncomingEdges);
     	
     	linkDiffNodes(rowSpace.getEdges(), rowIDsToProductEdges, rowIDToProductNodes, rowIDToDiffNode, 
     			blankProductEdges.get(0), nodeIDToIncomingEdges);
@@ -469,33 +469,69 @@ public class Product {
     	}
     }
     
-    private void insertFeedbackSpacers(Set<Edge> feedbackEdges, List<Set<Edge>> blankProductEdges,
+    private void insertFeedbackSpacers(Set<Edge> feedbackEdges, List<Set<Edge>> linkerEdges, 
     		HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
     	Set<Node> feedbackNodes = new HashSet<Node>();
-    	
+
     	for (Edge feedbackEdge : feedbackEdges) {
     		feedbackNodes.add(feedbackEdge.getTail());
     		feedbackNodes.add(feedbackEdge.getHead());
     	}
-    	
+
     	for (Node feedbackNode : feedbackNodes) {
     		Set<Edge> outLinkers = new HashSet<Edge>();
 
     		for (Edge edge : feedbackNode.getEdges()) {
-    			if (blankProductEdges.get(0).contains(edge)) {
+    			if (linkerEdges.get(0).contains(edge)) {
     				outLinkers.add(edge);
     			}
     		}
+    		
+    		int numIncomingEdges = 0;
+    		
+    		for (Edge incomingEdge : nodeIDToIncomingEdges.get(feedbackNode.getNodeID())) {
+				if (!feedbackEdges.contains(incomingEdge)) {
+					numIncomingEdges++;
+				}
+			}
 
+    		if (!outLinkers.isEmpty() && numIncomingEdges > 0) {
+    			Node spacerNode = productSpace.copyNode(feedbackNode);
+
+    			for (Edge incomingEdge : nodeIDToIncomingEdges.get(feedbackNode.getNodeID())) {
+    				if (!feedbackEdges.contains(incomingEdge)) {
+    					incomingEdge.setHead(spacerNode);
+    				}
+    			}
+
+    			for (Edge outLinker : outLinkers) {
+    				outLinker.setTail(spacerNode);
+
+    				spacerNode.addEdge(outLinker);
+    			}
+
+    			feedbackNode.deleteEdges(outLinkers);
+    			
+    			linkerEdges.get(1).add(spacerNode.createEdge(feedbackNode));
+    		}
+    		
     		Set<Edge> inLinkers = new HashSet<Edge>();
 
     		for (Edge edge : nodeIDToIncomingEdges.get(feedbackNode.getNodeID())) {
-    			if (blankProductEdges.get(0).contains(edge)) {
+    			if (linkerEdges.get(0).contains(edge)) {
     				inLinkers.add(edge);
     			}
     		}
-
-    		if (!outLinkers.isEmpty() || !inLinkers.isEmpty()) {
+    		
+    		int numOutgoingEdges = 0;
+    		
+    		for (Edge edge : feedbackNode.getEdges()) {
+				if (!feedbackEdges.contains(edge)) {
+					numOutgoingEdges++;
+				}
+			}
+    		
+    		if (!inLinkers.isEmpty() && numOutgoingEdges > 0) {
     			Node spacerNode = productSpace.copyNode(feedbackNode);
 
     			Set<Edge> deletedEdges = new HashSet<Edge>();
@@ -512,33 +548,11 @@ public class Product {
 
     			feedbackNode.deleteEdges(deletedEdges);
 
-    			int numIncoming = 0;
-
-    			for (Edge incomingEdge : nodeIDToIncomingEdges.get(feedbackNode.getNodeID())) {
-    				if (!feedbackEdges.contains(incomingEdge)) {
-    					incomingEdge.setHead(spacerNode);
-
-    					numIncoming++;
-    				}
-    			}
-
-    			for (Edge outLinker : outLinkers) {
-    				outLinker.setTail(spacerNode);
-
-    				spacerNode.addEdge(outLinker);
-    			}
-
-    			feedbackNode.deleteEdges(outLinkers);
-
     			for (Edge inLinker : inLinkers) {
     				inLinker.setHead(spacerNode);
     			}
 
-    			if (numIncoming > 0) {
-    				blankProductEdges.get(1).add(spacerNode.createEdge(feedbackNode));
-    			} else {
-    				blankProductEdges.get(1).add(feedbackNode.createEdge(spacerNode));
-    			}
+    			linkerEdges.get(1).add(feedbackNode.createEdge(spacerNode));
     		}
     	}
     }

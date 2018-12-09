@@ -26,6 +26,6 @@ public class MergeOperator {
 
 		union.getSpace().deleteBlankEdges(blankEdges);
 
-		outputSpace.shallowCopyNodeSpace(product.getSpace());
+		outputSpace.shallowCopyNodeSpace(union.getSpace());
 	}
 }
