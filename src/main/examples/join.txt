@@ -300,4 +300,90 @@ CREATE (o81)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["gene"], orientat
 CREATE (o82)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["gene"], orientation: "inline"}]->(o83)
 CREATE (o83)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["gene"], orientation: "inline"}]->(o84)
 
+
+CREATE (d9:DesignSpace {spaceID: "join9", nodeIndex: 6, commitIndex: 1})
+
+CREATE (n91:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n92:Node {nodeID: "n1", nodeTypes: []})
+CREATE (n93:Node {nodeID: "n2", nodeTypes: []})
+CREATE (n94:Node {nodeID: "n3", nodeTypes: []})
+CREATE (n95:Node {nodeID: "n4", nodeTypes: []})
+CREATE (n96:Node {nodeID: "n5", nodeTypes: ["accept"]})
+
+CREATE (d9)-[:CONTAINS]->(n91)
+CREATE (d9)-[:CONTAINS]->(n92)
+CREATE (d9)-[:CONTAINS]->(n93)
+CREATE (d9)-[:CONTAINS]->(n94)
+CREATE (d9)-[:CONTAINS]->(n95)
+CREATE (d9)-[:CONTAINS]->(n96)
+
+CREATE (n91)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["gene"], orientation: "inline"}]->(n92)
+CREATE (n92)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["gene"], orientation: "inline"}]->(n93)
+CREATE (n93)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["gene"], orientation: "inline"}]->(n94)
+CREATE (n94)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["gene"], orientation: "inline"}]->(n95)
+CREATE (n95)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["gene"], orientation: "inline"}]->(n96)
+
+CREATE (d9)-[:ARCHIVES]->(b9:Branch {branchID: "join9"})-[:CONTAINS]->(c9:Commit {commitID: "c0"})-[:CONTAINS]->(s9:Snapshot {nodeIndex: 6})
+CREATE (d9)-[:SELECTS]->(b9)-[:LATEST]->(c9)
+
+CREATE (o91:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (o92:Node {nodeID: "n1", nodeTypes: []})
+CREATE (o93:Node {nodeID: "n2", nodeTypes: []})
+CREATE (o94:Node {nodeID: "n3", nodeTypes: []})
+CREATE (o95:Node {nodeID: "n4", nodeTypes: []})
+CREATE (o96:Node {nodeID: "n5", nodeTypes: ["accept"]})
+
+CREATE (s9)-[:CONTAINS]->(o91)
+CREATE (s9)-[:CONTAINS]->(o92)
+CREATE (s9)-[:CONTAINS]->(o93)
+CREATE (s9)-[:CONTAINS]->(o94)
+CREATE (s9)-[:CONTAINS]->(o95)
+CREATE (s9)-[:CONTAINS]->(o96)
+
+CREATE (o91)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["gene"], orientation: "inline"}]->(o92)
+CREATE (o92)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["gene"], orientation: "inline"}]->(o93)
+CREATE (o93)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["gene"], orientation: "inline"}]->(o94)
+CREATE (o94)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["gene"], orientation: "inline"}]->(o95)
+CREATE (o95)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["gene"], orientation: "inline"}]->(o96)
+
+
+CREATE (d10:DesignSpace {spaceID: "join10", nodeIndex: 5, commitIndex: 1})
+
+CREATE (n101:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (n102:Node {nodeID: "n1", nodeTypes: []})
+CREATE (n103:Node {nodeID: "n2", nodeTypes: []})
+CREATE (n104:Node {nodeID: "n3", nodeTypes: []})
+CREATE (n105:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (d10)-[:CONTAINS]->(n101)
+CREATE (d10)-[:CONTAINS]->(n102)
+CREATE (d10)-[:CONTAINS]->(n103)
+CREATE (d10)-[:CONTAINS]->(n104)
+CREATE (d10)-[:CONTAINS]->(n105)
+
+CREATE (n101)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["gene"], orientation: "inline"}]->(n102)
+CREATE (n102)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["gene"], orientation: "inline"}]->(n103)
+CREATE (n103)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["gene"], orientation: "inline"}]->(n104)
+CREATE (n104)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["gene"], orientation: "inline"}]->(n105)
+
+CREATE (d10)-[:ARCHIVES]->(b10:Branch {branchID: "join10"})-[:CONTAINS]->(c10:Commit {commitID: "c0"})-[:CONTAINS]->(s10:Snapshot {nodeIndex: 5})
+CREATE (d10)-[:SELECTS]->(b10)-[:LATEST]->(c10)
+
+CREATE (o101:Node {nodeID: "n0", nodeTypes: ["start"]})
+CREATE (o102:Node {nodeID: "n1", nodeTypes: []})
+CREATE (o103:Node {nodeID: "n2", nodeTypes: []})
+CREATE (o104:Node {nodeID: "n3", nodeTypes: []})
+CREATE (o105:Node {nodeID: "n4", nodeTypes: ["accept"]})
+
+CREATE (s10)-[:CONTAINS]->(o101)
+CREATE (s10)-[:CONTAINS]->(o102)
+CREATE (s10)-[:CONTAINS]->(o103)
+CREATE (s10)-[:CONTAINS]->(o104)
+CREATE (s10)-[:CONTAINS]->(o105)
+
+CREATE (o101)-[:PRECEDES {componentIDs: ["A"], componentRoles: ["gene"], orientation: "inline"}]->(o102)
+CREATE (o102)-[:PRECEDES {componentIDs: ["X"], componentRoles: ["gene"], orientation: "inline"}]->(o103)
+CREATE (o103)-[:PRECEDES {componentIDs: ["Y"], componentRoles: ["gene"], orientation: "inline"}]->(o104)
+CREATE (o104)-[:PRECEDES {componentIDs: ["B"], componentRoles: ["gene"], orientation: "inline"}]->(o105)
+
 ;

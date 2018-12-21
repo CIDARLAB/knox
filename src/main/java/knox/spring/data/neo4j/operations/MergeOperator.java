@@ -25,6 +25,8 @@ public class MergeOperator {
 		Set<Edge> blankEdges = union.apply();
 
 		union.getSpace().deleteBlankEdges(blankEdges);
+		
+		union.getSpace().removeBlankCycles();
 
 		outputSpace.shallowCopyNodeSpace(union.getSpace());
 	}

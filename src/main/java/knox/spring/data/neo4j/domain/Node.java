@@ -140,6 +140,10 @@ public class Node {
         return edges != null && !edges.isEmpty();
     }
     
+    public boolean hasIncomingEdges(HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    	return !nodeIDToIncomingEdges.get(nodeID).isEmpty();
+    }
+    
     public boolean hasEdge(Node head) {
     	if (hasEdges()) {
     		for (Edge edge : edges) {
@@ -162,6 +166,102 @@ public class Node {
     	}
 
 		return false;
+    }
+    
+    public boolean hasBlankEdge(Node head) {  
+    	if (hasEdges()) {
+    		for (Edge edge : getEdges(head)) {
+    			if (edge.isBlank()) {
+    				return true;
+    			}
+    		}
+    	}
+
+		return false;
+    }
+    
+    public Set<Edge> getEdges(Set<Edge> targetEdges) {
+    	Set<Edge> edges = new HashSet<Edge>();
+    	
+    	if (hasEdges()) {
+    		for (Edge edge : this.edges) {
+    			if (targetEdges.contains(edge))  {
+    				edges.add(edge);
+    			}
+    		}
+    	}
+    	
+    	return edges;
+    }
+    
+    public Set<Edge> getIncomingEdges(HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    	Set<Edge> incomingEdges = new HashSet<Edge>(nodeIDToIncomingEdges.get(nodeID));
+    	
+    	return incomingEdges;
+    }
+    
+    public Set<Edge> getIncomingEdges(Set<Edge> targetEdges, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    	Set<Edge> incomingEdges = new HashSet<Edge>();
+    	
+    	for (Edge incomingEdge : nodeIDToIncomingEdges.get(nodeID)) {
+    		if (targetEdges.contains(incomingEdge))  {
+    			incomingEdges.add(incomingEdge);
+    		}
+    	}
+    	
+    	return incomingEdges;
+    }
+    
+    @SuppressWarnings("unchecked")
+	public Set<Edge> getOtherEdges(Set<Edge>... edges) {
+    	Set<Edge> otherEdges = new HashSet<Edge>();
+    	
+    	if (hasEdges()) {
+    		otherEdges.addAll(this.edges);
+    		
+    		for (Set<Edge> e : edges) {
+    			otherEdges.removeAll(e);
+    		}
+    	}
+    	
+    	return otherEdges;
+    }
+    
+    @SuppressWarnings("unchecked")
+	public Set<Edge> getOtherIncomingEdges(HashMap<String, Set<Edge>> nodeIDToIncomingEdges, Set<Edge>... incomingEdges) {
+    	Set<Edge> otherIncomingEdges = new HashSet<Edge>(nodeIDToIncomingEdges.get(nodeID));
+    	
+    	for (Set<Edge> e : incomingEdges) {
+    		otherIncomingEdges.removeAll(e);
+    	}
+    	
+    	return otherIncomingEdges;
+    }
+    
+    @SuppressWarnings("unchecked")
+	public boolean hasOtherEdges(Set<Edge>... edges) {
+    	Set<Edge> otherEdges = new HashSet<Edge>();
+
+    	if (hasEdges()) {
+    		otherEdges.addAll(this.edges);
+
+    		for (Set<Edge> e : edges) {
+    			otherEdges.removeAll(e);
+    		}
+    	}
+
+    	return !otherEdges.isEmpty();
+    }
+    
+    @SuppressWarnings("unchecked")
+	public boolean hasOtherIncomingEdges(HashMap<String, Set<Edge>> nodeIDToIncomingEdges, Set<Edge>... incomingEdges) {
+    	Set<Edge> otherIncomingEdges = new HashSet<Edge>(nodeIDToIncomingEdges.get(nodeID));
+
+    	for (Set<Edge> e : incomingEdges) {
+    		otherIncomingEdges.removeAll(e);
+    	}
+
+    	return !otherIncomingEdges.isEmpty();
     }
     
     public Set<Edge> getEdges(Node head) {
@@ -399,6 +499,14 @@ public class Node {
     	nodeTypes.addAll(node.getNodeTypes());
     }
     
+    public Set<Edge> getOtherBlankEdges(Set<Edge> blankEdges) {
+    	Set<Edge> otherBlankEdges = getBlankEdges();
+    	
+    	otherBlankEdges.removeAll(blankEdges);
+    	
+    	return otherBlankEdges;
+    }
+    
     public Set<Edge> getBlankEdges() {
     	Set<Edge> blankEdges = new HashSet<Edge>();
     	
@@ -411,5 +519,41 @@ public class Node {
     	}
     	
     	return blankEdges;
+    }
+    
+    public Set<Edge> getNonBlankEdges() {
+    	Set<Edge> nonBlankEdges = new HashSet<Edge>();
+
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (!edge.isBlank()) {
+    				nonBlankEdges.add(edge);
+    			}
+    		}
+    	}
+
+    	return nonBlankEdges;
+    }
+    
+    public Set<Edge> getOtherNonBlankEdges(Set<Edge> edges) {
+    	Set<Edge> otherNonBlankEdges = getNonBlankEdges();
+    	
+    	otherNonBlankEdges.removeAll(edges);
+    	
+    	return otherNonBlankEdges;
+    }
+    
+    public Set<Edge> getNonBlankEdges(Set<Node> heads) {
+    	Set<Edge> nonBlankEdges = new HashSet<Edge>();
+    	
+    	if (hasEdges()) {
+    		for (Edge edge : edges) {
+    			if (!edge.isBlank() && heads.contains(edge.getHead())) {
+    				nonBlankEdges.add(edge);
+    			}
+    		}
+    	}
+    	
+    	return nonBlankEdges;
     }
 }

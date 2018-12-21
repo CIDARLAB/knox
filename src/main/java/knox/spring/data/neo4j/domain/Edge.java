@@ -35,6 +35,8 @@ public class Edge {
     String orientation;
 
     double weight;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(Edge.class);
 
     public Edge() {
     	
@@ -153,6 +155,9 @@ public class Edge {
     	List<List<Edge>> blankPaths = new LinkedList<List<Edge>>();
     	blankPaths.add(new LinkedList<Edge>());
     	
+    	List<Set<Edge>> visitedEdges = new LinkedList<Set<Edge>>();
+    	visitedEdges.add(new HashSet<Edge>());
+    	
     	Stack<Edge> edgeStack = new Stack<Edge>();
     	edgeStack.push(this);
     	
@@ -164,19 +169,19 @@ public class Edge {
     		Edge tempEdge = edgeStack.pop();
     		
     		blankPaths.get(k).add(tempEdge);
-    		
-    		if (tempEdge.getHead().hasEdges()) {
-    			for (int i = 1; i < tempEdge.getHead().getEdges().size(); i++) {
-    				blankPaths.add(new LinkedList<Edge>(blankPaths.get(k)));
-    			}
-    			
-    			for (Edge headEdge : tempEdge.getHead().getEdges()) {
-    				if (headEdge.isBlank()) {
-    					edgeStack.add(headEdge);
-    				}
-    			}
+    		visitedEdges.get(k).add(tempEdge);
+
+    		Set<Edge> blankHeadEdges = tempEdge.getHead().getOtherBlankEdges(visitedEdges.get(k));
+
+    		for (int i = 1; i < blankHeadEdges.size(); i++) {
+    			blankPaths.add(new LinkedList<Edge>(blankPaths.get(k)));
+    			visitedEdges.add(new HashSet<Edge>(visitedEdges.get(k)));
     		}
-    		
+
+    		for (Edge blankHeadEdge : blankHeadEdges) {
+    			edgeStack.add(blankHeadEdge);
+    		}
+
     		if (edgeStack.size() < edgeCount) {
     			k = k + 1;
     		}
@@ -361,6 +366,15 @@ public class Edge {
 
     public double getWeight() { 
     	return weight; 
+    }
+    
+    public String toString() {
+    	if (hasComponentIDs()) {
+    		return tail.getNodeID() + " -" + componentIDs.toString() + "-> " + head.getNodeID();
+    	} else {
+    		return tail.getNodeID() + " --> " + head.getNodeID();
+    	}
+    	
     }
     
     public enum Orientation {

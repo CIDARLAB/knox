@@ -398,12 +398,7 @@ public class Product {
     public List<Set<Edge>> applyModifiedStrong(NodeSpace colSpace, int tolerance, Set<String> roles) {
     	NodeSpace rowSpace = productSpace;
     	
-    	List<Set<Edge>> blankProductEdges = applyTensor(colSpace, tolerance, 1, roles, true);
-    	
-    	HashMap<String, Set<Edge>> nodeIDToIncomingEdges = productSpace.mapNodeIDsToIncomingEdges();
-    	
-    	insertProductShims(rowIDToProductNodes, blankProductEdges.get(1), nodeIDToIncomingEdges);
-    	insertProductShims(colIDToProductNodes, blankProductEdges.get(1), nodeIDToIncomingEdges);
+    	List<Set<Edge>> blankEdges = applyTensor(colSpace, tolerance, 1, roles, true);
     	
     	rowIDToDiffNode = new HashMap<String, Node>();
     	colIDToDiffNode = new HashMap<String, Node>();
@@ -425,52 +420,63 @@ public class Product {
         	weakDiffEdges(colEdges, roles, colIDsToProductEdges, colIDToDiffNode);
     	}
     	
-    	diffBlankEdges(blankRowEdges, rowIDsToProductEdges, rowIDToDiffNode, blankProductEdges.get(1));
-    	diffBlankEdges(blankColEdges, colIDsToProductEdges, colIDToDiffNode, blankProductEdges.get(1));
+    	HashMap<String, Set<Edge>> nodeIDToIncomingEdges = productSpace.mapNodeIDsToIncomingEdges();
+    	
+    	Set<Edge> shimEdges = new HashSet<Edge>();
+    	
+    	insertProductShims(rowIDToProductNodes, shimEdges, nodeIDToIncomingEdges);
+    	insertProductShims(colIDToProductNodes, shimEdges, nodeIDToIncomingEdges);
+    	
+    	blankEdges.get(1).addAll(shimEdges);
+    	
+    	diffBlankEdges(blankRowEdges, rowIDsToProductEdges, rowIDToDiffNode, blankEdges.get(1));
+    	diffBlankEdges(blankColEdges, colIDsToProductEdges, colIDToDiffNode, blankEdges.get(1));
     	
     	nodeIDToIncomingEdges = productSpace.mapNodeIDsToIncomingEdges();
     	
-    	Set<Edge> feedbackProductEdges = productSpace.getFeedbackEdges(nodeIDToIncomingEdges);
+    	Set<Edge> feedbackEdges = productSpace.getFeedbackEdges(nodeIDToIncomingEdges);
     	
-    	linkDiffNodes(rowSpace.getEdges(), rowIDsToProductEdges, rowIDToProductNodes, rowIDToDiffNode, 
-    			blankProductEdges.get(0), nodeIDToIncomingEdges);
-    	linkDiffNodes(colSpace.getEdges(), colIDsToProductEdges, colIDToProductNodes, colIDToDiffNode, 
-    			blankProductEdges.get(0), nodeIDToIncomingEdges);
+    	Set<Edge> linkerEdges = new HashSet<Edge>();
     	
-    	insertFeedbackSpacers(feedbackProductEdges, blankProductEdges, nodeIDToIncomingEdges);
+    	insertDiffLinkers(rowIDToDiffNode, rowIDToProductNodes, linkerEdges, feedbackEdges, nodeIDToIncomingEdges);
+    	insertDiffLinkers(colIDToDiffNode, colIDToProductNodes, linkerEdges, feedbackEdges, nodeIDToIncomingEdges);
     	
-    	return blankProductEdges;
+    	blankEdges.get(0).addAll(linkerEdges);
+    	
+    	insertFeedbackSpacers(feedbackEdges, linkerEdges, blankEdges.get(1), nodeIDToIncomingEdges);
+    	
+    	return blankEdges;
     }
     
-    private void insertProductShims(HashMap<String, Set<Node>> idToProductNodes, Set<Edge> blankProductEdges, 
-    		HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    @SuppressWarnings("unchecked")
+	private void insertProductShims(HashMap<String, Set<Node>> idToProductNodes, Set<Edge> shimEdges,
+			HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
     	for (String id : idToProductNodes.keySet()) {
     		Set<Node> productTails = new HashSet<Node>();
     		Set<Node> productHeads = new HashSet<Node>();
     		
     		for (Node productNode : idToProductNodes.get(id)) {
-    			if (nodeIDToIncomingEdges.get(productNode.getNodeID()).isEmpty()) {
+    			Set<Edge> productEdges = productNode.getOtherEdges(shimEdges);
+    			Set<Edge> incomingProductEdges = productNode.getOtherIncomingEdges(nodeIDToIncomingEdges, shimEdges);
+    			
+    			if (!productEdges.isEmpty() && incomingProductEdges.isEmpty()) {
     				productHeads.add(productNode);
-    			}
-    			if (!productNode.hasEdges()) {
+    			} else if (productEdges.isEmpty() && !incomingProductEdges.isEmpty()) {
     				productTails.add(productNode);
     			}
     		}
     		
     		for (Node productTail : productTails) {
     			for (Node productHead : productHeads) {
-    				Edge shim = productTail.createEdge(productHead);
-    				
-    				blankProductEdges.add(shim);
-    				
-    				nodeIDToIncomingEdges.get(productHead.getNodeID()).add(shim);
+					shimEdges.add(productTail.createEdge(productHead));
     			}
     		}
     	}
     }
     
-    private void insertFeedbackSpacers(Set<Edge> feedbackEdges, List<Set<Edge>> linkerEdges, 
-    		HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    @SuppressWarnings("unchecked")
+	private void insertFeedbackSpacers(Set<Edge> feedbackEdges, Set<Edge> linkerEdges,
+    		Set<Edge> spacerEdges, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
     	Set<Node> feedbackNodes = new HashSet<Node>();
 
     	for (Edge feedbackEdge : feedbackEdges) {
@@ -479,29 +485,14 @@ public class Product {
     	}
 
     	for (Node feedbackNode : feedbackNodes) {
-    		Set<Edge> outLinkers = new HashSet<Edge>();
+    		Set<Edge> outLinkers = feedbackNode.getEdges(linkerEdges);
+    		Set<Edge> incomingEdges = feedbackNode.getOtherIncomingEdges(nodeIDToIncomingEdges, feedbackEdges);
 
-    		for (Edge edge : feedbackNode.getEdges()) {
-    			if (linkerEdges.get(0).contains(edge)) {
-    				outLinkers.add(edge);
-    			}
-    		}
-    		
-    		int numIncomingEdges = 0;
-    		
-    		for (Edge incomingEdge : nodeIDToIncomingEdges.get(feedbackNode.getNodeID())) {
-				if (!feedbackEdges.contains(incomingEdge)) {
-					numIncomingEdges++;
-				}
-			}
-
-    		if (!outLinkers.isEmpty() && numIncomingEdges > 0) {
+    		if (!outLinkers.isEmpty() && !incomingEdges.isEmpty()) {
     			Node spacerNode = productSpace.copyNode(feedbackNode);
 
-    			for (Edge incomingEdge : nodeIDToIncomingEdges.get(feedbackNode.getNodeID())) {
-    				if (!feedbackEdges.contains(incomingEdge)) {
-    					incomingEdge.setHead(spacerNode);
-    				}
+    			for (Edge incomingEdge : incomingEdges) {
+    				incomingEdge.setHead(spacerNode);
     			}
 
     			for (Edge outLinker : outLinkers) {
@@ -512,38 +503,23 @@ public class Product {
 
     			feedbackNode.deleteEdges(outLinkers);
     			
-    			linkerEdges.get(1).add(spacerNode.createEdge(feedbackNode));
+    			spacerEdges.add(spacerNode.createEdge(feedbackNode));
     		}
     		
-    		Set<Edge> inLinkers = new HashSet<Edge>();
-
-    		for (Edge edge : nodeIDToIncomingEdges.get(feedbackNode.getNodeID())) {
-    			if (linkerEdges.get(0).contains(edge)) {
-    				inLinkers.add(edge);
-    			}
-    		}
+    		Set<Edge> inLinkers = feedbackNode.getIncomingEdges(linkerEdges, nodeIDToIncomingEdges);
+    		Set<Edge> outgoingEdges = feedbackNode.getOtherEdges(feedbackEdges);
     		
-    		int numOutgoingEdges = 0;
-    		
-    		for (Edge edge : feedbackNode.getEdges()) {
-				if (!feedbackEdges.contains(edge)) {
-					numOutgoingEdges++;
-				}
-			}
-    		
-    		if (!inLinkers.isEmpty() && numOutgoingEdges > 0) {
+    		if (!inLinkers.isEmpty() && !outgoingEdges.isEmpty()) {
     			Node spacerNode = productSpace.copyNode(feedbackNode);
 
     			Set<Edge> deletedEdges = new HashSet<Edge>();
 
-    			for (Edge edge : feedbackNode.getEdges()) {
-    				if (!feedbackEdges.contains(edge)) {
-    					edge.setTail(spacerNode);
+    			for (Edge outgoingEdge : outgoingEdges) {
+    				outgoingEdge.setTail(spacerNode);
 
-    					spacerNode.addEdge(edge);
+    				spacerNode.addEdge(outgoingEdge);
 
-    					deletedEdges.add(edge);
-    				}
+    				deletedEdges.add(outgoingEdge);
     			}
 
     			feedbackNode.deleteEdges(deletedEdges);
@@ -552,7 +528,7 @@ public class Product {
     				inLinker.setHead(spacerNode);
     			}
 
-    			linkerEdges.get(1).add(feedbackNode.createEdge(spacerNode));
+    			spacerEdges.add(feedbackNode.createEdge(spacerNode));
     		}
     	}
     }
@@ -642,15 +618,28 @@ public class Product {
     	}
     }
     
-    private void diffBlankEdges(Set<Edge> blankEdges, HashMap<String, Set<Edge>> idsToProductEdges,
-    		HashMap<String, Node> idToDiffNode, Set<Edge> blankProductEdges) {
-    	for (Edge blankEdge : blankEdges) {
+    private void diffBlankEdges(Set<Edge> edges, HashMap<String, Set<Edge>> idsToProductEdges,
+    		HashMap<String, Node> idToDiffNode, Set<Edge> blankEdges) {
+    	for (Edge blankEdge : edges) {
     		Set<Edge> productEdges = idsToProductEdges.get(blankEdge.getTailID() + blankEdge.getHeadID());
     		
-    		if (!productEdges.isEmpty()) {
+    		Set<Edge> revProductEdges;
+    		if (idsToProductEdges.containsKey(blankEdge.getHeadID() + blankEdge.getTailID())) {
+    			revProductEdges = idsToProductEdges.get(blankEdge.getHeadID() + blankEdge.getTailID());
+    		} else {
+    			revProductEdges = new HashSet<Edge>();
+    		}
+    		
+    		if (!productEdges.isEmpty() || !revProductEdges.isEmpty()) {
     			for (Edge productEdge : productEdges) {
-    				if (!productEdge.isBlank() && !productEdge.getTail().hasBlankEdge()) {
-    					blankProductEdges.add(productEdge.getTail().createEdge(productEdge.getHead()));
+    				if (!productEdge.getTail().hasBlankEdge(productEdge.getHead())) {
+    					blankEdges.add(productEdge.getTail().createEdge(productEdge.getHead()));
+    				}
+    			}
+    			
+    			for (Edge reverseProductEdge : revProductEdges) {
+    				if (!reverseProductEdge.getHead().hasBlankEdge(reverseProductEdge.getTail())) {
+    					blankEdges.add(reverseProductEdge.getHead().createEdge(reverseProductEdge.getTail()));
     				}
     			}
 
@@ -660,7 +649,7 @@ public class Product {
     				Node diffHead = idToDiffNode.get(blankEdge.getHeadID());
 
     				if (diffTail.hasEdge(diffHead) || diffHead.hasEdge(diffTail)) {
-    					blankProductEdges.add(diffTail.createEdge(diffHead));
+    					blankEdges.add(diffTail.createEdge(diffHead));
     				}
     			}
     		} else {
@@ -684,120 +673,61 @@ public class Product {
     				idToDiffNode.put(blankEdge.getHeadID(), diffHead);
     			}
     			
-    			blankProductEdges.add(diffTail.createEdge(diffHead));
+    			blankEdges.add(diffTail.createEdge(diffHead));
     		}
     	}
     }
     
-    private boolean isUnionCompatible(Node tail, Node head, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
-    	return !(tail.isStartNode() && head.isStartNode() && nodeIDToIncomingEdges.get(tail.getNodeID()).isEmpty()
-    			|| tail.isAcceptNode() && head.isAcceptNode() && !head.hasEdges());
-    }
-    
-    private void linkDiffNodes(Set<Edge> edges, HashMap<String, Set<Edge>> idsToProductEdges,
-    		HashMap<String, Set<Node>> idToProductNodes, HashMap<String, Node> idToDiffNode, 
-    		Set<Edge> blankProductEdges, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
-    	for (Edge edge : edges) {
-    		String ids = edge.getTailID() + edge.getHeadID();
-    		
-    		if (!idsToProductEdges.get(ids).isEmpty()) {
-    			if (idToDiffNode.containsKey(edge.getTailID()) && idToDiffNode.containsKey(edge.getHeadID())) {
-        			Node diffTail = idToDiffNode.get(edge.getTailID());
-        			Node diffHead = idToDiffNode.get(edge.getHeadID());
-
-        			if (!diffTail.hasEdge(diffHead)) {
-        				for (Node productTail : idToProductNodes.get(edge.getTailID())) {
-        					if (!diffTail.hasEdge(productTail) 
-        							&& isUnionCompatible(diffTail, productTail, nodeIDToIncomingEdges)) {
-        						Edge linker = diffTail.createEdge(productTail);
-        						
-        						blankProductEdges.add(linker);
-        						nodeIDToIncomingEdges.get(productTail.getNodeID()).add(linker);
-        					}
-        				}
-        			}
-    			} else if (idToDiffNode.containsKey(edge.getTailID())) {
-    				Node diffTail = idToDiffNode.get(edge.getTailID());
-
-        			for (Node productTail : idToProductNodes.get(edge.getTailID())) {
-        				if (!diffTail.hasEdge(productTail) 
-        						&& isUnionCompatible(diffTail, productTail, nodeIDToIncomingEdges)) {
-        					Edge linker = diffTail.createEdge(productTail);
-        					
-        					blankProductEdges.add(linker);
-        					nodeIDToIncomingEdges.get(productTail.getNodeID()).add(linker);
-        				}
-        			}
-        		}
-    		}
-    	}
-    	
-    	for (Edge edge : edges) {
-    		String ids = edge.getTailID() + edge.getHeadID();
-    		
-    		if (!idsToProductEdges.get(ids).isEmpty()) {
-    			if (idToDiffNode.containsKey(edge.getTailID()) && idToDiffNode.containsKey(edge.getHeadID())) {
-        			Node diffTail = idToDiffNode.get(edge.getTailID());
-        			Node diffHead = idToDiffNode.get(edge.getHeadID());
-
-        			if (!diffTail.hasEdge(diffHead)) {
-        				for (Node productHead : idToProductNodes.get(edge.getHeadID())) {
-        					if (!productHead.hasEdge(diffHead) 
-        							&& isUnionCompatible(productHead, diffHead, nodeIDToIncomingEdges)) {
-        						Edge linker = productHead.createEdge(diffHead);
-        						
-        						blankProductEdges.add(linker);
-        						nodeIDToIncomingEdges.get(diffHead.getNodeID()).add(linker);
-        					}
-        				}
-        			}
-    			} else if (idToDiffNode.containsKey(edge.getHeadID())) {
-        			Node diffHead = idToDiffNode.get(edge.getHeadID());
-
-        			for (Node productHead : idToProductNodes.get(edge.getHeadID())) {
-        				if (!productHead.hasEdge(diffHead) 
-        						&& isUnionCompatible(productHead, diffHead, nodeIDToIncomingEdges)) {
-        					Edge linker = productHead.createEdge(diffHead);
+    @SuppressWarnings("unchecked")
+	private void insertDiffLinkers(HashMap<String, Node> idToDiffNode, HashMap<String, Set<Node>> idToProductNodes,  
+			Set<Edge> linkerEdges, Set<Edge> feedbackEdges, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    	for (String id : idToProductNodes.keySet()) {
+    		if (idToDiffNode.containsKey(id)) {
+    			Node diffNode = idToDiffNode.get(id);
+    			
+    			Set<Edge> diffEdges = diffNode.getOtherEdges(feedbackEdges, linkerEdges);
+    			Set<Edge> incomingDiffEdges = diffNode.getOtherIncomingEdges(nodeIDToIncomingEdges, feedbackEdges, 
+    					linkerEdges);
+    			
+    			if (diffEdges.isEmpty() && !incomingDiffEdges.isEmpty()) {
+    				for (Node productNode : idToProductNodes.get(id)) {
+    					if (productNode.hasEdges()) {
+    						Edge linkerEdge = diffNode.createEdge(productNode);
     						
-    						blankProductEdges.add(linker);
-    						nodeIDToIncomingEdges.get(diffHead.getNodeID()).add(linker);
-        				}
-        			}
-        		}
-    		}
-    	}
-    	
-    	for (Edge edge : edges) {
-    		String ids = edge.getTailID() + edge.getHeadID();
-    		
-    		if (idsToProductEdges.get(ids).isEmpty() && idToProductNodes.containsKey(edge.getTailID())) {
-    			Node diffTail = idToDiffNode.get(edge.getTailID());
-
-    			for (Node productTail : idToProductNodes.get(edge.getTailID())) {
-    				if (!diffTail.hasEdge(productTail) && !productTail.hasEdge(diffTail) 
-    						&& isUnionCompatible(productTail, diffTail, nodeIDToIncomingEdges)) {
-    					Edge linker = productTail.createEdge(diffTail);
-						
-						blankProductEdges.add(linker);
-						nodeIDToIncomingEdges.get(diffTail.getNodeID()).add(linker);
+    						linkerEdges.add(linkerEdge);
+    						
+    						nodeIDToIncomingEdges.get(productNode.getNodeID()).add(linkerEdge);
+    					}
     				}
-    			}
-    		}
-    	}
-    	
-    	for (Edge edge : edges) {
-    		String ids = edge.getTailID() + edge.getHeadID();
-
-    		if (idsToProductEdges.get(ids).isEmpty() && idToProductNodes.containsKey(edge.getHeadID())) {
-    			Node diffHead = idToDiffNode.get(edge.getHeadID());
-
-    			for (Node productHead : idToProductNodes.get(edge.getHeadID())) {
-    				if (!productHead.hasEdge(diffHead) && !diffHead.hasEdge(productHead) 
-    						&& isUnionCompatible(diffHead, productHead, nodeIDToIncomingEdges)) {
-    					Edge linker = diffHead.createEdge(productHead);
-						
-						blankProductEdges.add(linker);
-						nodeIDToIncomingEdges.get(productHead.getNodeID()).add(linker);
+    			} else if (!diffEdges.isEmpty() && incomingDiffEdges.isEmpty()) {
+    				for (Node productNode : idToProductNodes.get(id)) {
+    					if (productNode.hasIncomingEdges(nodeIDToIncomingEdges)) {
+    						Edge linkerEdge = productNode.createEdge(diffNode);
+    						
+    						linkerEdges.add(linkerEdge);
+    						
+    						nodeIDToIncomingEdges.get(diffNode.getNodeID()).add(linkerEdge);
+    					}
+    				}
+    			} else {
+    				for (Node productNode : idToProductNodes.get(id)) {
+    					Set<Edge> productEdges = productNode.getOtherEdges(feedbackEdges, linkerEdges);
+            			Set<Edge> incomingProductEdges = productNode.getOtherIncomingEdges(nodeIDToIncomingEdges, feedbackEdges, 
+            					linkerEdges);
+            			
+    					if (productEdges.isEmpty() && !incomingProductEdges.isEmpty()) {
+    						Edge linkerEdge = productNode.createEdge(diffNode);
+    						
+    						linkerEdges.add(linkerEdge);
+    						
+    						nodeIDToIncomingEdges.get(diffNode.getNodeID()).add(linkerEdge);
+    					} else if (!productEdges.isEmpty() && incomingProductEdges.isEmpty()) {
+    						Edge linkerEdge = diffNode.createEdge(productNode);
+    						
+    						linkerEdges.add(linkerEdge);
+    						
+    						nodeIDToIncomingEdges.get(productNode.getNodeID()).add(linkerEdge);
+    					}
     				}
     			}
     		}
