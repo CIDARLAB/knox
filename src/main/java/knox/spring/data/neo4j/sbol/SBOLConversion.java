@@ -1,20 +1,10 @@
 package knox.spring.data.neo4j.sbol;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-import org.sbolstandard.core2.Component;
-import org.sbolstandard.core2.ComponentDefinition;
-import org.sbolstandard.core2.Location;
-import org.sbolstandard.core2.Range;
-import org.sbolstandard.core2.SBOLDocument;
-import org.sbolstandard.core2.Sequence;
-import org.sbolstandard.core2.SequenceAnnotation;
-import org.sbolstandard.core2.SequenceOntology;
+import org.sbolstandard.core2.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,41 +27,124 @@ public class SBOLConversion {
 	}
 	
 	public DesignSpace convertCombinatorialSBOLToSpace(String outputSpaceID) {
-		// Create a list of component IDs and a list of component roles and use them to create a node space with a single edge for each atom
-		// Should replace with code that extracts this information from sbolDocs
-		
-		ArrayList<String> atom1IDs = new ArrayList<String>();
-		atom1IDs.add("pTac");
-		
-		ArrayList<String> atom1Roles = new ArrayList<String>();
-		atom1Roles.add("promoter");
-		
-		ArrayList<String> atom2IDs = new ArrayList<String>();
-		atom1IDs.add("gfp");
-		
-		ArrayList<String> atom2Roles = new ArrayList<String>();
-		atom1Roles.add("CDS");
-		
-		List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
-		
-		inputSpaces.add(new NodeSpace(atom1IDs, atom1Roles));
-		inputSpaces.add(new NodeSpace(atom2IDs, atom2Roles));
-		
-		// Create output space and apply operators based on combinatorial SBOL
-		// Should replace with code that extracts this information from sbolDocs
-		// The final output should be a design space rather than a node space so that version history can be added to it
+		SBOLDocument doc = sbolDocs.get(0);
+
+		CombinatorialDerivation rootCV = getRootCombinatorialDerivation(doc);
+
+		//iterate through variable components
+		List<NodeSpace> inputSpace = recurseVariableComponents(rootCV);
 		
 		DesignSpace outputSpace = new DesignSpace(outputSpaceID);
-		
-		JoinOperator.apply(inputSpaces, outputSpace); // Note that an input space can also be the output space of an operator - its graph will be overwritten by the result of applying the operator
+		JoinOperator.apply(inputSpace, outputSpace);
 		
 		// Create version history for output design space - single branch and single commit that captures result of conversion
-		
 		outputSpace.createHeadBranch(outputSpaceID);
-		
 		outputSpace.commitToHead();
 		
 		return outputSpace;
+	}
+
+	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation){
+		List<NodeSpace> inputSpace = new LinkedList<>();
+
+		// order components by sequence constraints
+		VariableComponent[] sortedVCs = sortVariableComponents(combinatorialDerivation);
+		for (VariableComponent variableComponent : sortedVCs) {
+			//get variant derivations first to find nested components
+			Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
+			if (variantDerivs.size() > 0){
+				for (CombinatorialDerivation cv : variantDerivs) {
+					inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+				}
+			}else{
+				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
+			}
+		}
+
+		return inputSpace;
+	}
+
+	private VariableComponent[] sortVariableComponents(CombinatorialDerivation combinatorialDerivation){
+		//make ordered components from sequence constraints
+		List<Component> orderedComponents = new ArrayList<>();
+		Set<SequenceConstraint> seqConstraints = combinatorialDerivation.getTemplate().getSequenceConstraints();
+		for (SequenceConstraint constraint : seqConstraints) {
+			//subject precedes object
+			Component subject = constraint.getSubject();
+			Component object = constraint.getObject();
+			int subIndex = orderedComponents.indexOf(subject);
+			int objIndex = orderedComponents.indexOf(object);
+			if (subIndex == -1 && objIndex == -1){
+				orderedComponents.add(subject);
+				orderedComponents.add(object);
+			}else if(subIndex > -1){
+				orderedComponents.add(subIndex+1, object);
+			}else if(objIndex > -1){
+				orderedComponents.add(objIndex, subject);
+			}
+		}
+
+		//order variable components based on components array
+		VariableComponent[] orderedVCs;
+		Set<VariableComponent> vcSet = combinatorialDerivation.getVariableComponents();
+		if (vcSet.size() > 1){
+			orderedVCs = new VariableComponent[orderedComponents.size()];
+			for (VariableComponent variableComponent : vcSet) {
+				int index = orderedComponents.indexOf(variableComponent.getVariable());
+				orderedVCs[index] = variableComponent;
+			}
+		}else{
+			orderedVCs = new VariableComponent[1];
+			orderedVCs[0] = vcSet.iterator().next();
+		}
+
+		return orderedVCs;
+	}
+
+	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent){
+		ArrayList<String> atomIDs = new ArrayList<>();
+		Set<String> atomRolesSet = new HashSet<>();
+		for (ComponentDefinition variant : variableComponent.getVariants()) {
+			atomIDs.add(variant.getDisplayId());
+			atomRolesSet.addAll(convertSOIdentifiersToNames(variableComponent.getVariable().getDefinition().getRoles()));
+		}
+
+		//convert set to list
+		ArrayList<String> atomRoles = new ArrayList<>(atomRolesSet);
+
+		System.out.println(atomIDs);
+		System.out.println(atomRoles);
+
+		//create space
+		List<NodeSpace> inputSpace = new LinkedList<>();
+		inputSpace.add(new NodeSpace(atomIDs, atomRoles));
+
+		//check operator
+		return applyOperator(variableComponent.getOperator(), inputSpace);
+	}
+
+	private NodeSpace applyOperator(OperatorType operator, List<NodeSpace> inputSpace){
+		NodeSpace outputSpace = new NodeSpace();
+		if (operator == OperatorType.ONEORMORE){
+			RepeatOperator.apply(inputSpace, outputSpace, false);
+		}
+		if (operator == OperatorType.ZEROORMORE){
+			RepeatOperator.apply(inputSpace, outputSpace, true);
+		}
+		if (operator == OperatorType.ONE){
+			JoinOperator.apply(inputSpace, outputSpace);
+		}
+		return outputSpace;
+	}
+
+	private CombinatorialDerivation getRootCombinatorialDerivation(SBOLDocument doc){
+		Set<CombinatorialDerivation> derivations = doc.getCombinatorialDerivations();
+		for (CombinatorialDerivation combDerivation : doc.getCombinatorialDerivations()) {
+			for (VariableComponent vc: combDerivation.getVariableComponents()){
+				derivations.removeAll(vc.getVariantDerivations());
+			}
+		}
+		return derivations.iterator().next();
 	}
 	
 	public DesignSpace convertSBOLToSpace(String outputSpaceID) {

@@ -613,7 +613,8 @@ public class DesignSpaceService {
     		throws SBOLValidationException, IOException, SBOLConversionException {
     	SBOLConversion sbolConv = new SBOLConversion(sbolDocs);
     	
-    	DesignSpace outputSpace = sbolConv.convertSBOLToSpace(outputSpaceID);
+    	//DesignSpace outputSpace = sbolConv.convertSBOLToSpace(outputSpaceID);
+		DesignSpace outputSpace = sbolConv.convertCombinatorialSBOLToSpace(outputSpaceID);
     	
     	saveDesignSpace(outputSpace);
     }

@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
+import knox.spring.data.neo4j.sbol.SBOLConversion;
 import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import org.sbolstandard.core2.SBOLConversionException;
