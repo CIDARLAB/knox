@@ -50,13 +50,24 @@ public class SBOLConversion {
 		// order components by sequence constraints
 		VariableComponent[] sortedVCs = sortVariableComponents(combinatorialDerivation);
 		for (VariableComponent variableComponent : sortedVCs) {
-			//get variant derivations first to find nested components
+
+			// recurse through variant derivations
 			Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
 			if (variantDerivs.size() > 0){
-				for (CombinatorialDerivation cv : variantDerivs) {
-					inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+				List<NodeSpace> orSpace = new LinkedList<>();
+				NodeSpace outputSpace = new NodeSpace();
+
+				if (variableComponent.getVariants().size() > 0){
+					orSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
 				}
-			}else{
+				for (CombinatorialDerivation cv : variantDerivs) {
+					orSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+				}
+				OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
+				inputSpace.add(outputSpace);
+			}
+
+			else{
 				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
 			}
 		}
