@@ -53,20 +53,29 @@ public class SBOLConversion {
 
 			// recurse through variant derivations
 			Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
-			if (variantDerivs.size() > 0){
+
+			//handle structure for just repeats
+			if (variantDerivs.size() == 1 && variableComponent.getVariants().size() == 0){
+				for (CombinatorialDerivation cv : variantDerivs) {
+					inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+				}
+			}
+
+			//else handle collapsed complex ORs
+			else if (variantDerivs.size() > 0){
 				List<NodeSpace> orSpace = new LinkedList<>();
 				NodeSpace outputSpace = new NodeSpace();
+				orSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
 
-				if (variableComponent.getVariants().size() > 0){
-					orSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
-				}
 				for (CombinatorialDerivation cv : variantDerivs) {
 					orSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
 				}
+
 				OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
 				inputSpace.add(outputSpace);
 			}
 
+			// else handle simple ORs
 			else{
 				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
 			}
@@ -122,9 +131,6 @@ public class SBOLConversion {
 
 		//convert set to list
 		ArrayList<String> atomRoles = new ArrayList<>(atomRolesSet);
-
-		System.out.println(atomIDs);
-		System.out.println(atomRoles);
 
 		//create space
 		List<NodeSpace> inputSpace = new LinkedList<>();
