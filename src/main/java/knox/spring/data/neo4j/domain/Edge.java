@@ -151,12 +151,91 @@ public class Edge {
     	componentIDs.removeAll(edge.getComponentIDs());
     }
     
-    public List<List<Edge>> getBlankPaths() {
+    public List<Edge> depthFirstTraversal(boolean includeStart, boolean blankOnly) {
+    	Stack<Edge> edgeStack = new Stack<Edge>();
+
+    	edgeStack.push(this);
+
+    	List<Edge> traversalEdges = new LinkedList<Edge>();
+    	Set<Edge> visitedEdges = new HashSet<Edge>();
+
+    	while (!edgeStack.isEmpty()) {
+    		Edge edge = edgeStack.pop();
+    		
+    		if (includeStart || edge != this || !traversalEdges.isEmpty()) {
+    			traversalEdges.add(edge);
+    			visitedEdges.add(edge);
+    		}
+    		
+    		if (edge.getHead().hasEdges()) {
+    			if (blankOnly) {
+    				for (Edge headEdge : edge.getHead().getBlankEdges()) {
+        				if (!visitedEdges.contains(headEdge)) {
+        					edgeStack.push(headEdge);
+        				}
+        			}
+    			} else {
+    				for (Edge headEdge : edge.getHead().getEdges()) {
+        				if (!visitedEdges.contains(headEdge)) {
+        					edgeStack.push(headEdge);
+        				}
+        			}
+    			}
+    			
+    		}
+    	}
+    	
+    	return traversalEdges;
+    }
+    
+    public List<Edge> reverseDepthFirstTraversal(HashMap<String, Set<Edge>> idToIncomingEdges, boolean blankOnly) {
+    	Stack<Edge> edgeStack = new Stack<Edge>();
+
+    	edgeStack.push(this);
+
+    	List<Edge> traversalEdges = new LinkedList<Edge>();
+    	Set<Edge> visitedEdges = new HashSet<Edge>();
+
+    	while (!edgeStack.isEmpty()) {
+    		Edge edge = edgeStack.pop();
+    		
+    		traversalEdges.add(edge);
+        	visitedEdges.add(edge);
+
+    		if (idToIncomingEdges.containsKey(edge.getTail().getNodeID())) {
+    			if (blankOnly) {
+    				for (Edge tailEdge : idToIncomingEdges.get(edge.getTail().getNodeID())) {
+        				if (!visitedEdges.contains(tailEdge) && tailEdge.isBlank()) {
+        					edgeStack.push(tailEdge);
+        				}
+        			}
+    			} else {
+    				for (Edge tailEdge : idToIncomingEdges.get(edge.getTail().getNodeID())) {
+        				if (!visitedEdges.contains(tailEdge)) {
+        					edgeStack.push(tailEdge);
+        				}
+        			}
+    			}
+    		}
+    	}
+
+    	return traversalEdges;
+    }
+    
+    public List<Edge> getCycle(HashMap<String, Set<Edge>> nodeIDToIncomingEdges, boolean blankOnly) {
+    	List<Edge> traversalEdges = this.depthFirstTraversal(false, blankOnly);
+		
+    	traversalEdges.retainAll(this.reverseDepthFirstTraversal(nodeIDToIncomingEdges, blankOnly));
+
+    	return traversalEdges;
+    }
+    
+    public List<List<Edge>> getOrthogonalBlankPaths() {
     	List<List<Edge>> blankPaths = new LinkedList<List<Edge>>();
     	blankPaths.add(new LinkedList<Edge>());
     	
-    	List<Set<Edge>> visitedEdges = new LinkedList<Set<Edge>>();
-    	visitedEdges.add(new HashSet<Edge>());
+    	List<Set<Node>> visitedNodes = new LinkedList<Set<Node>>();
+    	visitedNodes.add(new HashSet<Node>());
     	
     	Stack<Edge> edgeStack = new Stack<Edge>();
     	edgeStack.push(this);
@@ -169,13 +248,16 @@ public class Edge {
     		Edge tempEdge = edgeStack.pop();
     		
     		blankPaths.get(k).add(tempEdge);
-    		visitedEdges.get(k).add(tempEdge);
+    		
+    		visitedNodes.get(k).add(tempEdge.getTail());
+    		visitedNodes.get(k).add(tempEdge.getHead());
 
-    		Set<Edge> blankHeadEdges = tempEdge.getHead().getOtherBlankEdges(visitedEdges.get(k));
+    		Set<Edge> blankHeadEdges = tempEdge.getHead().getBlankEdgesWithoutHeads(visitedNodes.get(k));
 
     		for (int i = 1; i < blankHeadEdges.size(); i++) {
     			blankPaths.add(new LinkedList<Edge>(blankPaths.get(k)));
-    			visitedEdges.add(new HashSet<Edge>(visitedEdges.get(k)));
+    			
+    			visitedNodes.add(new HashSet<Node>(visitedNodes.get(k)));
     		}
 
     		for (Edge blankHeadEdge : blankHeadEdges) {
@@ -252,8 +334,8 @@ public class Edge {
     	return hasSameOrientation(edge) 
     			&& (tolerance == 0 && hasSameComponentIDs(edge) && hasSameRoles(edge, roles)
     					|| (tolerance == 1 || tolerance == 2) && hasSharedComponentIDs(edge) && hasSharedRoles(edge, roles)
-    					|| tolerance == 2 && hasSameRoles(edge, roles)
-    					|| tolerance == 3 && hasSharedRoles(edge, roles));
+    					|| tolerance == 3 && hasSameRoles(edge, roles)
+    					|| tolerance == 4 && hasSharedRoles(edge, roles));
     }
     
     public boolean hasSameOrientation(Edge edge) {
@@ -353,7 +435,19 @@ public class Edge {
         	}
         }
         
-        componentRoles.retainAll(edge.getComponentRoles());
+        Set<String> unionedRoles = new HashSet<String>();
+        
+        unionedRoles.addAll(componentRoles);
+
+        for (String compRole : edge.getComponentRoles()) {
+        	if (!unionedRoles.contains(compRole)) {
+        		componentRoles.add(compRole);
+
+        		unionedRoles.add(compRole);
+        	}
+        }
+        
+//        componentRoles.retainAll(edge.getComponentRoles());
     }
     
     public String getOrientation() {

@@ -10,7 +10,9 @@ public class RepeatOperator {
 		Star star = new Star(inputSpaces);
 
 		star.apply(isOptional);
+		
+		star.getSpace().removeBlankCycles();
 
-		outputSpace.shallowCopyNodeSpace(star.getStarSpace());
+		outputSpace.shallowCopyNodeSpace(star.getSpace());
 	}
 }

@@ -385,7 +385,7 @@ public class Node {
 
     				codeToIncomingEdges.get(code).add(edge);
     			} else {
-    				List<List<Edge>> blankPaths = edge.getBlankPaths();
+    				List<List<Edge>> blankPaths = edge.getOrthogonalBlankPaths();
 
     				for (List<Edge> blankPath : blankPaths) {
     					String code = blankPath.get(blankPath.size() - 1).getHead().getNodeID() + edge.getOrientation();
@@ -507,6 +507,22 @@ public class Node {
     	return otherBlankEdges;
     }
     
+    public Set<Edge> getBlankEdgesWithoutHeads(Set<Node> heads) {
+    	Set<Edge> otherBlankEdges = getBlankEdges();
+    	
+    	Set<Edge> blankEdges = new HashSet<Edge>();
+    	
+    	for (Edge blankEdge : otherBlankEdges) {
+    		if (heads.contains(blankEdge.getHead())) {
+    			blankEdges.add(blankEdge);
+    		}
+    	}
+    	
+    	otherBlankEdges.removeAll(blankEdges);
+    	
+    	return otherBlankEdges;
+    }
+    
     public Set<Edge> getBlankEdges() {
     	Set<Edge> blankEdges = new HashSet<Edge>();
     	
@@ -519,6 +535,18 @@ public class Node {
     	}
     	
     	return blankEdges;
+    }
+    
+    public Set<Edge> getIncomingBlankEdges(HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+    	Set<Edge> incomingBlankEdges = new HashSet<Edge>();
+    	
+    	for (Edge edge : nodeIDToIncomingEdges.get(nodeID)) {
+    		if (edge.isBlank()) {
+    			incomingBlankEdges.add(edge);
+    		}
+    	}
+    	
+    	return incomingBlankEdges;
     }
     
     public Set<Edge> getNonBlankEdges() {
