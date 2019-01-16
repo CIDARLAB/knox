@@ -125,8 +125,10 @@ public class SBOLConversion {
 		ArrayList<String> atomIDs = new ArrayList<>();
 		Set<String> atomRolesSet = new HashSet<>();
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
-			atomIDs.add(variant.getDisplayId());
-			atomRolesSet.addAll(convertSOIdentifiersToNames(variableComponent.getVariable().getDefinition().getRoles()));
+			for (String role : convertSOIdentifiersToNames(variableComponent.getVariable().getDefinition().getRoles())) {
+				atomIDs.add(variant.getDisplayId());
+				atomRolesSet.add(role);
+			}
 		}
 
 		//convert set to list
@@ -327,7 +329,7 @@ public class SBOLConversion {
         Set<String> roleNames = new HashSet<String>();
         
         if (soIdentifiers.isEmpty()) {
-            roleNames.add("engineered_region");
+            roleNames.add("sequence_feature");
         } else {
             SequenceOntology so = new SequenceOntology();
 
@@ -346,7 +348,7 @@ public class SBOLConversion {
                 } else if (soIdentifier.equals(SequenceOntology.TERMINATOR)) {
                     roleNames.add("terminator");
                 } else {
-                    roleNames.add("engineered_region");
+                    roleNames.add("sequence_feature");
                 }
             }
         }
