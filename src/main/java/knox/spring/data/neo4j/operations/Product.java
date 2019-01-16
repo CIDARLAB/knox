@@ -147,9 +147,9 @@ public class Product {
 
 					Edge productEdge = productTail.copyEdge(colEdge, productHead);
 
-					if (tolerance == 1) {
-						productEdge.intersectWithEdge(rowEdge);
-					} else if (tolerance > 1) {
+					if (tolerance <= 0 || tolerance == 2) {
+						productEdge.intersectWithEdge(rowEdge, tolerance);
+					} else if (tolerance == 1 || tolerance >= 3) {
 						productEdge.unionWithEdge(rowEdge);
 					}
 					
@@ -412,10 +412,10 @@ public class Product {
     	rowEdges.removeAll(blankRowEdges);
     	colEdges.removeAll(blankColEdges);
 
-    	if (tolerance == 0 || tolerance == 1) {
-    		strongDiffEdges(rowEdges, roles, rowIDsToProductEdges, rowIDToDiffNode);
-        	strongDiffEdges(colEdges, roles, colIDsToProductEdges, colIDToDiffNode);
-    	} else if (tolerance > 1) {
+    	if (tolerance <= 0 || tolerance == 2) {
+    		strongDiffEdges(rowEdges, tolerance, rowIDsToProductEdges, rowIDToDiffNode);
+        	strongDiffEdges(colEdges, tolerance, colIDsToProductEdges, colIDToDiffNode);
+    	} else if (tolerance == 1 || tolerance >= 3) {
     		weakDiffEdges(rowEdges, roles, rowIDsToProductEdges, rowIDToDiffNode);
         	weakDiffEdges(colEdges, roles, colIDsToProductEdges, colIDToDiffNode);
     	}
@@ -533,14 +533,14 @@ public class Product {
     	}
     }
     
-    private void strongDiffEdges(Set<Edge> edges, Set<String> roles, 
+    private void strongDiffEdges(Set<Edge> edges, int tolerance, 
     		HashMap<String, Set<Edge>> idsToProductEdges, HashMap<String, Node> idToDiffNode) {
     	for (Edge edge : edges) {
     		Set<Edge> productEdges = idsToProductEdges.get(edge.getTailID() + edge.getHeadID());
     		Edge diffEdge = edge.copy();
 
     		for (Edge productEdge : productEdges) {
-    			diffEdge.diffWithEdge(productEdge);
+    			diffEdge.diffWithEdge(productEdge, tolerance);
     		}
 
     		if (diffEdge.hasComponentIDs()) {

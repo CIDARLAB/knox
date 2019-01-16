@@ -52,7 +52,7 @@ public class Star {
 		}
 	}
 	
-	public NodeSpace getStarSpace() {
+	public NodeSpace getSpace() {
 		return starSpace;
 	}
 	
