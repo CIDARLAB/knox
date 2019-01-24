@@ -65,14 +65,16 @@ public class SBOLConversion {
 			else if (variantDerivs.size() > 0){
 				List<NodeSpace> orSpace = new LinkedList<>();
 				NodeSpace outputSpace = new NodeSpace();
-				orSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
+				orSpace.add(createNodeSpaceFromVariableComponent(variableComponent)); //add variants
 
 				for (CombinatorialDerivation cv : variantDerivs) {
-					orSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+					orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv)));
 				}
 
 				OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
-				inputSpace.add(outputSpace);
+				List<NodeSpace> tempSpace = new LinkedList<>();
+				tempSpace.add(outputSpace);
+				inputSpace.add(applyOperator(variableComponent.getOperator(), tempSpace));
 			}
 
 			// else handle simple ORs
@@ -149,6 +151,9 @@ public class SBOLConversion {
 		}
 		if (operator == OperatorType.ZEROORMORE){
 			RepeatOperator.apply(inputSpace, outputSpace, true);
+		}
+		if (operator == OperatorType.ZEROORONE){
+			OROperator.apply(inputSpace, outputSpace);
 		}
 		if (operator == OperatorType.ONE){
 			JoinOperator.apply(inputSpace, outputSpace);
