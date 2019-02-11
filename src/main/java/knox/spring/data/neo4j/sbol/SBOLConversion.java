@@ -77,7 +77,6 @@ public class SBOLConversion {
 				inputSpace.add(applyOperator(variableComponent.getOperator(), tempSpace));
 			}
 
-			// else handle simple ORs
 			else{
 				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
 			}
@@ -126,10 +125,25 @@ public class SBOLConversion {
 	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent){
 		ArrayList<String> atomIDs = new ArrayList<>();
 		Set<String> atomRolesSet = new HashSet<>();
+
+		// Find variant roles
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
 			for (String role : convertSOIdentifiersToNames(variableComponent.getVariable().getDefinition().getRoles())) {
 				atomIDs.add(variant.getDisplayId());
 				atomRolesSet.add(role);
+			}
+		}
+
+		// Find collection roles
+		for (org.sbolstandard.core2.Collection collection : variableComponent.getVariantCollections()) {
+			for (TopLevel member: collection.getMembers()){
+				if (member.getClass() == ComponentDefinition.class){
+					ComponentDefinition def = (ComponentDefinition) member;
+					for (String role : convertSOIdentifiersToNames(def.getRoles())) {
+						atomIDs.add(def.getDisplayId());
+						atomRolesSet.add(role);
+					}
+				}
 			}
 		}
 
