@@ -662,32 +662,6 @@ public class KnoxController {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
     
-    @RequestMapping(value = "/sbol/importCombinatorial", method = RequestMethod.POST)
-    public ResponseEntity<String> importCombinatorialSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
-    	
-    	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
-    		if (!inputSBOLFile.isEmpty()) {
-    			try {
-    				sbolDocs.add(SBOLReader.read(inputSBOLFile.getInputStream()));
-				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-    		}
-    	}
-    	
-    	try {
-			designSpaceService.importCombinatorialSBOL(sbolDocs, outputSpaceID);
-		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
- 
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
-    }
-    
     @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
     public Map<String, Object> d3GraphBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
         return designSpaceService.d3GraphBranches(targetSpaceID);

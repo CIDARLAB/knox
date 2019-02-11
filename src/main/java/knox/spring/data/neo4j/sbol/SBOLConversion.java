@@ -17,31 +17,64 @@ import knox.spring.data.neo4j.operations.RepeatOperator;
 import knox.spring.data.neo4j.operations.Union;
 
 public class SBOLConversion {
-	
-	List<SBOLDocument> sbolDocs;
+
+	private List<SBOLDocument> sbolDocs;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SBOLConversion.class);
-	
-	public SBOLConversion(List<SBOLDocument> sbolDocs) {
+
+	public List<SBOLDocument> getSbolDoc() {
+		return sbolDocs;
+	}
+
+	public void setSbolDoc(List<SBOLDocument> sbolDocs) {
 		this.sbolDocs = sbolDocs;
 	}
-	
-	public DesignSpace convertCombinatorialSBOLToSpace(String outputSpaceID) {
-		SBOLDocument doc = sbolDocs.get(0);
 
-		CombinatorialDerivation rootCV = getRootCombinatorialDerivation(doc);
+	/**
+	 * Iterates through all the uploaded SBOL documents and
+	 * calls the appropriate SBOL parser by checking for CombinatorialDerivations
+	 * @return
+	 */
+	public List<DesignSpace> convertSBOLsToSpaces(){
 
-		//iterate through variable components
-		List<NodeSpace> inputSpace = recurseVariableComponents(rootCV);
+		List<DesignSpace> allOutputSpaces = new ArrayList<>();
+
+		for(SBOLDocument sbolDoc: sbolDocs){
+			Set<CombinatorialDerivation> derivations = sbolDoc.getCombinatorialDerivations();
+			if (derivations.isEmpty()){
+				allOutputSpaces.addAll(convertSBOL(sbolDoc));
+			}
+
+			allOutputSpaces.addAll(convertCombinatorialSBOL(sbolDoc));
+		}
+
+		return allOutputSpaces;
+	}
+
+	/**
+	 * Creates one outputSpace per root CombinatorialDerivation
+	 * @param sbolDoc
+	 * @return list of design spaces
+	 */
+	private List<DesignSpace> convertCombinatorialSBOL(SBOLDocument sbolDoc) {
+
+		List<DesignSpace> outputSpaces = new ArrayList<>();
+		Set<CombinatorialDerivation> rootCVs = getRootCombinatorialDerivation(sbolDoc);
+
+		for(CombinatorialDerivation rootCV: rootCVs){
+			//iterate through variable components
+			List<NodeSpace> inputSpace = recurseVariableComponents(rootCV);
+
+			DesignSpace outputSpace = new DesignSpace(rootCV.getDisplayId());
+			JoinOperator.apply(inputSpace, outputSpace);
+
+			// Create version history for output design space - single branch and single commit that captures result of conversion
+			outputSpace.createHeadBranch(rootCV.getDisplayId());
+			outputSpace.commitToHead();
+			outputSpaces.add(outputSpace);
+		}
 		
-		DesignSpace outputSpace = new DesignSpace(outputSpaceID);
-		JoinOperator.apply(inputSpace, outputSpace);
-		
-		// Create version history for output design space - single branch and single commit that captures result of conversion
-		outputSpace.createHeadBranch(outputSpaceID);
-		outputSpace.commitToHead();
-		
-		return outputSpace;
+		return outputSpaces;
 	}
 
 	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation){
@@ -175,70 +208,58 @@ public class SBOLConversion {
 		return outputSpace;
 	}
 
-	private CombinatorialDerivation getRootCombinatorialDerivation(SBOLDocument doc){
+	private Set<CombinatorialDerivation> getRootCombinatorialDerivation(SBOLDocument doc){
 		Set<CombinatorialDerivation> derivations = doc.getCombinatorialDerivations();
 		for (CombinatorialDerivation combDerivation : doc.getCombinatorialDerivations()) {
 			for (VariableComponent vc: combDerivation.getVariableComponents()){
 				derivations.removeAll(vc.getVariantDerivations());
 			}
 		}
-		return derivations.iterator().next();
+		return derivations;
 	}
-	
-	public DesignSpace convertSBOLToSpace(String outputSpaceID) {
-		NodeSpace unionSpace = new NodeSpace(0);
-		
-		for (SBOLDocument sbolDoc : sbolDocs) {
-    		Set<ComponentDefinition> rootDefs = getRootDNAComponentDefinitions(sbolDoc);
 
-    		for (ComponentDefinition rootDef : rootDefs) {
-    			List<ComponentDefinition> leafDefs = flattenComponentDefinition(rootDef);
+	private List<DesignSpace> convertSBOL(SBOLDocument sbolDoc) {
+		List<DesignSpace> outputSpaces = new ArrayList<>();
+		Set<ComponentDefinition> rootDefs = getRootDNAComponentDefinitions(sbolDoc);
 
-    			Node currentNode = unionSpace.createStartNode();
+		for (ComponentDefinition rootDef : rootDefs) {
+			List<ComponentDefinition> leafDefs = flattenComponentDefinition(rootDef);
+			NodeSpace unionSpace = new NodeSpace(0);
+			Node currentNode = unionSpace.createStartNode();
 
-    			for (int i = 0; i < leafDefs.size(); i++) {
-    				ArrayList<String> compIDs = new ArrayList<String>();
+			for (int i = 0; i < leafDefs.size(); i++) {
+				ArrayList<String> compIDs = new ArrayList<String>();
 
-    				compIDs.add(leafDefs.get(i).getIdentity().toString());
+				compIDs.add(leafDefs.get(i).getIdentity().toString());
 
-    				ArrayList<String> compRoles = new ArrayList<String>(
-    						convertSOIdentifiersToNames(leafDefs.get(i).getRoles()));
+				ArrayList<String> compRoles = new ArrayList<String>(
+						convertSOIdentifiersToNames(leafDefs.get(i).getRoles()));
 
-    				Node nextNode;
-    				
-    				if (i < leafDefs.size() - 1) {
-    					nextNode = unionSpace.createNode();
-    				} else {
-    					nextNode = unionSpace.createAcceptNode();
-    				}
+				Node nextNode;
 
-    				currentNode.createEdge(nextNode, compIDs, compRoles);
+				if (i < leafDefs.size() - 1) {
+					nextNode = unionSpace.createNode();
+				} else {
+					nextNode = unionSpace.createAcceptNode();
+				}
 
-    				currentNode = nextNode;
-    			}
-    			
-    		}
-    	}
-		
-		DesignSpace outputSpace = new DesignSpace(outputSpaceID);
-		
-		if (unionSpace.getNumStartNodes() > 1) {
-			Union union = new Union(unionSpace);
+				currentNode.createEdge(nextNode, compIDs, compRoles);
 
-			union.apply();
+				currentNode = nextNode;
+			}
 
-			union.getSpace().minimizeEdges();
-			
-			outputSpace.shallowCopyNodeSpace(union.getSpace());
-		} else {
+			// create a separate design space per root CD
+			DesignSpace outputSpace = new DesignSpace(rootDef.getDisplayId());
 			outputSpace.shallowCopyNodeSpace(unionSpace);
+
+			// create version history
+			outputSpace.createHeadBranch(rootDef.getDisplayId());
+			outputSpace.commitToHead();
+
+			outputSpaces.add(outputSpace);
 		}
-		
-		outputSpace.createHeadBranch(outputSpaceID);
-		
-		outputSpace.commitToHead();
-		
-		return outputSpace;
+
+		return outputSpaces;
 	}
 	
 	private static List<ComponentDefinition> flattenComponentDefinition(ComponentDefinition rootDef) {

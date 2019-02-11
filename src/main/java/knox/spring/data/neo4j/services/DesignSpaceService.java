@@ -600,23 +600,17 @@ public class DesignSpaceService {
 		return compIDToRole;
     }
     
-    public void importCombinatorialSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID) 
-    		throws SBOLValidationException, IOException, SBOLConversionException {
-    	SBOLConversion sbolConv = new SBOLConversion(sbolDocs);
-    	
-    	DesignSpace outputSpace = sbolConv.convertCombinatorialSBOLToSpace(outputSpaceID);
-    	
-    	saveDesignSpace(outputSpace);
-    }
-    
     public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID) 
     		throws SBOLValidationException, IOException, SBOLConversionException {
-    	SBOLConversion sbolConv = new SBOLConversion(sbolDocs);
-    	
-    	//DesignSpace outputSpace = sbolConv.convertSBOLToSpace(outputSpaceID);
-		DesignSpace outputSpace = sbolConv.convertCombinatorialSBOLToSpace(outputSpaceID);
-    	
-    	saveDesignSpace(outputSpace);
+    	SBOLConversion sbolConv = new SBOLConversion();
+
+    	sbolConv.setSbolDoc(sbolDocs);
+
+    	List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
+
+		for (DesignSpace outputSpace: outputSpaces){
+			saveDesignSpace(outputSpace);
+		}
     }
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
