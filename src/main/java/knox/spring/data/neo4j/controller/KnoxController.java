@@ -638,7 +638,7 @@ public class KnoxController {
 
     @RequestMapping(value = "/sbol/import", method = RequestMethod.POST)
     public ResponseEntity<String> importSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
     	List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
     	
     	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
