@@ -1,9 +1,5 @@
 
-const knoxClass = {
-  HEAD: "Head",
-  BRANCH: "Branch",
-  COMMIT: "Commit"
-};
+import {knoxClass} from './knox.js';
 
 // The target class observes an SVG element on the page, and
 // provides methods for setting and clearing graph data. A variable
@@ -174,25 +170,24 @@ export default class Target{
   setHistory(graph){
     console.log(graph);
 
-
-    var width = $(this.id).parent().width();
-    var height = $(this.id).parent().height();
-
     let zoom = d3.behavior.zoom()
       .scaleExtent([1, 10])
       .on("zoom", () => {
         svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
       });
 
-    var force = (this.layout = d3.layout.force());
-    var drag = force.drag()
+    let force = (this.layout = d3.layout.force());
+    let drag = force.drag()
       .on("dragstart", function (d) {
         d3.event.sourceEvent.stopPropagation();
       });
     force.charge(-400).linkDistance(100);
+
+    let width = $(this.id).parent().width();
+    let height = $(this.id).parent().height();
     force.nodes(graph.nodes).links(graph.links).size([width, height]).start();
 
-    var svg = d3.select(this.id).call(zoom).append("svg:g");
+    let svg = d3.select(this.id).call(zoom).append("svg:g");
     svg.append('defs').append('marker')
       .attr('id', 'endArrow')
       .attr('viewBox', '0 -5 10 10')
@@ -215,15 +210,15 @@ export default class Target{
       .append("rect")
       .attr("class", function (d) {
         return "node " + d.knoxClass;
-      })
+      }) // this changes the border & font of the node, but idk from where
       .attr("width", 60)
       .attr("height", 20)
       .style("fill", function(d){
         if (d.knoxClass === knoxClass.HEAD){
-          return "#e8be12";
+          return "#f96a17";
         }
         if (d.knoxClass === knoxClass.BRANCH){
-          return "#e54b0f";
+          return "#0cc5b6";
         }
         if (d.knoxClass === knoxClass.COMMIT){
           return "#7e7e7e";

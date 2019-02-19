@@ -16,13 +16,22 @@ const targets = {
 const extensions = {
   D3: "/designSpace/graph/d3",
   List: "/designSpace/list",
-  history: "/branch/graph/d3"
+  history: "/branch/graph/d3",
+  branch: "/branch", //post vs delete
+  checkout: "/branch/checkout",
+  commit: "/branch/commitTo",
+  reset: "/branch/reset"
 };
 const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
   commit: "#commit-btn"
+};
+export const knoxClass = {
+  HEAD: "Head",
+  BRANCH: "Branch",
+  COMMIT: "Commit"
 };
 
 /********************
@@ -65,6 +74,12 @@ window.onload = function() {
         refreshCompletions("#search-tb", "#search-autocomplete", onSearchSubmit);
       });
     }
+  });
+
+  // change version history visualization when
+  // value changes in the drop down
+  $("#branch-selector").change(function() {
+    visualizeHistory(currentSpace);
   });
 
   $("body").scrollspy({
@@ -241,15 +256,37 @@ function onSearchSubmit(spaceid) {
         }
     });
 
-    getHistory(spaceid, (err, data) => {
-        if (err) {
-            swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
-        } else {
-            targets.history.clear();
-            targets.history.setHistory(data);
-        }
-    });
+  visualizeHistory(spaceid);
 }
+
+/******************
+ * VERSION HISTORY
+ ******************/
+function visualizeHistory(spaceid){
+  getHistory(spaceid, (err, data) => {
+    if (err) {
+      swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
+    } else {
+      targets.history.clear();
+      targets.history.setHistory(data);
+      populateBranchSelector(data.nodes);
+    }
+  });
+}
+
+function populateBranchSelector(nodes){
+  let branchSelector = $('#branch-selector');
+
+  // clear options
+  branchSelector.find('option').not(':first').remove();
+
+  //repopulate
+  let branches = nodes.filter(obj => obj.knoxClass === knoxClass.BRANCH);
+  $.each(branches, function(i, b) {
+    branchSelector.append($('<option></option>').val(b.knoxID).html(b.knoxID));
+  });
+}
+
 
 
 /******************
