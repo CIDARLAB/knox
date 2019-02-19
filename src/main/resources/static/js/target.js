@@ -173,6 +173,92 @@ export default class Target{
 
   setHistory(graph){
     console.log(graph);
+
+
+    var width = $(this.id).parent().width();
+    var height = $(this.id).parent().height();
+
+    let zoom = d3.behavior.zoom()
+      .scaleExtent([1, 10])
+      .on("zoom", () => {
+        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+      });
+
+    var force = (this.layout = d3.layout.force());
+    var drag = force.drag()
+      .on("dragstart", function (d) {
+        d3.event.sourceEvent.stopPropagation();
+      });
+    force.charge(-400).linkDistance(100);
+    force.nodes(graph.nodes).links(graph.links).size([width, height]).start();
+
+    var svg = d3.select(this.id).call(zoom).append("svg:g");
+    svg.append('defs').append('marker')
+      .attr('id', 'endArrow')
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 6)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', '#000');
+
+    force.nodes(graph.nodes).links(graph.links).start();
+
+    var link = svg.selectAll(".link")
+      .data(graph.links).enter()
+      .append("path").attr("class", "link");
+
+    var node = svg.selectAll(".node")
+      .data(graph.nodes).enter()
+      .append("rect")
+      .attr("class", function (d) {
+        return "node " + d.knoxClass;
+      })
+      .attr("width", 60)
+      .attr("height", 20)
+      .style("fill", function(d){
+        if (d.knoxClass === knoxClass.HEAD){
+          return "#e8be12";
+        }
+        if (d.knoxClass === knoxClass.BRANCH){
+          return "#e54b0f";
+        }
+        if (d.knoxClass === knoxClass.COMMIT){
+          return "#7e7e7e";
+        }
+      })
+      .call(drag);
+
+    var text = svg.selectAll("text.label")
+      .data(graph.nodes).enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("text-anchor", "middle")
+      .attr("fill", "black")
+      .text(function(d) { return d.knoxID; });
+
+    // force feed algo ticks
+    force.on("tick", function() {
+
+      link.attr('d', function(d) {
+        var yPadding = 12,
+          sourceX = d.source.x,
+          sourceY = d.source.y + yPadding,
+          targetX = d.target.x,
+          targetY = d.target.y - yPadding;
+        return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+      });
+
+      node.attr("x", function(d) { return d.x - 30; })
+        .attr("y", function(d) { return d.y - 10 });
+
+      text.attr("transform", function(d) {
+        return "translate(" + d.x + "," + (d.y + 3) + ")";
+      });
+
+    });
   }
 
 }

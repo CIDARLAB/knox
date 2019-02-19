@@ -1,124 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <title>KNOX</title>
-    <link rel="stylesheet" type="text/css" href="vendor/sweet/sweetalert.css">
-    <link rel="stylesheet" type="text/css" href="vendor/tooltipster/tooltipster.bundle.min.css"/>
-    <link rel="stylesheet" type="text/css" href="vendor/tooltipster/tooltipster-sideTip-shadow.min.css"/>
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
-    <link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
-    <link href="vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
-    <link href="css/knox.css" rel="stylesheet">
-  </head>    
-  <body id="page-top">
-    <nav id="mainNav" class="navbar navbar-default navbar-fixed-top">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button"
-                  class="navbar-toggle collapsed"
-                  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-            <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
-          </button>
-          <a class="navbar-brand" id="brand" href="#page-top">KNOX</a>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <ul class="nav navbar-nav navbar-right" id="navigation-bar">
-            <li><a data-toggle="tabs" href="#explore">Explore</a></li>
-            <li><a data-toggle="tabs" href="#import">Import</a></li>
-            <li><a data-toggle="tabs" href="#version">Version Control</a></li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-    <header>
-      <div class="header-content">
-        <div class="header-content-inner">
-          <h1 id="homeHeading">A Genetic Design Space Repository</h1>
-          <hr>
-          <p>Knox is a platform for storing, tracking, and synthesizing
-            combinatorial genetic designs.
-          </p>
-          <a href="#explore" class="btn btn-primary btn-xl">Explore</a>
-        </div>
-      </div>
-    </header>
-
-    <section id="explore">
-      <div id="search-card">
-        <input type="text" autocomplete="off" class="card" id="search-tb">
-        <br>
-        <div id="search-autocomplete" class="tb-dropdown"></div>
-      </div>
-      <div class="btn-holder">
-        <span class="circle-float-btn" id="list-btn">
-          <img id="list-img" class="btn-img" src="img/ic_list.png"/>
-        </span>
-        <span class="circle-float-btn" id="combine-btn">
-          <img id="combine-img" class="btn-img" src="img/ic_merge.png"/>
-        </span>
-        <span type="button" class="circle-float-btn" id="delete-btn">
-          <img id="delete-img" class="btn-img" src="img/ic_delete.png"/>
-        </span>
-      </div>
-      <svg id="search-svg"></svg>
-    </section>
-    
-    <section id="import">
-      <ul class="nav nav-pills nav-justified">
-        <li class="active"><a data-toggle="pill" href="#CSV">CSV</a></li>
-        <li><a data-toggle="pill" href="#Eugene">Eugene</a></li>
-        <li><a data-toggle="pill" href="#SBOL">SBOL</a></li>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>KNOX</title>
+  <link rel="stylesheet" type="text/css" href="vendor/sweet/sweetalert.css">
+  <link rel="stylesheet" type="text/css" href="vendor/tooltipster/tooltipster.bundle.min.css"/>
+  <link rel="stylesheet" type="text/css" href="vendor/tooltipster/tooltipster-sideTip-shadow.min.css"/>
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
+  <link href="vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
+  <link href="css/knox.css" rel="stylesheet">
+</head>
+<body id="page-top">
+<nav id="mainNav" class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button"
+              class="navbar-toggle collapsed"
+              data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
+      </button>
+      <a class="navbar-brand" id="brand" href="#page-top">KNOX</a>
+    </div>
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav navbar-right" id="navigation-bar">
+        <li><a data-toggle="tabs" href="#explore">Explore</a></li>
+        <li><a data-toggle="tabs" href="#import">Import</a></li>
       </ul>
-      <div class="tab-content">
-        <div id="CSV" class="tab-pane fade in active">
-          <form method="POST" enctype="multipart/form-data"
-                action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
-            <input type="file" name="inputCSVFiles[]" multiple>
-            <input type="text" name="outputSpacePrefix" placeholder="Space ID"
-                   class="form-control" aria-label="..." size="10">
-            <input type="submit" value="Import">
-          </form>
-        </div>
-        <div id="Eugene" class="tab-pane fade">
-          <form method="POST" enctype="multipart/form-data"
-                action="import/eugene" class="navbar-form navbar-left" ng-show="isEugeneMode">
-            <input type="file" name="inputEugeneFiles[]" multiple>
-            <input type="submit" value="Import">
-          </form>
-        </div>
-        <div id="SBOL" class="tab-pane fade">
-          <form method="POST" enctype="multipart/form-data"
-                action="sbol/import" class="navbar-form navbar-left" ng-show="isSBOLMode">
-            <input type="file" name="inputSBOLFiles[]" multiple>
-            <input type="text" name="outputSpaceID" placeholder="Space ID"
-                   class="form-control" aria-label="..." size="10">
-            <input type="submit" value="Import">
-          </form>
-        </div>
-      </div>
-    </section>
+    </div>
+  </div>
+</nav>
+<header>
+  <div class="header-content">
+    <div class="header-content-inner">
+      <h1 id="homeHeading">A Genetic Design Space Repository</h1>
+      <hr>
+      <p>Knox is a platform for storing, tracking, and synthesizing
+        combinatorial genetic designs.
+      </p>
+      <a href="#explore" class="btn btn-primary btn-xl">Explore</a>
+    </div>
+  </div>
+</header>
 
-    <section id="version">
+<section id="explore">
+  <div class="left-column">
+    <svg id="history-svg"></svg>
+  </div>
 
-    </section>
+  <div class="right-column">
+    <div id="search-card">
+      <input type="text" autocomplete="off" class="card" id="search-tb">
+      <br>
+      <div id="search-autocomplete" class="tb-dropdown"></div>
+    </div>
+    <svg id="search-svg"></svg>
+    <div id="btn-holder">
+          <span class="circle-float-btn" id="list-btn">
+            <img id="list-img" class="btn-img" src="img/ic_list.png"/>
+          </span>
+      <span class="circle-float-btn" id="combine-btn">
+            <img id="combine-img" class="btn-img" src="img/ic_merge.png"/>
+          </span>
+      <span type="button" class="circle-float-btn" id="commit-btn">
+            <img id="commit-img" class="btn-img" src="img/commit_file.png"/>
+          </span>
+      <span type="button" class="circle-float-btn" id="delete-btn">
+            <img id="delete-img" class="btn-img" src="img/ic_delete.png"/>
+          </span>
+    </div>
+  </div>
 
-    <footer>
-      <script src="vendor/sweet/sweetalert.min.js"></script>
-      <script src="vendor/jquery/jquery.min.js"></script>
-      <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
-      <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
-      <script src="vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
-      <script type="text/javascript" src="vendor/tooltipster/tooltipster.bundle.min.js"></script>
-      <script type="module" src="js/knox.js"></script>
-      <script type="module" src="js/target.js"></script>
-    </footer>
-  </body>
+</section>
+
+<section id="import">
+  <ul class="nav nav-pills nav-justified">
+    <li class="active"><a data-toggle="pill" href="#CSV">CSV</a></li>
+    <li><a data-toggle="pill" href="#Eugene">Eugene</a></li>
+    <li><a data-toggle="pill" href="#SBOL">SBOL</a></li>
+  </ul>
+  <div class="tab-content">
+    <div id="CSV" class="tab-pane fade in active">
+      <form method="POST" enctype="multipart/form-data"
+            action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <input type="file" name="inputCSVFiles[]" multiple>
+        <input type="text" name="outputSpacePrefix" placeholder="Space ID"
+               class="form-control" aria-label="..." size="10">
+        <input type="submit" value="Import">
+      </form>
+    </div>
+    <div id="Eugene" class="tab-pane fade">
+      <form method="POST" enctype="multipart/form-data"
+            action="import/eugene" class="navbar-form navbar-left" ng-show="isEugeneMode">
+        <input type="file" name="inputEugeneFiles[]" multiple>
+        <input type="submit" value="Import">
+      </form>
+    </div>
+    <div id="SBOL" class="tab-pane fade">
+      <form method="POST" enctype="multipart/form-data"
+            action="sbol/import" class="navbar-form navbar-left" ng-show="isSBOLMode">
+        <input type="file" name="inputSBOLFiles[]" multiple>
+        <input type="text" name="outputSpaceID" placeholder="Space ID"
+               class="form-control" aria-label="..." size="10">
+        <input type="submit" value="Import">
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <script src="vendor/sweet/sweetalert.min.js"></script>
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+  <script src="vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
+  <script type="text/javascript" src="vendor/tooltipster/tooltipster.bundle.min.js"></script>
+  <script type="module" src="js/knox.js"></script>
+  <script type="module" src="js/target.js"></script>
+</footer>
+</body>
 </html>
