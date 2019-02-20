@@ -642,6 +642,9 @@ public class DesignSpaceService {
 
     public void commitToBranch(String targetSpaceID, String targetBranchID) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+		System.out.println("targetSpaceID" + targetSpaceID);
+		System.out.println("targetSpace:");
+    	System.out.println(targetSpace);
     	
     	Branch targetBranch = targetSpace.getBranch(targetBranchID);
     	
@@ -654,7 +657,7 @@ public class DesignSpaceService {
     	commitToBranch(targetSpace, targetSpace.getHeadBranch());
     }
     
-    public void commitToBranch(DesignSpace targetSpace, Branch targetBranch) {
+    private void commitToBranch(DesignSpace targetSpace, Branch targetBranch) {
     	Commit commit = targetSpace.createCommit(targetBranch);
     	
     	targetBranch.setLatestCommit(commit);

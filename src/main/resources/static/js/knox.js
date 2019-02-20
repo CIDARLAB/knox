@@ -1,38 +1,32 @@
 import Target from './target.js';
+import * as vh from "./version_history.js";
 
 /******************
  * GLOBAL VARIABLES
  ******************/
 let completionSet = new Set();
-let currentSpace;
+export let currentSpace;
 let layouts = {
   combineModal: null,
-  listModal: null
+  listModal: null,
+  createModal: null,
+  deleteModal: null,
 };
-const targets = {
+export const targets = {
   search: new Target("#search-svg"),
   history: new Target("#history-svg")
 };
 const extensions = {
   D3: "/designSpace/graph/d3",
   List: "/designSpace/list",
-  history: "/branch/graph/d3",
-  branch: "/branch", //post vs delete
-  checkout: "/branch/checkout",
-  commit: "/branch/commitTo",
-  reset: "/branch/reset"
 };
 const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
-  commit: "#commit-btn"
+  create: "#commit-btn"
 };
-export const knoxClass = {
-  HEAD: "Head",
-  BRANCH: "Branch",
-  COMMIT: "Commit"
-};
+
 
 /********************
  * WINDOW FUNCTIONS
@@ -40,14 +34,7 @@ export const knoxClass = {
 window.onload = function() {
   disableTabs();
   hideExplorePageBtns();
-  $.ajax({
-    url: "/layouts/combine-modal.html",
-    success: (result) => { layouts.combineModal = result; }
-  });
-  $.ajax({
-    url: "/layouts/list-modal.html",
-    success: (result) => { layouts.listModal = result; }
-  });
+  getModals();
 
   $("#navigation-bar").on("click", "*", clearAllPages);
   $("#brand").click(clearAllPages);
@@ -79,7 +66,8 @@ window.onload = function() {
   // change version history visualization when
   // value changes in the drop down
   $("#branch-selector").change(function() {
-    visualizeHistory(currentSpace);
+    vh.checkoutBranch();
+    vh.visualizeHistory(currentSpace);
   });
 
   $("body").scrollspy({
@@ -112,6 +100,25 @@ window.onresize = function(e) {
   });
 };
 
+function getModals(){
+  $.ajax({
+    url: "/layouts/combine-modal.html",
+    success: (result) => { layouts.combineModal = result; }
+  });
+  $.ajax({
+    url: "/layouts/list-modal.html",
+    success: (result) => { layouts.listModal = result; }
+  });
+  $.ajax({
+    url: "/layouts/create-modal.html",
+    success: (result) => { layouts.createModal = result; }
+  });
+  $.ajax({
+    url: "/layouts/delete-modal.html",
+    success: (result) => { layouts.deleteModal = result; }
+  });
+}
+
 // Utility for disabling navigation features.
 // Exposes the function disableTabs.
 function disableTabs() {
@@ -124,7 +131,7 @@ function disableTabs() {
   });
 }
 
-function hideExplorePageBtns() {
+export function hideExplorePageBtns() {
   Object.keys(exploreBtnIDs).map((id, _) => {
     $(exploreBtnIDs[id]).hide();
   });
@@ -152,11 +159,6 @@ function clearAllPages() {
 function getGraph (id, callback){
   var query = "?targetSpaceID=" + encodeURIComponent(id);
   d3.json(extensions.D3 + query, callback);
-}
-
-function getHistory (id, callback){
-  var query = "?targetSpaceID=" + encodeURIComponent(id);
-  d3.json(extensions.history + query, callback);
 }
 
 function listDesignSpaces (callback){
@@ -255,36 +257,7 @@ function onSearchSubmit(spaceid) {
             currentSpace = spaceid;
         }
     });
-
-  visualizeHistory(spaceid);
-}
-
-/******************
- * VERSION HISTORY
- ******************/
-function visualizeHistory(spaceid){
-  getHistory(spaceid, (err, data) => {
-    if (err) {
-      swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
-    } else {
-      targets.history.clear();
-      targets.history.setHistory(data);
-      populateBranchSelector(data.nodes);
-    }
-  });
-}
-
-function populateBranchSelector(nodes){
-  let branchSelector = $('#branch-selector');
-
-  // clear options
-  branchSelector.find('option').not(':first').remove();
-
-  //repopulate
-  let branches = nodes.filter(obj => obj.knoxClass === knoxClass.BRANCH);
-  $.each(branches, function(i, b) {
-    branchSelector.append($('<option></option>').val(b.knoxID).html(b.knoxID));
-  });
+  vh.visualizeHistory(spaceid);
 }
 
 
@@ -292,7 +265,7 @@ function populateBranchSelector(nodes){
 /******************
  * BUTTON FUNCTIONS
  ******************/
-function encodeQueryParameter(parameterName, parameterValue, query) {
+export function encodeQueryParameter(parameterName, parameterValue, query) {
   if (query.length > 1) {
     return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
   } else {
@@ -447,34 +420,59 @@ $(exploreBtnIDs.combine).click(() => {
     });
 });
 
+$(exploreBtnIDs.create).click(() => {
+  swal({
+    title: "Create History",
+    html: true,
+    animation: false,
+    showCancelButton: true,
+    closeOnConfirm: false,
+    text: layouts.createModal,
+    confirmButtonColor: "#F05F40"
+  }, function(isconfirm) {
+    if (isconfirm) {
+      let createVal = $("input[name='create-history']:checked").val();
+
+      if (createVal === vh.knoxClass.BRANCH){
+        vh.makeNewBranch();
+      }
+      if (createVal === vh.knoxClass.COMMIT){
+        vh.makeCommit();
+      }
+    }
+  });
+});
+
 $(exploreBtnIDs.delete).click(() => {
-    swal({
-        title: "Really delete?",
-        text: "You will not be able to recover the data!",
-        type: "warning",
-        showCancelButton: true,
-        closeOnConfirm: false,
-        confirmButtonColor: "#F05F40",
-        confirmButtonText: "OK"
-    }, function(isconfirm) {
-        if (isconfirm) {
-            var query = "?targetSpaceID=" + currentSpace;
-            var request = new XMLHttpRequest();
-            request.open("DELETE", "/designSpace" + query, false);
-            request.send(null);
-            if (request.status >= 200 && request.status < 300) {
-                swal({
-                    title: "Deleted!",
-                    confirmButtonColor: "#F05F40",
-                    type: "success"
-                });
-                targets.search.clear();
-                hideExplorePageBtns();
-            } else {
-                swal("Error: Failed to delete design space " + currentSpace + ".");
-            }
+  swal({
+    title: "Delete history",
+    html: true,
+    animation: false,
+    showCancelButton: true,
+    closeOnConfirm: false,
+    text: layouts.deleteModal,
+    confirmButtonColor: "#F05F40",
+  }, function(isconfirm) {
+      if (isconfirm) {
+        let deleteVal = $("input[name='delete-history']:checked").val();
+        switch(deleteVal){
+          case 'Design':
+            vh.deleteDesign();
+            break;
+          case 'Branch':
+            vh.deleteBranch();
+            break;
+          case 'Reset':
+            vh.resetCommit();
+            break;
+          case 'Revert':
+            vh.revertCommit();
+            break;
+          default:
+            break;
         }
-    });
+      }
+  });
 });
 
 

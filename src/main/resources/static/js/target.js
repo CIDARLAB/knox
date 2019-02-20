@@ -1,5 +1,5 @@
 
-import {knoxClass} from './knox.js';
+import {knoxClass} from "./version_history.js";
 
 // The target class observes an SVG element on the page, and
 // provides methods for setting and clearing graph data. A variable
