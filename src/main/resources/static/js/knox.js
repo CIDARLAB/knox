@@ -9,7 +9,7 @@ export let currentSpace;
 let layouts = {
   combineModal: null,
   listModal: null,
-  createModal: null,
+  saveModal: null,
   deleteModal: null,
 };
 export const targets = {
@@ -24,7 +24,7 @@ const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
-  create: "#commit-btn"
+  save: "#save-btn",
 };
 
 
@@ -110,8 +110,8 @@ function getModals(){
     success: (result) => { layouts.listModal = result; }
   });
   $.ajax({
-    url: "/layouts/create-modal.html",
-    success: (result) => { layouts.createModal = result; }
+    url: "/layouts/save-modal.html",
+    success: (result) => { layouts.saveModal = result; }
   });
   $.ajax({
     url: "/layouts/delete-modal.html",
@@ -420,18 +420,18 @@ $(exploreBtnIDs.combine).click(() => {
     });
 });
 
-$(exploreBtnIDs.create).click(() => {
+$(exploreBtnIDs.save).click(() => {
   swal({
-    title: "Create History",
+    title: "Save Changes",
     html: true,
     animation: false,
     showCancelButton: true,
     closeOnConfirm: false,
-    text: layouts.createModal,
+    text: layouts.saveModal,
     confirmButtonColor: "#F05F40"
   }, function(isconfirm) {
     if (isconfirm) {
-      let createVal = $("input[name='create-history']:checked").val();
+      let createVal = $("input[name='save-history']:checked").val();
 
       if (createVal === vh.knoxClass.BRANCH){
         vh.makeNewBranch();

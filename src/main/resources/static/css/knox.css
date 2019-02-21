@@ -716,6 +716,7 @@ textarea:focus, input:focus{
     overflow: scroll;
 }
 
+/*Left and right columns for explore tab*/
 .left-column {
     height: 100%;
     width: 40%;
