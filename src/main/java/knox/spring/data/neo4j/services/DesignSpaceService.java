@@ -624,8 +624,11 @@ public class DesignSpaceService {
 
     public void copyHeadBranch(String targetSpaceID, String outputBranchID) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
-    	
-    	targetSpace.addBranch(targetSpace.getHeadBranch().copy());
+
+    	Branch outputBranch = targetSpace.getHeadBranch().copy();
+		outputBranch.setBranchID(outputBranchID);
+
+		targetSpace.addBranch(outputBranch);
     	
     	saveDesignSpace(targetSpace);
     }
@@ -634,7 +637,9 @@ public class DesignSpaceService {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
     	targetSpace.clearNodes();
-    	
+
+    	targetSpace.setHeadBranch(targetSpace.getBranch(targetBranchID));
+
     	targetSpace.copyNodeSpace(targetSpace.getHeadSnapshot());
     	
     	saveDesignSpace(targetSpace);
@@ -642,9 +647,6 @@ public class DesignSpaceService {
 
     public void commitToBranch(String targetSpaceID, String targetBranchID) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
-		System.out.println("targetSpaceID" + targetSpaceID);
-		System.out.println("targetSpace:");
-    	System.out.println(targetSpace);
     	
     	Branch targetBranch = targetSpace.getBranch(targetBranchID);
     	
@@ -659,10 +661,10 @@ public class DesignSpaceService {
     
     private void commitToBranch(DesignSpace targetSpace, Branch targetBranch) {
     	Commit commit = targetSpace.createCommit(targetBranch);
-    	
-    	targetBranch.setLatestCommit(commit);
-    	
-    	commit.getSnapshot().copyNodeSpace(targetSpace);
+
+		commit.createSnapshot().copyNodeSpace(targetSpace);
+
+		targetBranch.setLatestCommit(commit);
     	
     	saveDesignSpace(targetSpace);
     }

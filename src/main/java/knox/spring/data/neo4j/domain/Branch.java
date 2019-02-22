@@ -84,6 +84,11 @@ public class Branch {
     public String getBranchID() { 
     	return branchID; 
     }
+
+    public void setBranchID(String branchID) {
+
+        this.branchID = branchID;
+    }
     
     public boolean hasLatestCommit() {
     	return latestCommit != null;
