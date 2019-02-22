@@ -547,7 +547,7 @@ section {
 }
 
 #search-tb {
-    background-image: url("http://i47.tinypic.com/r02vbq.png");
+    background-image: url('../img/search.jpg');
     background-repeat: no-repeat;
     background-position: left center;
     display: inline-block;
