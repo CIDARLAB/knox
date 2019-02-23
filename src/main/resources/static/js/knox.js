@@ -44,7 +44,7 @@ window.onload = function() {
 
   $("#search-autocomplete").hide();
   $("#search-tb").on("input", function() {
-    refreshCompletions("#search-tb", "#search-autocomplete", onSearchSubmit);
+    refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
   });
   $("#search-tb").focus(function() {
     updateAutocompleteVisibility("#search-autocomplete");
@@ -58,7 +58,7 @@ window.onload = function() {
     // graph.
     if (!$(this).is(":focus")) {
       populateAutocompleteList(() => {
-        refreshCompletions("#search-tb", "#search-autocomplete", onSearchSubmit);
+        refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
       });
     }
   });
@@ -143,13 +143,30 @@ function showExplorePageBtns() {
   });
 }
 
-function clearAllPages() {
+export function clearAllPages() {
   Object.keys(targets).map((key, _) => { targets[key].clear(); });
   $("#search-tb").val("");
   $("#search-autocomplete").empty();
   $("#combine-tb-lhs").val("");
   $("#combine-tb-rhs").val("");
   hideExplorePageBtns();
+  $('#branch-selector').find('option').not(':first').remove();
+}
+
+export function visualizeDesignAndHistory(spaceid) {
+  getGraph(spaceid, (err, data) => {
+    if (err) {
+      swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
+    } else {
+      targets.search.clear();
+      targets.search.setGraph(data);
+      $("#search-tb").blur();
+      $("#search-autocomplete").blur();
+      showExplorePageBtns();
+      currentSpace = spaceid;
+    }
+  });
+  vh.visualizeHistory(spaceid);
 }
 
 /********************
@@ -242,22 +259,6 @@ function suggestCompletions (phrase){
         }
     });
     return results;
-}
-
-function onSearchSubmit(spaceid) {
-    getGraph(spaceid, (err, data) => {
-        if (err) {
-            swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
-        } else {
-            targets.search.clear();
-            targets.search.setGraph(data);
-            $("#search-tb").blur();
-            $("#search-autocomplete").blur();
-            showExplorePageBtns();
-            currentSpace = spaceid;
-        }
-    });
-  vh.visualizeHistory(spaceid);
 }
 
 
