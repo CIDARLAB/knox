@@ -50,24 +50,25 @@
 </header>
 
 <section id="explore">
-  <!--Left column is the version history visualization-->
-  <div class="left-column">
-    <div id="search-card">
-      <select id="branch-selector">
-        <option selected="true" disabled="disabled">Branches</option>
-      </select>
-    </div>
+
+  <div id="vh-sidebar">
+    <select id="branch-selector">
+      <option selected="selected" disabled="disabled">Branches</option>
+    </select>
     <svg id="history-svg"></svg>
   </div>
 
-  <!--Right column is the design space visualization-->
-  <div class="right-column">
+  <button id="vh-toggle-button" type="button" class="vh-tooltip" title="See version history"">
+    <span class="icon-chevron-right"></span>
+  </button>
+
+  <div id="design-space">
     <div id="search-card">
       <input type="text" autocomplete="off" class="card" id="search-tb">
       <br>
       <div id="search-autocomplete" class="tb-dropdown"></div>
     </div>
-    <svg id="search-svg"></svg>
+    <svg id="search-svg" class="svg"></svg>
     <div id="btn-holder">
       <span class="circle-float-btn" id="list-btn">
         <img id="list-img" class="btn-img" src="img/ic_list.png"/>

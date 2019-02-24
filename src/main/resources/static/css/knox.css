@@ -528,7 +528,7 @@ section {
 #search-card {
     position: absolute;
     margin-top: 95px;
-    width: 55%;
+    width: 100%;
     text-align: center;
 }
 
@@ -599,80 +599,6 @@ textarea:focus, input:focus{
     background: #EEEEEE;
 }
 
-#btn-holder {
-    text-align: center;
-    position: absolute;
-    width: 55%;
-    bottom: 50px;
-}
-
-.circle-float-btn {
-    background-color: white;
-    width: 70px;
-    height: 70px;
-    padding: 10px 16px;
-    font-size: 18px;
-    line-height: 1.33;
-    border-radius: 35px;
-    display: inline-block;
-    border: 1px solid #EEEEEE;
-    box-shadow: 0px 2px 5px #EEEEEE;
-    -webkit-transition: box-shadow ease-in-out .35s;
-    -moz-transition: box-shadow ease-in-out .35s;
-    transition: box-shadow ease-in-out .35s;
-    margin: 10px;
-    overflow: hidden;
-}
-
-.btn-img {
-    margin-left: -5px;
-    margin-top: -1px;
-}
-
-.circle-float-btn img {
-    opacity: 0.5;
-    -webkit-transition: box-shadow .35s, opacity ease-in-out .35s;
-    -moz-transition: box-shadow .35s, opacity ease-in-out .35s;
-    transition: box-shadow .35s, opacity ease-in-out .35s;
-}
-
-.circle-float-btn:hover img.btn-img {
-    opacity: 1;
-}
-
-/*#combine-btn img {*/
-/*opacity: 0.5;*/
-/*-webkit-transition: box-shadow .35s, opacity ease-in-out .35s;*/
-/*-moz-transition: box-shadow .35s, opacity ease-in-out .35s;*/
-/*transition: box-shadow .35s, opacity ease-in-out .35s;    */
-/*}*/
-
-/*#combine-btn:hover img.btn-img {*/
-/*opacity: 1;*/
-/*}*/
-
-/*#delete-btn img {*/
-    /*opacity: 0.5;*/
-    /*-webkit-transition: box-shadow .35s, opacity ease-in-out .35s;*/
-    /*-moz-transition: box-shadow .35s, opacity ease-in-out .35s;*/
-    /*transition: box-shadow .35s, opacity ease-in-out .35s;    */
-/*}*/
-
-/*#delete-btn:hover img.btn-img {*/
-    /*opacity: 1;*/
-/*}*/
-
-/*#list-btn img {*/
-    /*opacity: 0.5;*/
-    /*-webkit-transition: box-shadow .35s, opacity ease-in-out .35s;*/
-    /*-moz-transition: box-shadow .35s, opacity ease-in-out .35s;*/
-    /*transition: box-shadow .35s, opacity ease-in-out .35s;    */
-/*}*/
-
-/*#list-btn:hover img.btn-img {*/
-    /*opacity: 1;*/
-/*}*/
-
 .circle-float-btn:hover {
     box-shadow: 0px 4px 5px #CCCCCC;
 }
@@ -716,16 +642,91 @@ textarea:focus, input:focus{
     overflow: scroll;
 }
 
-/*Left and right columns for explore tab*/
-.left-column {
-    height: 100%;
-    width: 40%;
-    float: left;
-    background-color: #e9eeee;
+/**********************
+VERSION HISTORY SIDEBAR
+***********************/
+#branch-selector{
+    display: block;
+    position: absolute;
+    top: 150px;
+    left: 150px;
+    text-align:center;
 }
 
-.right-column {
+#vh-sidebar {
+    display:none;
+    background: black;
+    position: absolute;
     height: 100%;
-    width: 60%;
-    float: right;
+
+    /*the left value is what hides the width */
+    /*if these are changed, must change in knox.js as well*/
+    left: -380px;
+    width: 400px;
+}
+
+#vh-toggle-button {
+    position: absolute;
+    left: 20px; /*this is the offset of the vh-sidebar*/
+    top: 100px;
+    display: none; /*hide the button until a design is selected*/
+    width: 30px;
+    height: 40px;
+    /*background-color: Transparent;*/
+    background-color: #e5e5e5;
+    outline:none;
+    border: none;
+    cursor:pointer;
+}
+
+/**********************
+ DESIGN SPACE
+***********************/
+#design-space {
+    height: 100%;
+}
+
+/*******************
+DESIGN SPACE BUTTONS
+********************/
+#btn-holder {
+    text-align: center;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    padding-bottom: 40px;
+}
+
+.circle-float-btn {
+    background-color: white;
+    width: 70px;
+    height: 70px;
+    padding: 10px 16px;
+    font-size: 18px;
+    line-height: 1.33;
+    border-radius: 35px;
+    display: inline-block;
+    border: 1px solid #EEEEEE;
+    box-shadow: 0px 2px 5px #EEEEEE;
+    -webkit-transition: box-shadow ease-in-out .35s;
+    -moz-transition: box-shadow ease-in-out .35s;
+    transition: box-shadow ease-in-out .35s;
+    margin: 10px;
+    overflow: hidden;
+}
+
+.btn-img {
+    margin-left: -5px;
+    margin-top: -1px;
+}
+
+.circle-float-btn img {
+    opacity: 0.5;
+    -webkit-transition: box-shadow .35s, opacity ease-in-out .35s;
+    -moz-transition: box-shadow .35s, opacity ease-in-out .35s;
+    transition: box-shadow .35s, opacity ease-in-out .35s;
+}
+
+.circle-float-btn:hover img.btn-img {
+    opacity: 1;
 }

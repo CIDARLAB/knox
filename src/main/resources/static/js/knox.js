@@ -26,12 +26,15 @@ const exploreBtnIDs = {
   list: "#list-btn",
   save: "#save-btn",
 };
+let panelNum = 1;
 
 
 /********************
  * WINDOW FUNCTIONS
  ********************/
 window.onload = function() {
+  $('.vh-tooltip').tooltipster();
+
   disableTabs();
   hideExplorePageBtns();
   getModals();
@@ -151,6 +154,8 @@ export function clearAllPages() {
   $("#combine-tb-rhs").val("");
   hideExplorePageBtns();
   $('#branch-selector').find('option').not(':first').remove();
+  $('#vh-sidebar').hide();
+  $('#vh-toggle-button').hide();
 }
 
 export function visualizeDesignAndHistory(spaceid) {
@@ -168,6 +173,40 @@ export function visualizeDesignAndHistory(spaceid) {
   });
   vh.visualizeHistory(spaceid);
 }
+
+/********************
+ * VERSION HISTORY SIDEBAR
+ ********************/
+$('#vh-toggle-button').click(function() {
+  if (panelNum === 1) {
+    $('#vh-toggle-button i').addClass('icon-chevron-left');
+    $('#vh-toggle-button i').removeClass('icon-chevron-right');
+
+    // show VH sidebar
+    $('#vh-sidebar').animate({
+      left: 0,
+    });
+    // move toggle button dynamically with the sidebar
+    $('#vh-toggle-button').animate({
+      left: 400,
+    });
+    panelNum = 2;
+  } else {
+    $('#vh-toggle-button i').removeClass('icon-chevron-left');
+    $('#vh-toggle-button i').addClass('icon-chevron-right');
+
+    // hide VH sidebar
+    $('#vh-sidebar').animate({
+      left: -380,
+    });
+    // move toggle button dynamically with the sidebar
+    $('#vh-toggle-button').animate({
+      left: 20,
+    });
+
+    panelNum = 1;
+  }
+});
 
 /********************
  * KNOX FUNCTIONS

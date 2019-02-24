@@ -32,6 +32,8 @@ export function visualizeHistory(spaceid){
       currentBranch = data.links[0].target.knoxID;
       populateBranchSelector(data.nodes, $('#branch-selector'));
       populateBranchSelector(data.nodes, $('#branch-delete-selector'));
+      $('#vh-sidebar').show();
+      $('#vh-toggle-button').show();
     }
   });
 }
