@@ -179,8 +179,8 @@ export function visualizeDesignAndHistory(spaceid) {
  ********************/
 $('#vh-toggle-button').click(function() {
   if (panelNum === 1) {
-    $('#vh-toggle-button i').addClass('icon-chevron-left');
-    $('#vh-toggle-button i').removeClass('icon-chevron-right');
+    $('#vh-toggle-button span').addClass('fa-chevron-left');
+    $('#vh-toggle-button span').removeClass('fa-chevron-right');
 
     // show VH sidebar
     $('#vh-sidebar').animate({
@@ -190,10 +190,12 @@ $('#vh-toggle-button').click(function() {
     $('#vh-toggle-button').animate({
       left: 400,
     });
+    // Update tooltip title
+    $('#vh-toggle-button').tooltipster('content', 'Hide version history');
     panelNum = 2;
   } else {
-    $('#vh-toggle-button i').removeClass('icon-chevron-left');
-    $('#vh-toggle-button i').addClass('icon-chevron-right');
+    $('#vh-toggle-button span').removeClass('fa-chevron-left');
+    $('#vh-toggle-button span').addClass('fa-chevron-right');
 
     // hide VH sidebar
     $('#vh-sidebar').animate({
@@ -203,6 +205,8 @@ $('#vh-toggle-button').click(function() {
     $('#vh-toggle-button').animate({
       left: 20,
     });
+    // Update tooltip title
+    $('#vh-toggle-button').tooltipster('content', 'See version history');
 
     panelNum = 1;
   }

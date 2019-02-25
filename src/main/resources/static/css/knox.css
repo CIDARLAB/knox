@@ -648,14 +648,18 @@ VERSION HISTORY SIDEBAR
 #branch-selector{
     display: block;
     position: absolute;
-    top: 150px;
+    top: 95px;
     left: 150px;
     text-align:center;
+    z-index: 2;
+    height: 40px;
+    background-color: white;
+    border: 1px solid #ccc
 }
 
 #vh-sidebar {
     display:none;
-    background: black;
+    background: #e5e5e5;
     position: absolute;
     height: 100%;
 
@@ -668,15 +672,15 @@ VERSION HISTORY SIDEBAR
 #vh-toggle-button {
     position: absolute;
     left: 20px; /*this is the offset of the vh-sidebar*/
-    top: 100px;
+    top: 95px;
     display: none; /*hide the button until a design is selected*/
     width: 30px;
     height: 40px;
-    /*background-color: Transparent;*/
-    background-color: #e5e5e5;
+    background-color: transparent;
     outline:none;
-    border: none;
+    border: 2px solid #e5e5e5;
     cursor:pointer;
+    z-index: 2;
 }
 
 /**********************
