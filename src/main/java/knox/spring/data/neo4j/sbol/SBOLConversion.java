@@ -88,7 +88,7 @@ public class SBOLConversion {
 			Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
 
 			//handle structure for just repeats
-			if (variantDerivs.size() == 1 && variableComponent.getVariants().size() == 0){
+			if (variantDerivs.size() == 1 && variableComponent.getVariants().isEmpty() && variableComponent.getVariantCollections().isEmpty()){
 				for (CombinatorialDerivation cv : variantDerivs) {
 					inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
 				}
