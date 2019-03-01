@@ -64,6 +64,11 @@ gulp.task('copy', function() {
     gulp.src(['node_modules/scrollreveal/dist/*.js'])
         .pipe(gulp.dest('vendor/scrollreveal'))
 
+    gulp.src(['node_modules/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/*.css',
+              'node_modules/tooltipster/dist/css/*.css',
+              'node_modules/tooltipster/dist/js/*.js'])
+      .pipe(gulp.dest('vendor/tooltipster'))
+
     gulp.src([
             'node_modules/font-awesome/**',
             '!node_modules/font-awesome/**/*.map',
