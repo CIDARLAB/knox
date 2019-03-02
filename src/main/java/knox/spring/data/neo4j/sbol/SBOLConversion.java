@@ -200,6 +200,8 @@ public class SBOLConversion {
 			RepeatOperator.apply(inputSpace, outputSpace, true);
 		}
 		if (operator == OperatorType.ZEROORONE){
+			inputSpace.add(new NodeSpace(new ArrayList<String>(), new ArrayList<String>()));
+			
 			OROperator.apply(inputSpace, outputSpace);
 		}
 		if (operator == OperatorType.ONE){
