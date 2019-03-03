@@ -69,6 +69,9 @@ gulp.task('copy', function() {
               'node_modules/tooltipster/dist/js/*.js'])
       .pipe(gulp.dest('vendor/tooltipster'))
 
+    gulp.src(['node_modules/sweetalert/dist/*'])
+      .pipe(gulp.dest('vendor/sweet'))
+
     gulp.src([
             'node_modules/font-awesome/**',
             '!node_modules/font-awesome/**/*.map',
