@@ -20,11 +20,6 @@
 <nav id="mainNav" class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <button type="button"
-              class="navbar-toggle collapsed"
-              data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
-      </button>
       <a class="navbar-brand" id="brand" href="#page-top">KNOX</a>
     </div>
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -57,7 +52,7 @@
     <svg id="history-svg"></svg>
   </div>
 
-  <button id="vh-toggle-button" type="button" class="vh-tooltip" title="See version history">
+  <button id="vh-toggle-button" type="button">
     <span class="fa fa-chevron-right"></span>
   </button>
 
@@ -68,6 +63,7 @@
       <div id="search-autocomplete" class="tb-dropdown"></div>
     </div>
     <svg id="search-svg" class="svg"></svg>
+
     <div id="btn-holder">
       <span class="circle-float-btn" id="list-btn">
         <img id="list-img" class="btn-img" src="img/ic_list.png"/>
@@ -120,6 +116,20 @@
     </div>
   </div>
 </section>
+
+<!--Hidden templates-->
+<div class="tooltip-templates">
+  <a id="delete-design-tooltip">Delete Design</a>
+  <a id="delete-branch-tooltip">Delete Branch</a>
+  <a id="reset-commit-tooltip">Reset Commit</a>
+  <a id="revert-commit-tooltip">Revert Commit</a>
+
+  <a id="make-commit-tooltip">Save as New Commit</a>
+  <a id="make-branch-tooltip">Save as New Branch</a>
+
+  <a id="apply-operators-tooltip">Apply Operators</a>
+  <a id="enumerate-designs-tooltip">Enumerate Designs</a>
+</div>
 
 <footer>
   <script src="vendor/sweet/sweetalert.min.js"></script>

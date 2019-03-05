@@ -37,6 +37,7 @@ a {
 a:hover,
 a:focus {
     color: #eb3812;
+    cursor: pointer
 }
 
 h1,
@@ -683,16 +684,43 @@ VERSION HISTORY SIDEBAR
     z-index: 2;
 }
 
-/**********************
+/*********
+ TOOLTIP
+**********/
+.tooltip-templates {
+    display: none;
+}
+
+/************
+ SWEET ALERT
+*************/
+.swal-button--confirm {
+    background-color: #F05F40;
+}
+
+.swal-button--confirm:not([disabled]):hover{
+    background-color: #d35234
+}
+
+.swal-button--confirm:active {
+    background-color: #b85435;
+}
+
+.swal-content__input {
+    border-color: #bbbbbb;
+}
+
+.swal-content__input:focus,.swal-content__textarea:focus{
+    border-color:#999
+}
+
+/*************
  DESIGN SPACE
-***********************/
+**************/
 #design-space {
     height: 100%;
 }
 
-/*******************
-DESIGN SPACE BUTTONS
-********************/
 #btn-holder {
     text-align: center;
     position: absolute;

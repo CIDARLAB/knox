@@ -33,45 +33,12 @@ let panelNum = 1;
  * WINDOW FUNCTIONS
  ********************/
 window.onload = function() {
-  $('.vh-tooltip').tooltipster();
-
+  addTooltips();
   disableTabs();
   hideExplorePageBtns();
   getModals();
 
-  $("#navigation-bar").on("click", "*", clearAllPages);
-  $("#brand").click(clearAllPages);
-  $(".navbar-collapse ul li a").click(function() {
-    $(".navbar-toggle:visible").click();
-  });
-
   $("#search-autocomplete").hide();
-  $("#search-tb").on("input", function() {
-    refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
-  });
-  $("#search-tb").focus(function() {
-    updateAutocompleteVisibility("#search-autocomplete");
-  });
-  $("#search-tb").click(() => {
-    // Currently autocomplete runs when the user clicks on an unfocused
-    // textbox that supports completion. I think that this is reasonable,
-    // but if you find that it is a performance issue you may want to change
-    // the Knox webapp so that it populates the completion list once on
-    // startup, and then only when some event triggers the creation of a new
-    // graph.
-    if (!$(this).is(":focus")) {
-      populateAutocompleteList(() => {
-        refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
-      });
-    }
-  });
-
-  // change version history visualization when
-  // value changes in the drop down
-  $("#branch-selector").change(function() {
-    vh.checkoutBranch();
-    vh.visualizeHistory(currentSpace);
-  });
 
   $("body").scrollspy({
     target: ".navbar-fixed-top",
@@ -174,9 +141,170 @@ export function visualizeDesignAndHistory(spaceid) {
   vh.visualizeHistory(spaceid);
 }
 
-/********************
+/*********************
+ * TOOLTIPS FUNCTIONS
+ *********************/
+function addTooltips(){
+  $('#vh-toggle-button').tooltipster({
+    content: "See version history"
+  });
+
+  let deleteBtn = $('#delete-btn');
+  deleteBtn.tooltipster({
+    content: $('#delete-design-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  deleteBtn.tooltipster({
+    content: $('#delete-branch-tooltip'),
+    multiple: true,
+    side: 'left',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  deleteBtn.tooltipster({
+    content: $('#reset-commit-tooltip'),
+    multiple: true,
+    side: 'bottom',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  deleteBtn.tooltipster({
+    content: $('#revert-commit-tooltip'),
+    multiple: true,
+    side: 'right',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let saveBtn = $('#save-btn');
+  saveBtn.tooltipster({
+    content: $('#make-commit-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  saveBtn.tooltipster({
+    content: $('#make-branch-tooltip'),
+    multiple: true,
+    side: 'bottom',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let listBtn = $('#list-btn');
+  listBtn.tooltipster({
+    content: $('#enumerate-designs-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let operatorBtn = $('#combine-btn');
+  operatorBtn.tooltipster({
+    content: $('#apply-operators-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+}
+
+$('#enumerate-designs-tooltip').click(() => {
+
+});
+
+$('#apply-operators-tooltip').click(() => {
+
+});
+
+$('#delete-design-tooltip').click(() => {
+  swal({
+    title: "Really delete?",
+    text: "You will not be able to recover the data!",
+    icon: "warning",
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      vh.deleteDesign();
+    }
+  });
+});
+
+$('#delete-branch-tooltip').click(() => {
+  let dropdown = document.createElement("select");
+  let branchOption = new Option("Branches", "", true, true);
+  branchOption.disabled = true;
+  dropdown.appendChild(branchOption);
+  vh.populateBranchSelector(vh.historyNodes, $(dropdown));
+  swal({
+    title: "Really delete?",
+    text: "Select the branch you want to delete (you cannot delete the current active branch)",
+    icon: "warning",
+    buttons: true,
+    content: dropdown
+  }).then((confirm) => {
+    if (confirm) {
+      let branchName = $(dropdown)[0].options[$(dropdown)[0].selectedIndex].value;
+      vh.deleteBranch(branchName);
+    }
+  });
+});
+
+$('#reset-commit-tooltip').click(() => {
+  swal({
+    title: "Really reset?",
+    text: "No history of the commit will remain (If you want to preserve history, use revert). ",
+    icon: "warning",
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      vh.resetCommit();
+    }
+  });
+});
+
+$('#revert-commit-tooltip').click(() => {
+  swal({
+    title: "Really revert?",
+    text: "A new commit will be made from the previous design.",
+    icon: "warning",
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      vh.revertCommit();
+    }
+  });
+});
+
+$('#make-commit-tooltip').click(() => {
+  vh.makeCommit();
+});
+
+$('#make-branch-tooltip').click(() => {
+  swal({
+    title: "Create branch",
+    text: "Enter a unique branch name",
+    content: "input",
+    buttons: true
+  }).then((branchName) => {
+    if (branchName){
+      vh.makeNewBranch(branchName);
+    }
+  });
+});
+
+
+/**************************
  * VERSION HISTORY SIDEBAR
- ********************/
+ **************************/
+// change version history visualization when
+// value changes in the drop down
+$("#branch-selector").change(function() {
+  vh.checkoutBranch();
+  vh.visualizeHistory(currentSpace);
+});
+
 $('#vh-toggle-button').click(function() {
   if (panelNum === 1) {
     $('#vh-toggle-button span').addClass('fa-chevron-left');
@@ -225,10 +353,38 @@ function listDesignSpaces (callback){
   d3.json(extensions.List, callback);
 }
 
+/************************
+ * NAVIGATION FUNCTIONS
+ ************************/
+$("#brand").click(
+  clearAllPages
+);
 
 /************************
- * AUTOCOMPLETE FUNCTIONS
+ * SEARCH BAR FUNCTIONS
  ************************/
+$("#search-tb").on("input", function() {
+  refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
+});
+
+$("#search-tb").focus(function() {
+  updateAutocompleteVisibility("#search-autocomplete");
+});
+
+$("#search-tb").click(() => {
+  // Currently autocomplete runs when the user clicks on an unfocused
+  // textbox that supports completion. I think that this is reasonable,
+  // but if you find that it is a performance issue you may want to change
+  // the Knox webapp so that it populates the completion list once on
+  // startup, and then only when some event triggers the creation of a new
+  // graph.
+  if (!$(this).is(":focus")) {
+    populateAutocompleteList(() => {
+      refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
+    });
+  }
+});
+
 function updateAutocompleteVisibility(id) {
   var autoCmpl = $(id);
   if (autoCmpl.children().length > 0) {
@@ -410,7 +566,7 @@ $(exploreBtnIDs.combine).click(() => {
         closeOnConfirm: false,
         text: layouts.combineModal,
         confirmButtonColor: "#F05F40"
-    }, function(isconfirm) {
+    }).then((isconfirm) => {
         if (isconfirm) {
             var lhs = currentSpace;
             var rhs = $("#swal-combine-with").val().split(",");
@@ -462,61 +618,6 @@ $(exploreBtnIDs.combine).click(() => {
             }
         }
     });
-});
-
-$(exploreBtnIDs.save).click(() => {
-  swal({
-    title: "Save Changes",
-    html: true,
-    animation: false,
-    showCancelButton: true,
-    closeOnConfirm: false,
-    text: layouts.saveModal,
-    confirmButtonColor: "#F05F40"
-  }, function(isconfirm) {
-    if (isconfirm) {
-      let createVal = $("input[name='save-history']:checked").val();
-
-      if (createVal === vh.knoxClass.BRANCH){
-        vh.makeNewBranch();
-      }
-      if (createVal === vh.knoxClass.COMMIT){
-        vh.makeCommit();
-      }
-    }
-  });
-});
-
-$(exploreBtnIDs.delete).click(() => {
-  swal({
-    title: "Delete history",
-    html: true,
-    animation: false,
-    showCancelButton: true,
-    closeOnConfirm: false,
-    text: layouts.deleteModal,
-    confirmButtonColor: "#F05F40",
-  }, function(isconfirm) {
-      if (isconfirm) {
-        let deleteVal = $("input[name='delete-history']:checked").val();
-        switch(deleteVal){
-          case 'Design':
-            vh.deleteDesign();
-            break;
-          case 'Branch':
-            vh.deleteBranch();
-            break;
-          case 'Reset':
-            vh.resetCommit();
-            break;
-          case 'Revert':
-            vh.revertCommit();
-            break;
-          default:
-            break;
-        }
-      }
-  });
 });
 
 

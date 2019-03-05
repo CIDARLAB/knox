@@ -2,6 +2,7 @@
 import {targets, currentSpace, encodeQueryParameter, clearAllPages, visualizeDesignAndHistory} from "./knox.js";
 
 let currentBranch;
+export let historyNodes;
 const endpoints = {
   history: "/branch/graph/d3",
   branch: "/branch", //post vs delete
@@ -25,13 +26,13 @@ function getHistory (id, callback){
 export function visualizeHistory(spaceid){
   getHistory(spaceid, (err, data) => {
     if (err) {
-      swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
+      swalError("Graph error status: " + JSON.stringify(err));
     } else {
       targets.history.clear();
       targets.history.setHistory(data);
       currentBranch = data.links[0].target.knoxID;
+      historyNodes = data.nodes;
       populateBranchSelector(data.nodes, $('#branch-selector'));
-      populateBranchSelector(data.nodes, $('#branch-delete-selector'));
       $('#vh-sidebar').show();
       $('#vh-toggle-button').show();
     }
@@ -41,9 +42,10 @@ export function visualizeHistory(spaceid){
 /**
  * Populate dropdown in the Version History column
  * with all the branches associated with a design space
- * @param nodes
+ * @param nodes history nodes
+ * @param branchSelector
  */
-function populateBranchSelector(nodes, branchSelector){
+export function populateBranchSelector(nodes, branchSelector){
   branchSelector.find('option').not(':first').remove();
 
   //repopulate
@@ -79,10 +81,9 @@ export function checkoutBranch(){
 /**
  * Creates new branch and refresh history
  */
-export function makeNewBranch(){
+export function makeNewBranch(branchName){
   let request = new XMLHttpRequest();
   let query = "?";
-  let branchName = $("#new-branch-name").val();
 
   query += encodeQueryParameter("targetSpaceID", currentSpace, query);
   query += encodeQueryParameter("outputBranchID", branchName, query);
@@ -92,10 +93,10 @@ export function makeNewBranch(){
   // on success
   if (request.status >= 200 && request.status < 300) {
     currentBranch = branchName;
-    requestSuccess();
+    swalSuccess();
     visualizeHistory(currentSpace);
   } else {
-    swal("Error: Failed to create new branch");
+    swalError("Failed to create new branch");
   }
 }
 
@@ -103,20 +104,20 @@ export function makeNewBranch(){
  * Deletes user specified branch and refreshes history
  * Will throw error if user tries to delete current branch
  */
-export function deleteBranch(){
+export function deleteBranch(branchName){
   let request = new XMLHttpRequest();
   let query = "?";
   query += encodeQueryParameter("targetSpaceID", currentSpace, query);
-  query += encodeQueryParameter("targetBranchID", currentBranch, query);
+  query += encodeQueryParameter("targetBranchID", branchName, query);
   request.open("DELETE", endpoints.branch + query, false);
   request.send(null);
 
   // on success
   if (request.status >= 200 && request.status < 300) {
-    requestSuccess();
+    swalSuccess();
     visualizeHistory(currentSpace);
   } else {
-    swal("Error: Failed to delete branch");
+    swalError("Failed to delete branch");
   }
 }
 
@@ -124,7 +125,6 @@ export function deleteBranch(){
  * Creates new commit and refresh visualization
  */
 export function makeCommit(){
-
   let request = new XMLHttpRequest();
   let query = "?";
   query += encodeQueryParameter("targetSpaceID", currentSpace, query);
@@ -135,10 +135,10 @@ export function makeCommit(){
 
   // on success
   if (request.status >= 200 && request.status < 300) {
-    requestSuccess();
+    swalSuccess();
     visualizeHistory(currentSpace);
   } else {
-    swal("Error: Failed to create new commit");
+    swalError("Failed to create new commit");
   }
 }
 
@@ -158,10 +158,10 @@ export function resetCommit(){
 
   // on success
   if (request.status >= 200 && request.status < 300) {
-    requestSuccess();
+    swalSuccess();
     visualizeDesignAndHistory(currentSpace);
   } else {
-    swal("Error: Failed to reset commit");
+    swalError("Failed to reset commit");
   }
 }
 
@@ -181,10 +181,10 @@ export function revertCommit(){
 
   // on success
   if (request.status >= 200 && request.status < 300) {
-    requestSuccess();
+    swalSuccess();
     visualizeDesignAndHistory(currentSpace);
   } else {
-    swal("Error: Failed to reset commit");
+    swalError("Failed to revert commit");
   }
 }
 
@@ -198,17 +198,26 @@ export function deleteDesign(){
   request.send(null);
 
   if (request.status >= 200 && request.status < 300) {
-    requestSuccess();
+    swalSuccess();
     clearAllPages();
   } else {
-    swal("Error: Failed to delete design space " + currentSpace + ".");
+    swalError("Failed to delete design space " + currentSpace);
   }
 }
 
-function requestSuccess(){
+
+
+function swalError(errorMsg){
+  swal({
+    title: "Error!",
+    text: errorMsg,
+    icon: "error"
+  });
+}
+
+function swalSuccess(){
   swal({
     title: "Success!",
-    confirmButtonColor: "#F05F40",
-    type: "success"
+    icon: "success"
   });
 }
