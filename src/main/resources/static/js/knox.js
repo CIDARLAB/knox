@@ -1,11 +1,10 @@
 import Target from './target.js';
-import * as vh from "./version_history.js";
+import * as endpoint from "./endpoints.js";
 
 /******************
  * GLOBAL VARIABLES
  ******************/
 let completionSet = new Set();
-export let currentSpace;
 let layouts = {
   combineModal: null,
   listModal: null,
@@ -16,18 +15,25 @@ export const targets = {
   search: new Target("#search-svg"),
   history: new Target("#history-svg")
 };
-const extensions = {
-  D3: "/designSpace/graph/d3",
-  List: "/designSpace/list",
-};
+
 const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
   save: "#save-btn",
 };
-let panelNum = 1;
+export const knoxClass = {
+  HEAD: "Head",
+  BRANCH: "Branch",
+  COMMIT: "Commit"
+};
 
+let historyNodes;
+export let currentSpace;
+export let currentBranch;
+export function setcurrentBranch(branchName){
+  currentBranch = branchName;
+}
 
 /********************
  * WINDOW FUNCTIONS
@@ -126,9 +132,9 @@ export function clearAllPages() {
 }
 
 export function visualizeDesignAndHistory(spaceid) {
-  getGraph(spaceid, (err, data) => {
+  endpoint.getGraph(spaceid, (err, data) => {
     if (err) {
-      swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
+      swalError(JSON.stringify(err));
     } else {
       targets.search.clear();
       targets.search.setGraph(data);
@@ -138,8 +144,35 @@ export function visualizeDesignAndHistory(spaceid) {
       currentSpace = spaceid;
     }
   });
-  vh.visualizeHistory(spaceid);
+  visualizeHistory(spaceid);
 }
+
+export function visualizeHistory(spaceid){
+  endpoint.getHistory(spaceid, (err, data) => {
+    if (err) {
+      swalError("Graph error status: " + JSON.stringify(err));
+    } else {
+      targets.history.clear();
+      targets.history.setHistory(data);
+      currentBranch = data.links[0].target.knoxID;
+      historyNodes = data.nodes;
+      populateBranchSelector(data.nodes, $('#branch-selector'));
+      $('#vh-sidebar').show();
+      $('#vh-toggle-button').show();
+    }
+  });
+}
+
+export function populateBranchSelector(nodes, branchSelector){
+  branchSelector.find('option').not(':first').remove();
+
+  //repopulate
+  let branches = nodes.filter(obj => obj.knoxClass === knoxClass.BRANCH);
+  $.each(branches, function(i, b) {
+    branchSelector.append($('<option></option>').val(b.knoxID).html(b.knoxID));
+  });
+}
+
 
 /*********************
  * TOOLTIPS FUNCTIONS
@@ -226,17 +259,18 @@ $('#delete-design-tooltip').click(() => {
     buttons: true
   }).then((confirm) => {
     if (confirm) {
-      vh.deleteDesign();
+      endpoint.deleteDesign();
     }
   });
 });
 
 $('#delete-branch-tooltip').click(() => {
+  // create DOM object to add to alert
   let dropdown = document.createElement("select");
   let branchOption = new Option("Branches", "", true, true);
   branchOption.disabled = true;
   dropdown.appendChild(branchOption);
-  vh.populateBranchSelector(vh.historyNodes, $(dropdown));
+  populateBranchSelector(historyNodes, $(dropdown));
   swal({
     title: "Really delete?",
     text: "Select the branch you want to delete (you cannot delete the current active branch)",
@@ -246,7 +280,7 @@ $('#delete-branch-tooltip').click(() => {
   }).then((confirm) => {
     if (confirm) {
       let branchName = $(dropdown)[0].options[$(dropdown)[0].selectedIndex].value;
-      vh.deleteBranch(branchName);
+      endpoint.deleteBranch(branchName);
     }
   });
 });
@@ -259,7 +293,7 @@ $('#reset-commit-tooltip').click(() => {
     buttons: true
   }).then((confirm) => {
     if (confirm) {
-      vh.resetCommit();
+      endpoint.resetCommit();
     }
   });
 });
@@ -272,13 +306,13 @@ $('#revert-commit-tooltip').click(() => {
     buttons: true
   }).then((confirm) => {
     if (confirm) {
-      vh.revertCommit();
+      endpoint.revertCommit();
     }
   });
 });
 
 $('#make-commit-tooltip').click(() => {
-  vh.makeCommit();
+  endpoint.makeCommit();
 });
 
 $('#make-branch-tooltip').click(() => {
@@ -289,10 +323,25 @@ $('#make-branch-tooltip').click(() => {
     buttons: true
   }).then((branchName) => {
     if (branchName){
-      vh.makeNewBranch(branchName);
+      endpoint.makeNewBranch(branchName);
     }
   });
 });
+
+export function swalError(errorMsg){
+  swal({
+    title: "Error!",
+    text: errorMsg,
+    icon: "error"
+  });
+}
+
+export function swalSuccess(){
+  swal({
+    title: "Success!",
+    icon: "success"
+  });
+}
 
 
 /**************************
@@ -301,8 +350,9 @@ $('#make-branch-tooltip').click(() => {
 // change version history visualization when
 // value changes in the drop down
 $("#branch-selector").change(function() {
-  vh.checkoutBranch();
-  vh.visualizeHistory(currentSpace);
+  let branchName = this.value;
+  endpoint.checkoutBranch(branchName);
+  visualizeHistory(currentSpace);
 });
 
 $('#vh-toggle-button').click(function() {
@@ -339,19 +389,6 @@ $('#vh-toggle-button').click(function() {
     panelNum = 1;
   }
 });
-
-/********************
- * KNOX FUNCTIONS
- ********************/
-// callback is of the form: function(err, jsonObj)
-function getGraph (id, callback){
-  var query = "?targetSpaceID=" + encodeURIComponent(id);
-  d3.json(extensions.D3 + query, callback);
-}
-
-function listDesignSpaces (callback){
-  d3.json(extensions.List, callback);
-}
 
 /************************
  * NAVIGATION FUNCTIONS
@@ -438,9 +475,9 @@ function refreshCompletions(textInputId, textCompletionsId, onSubmit) {
 // matching to return a list of design spaces with similar names.
 
 function populateAutocompleteList(callback) {
-    listDesignSpaces((err, data) => {
+    endpoint.listDesignSpaces((err, data) => {
         if (err) {
-            swal("Unable top populate autocomplete list!", "Are you sure Knox and Neo4j are running?");
+            swalError("Are you sure Knox and Neo4j are running?");
         } else {
             completionSet = new Set();
             data.map((element) => { completionSet.add(element); });
