@@ -5,12 +5,6 @@ import * as endpoint from "./endpoints.js";
  * GLOBAL VARIABLES
  ******************/
 let completionSet = new Set();
-let layouts = {
-  combineModal: null,
-  listModal: null,
-  saveModal: null,
-  deleteModal: null,
-};
 export const targets = {
   search: new Target("#search-svg"),
   history: new Target("#history-svg")
@@ -42,7 +36,6 @@ window.onload = function() {
   addTooltips();
   disableTabs();
   hideExplorePageBtns();
-  getModals();
 
   $("#search-autocomplete").hide();
 
@@ -76,24 +69,9 @@ window.onresize = function(e) {
   });
 };
 
-function getModals(){
-  $.ajax({
-    url: "/layouts/combine-modal.html",
-    success: (result) => { layouts.combineModal = result; }
-  });
-  $.ajax({
-    url: "/layouts/list-modal.html",
-    success: (result) => { layouts.listModal = result; }
-  });
-  $.ajax({
-    url: "/layouts/save-modal.html",
-    success: (result) => { layouts.saveModal = result; }
-  });
-  $.ajax({
-    url: "/layouts/delete-modal.html",
-    success: (result) => { layouts.deleteModal = result; }
-  });
-}
+/*********************
+ * HELPER FUNCTIONS
+ *********************/
 
 // Utility for disabling navigation features.
 // Exposes the function disableTabs.
@@ -173,6 +151,24 @@ export function populateBranchSelector(nodes, branchSelector){
   });
 }
 
+export function encodeQueryParameter(parameterName, parameterValue, query) {
+  if (query.length > 1) {
+    return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
+  } else {
+    return parameterName + "=" + encodeURIComponent(parameterValue);
+  }
+}
+
+function longestListLength(listoflists) {
+  var maxLength = 0;
+  listoflists.map((list) => {
+    if (list.length > maxLength) {
+      maxLength = list.length;
+    }
+  });
+  return maxLength;
+}
+
 
 /*********************
  * TOOLTIPS FUNCTIONS
@@ -248,8 +244,163 @@ $('#enumerate-designs-tooltip').click(() => {
 });
 
 $('#apply-operators-tooltip').click(() => {
+  let div = document.createElement('div');
 
+  //input space
+  let inputDiv = document.createElement('div');
+  let inputSpaceInput = document.createElement('input');
+  inputSpaceInput.setAttribute("placeholder", "delimit with comma");
+  makeDiv(inputDiv, inputSpaceInput, 'Combine with: ');
+
+  //output space
+  let outputDiv = document.createElement('div');
+  let outputSpaceInput = document.createElement('input');
+  makeDiv(outputDiv, outputSpaceInput, 'Output space ID: ');
+
+  //operator dropdown
+  let operatorDiv = document.createElement('div');
+  let operatorDropdown = makeOperatorDropdown();
+  makeDiv(operatorDiv, operatorDropdown, 'Operator: ');
+
+  //optional div
+  let optDiv = document.createElement('div');
+  let optionalDropdown = makeOptionalDropdown();
+  makeDiv(optDiv, optionalDropdown, 'Cardinality: ');
+
+  //complete div
+  let comDiv = document.createElement('div');
+  let completeDropdown = makeCompleteDropdown();
+  makeDiv(comDiv, completeDropdown, 'Complete Matches Only: ');
+
+  //tolerance div
+  let tolDiv = document.createElement('div');
+  let toleranceDropdown = makeToleranceDropdown();
+  makeDiv(tolDiv, toleranceDropdown, 'Tolerance: ');
+
+  //append all
+  div.appendChild(inputDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(outputDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(operatorDiv);
+  div.appendChild(document.createElement('br'));
+
+  $(operatorDropdown).change(function() {
+    if(this.value === endpoint.operators.REPEAT){
+      if(div.contains(tolDiv)){
+        div.removeChild(tolDiv);
+      }
+      if(div.contains(comDiv)){
+        div.removeChild(comDiv);
+      }
+      div.appendChild(optDiv);
+    }
+    if(this.value === endpoint.operators.AND){
+      if(div.contains(optDiv)){
+        div.removeChild(optDiv);
+      }
+      div.appendChild(tolDiv);
+      div.appendChild(comDiv);
+    }
+    if(this.value === endpoint.operators.MERGE){
+      if(div.contains(optDiv)){
+        div.removeChild(optDiv);
+      }
+      if(div.contains(comDiv)){
+        div.removeChild(comDiv);
+      }
+      div.appendChild(tolDiv);
+    }
+  });
+
+  swal({
+    title: "Apply Operator",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (confirm) {
+      let inputSpaces = [currentSpace];
+      let combineWithSpaces = inputSpaceInput.value.split(",");
+      for (let i = 0; i < combineWithSpaces.length; i++) {
+        if (combineWithSpaces[i].trim().length > 0) {
+          inputSpaces.push(combineWithSpaces[i].trim());
+        }
+      }
+      let outputSpace = outputSpaceInput.value;
+      let isOptional = optionalDropdown.value;
+      let tolerance = toleranceDropdown.value;
+      let isComplete = completeDropdown.value;
+
+      switch (operatorDropdown.value) {
+        case endpoint.operators.JOIN:
+          endpoint.designSpaceJoin(inputSpaces, outputSpace);
+          break;
+
+        case endpoint.operators.OR:
+          endpoint.designSpaceOr(inputSpaces, outputSpace);
+          break;
+
+        case endpoint.operators.REPEAT:
+          endpoint.designSpaceRepeat(inputSpaces, outputSpace, isOptional);
+          break;
+
+        case endpoint.operators.AND:
+          endpoint.designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete);
+          break;
+
+        case endpoint.operators.MERGE:
+          endpoint.designSpaceMerge(inputSpaces, outputSpace, tolerance);
+          break;
+      }
+    }
+  });
 });
+
+function makeOperatorDropdown(){
+  let operatorDropdown = document.createElement('select');
+  let operatorOption = new Option("Operations", "", true, true);
+  operatorOption.disabled = true;
+  operatorDropdown.appendChild(operatorOption);
+  for(let key in endpoint.operators){
+    operatorDropdown.appendChild(new Option(endpoint.operators[key]));
+  }
+
+  return operatorDropdown;
+}
+
+function makeOptionalDropdown(){
+  let optionalDropdown = document.createElement('select');
+  optionalDropdown.setAttribute("id", "optional-dropdown");
+  optionalDropdown.appendChild(new Option("one-or-more", false, true, true));
+  optionalDropdown.appendChild(new Option("zero-or-more", true));
+
+  return optionalDropdown;
+}
+
+function makeToleranceDropdown(){
+  let toleranceDropdown = document.createElement('select');
+  toleranceDropdown.setAttribute("id", "tolerance-dropdown");
+  toleranceDropdown.appendChild(new Option("0", "0", true, true));
+  toleranceDropdown.appendChild(new Option("1"));
+  toleranceDropdown.appendChild(new Option("2"));
+  toleranceDropdown.appendChild(new Option("3"));
+
+  return toleranceDropdown;
+}
+
+function makeCompleteDropdown(){
+  let completeDropdown = document.createElement('select');
+  completeDropdown.setAttribute("id", "complete-dropdown");
+  completeDropdown.appendChild(new Option("True", true, true, true));
+  completeDropdown.appendChild(new Option("False", false));
+
+  return completeDropdown;
+}
+
+function makeDiv(div, input, title){
+  div.appendChild(document.createTextNode(title));
+  div.appendChild(input);
+}
 
 $('#delete-design-tooltip').click(() => {
   swal({
@@ -502,24 +653,6 @@ function suggestCompletions (phrase){
 /******************
  * BUTTON FUNCTIONS
  ******************/
-export function encodeQueryParameter(parameterName, parameterValue, query) {
-  if (query.length > 1) {
-    return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
-  } else {
-    return parameterName + "=" + encodeURIComponent(parameterValue);
-  }
-}
-
-function longestListLength(listoflists) {
-  var maxLength = 0;
-  listoflists.map((list) => {
-    if (list.length > maxLength) {
-      maxLength = list.length;
-    }
-  });
-  return maxLength;
-}
-
 $(exploreBtnIDs.list).click(() => {
     swal({
         title: "Pathways",
@@ -590,69 +723,6 @@ $(exploreBtnIDs.list).click(() => {
                 pen.y += celHeight;
                 pen.x = 0;
             });
-        }
-    });
-});
-
-$(exploreBtnIDs.combine).click(() => {
-    swal({
-        title: "Apply Operator",
-        html: true,
-        animation: false,
-        showCancelButton: true,
-        closeOnConfirm: false,
-        text: layouts.combineModal,
-        confirmButtonColor: "#F05F40"
-    }).then((isconfirm) => {
-        if (isconfirm) {
-            var lhs = currentSpace;
-            var rhs = $("#swal-combine-with").val().split(",");
-            var lrhs = [lhs];
-            var i;
-            for (i = 0; i < rhs.length; i++) {
-                if (rhs[i].length > 0) {
-                    lrhs.push(rhs[i]);
-                }
-            }
-            var query = "?";
-            query += encodeQueryParameter("inputSpaceIDs", lrhs, query);
-            query += encodeQueryParameter("outputSpaceID", $("#swal-output").val(), query);
-            var request = new XMLHttpRequest();
-            switch ($("#swal-select").val()) {
-            case "Join":
-                request.open("POST", "/designSpace/join" + query, false);
-                break;
-
-            case "OR":
-                request.open("POST", "/designSpace/or" + query, false);
-                break;
-
-            case "Repeat":
-                query += encodeQueryParameter("isOptional", $("#swal-cardinality").val(), query);
-                request.open("POST", "/designSpace/repeat" + query, false);
-                break;
-
-            case "AND":
-                query += encodeQueryParameter("tolerance", $("#swal-tolerance").val(), query);
-                query += encodeQueryParameter("isComplete", $("#swal-complete").val(), query);
-                request.open("POST", "/designSpace/and" + query, false);
-                break;
-
-            case "Merge":
-                query += encodeQueryParameter("tolerance", $("#swal-tolerance").val(), query);
-                request.open("POST", "/designSpace/merge" + query, false);
-                break;
-            }
-            request.send(null);
-            if (request.status >= 200 && request.status < 300) {
-                swal({
-                    title: "Success!",
-                    confirmButtonColor: "#F05F40",
-                    type: "success"
-                });
-            } else {
-                swal("Error: Operation failed with error: " + request.response);
-            }
         }
     });
 });
