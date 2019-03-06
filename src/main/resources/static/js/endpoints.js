@@ -90,7 +90,7 @@ export function makeNewBranch(branchName){
 
   query += encodeQueryParameter("targetSpaceID", currentSpace, query);
   query += encodeQueryParameter("outputBranchID", branchName, query);
-  request.open("POST", endpoints.branch + query, false);
+  request.open("POST", endpoints.BRANCH + query, false);
   request.send(null);
 
   // on success
@@ -112,7 +112,7 @@ export function deleteBranch(branchName){
   let query = "?";
   query += encodeQueryParameter("targetSpaceID", currentSpace, query);
   query += encodeQueryParameter("targetBranchID", branchName, query);
-  request.open("DELETE", endpoints.branch + query, false);
+  request.open("DELETE", endpoints.BRANCH + query, false);
   request.send(null);
 
   // on success
@@ -217,7 +217,7 @@ export function designSpaceJoin(inputSpaces, outputSpace){
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
 
   let request = new XMLHttpRequest();
-  request.open("POST", endpoints.DESIGN + operators.JOIN + query, false);
+  request.open("POST", endpoints.DESIGN + "/" + operators.JOIN + query, false);
   request.send(null);
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();
@@ -232,7 +232,7 @@ export function designSpaceOr(inputSpaces, outputSpace){
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
 
   let request = new XMLHttpRequest();
-  request.open("POST", endpoints.DESIGN + operators.OR + query, false);
+  request.open("POST", endpoints.DESIGN + "/" + operators.OR + query, false);
   request.send(null);
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();
@@ -248,7 +248,7 @@ export function designSpaceRepeat(inputSpaces, outputSpace, isOptional){
   query += encodeQueryParameter("isOptional", isOptional, query);
 
   let request = new XMLHttpRequest();
-  request.open("POST", endpoints.DESIGN + operators.REPEAT + query, false);
+  request.open("POST", endpoints.DESIGN + "/" + operators.REPEAT + query, false);
   request.send(null);
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();
@@ -265,7 +265,7 @@ export function designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete){
   query += encodeQueryParameter("isComplete", isComplete, query);
 
   let request = new XMLHttpRequest();
-  request.open("POST", endpoints.DESIGN + operators.AND + query, false);
+  request.open("POST", endpoints.DESIGN + "/" + operators.AND + query, false);
   request.send(null);
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();
@@ -281,7 +281,7 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance){
   query += encodeQueryParameter("tolerance", tolerance, query);
 
   let request = new XMLHttpRequest();
-  request.open("POST", endpoints.DESIGN + operators.MERGE + query, false);
+  request.open("POST", endpoints.DESIGN + "/" + operators.MERGE + query, false);
   request.send(null);
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();
