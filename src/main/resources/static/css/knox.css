@@ -639,10 +639,6 @@ textarea:focus, input:focus{
     padding: 10px;
 }
 
-#swal-svg-box {
-    overflow: scroll;
-}
-
 /**********************
 VERSION HISTORY SIDEBAR
 ***********************/
@@ -712,6 +708,10 @@ VERSION HISTORY SIDEBAR
 
 .swal-content__input:focus,.swal-content__textarea:focus{
     border-color:#999
+}
+
+.enumeration-swal .swal-content{
+    height: 400px
 }
 
 /*************

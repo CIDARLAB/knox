@@ -13,6 +13,7 @@ import {currentSpace,
 const endpoints = {
   D3: "/graph/d3",
   LIST: "/designSpace/list",
+  ENUMERATE: "/designSpace/enumerate",
 
   D3HISTORY: "/branch/graph/d3",
   CHECKOUT: "/branch/checkout",
@@ -49,6 +50,11 @@ export function listDesignSpaces (callback){
 export function getHistory (id, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
   d3.json(endpoints.BRANCH+endpoints.D3 + query, callback);
+}
+
+export function enumerateDesigns(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id) + "&bfs=true";
+  d3.json(endpoints.ENUMERATE + query, callback);
 }
 
 /***************************

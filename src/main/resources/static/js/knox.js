@@ -240,6 +240,92 @@ function addTooltips(){
 }
 
 $('#enumerate-designs-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.height = "inherit";
+
+  // loading div
+  let loadingDiv = document.createElement('div');
+  loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+  //svg div
+  let svgDiv = document.createElement('div');
+  svgDiv.style.height = "inherit";
+  svgDiv.style.overflow = "scroll";
+  let svg = document.createElement('svg');
+  svgDiv.appendChild(svg);
+
+  //append all
+  div.appendChild(loadingDiv);
+  div.appendChild(svgDiv);
+
+  swal({
+    title: "Pathways",
+    content: div,
+    className: "enumeration-swal"
+  });
+
+  endpoint.enumerateDesigns(currentSpace, (err, data) => {
+    console.log(data);
+    if (err) {
+      swalError("Enumeration error: " + JSON.stringify(err));
+    } else {
+      div.removeChild(loadingDiv);
+
+      const celHeight = 80;
+      const celWidth = 50;
+      var yPitch = 3.1*celHeight;
+      var xPitch = (longestListLength(data) + 1) * celWidth;
+      svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
+      svg.setAttribute("height", yPitch);
+      svg.setAttribute("width", xPitch);
+      var pen = { x: 0, y: 0 };
+      data.map((list) => {
+        list.map((element) => {
+          var svgimg =
+            document.createElementNS(
+              "http://www.w3.org/2000/svg", "image");
+          svgimg.setAttribute("height", "100");
+          svgimg.setAttribute("width", "100");
+          svgimg.setAttribute("id", "testimg2");
+          svgimg.setAttributeNS(
+            "http://www.w3.org/1999/xlink",
+            "href", "./img/sbol/" + element.roles[0] + ".svg");
+          svgimg.setAttribute("x", "" + pen.x);
+          svgimg.setAttribute("y", "" + pen.y);
+          svg.appendChild(svgimg);
+          var svgtext =
+            document.createElementNS(
+              "http://www.w3.org/2000/svg", "text");
+          svgtext.setAttribute("height", "100");
+          svgtext.setAttribute("width", "100");
+          svgtext.setAttribute("id", "testimg2");
+          svgtext.setAttribute("font-family", "sans-serif");
+          svgtext.setAttribute("font-size", "20px");
+          svgtext.setAttribute("fill", "black");
+          svgtext.textContent = element.id;
+          svgtext.setAttribute("x", "" + (pen.x + 0.85*celWidth));
+          if (element.roles[0] === "CDS") {
+            svgtext.setAttribute("y", "" + (pen.y + 1.1*celHeight));
+          } else {
+            svgtext.setAttribute("y", "" + (pen.y + celHeight));
+          }
+          svg.appendChild(svgtext);
+          pen.x += celWidth;
+        });
+        var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("stroke", "black");
+        line.setAttribute("stroke-width", "4");
+        line.setAttribute("x1", "" + 0);
+        line.setAttribute("y1", "" + (pen.y + celWidth));
+        line.setAttribute("x2", "" + (pen.x + celWidth));
+        line.setAttribute("y2", "" + (pen.y + celWidth));
+        svg.appendChild(line);
+
+        pen.y += celHeight;
+        pen.x = 0;
+      });
+    }
+  });
 
 });
 
@@ -647,85 +733,3 @@ function suggestCompletions (phrase){
     });
     return results;
 }
-
-
-
-/******************
- * BUTTON FUNCTIONS
- ******************/
-$(exploreBtnIDs.list).click(() => {
-    swal({
-        title: "Pathways",
-        html: true,
-        text: layouts.listModal,
-        animation: false,
-        confirmButtonColor: "#F05F40"
-    });
-    var query = "/designSpace/enumerate?targetSpaceID="
-        + currentSpace + "&bfs=true";
-    d3.json(query, (err, data) => {
-        if (err) {
-            window.alert(err);
-        } else {
-            const celHeight = 80;
-            const celWidth = 50;
-            var svg = document.getElementById("swal-svg");
-            var loading = document.getElementById("swal-loading");
-            loading.parentNode.removeChild(loading);
-            var yPitch = 3.1*celHeight;
-            var xPitch = (longestListLength(data) + 1) * celWidth;
-            svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
-            svg.setAttribute("height", yPitch);
-            svg.setAttribute("width", xPitch);
-            var pen = { x: 0, y: 0 };
-            data.map((list) => {
-                list.map((element) => {
-                    var svgimg =
-                        document.createElementNS(
-                            "http://www.w3.org/2000/svg", "image");
-                    svgimg.setAttribute("height", "100");
-                    svgimg.setAttribute("width", "100");
-                    svgimg.setAttribute("id", "testimg2");
-                    svgimg.setAttributeNS(
-                        "http://www.w3.org/1999/xlink",
-                        "href", "./img/sbol/" + element.roles[0] + ".svg");
-                    svgimg.setAttribute("x", "" + pen.x);
-                    svgimg.setAttribute("y", "" + pen.y);
-                    svg.appendChild(svgimg);
-                    var svgtext =
-                        document.createElementNS(
-                            "http://www.w3.org/2000/svg", "text");
-                    svgtext.setAttribute("height", "100");
-                    svgtext.setAttribute("width", "100");
-                    svgtext.setAttribute("id", "testimg2");
-                    svgtext.setAttribute("font-family", "sans-serif");
-                    svgtext.setAttribute("font-size", "20px");
-                    svgtext.setAttribute("fill", "black");
-                    svgtext.textContent = element.id;
-                    svgtext.setAttribute("x", "" + (pen.x + 0.85*celWidth));
-                    if (element.roles[0] === "CDS") {
-                        svgtext.setAttribute("y", "" + (pen.y + 1.1*celHeight));
-                    } else {
-                        svgtext.setAttribute("y", "" + (pen.y + celHeight));
-                    }
-                    svg.appendChild(svgtext);
-                    pen.x += celWidth;
-                });
-                var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("stroke", "black");
-                line.setAttribute("stroke-width", "4");
-                line.setAttribute("x1", "" + 0);
-                line.setAttribute("y1", "" + (pen.y + celWidth));
-                line.setAttribute("x2", "" + (pen.x + celWidth));
-                line.setAttribute("y2", "" + (pen.y + celWidth));
-                svg.appendChild(line);
-
-                pen.y += celHeight;
-                pen.x = 0;
-            });
-        }
-    });
-});
-
-
-
