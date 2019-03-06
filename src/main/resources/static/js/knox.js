@@ -153,7 +153,16 @@ export function populateBranchSelector(nodes, branchSelector){
   //repopulate
   let branches = nodes.filter(obj => obj.knoxClass === knoxClass.BRANCH);
   $.each(branches, function(i, b) {
-    branchSelector.append($('<option></option>').val(b.knoxID).html(b.knoxID));
+    let text = b.knoxID;
+    if (text.length > 20) {
+      text = text.substring(0, 19) + '...';
+    }
+
+    let option = $('<option></option>').val(b.knoxID).html(text);
+    if (b.knoxID === currentBranch){
+      option.prop('disabled', true);
+    }
+    branchSelector.append(option);
   });
 }
 
