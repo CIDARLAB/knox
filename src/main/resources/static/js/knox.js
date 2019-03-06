@@ -4,6 +4,7 @@ import * as endpoint from "./endpoints.js";
 /******************
  * GLOBAL VARIABLES
  ******************/
+let panelNum = 1; //closed
 let completionSet = new Set();
 export const targets = {
   search: new Target("#search-svg"),
@@ -123,6 +124,11 @@ export function visualizeDesignAndHistory(spaceid) {
     }
   });
   visualizeHistory(spaceid);
+
+  //autoshow history
+  if(panelNum === 1){
+    $('#vh-toggle-button').click();
+  }
 }
 
 export function visualizeHistory(spaceid){
