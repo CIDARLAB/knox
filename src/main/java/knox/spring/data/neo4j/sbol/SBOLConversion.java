@@ -87,8 +87,10 @@ public class SBOLConversion {
 			// recurse through variant derivations
 			Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
 
+			Boolean hasVariants = !variableComponent.getVariants().isEmpty() || !variableComponent.getVariantCollections().isEmpty();
+
 			//handle structure for just repeats
-			if (variantDerivs.size() == 1 && variableComponent.getVariants().isEmpty() && variableComponent.getVariantCollections().isEmpty()){
+			if (variantDerivs.size() == 1 && !hasVariants){
 				for (CombinatorialDerivation cv : variantDerivs) {
 					inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
 				}
@@ -98,7 +100,10 @@ public class SBOLConversion {
 			else if (variantDerivs.size() > 0){
 				List<NodeSpace> orSpace = new LinkedList<>();
 				NodeSpace outputSpace = new NodeSpace();
-				orSpace.add(createNodeSpaceFromVariableComponent(variableComponent)); //add variants
+
+				if (hasVariants){
+					orSpace.add(createNodeSpaceFromVariableComponent(variableComponent)); //add variants
+				}
 
 				for (CombinatorialDerivation cv : variantDerivs) {
 					orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv)));
@@ -110,7 +115,7 @@ public class SBOLConversion {
 				inputSpace.add(applyOperator(variableComponent.getOperator(), tempSpace));
 			}
 
-			else{
+			else if (hasVariants){
 				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
 			}
 		}
@@ -193,6 +198,7 @@ public class SBOLConversion {
 
 	private NodeSpace applyOperator(OperatorType operator, List<NodeSpace> inputSpace){
 		NodeSpace outputSpace = new NodeSpace();
+
 		if (operator == OperatorType.ONEORMORE){
 			RepeatOperator.apply(inputSpace, outputSpace, false);
 		}
