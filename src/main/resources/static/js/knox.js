@@ -184,6 +184,36 @@ function longestListLength(listoflists) {
   return maxLength;
 }
 
+export function getSBOLImage(role){
+  const sbolpath = "./img/sbol/";
+  switch (role) {
+    case "promoter":
+    case "terminator":
+    case "CDS":
+    case "restriction_enzyme_assembly_scar":
+    case "restriction_enzyme_recognition_site":
+    case "protein_stability_element":
+    case "blunt_end_restriction_enzyme_cleavage_site":
+    case "ribonuclease_site":
+    case "restriction_enzyme_five_prime_single_strand_overhang":
+    case "ribosome_entry_site":
+    case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
+    case "RNA_stability_element":
+    case "ribozyme":
+    case "insulator":
+    case "signature":
+    case "operator":
+    case "origin_of_replication":
+    case "restriction_enzyme_three_prime_single_strand_overhang":
+    case "primer_binding_site":
+    case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
+    case "protease_site":
+      return sbolpath + role + ".svg";
+    default:
+      return sbolpath + "user_defined.svg";
+  }
+}
+
 
 /*********************
  * TOOLTIPS FUNCTIONS
@@ -257,24 +287,26 @@ function addTooltips(){
 $('#enumerate-designs-tooltip').click(() => {
   let div = document.createElement('div');
   div.style.height = "inherit";
+  div.style.overflow = "scroll";
 
   // loading div
   let loadingDiv = document.createElement('div');
   loadingDiv.appendChild(document.createTextNode("Loading..."));
 
   //svg div
-  let svgDiv = document.createElement('div');
-  svgDiv.style.height = "inherit";
-  svgDiv.style.overflow = "scroll";
-  let svg = document.createElement('svg');
-  svgDiv.appendChild(svg);
+  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.style.display = "block";
 
   //append all
   div.appendChild(loadingDiv);
-  div.appendChild(svgDiv);
+  div.appendChild(svg);
+
+  //save x and y max values
+  let maxX = 0;
+  let maxY = 0;
 
   swal({
-    title: "Pathways",
+    title: "Designs",
     content: div,
     className: "enumeration-swal"
   });
@@ -288,37 +320,33 @@ $('#enumerate-designs-tooltip').click(() => {
 
       const celHeight = 80;
       const celWidth = 50;
-      var yPitch = 3.1*celHeight;
-      var xPitch = (longestListLength(data) + 1) * celWidth;
-      svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
-      svg.setAttribute("height", yPitch);
-      svg.setAttribute("width", xPitch);
       var pen = { x: 0, y: 0 };
+
       data.map((list) => {
         list.map((element) => {
-          var svgimg =
-            document.createElementNS(
-              "http://www.w3.org/2000/svg", "image");
+
+          var svgimg = document.createElementNS("http://www.w3.org/2000/svg", "image");
           svgimg.setAttribute("height", "100");
           svgimg.setAttribute("width", "100");
           svgimg.setAttribute("id", "testimg2");
+          svgimg.style.display = "block";
           svgimg.setAttributeNS(
             "http://www.w3.org/1999/xlink",
-            "href", "./img/sbol/" + element.roles[0] + ".svg");
+            "href", getSBOLImage(element.roles[0]));
           svgimg.setAttribute("x", "" + pen.x);
           svgimg.setAttribute("y", "" + pen.y);
           svg.appendChild(svgimg);
-          var svgtext =
-            document.createElementNS(
-              "http://www.w3.org/2000/svg", "text");
+
+          var svgtext = document.createElementNS("http://www.w3.org/2000/svg", "text");
           svgtext.setAttribute("height", "100");
           svgtext.setAttribute("width", "100");
           svgtext.setAttribute("id", "testimg2");
           svgtext.setAttribute("font-family", "sans-serif");
-          svgtext.setAttribute("font-size", "20px");
+          svgtext.setAttribute("font-size", "12px");
           svgtext.setAttribute("fill", "black");
           svgtext.textContent = element.id;
-          svgtext.setAttribute("x", "" + (pen.x + 0.85*celWidth));
+          svgtext.style.display = "block";
+          svgtext.setAttribute("x", "" + (pen.x + 0.40*celWidth));
           if (element.roles[0] === "CDS") {
             svgtext.setAttribute("y", "" + (pen.y + 1.1*celHeight));
           } else {
@@ -327,6 +355,7 @@ $('#enumerate-designs-tooltip').click(() => {
           svg.appendChild(svgtext);
           pen.x += celWidth;
         });
+
         var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute("stroke", "black");
         line.setAttribute("stroke-width", "4");
@@ -337,8 +366,15 @@ $('#enumerate-designs-tooltip').click(() => {
         svg.appendChild(line);
 
         pen.y += celHeight;
+
+        maxY = Math.max(pen.y + celHeight, maxY);
+        maxX = Math.max(pen.x + celWidth, maxX);
+
         pen.x = 0;
       });
+
+      svg.setAttribute("height", maxY);
+      svg.setAttribute("width", maxX);
     }
   });
 

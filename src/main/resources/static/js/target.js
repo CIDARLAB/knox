@@ -1,5 +1,5 @@
 
-import {knoxClass} from "./knox.js";
+import {knoxClass, getSBOLImage} from "./knox.js";
 
 // The target class observes an SVG element on the page, and
 // provides methods for setting and clearing graph data. A variable
@@ -97,39 +97,13 @@ export default class Target{
       })
       .attr("xlink:href", (d) => {
         if (d.hasOwnProperty("componentRoles")) {
-          const sbolpath = "./img/sbol/";
           if (d["componentRoles"].length > 0) {
-            var role = d["componentRoles"][0];
-            switch (role) {
-              case "promoter":
-              case "terminator":
-              case "CDS":
-              case "restriction_enzyme_assembly_scar":
-              case "restriction_enzyme_recognition_site":
-              case "protein_stability_element":
-              case "blunt_end_restriction_enzyme_cleavage_site":
-              case "ribonuclease_site":
-              case "restriction_enzyme_five_prime_single_strand_overhang":
-              case "ribosome_entry_site":
-              case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
-              case "RNA_stability_element":
-              case "ribozyme":
-              case "insulator":
-              case "signature":
-              case "operator":
-              case "origin_of_replication":
-              case "restriction_enzyme_three_prime_single_strand_overhang":
-              case "primer_binding_site":
-              case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
-              case "protease_site":
-                return sbolpath + role + ".svg";
-              default:
-                return sbolpath + "user_defined.svg";
-            }
+            let role = d["componentRoles"][0];
+            return getSBOLImage(role);
           }
         }
         return "";
-    })
+    });
 
     $('.sboltip').tooltipster({
       theme: 'tooltipster-shadow'
