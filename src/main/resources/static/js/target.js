@@ -1,5 +1,4 @@
-
-import {knoxClass, getSBOLImage, splitElementID} from "./knox.js";
+import {knoxClass, getSBOLImage, splitElementID, condenseVisualization} from "./knox.js";
 
 // The target class observes an SVG element on the page, and
 // provides methods for setting and clearing graph data. A variable
@@ -34,6 +33,10 @@ export default class Target{
   }
 
   setGraph(graph) {
+    // add 'show' and 'optional' flags
+    condenseVisualization(graph);
+    console.log(graph);
+
     var zoom = d3.behavior.zoom()
       .scaleExtent([1, 10])
       .on("zoom", () => {
@@ -62,11 +65,16 @@ export default class Target{
       ]).start();
 
     var linksEnter = svg.selectAll(".link")
-      .data(graph.links)
+      .data(graph.links.filter(link => link.show))
       .enter();
 
     var links = linksEnter.append("path")
-      .attr("class", "link");
+      .attr("class", (l) => {
+        if (l.optional){
+          return "link dashed-link";
+        }
+        return "link"
+      });
 
     var nodesEnter = svg.selectAll(".node")
       .data(graph.nodes)

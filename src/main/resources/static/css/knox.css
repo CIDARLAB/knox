@@ -504,6 +504,10 @@ section {
     marker-end: url(#endArrow);
 }
 
+.dashed-link {
+    stroke-dasharray: 5;
+}
+
 .node {
     stroke: #fff;
     fill: #F05F40;

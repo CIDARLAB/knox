@@ -73,6 +73,48 @@ window.onresize = function(e) {
 /*********************
  * HELPER FUNCTIONS
  *********************/
+/**
+ * Determine and add optional flags to each link
+ * and mark redundant links
+ * @param graph design space graph
+ */
+export function condenseVisualization(graph){
+  let sourceTargetMap = [];
+
+  for(let i=0; i<graph.links.length; i++) {
+    // add optional flag to all links
+    graph.links[i].optional = false; //optional links show dashed lines
+    graph.links[i].show = true; //will not be rendered if false
+
+    //get all source/target pairs
+    let sourceNode = graph.links[i].source.nodeID;
+    let targetNode = graph.links[i].target.nodeID;
+    let stPairNum = sourceNode + targetNode;
+
+    if(!(stPairNum in sourceTargetMap)){
+      sourceTargetMap[stPairNum] = i; //save index
+    }
+    else{
+      let dupLink1 = graph.links[sourceTargetMap[stPairNum]];
+      let dupLink2 = graph.links[i];
+
+      if(dupLink1.componentIDs.length && dupLink2.componentIDs.length){
+        // if they both contain components, don't condense
+        // though this should never be the case, I think?
+        continue;
+      }
+
+      if(dupLink1.componentIDs.length){
+        dupLink1.optional = true;
+        dupLink2.show = false;
+      } else {
+        dupLink2.optional = true;
+        dupLink1.show = false;
+      }
+    }
+  }
+
+}
 
 // Utility for disabling navigation features.
 // Exposes the function disableTabs.
