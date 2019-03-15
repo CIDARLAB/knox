@@ -328,13 +328,15 @@ $('#enumerate-designs-tooltip').click(() => {
           var svgimg = document.createElementNS("http://www.w3.org/2000/svg", "image");
           svgimg.setAttribute("height", "100");
           svgimg.setAttribute("width", "100");
-          svgimg.setAttribute("id", "testimg2");
           svgimg.style.display = "block";
           svgimg.setAttributeNS(
             "http://www.w3.org/1999/xlink",
             "href", getSBOLImage(element.roles[0]));
           svgimg.setAttribute("x", "" + pen.x);
           svgimg.setAttribute("y", "" + pen.y);
+          $(svgimg).tooltipster({
+            content: element.id
+          });
           svg.appendChild(svgimg);
 
           var svgtext = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -342,9 +344,15 @@ $('#enumerate-designs-tooltip').click(() => {
           svgtext.setAttribute("width", "100");
           svgtext.setAttribute("id", "testimg2");
           svgtext.setAttribute("font-family", "sans-serif");
-          svgtext.setAttribute("font-size", "12px");
+          svgtext.setAttribute("font-size", "10px");
           svgtext.setAttribute("fill", "black");
-          svgtext.textContent = element.id;
+
+          let text = element.id;
+          if (text.length > 10) {
+            text = text.substring(0, 7) + '...';
+          }
+          svgtext.textContent = text;
+
           svgtext.style.display = "block";
           svgtext.setAttribute("x", "" + (pen.x + 0.40*celWidth));
           if (element.roles[0] === "CDS") {
