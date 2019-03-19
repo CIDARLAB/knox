@@ -662,6 +662,12 @@ public class NodeSpace {
     		
     		if (!sourceEdges.isEmpty()) {
     			for (Edge sourceEdge : sourceEdges) {
+    				if (sourceEdge.getTail().isAcceptNode()) {
+    					outerSink.addNodeType(NodeType.ACCEPT.getValue());
+    				} else if (sourceEdge.getTail().isStartNode()) {
+    					outerSource.addNodeType(NodeType.START.getValue());
+    				}
+    				
     				sourceEdge.delete();
     				
     				sourceEdge.setTail(innerSource);
@@ -676,6 +682,12 @@ public class NodeSpace {
     			nodeIDToIncomingEdges.put(innerSink.getNodeID(), new HashSet<Edge>());
 
     			for (Edge sinkEdge : sinkEdges) {
+    				if (sinkEdge.getHead().isAcceptNode()) {
+    					outerSink.addNodeType(NodeType.ACCEPT.getValue());
+    				} else if (sinkEdge.getHead().isStartNode()) {
+    					outerSource.addNodeType(NodeType.START.getValue());
+    				}
+    				
     				nodeIDToIncomingEdges.get(sinkEdge.getHeadID()).remove(sinkEdge);
     				
     				sinkEdge.setHead(innerSink);
@@ -690,6 +702,12 @@ public class NodeSpace {
     			nodeIDToIncomingEdges.put(outerSource.getNodeID(), new HashSet<Edge>());
     			
     			for (Edge incomingEdge : incomingEdges) {
+    				if (incomingEdge.getHead().isAcceptNode()) {
+    					outerSink.addNodeType(NodeType.ACCEPT.getValue());
+    				} else if (incomingEdge.getHead().isStartNode()) {
+    					outerSource.addNodeType(NodeType.START.getValue());
+    				}
+    				
     				nodeIDToIncomingEdges.get(incomingEdge.getHeadID()).remove(incomingEdge);
     				
     				incomingEdge.setHead(outerSource);
@@ -702,6 +720,12 @@ public class NodeSpace {
     		
     		if (!outgoingEdges.isEmpty()) {
     			for (Edge outgoingEdge : outgoingEdges) {
+    				if (outgoingEdge.getTail().isAcceptNode()) {
+    					outerSink.addNodeType(NodeType.ACCEPT.getValue());
+    				} else if (outgoingEdge.getTail().isStartNode()) {
+    					outerSource.addNodeType(NodeType.START.getValue());
+    				}
+    				
     				outgoingEdge.delete();
     				
     				outgoingEdge.setTail(outerSink);

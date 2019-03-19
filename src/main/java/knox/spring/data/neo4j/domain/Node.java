@@ -494,9 +494,15 @@ public class Node {
     }
     
     public void copyNodeType(Node node) {
-    	nodeTypes = new ArrayList<String>();
-    	
-    	nodeTypes.addAll(node.getNodeTypes());
+    	if (nodeTypes == null) {
+    		nodeTypes = new ArrayList<String>(node.getNodeTypes());
+    	} else if (nodeTypes.isEmpty()) {
+    		nodeTypes.addAll(node.getNodeTypes());
+    	} else {
+    		for (String nodeType : node.getNodeTypes()) {
+        		addNodeType(nodeType);
+        	}
+    	}
     }
     
     public Set<Edge> getOtherBlankEdges(Set<Edge> blankEdges) {
