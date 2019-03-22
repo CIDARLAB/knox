@@ -344,36 +344,85 @@ public class Edge {
     }
     
     public void intersectWithEdge(Edge edge, int tolerance) {
+    	// Map other component IDs to roles and other component roles to IDs
+    	
     	ArrayList<String> otherComponentIDs = edge.getComponentIDs();
     	ArrayList<String> otherComponentRoles = edge.getComponentRoles();
     	
-    	Set<String> diffComponentIDs = new HashSet<String>(otherComponentIDs);
-    	Set<String> diffComponentRoles = new HashSet<String>(otherComponentRoles);
+    	HashMap<String, Set<String>> otherComponentIDToRoles = new HashMap<String, Set<String>>();
+    	HashMap<String, Set<String>> otherComponentRoleToIDs = new HashMap<String, Set<String>>();
+    	
+    	for (int i = 0; i < otherComponentIDs.size(); i++) {
+    		if (!otherComponentIDToRoles.containsKey(otherComponentIDs.get(i))) {
+    			otherComponentIDToRoles.put(otherComponentIDs.get(i), new HashSet<String>());
+    		}
 
+    		otherComponentIDToRoles.get(otherComponentIDs.get(i)).add(otherComponentRoles.get(i));
+    		
+    		if (!otherComponentRoleToIDs.containsKey(otherComponentRoles.get(i))) {
+    			otherComponentRoleToIDs.put(otherComponentRoles.get(i), new HashSet<String>());
+    		}
+
+    		otherComponentRoleToIDs.get(otherComponentRoles.get(i)).add(otherComponentIDs.get(i));
+    	}
+    	
+    	// Remove non-intersecting component IDs and roles
+    	
     	for (int i = 0; i < componentRoles.size(); i++) {
     		if (i < componentIDs.size()) {
-    			if (diffComponentIDs.contains(componentIDs.get(i))) {
-    				if (!componentRoles.get(i).equals(otherComponentRoles.get(i))) {
-    					componentIDs.add(0, otherComponentIDs.get(i));
-    					componentRoles.add(0, otherComponentRoles.get(i));
+    			if (!otherComponentIDToRoles.containsKey(componentIDs.get(i)) 
+    					&& (tolerance < 2 || !otherComponentRoleToIDs.containsKey(componentRoles.get(i)))) {
+    				componentIDs.remove(i);
+        			componentRoles.remove(i);
+
+        			i = i - 1;
+    			}
+    		} else if (tolerance < 2 || !otherComponentRoleToIDs.containsKey(componentRoles.get(i))) {
+    			componentRoles.remove(i);
+
+    			i = i - 1;
+    		}
+    	}
+    	
+    	// Map component IDs to roles
+    	
+    	HashMap<String, Set<String>> componentIDToRoles = new HashMap<String, Set<String>>();
+
+    	for (int i = 0; i < componentIDs.size(); i++) {
+    		if (!componentIDToRoles.containsKey(componentIDs.get(i))) {
+    			componentIDToRoles.put(componentIDs.get(i), new HashSet<String>());
+    		}
+
+    		componentIDToRoles.get(componentIDs.get(i)).add(componentRoles.get(i));
+    	}
+    	
+    	// Add missing component roles associated with intersecting component IDs
+
+    	for (String componentID : componentIDToRoles.keySet()) {
+    		for (String otherComponentRole : otherComponentIDToRoles.get(componentID)) {
+    			if (!componentIDToRoles.get(componentID).contains(otherComponentRole)) {
+    				componentIDs.add(0, componentID);
+        			componentRoles.add(0, otherComponentRole);
+    			}
+    		}
+    	}
+    	
+    	// Add missing component IDs associated with intersecting component roles
+    	
+    	if (tolerance >= 2) {
+    		for (int i = componentIDs.size(); i < componentRoles.size(); i++) {
+    			if (otherComponentRoleToIDs.containsKey(componentRoles.get(i))) {
+    				for (String otherComponentID : otherComponentRoleToIDs.get(componentRoles.get(i))) {
+    					componentIDs.add(0, otherComponentID);
+    					componentRoles.add(0, componentRoles.get(i));
 
     					i = i + 1;
     				}
-    			} else if (tolerance >= 2 && diffComponentRoles.contains(componentRoles.get(i))) {
-    				componentIDs.add(0, otherComponentIDs.get(i));
-    				componentRoles.add(0, otherComponentRoles.get(i));
-
-    				i = i + 1;
-    			} else {
-    				componentIDs.remove(i);
+    				
     				componentRoles.remove(i);
 
     				i = i - 1;
     			}
-    		} else if (!diffComponentRoles.contains(componentRoles.get(i))) {
-    			componentRoles.remove(i);
-
-    			i = i - 1;
     		}
     	}
     }

@@ -14,7 +14,6 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.operations.JoinOperator;
 import knox.spring.data.neo4j.operations.OROperator;
 import knox.spring.data.neo4j.operations.RepeatOperator;
-import knox.spring.data.neo4j.operations.Union;
 
 public class SBOLConversion {
 
@@ -162,13 +161,22 @@ public class SBOLConversion {
 
 	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent){
 		ArrayList<String> atomIDs = new ArrayList<>();
-		Set<String> atomRolesSet = new HashSet<>();
+		ArrayList<String> atomRoles = new ArrayList<>();
+		
+		ComponentDefinition variable = variableComponent.getVariable().getDefinition();
 
 		// Find variant roles
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
-			for (String role : convertSOIdentifiersToNames(variableComponent.getVariable().getDefinition().getRoles())) {
-				atomIDs.add(variant.getDisplayId());
-				atomRolesSet.add(role);
+			if (variant.getRoles().isEmpty()) {
+				for (URI role : variable.getRoles()) {
+					atomIDs.add(variant.getIdentity().toString());
+					atomRoles.add(role.toString());
+				}
+			} else {
+				for (URI role : variant.getRoles()) {
+					atomIDs.add(variant.getIdentity().toString());
+					atomRoles.add(role.toString());
+				}
 			}
 		}
 
@@ -177,16 +185,21 @@ public class SBOLConversion {
 			for (TopLevel member: collection.getMembers()){
 				if (member.getClass() == ComponentDefinition.class){
 					ComponentDefinition def = (ComponentDefinition) member;
-					for (String role : convertSOIdentifiersToNames(def.getRoles())) {
-						atomIDs.add(def.getDisplayId());
-						atomRolesSet.add(role);
+					
+					if (def.getRoles().isEmpty()) {
+						for (URI role : variable.getRoles()) {
+							atomIDs.add(def.getIdentity().toString());
+							atomRoles.add(role.toString());
+						}
+					} else {
+						for (URI role : def.getRoles()) {
+							atomIDs.add(def.getIdentity().toString());
+							atomRoles.add(role.toString());
+						}
 					}
 				}
 			}
 		}
-
-		//convert set to list
-		ArrayList<String> atomRoles = new ArrayList<>(atomRolesSet);
 
 		//create space
 		List<NodeSpace> inputSpace = new LinkedList<>();
@@ -237,11 +250,12 @@ public class SBOLConversion {
 
 			for (int i = 0; i < leafDefs.size(); i++) {
 				ArrayList<String> compIDs = new ArrayList<String>();
-
-				compIDs.add(leafDefs.get(i).getIdentity().toString());
-
-				ArrayList<String> compRoles = new ArrayList<String>(
-						convertSOIdentifiersToNames(leafDefs.get(i).getRoles()));
+				ArrayList<String> compRoles = new ArrayList<String>();
+				
+				for (URI role : leafDefs.get(i).getRoles()) {
+					compIDs.add(leafDefs.get(i).getIdentity().toString());
+					compRoles.add(role.toString());
+				}
 
 				Node nextNode;
 
@@ -372,36 +386,4 @@ public class SBOLConversion {
 		}
     	return dnaCompDefs;
     }
-	
-	private static Set<String> convertSOIdentifiersToNames(Set<URI> soIdentifiers) {
-        Set<String> roleNames = new HashSet<String>();
-        
-        if (soIdentifiers.isEmpty()) {
-            roleNames.add("sequence_feature");
-        } else {
-            SequenceOntology so = new SequenceOntology();
-
-            for (URI soIdentifier : soIdentifiers) {
-                if (soIdentifier.equals(SequenceOntology.PROMOTER)) {
-                    roleNames.add("promoter");
-                } else if (soIdentifier.equals(so.getURIbyId("SO:0000374"))) {
-                    roleNames.add("ribozyme");
-                } else if (soIdentifier.equals(SequenceOntology.INSULATOR)) {
-                    roleNames.add("insulator");
-                } else if (soIdentifier.equals(
-                               SequenceOntology.RIBOSOME_ENTRY_SITE)) {
-                    roleNames.add("ribosome_entry_site");
-                } else if (soIdentifier.equals(SequenceOntology.CDS)) {
-                    roleNames.add("CDS");
-                } else if (soIdentifier.equals(SequenceOntology.TERMINATOR)) {
-                    roleNames.add("terminator");
-                } else {
-                    roleNames.add("sequence_feature");
-                }
-            }
-        }
-        
-        return roleNames;
-    }
-
 }

@@ -16,8 +16,8 @@
    height="0.5in"
    id="svg2"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="operator.svg"
-   inkscape:export-filename="/Users/jakebeal/projects/SBOL/SBOLv-realizations/Glyphs/operator/operator-specification.png"
+   sodipodi:docname="specific-recombination-site.svg"
+   inkscape:export-filename="/Users/jakebeal/projects/SBOL/SBOLv-realizations/Glyphs/inverter/inverter-specification.png"
    inkscape:export-xdpi="300"
    inkscape:export-ydpi="300"><metadata
      id="metadata12"><rdf:RDF><cc:Work
@@ -31,14 +31,14 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1009"
-     inkscape:window-height="744"
+     inkscape:window-width="922"
+     inkscape:window-height="720"
      id="namedview10"
      showgrid="false"
      units="in"
-     inkscape:zoom="9.44"
+     inkscape:zoom="13.350176"
      inkscape:cx="25"
-     inkscape:cy="24.576271"
+     inkscape:cy="26.030279"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
@@ -53,8 +53,7 @@
         stroke-linejoin: round;
         fill: none
       }]]></style></defs><path
-     d="m 12.499997,12.499997 0,20 20,0 0,-20"
+     d="m 12.50009,32.499997 20,-10 -20,-10 0,20 z"
      id="path8"
      inkscape:connector-curvature="0"
-     style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
-     sodipodi:nodetypes="cccc" /></svg>
+     style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round" /></svg>
