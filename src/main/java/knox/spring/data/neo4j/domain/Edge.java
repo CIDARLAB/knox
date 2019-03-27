@@ -457,7 +457,7 @@ public class Edge {
     }
     
     public boolean isMatching(Edge edge, int tolerance, Set<String> roles) {
-    	return hasSameOrientation(edge) && (roles.isEmpty() || hasSharedComponentRoles(edge, roles))
+    	return hasSameOrientation(edge)
     			&& (hasSharedComponentIDs(edge) || tolerance >= 2 && hasSharedComponentRoles(edge, roles));
     }
     

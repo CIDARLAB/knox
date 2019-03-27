@@ -32,12 +32,6 @@ public class ANDOperator {
 			}
 		}
 		
-//		for (NodeSpace ns : inputSpaces) {
-//			LOG.info(ns.toString());
-//		}
-//		
-//		LOG.info("---");
-		
 		if (product.getSpace().hasNodes()) {
 			Union union = new Union(product.getSpace());
 
