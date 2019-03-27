@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
+import knox.spring.data.neo4j.sbol.SBOLConversion;
 import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import org.sbolstandard.core2.SBOLConversionException;
@@ -636,7 +638,7 @@ public class KnoxController {
 
     @RequestMapping(value = "/sbol/import", method = RequestMethod.POST)
     public ResponseEntity<String> importSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
     	List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
     	
     	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
@@ -652,32 +654,6 @@ public class KnoxController {
     	
     	try {
 			designSpaceService.importSBOL(sbolDocs, outputSpaceID);
-		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
- 
-        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
-    }
-    
-    @RequestMapping(value = "/sbol/importCombinatorial", method = RequestMethod.POST)
-    public ResponseEntity<String> importCombinatorialSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
-    		@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID) {
-    	List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
-    	
-    	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
-    		if (!inputSBOLFile.isEmpty()) {
-    			try {
-    				sbolDocs.add(SBOLReader.read(inputSBOLFile.getInputStream()));
-				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-    		}
-    	}
-    	
-    	try {
-			designSpaceService.importCombinatorialSBOL(sbolDocs, outputSpaceID);
 		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
