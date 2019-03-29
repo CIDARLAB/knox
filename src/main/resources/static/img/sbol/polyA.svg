@@ -16,8 +16,8 @@
    height="0.5in"
    id="svg2"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="operator.svg"
-   inkscape:export-filename="/Users/jakebeal/projects/SBOL/SBOLv-realizations/Glyphs/operator/operator-specification.png"
+   sodipodi:docname="polyA.svg"
+   inkscape:export-filename="polyA-specification.png"
    inkscape:export-xdpi="300"
    inkscape:export-ydpi="300"><metadata
      id="metadata12"><rdf:RDF><cc:Work
@@ -31,8 +31,8 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1009"
-     inkscape:window-height="744"
+     inkscape:window-width="942"
+     inkscape:window-height="693"
      id="namedview10"
      showgrid="false"
      units="in"
@@ -52,9 +52,15 @@
         stroke-linecap: round;
         stroke-linejoin: round;
         fill: none
-      }]]></style></defs><path
-     d="m 12.499997,12.499997 0,20 20,0 0,-20"
-     id="path8"
-     inkscape:connector-curvature="0"
-     style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"
-     sodipodi:nodetypes="cccc" /></svg>
+      }]]></style></defs><text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:16.15233421px;line-height:125%;font-family:Arial;-inkscape-font-specification:'Sans Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="22.535488"
+     y="28.281082"
+     id="text4134"
+     sodipodi:linespacing="125%"><tspan
+       sodipodi:role="line"
+       id="tspan4136"
+       x="22.535488"
+       y="28.281082">AAA</tspan></text>
+</svg>

@@ -1,20 +1,10 @@
 package knox.spring.data.neo4j.sbol;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-import org.sbolstandard.core2.Component;
-import org.sbolstandard.core2.ComponentDefinition;
-import org.sbolstandard.core2.Location;
-import org.sbolstandard.core2.Range;
-import org.sbolstandard.core2.SBOLDocument;
-import org.sbolstandard.core2.Sequence;
-import org.sbolstandard.core2.SequenceAnnotation;
-import org.sbolstandard.core2.SequenceOntology;
+import org.sbolstandard.core2.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,110 +14,274 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.operations.JoinOperator;
 import knox.spring.data.neo4j.operations.OROperator;
 import knox.spring.data.neo4j.operations.RepeatOperator;
-import knox.spring.data.neo4j.operations.Union;
 
 public class SBOLConversion {
-	
-	List<SBOLDocument> sbolDocs;
+
+	private List<SBOLDocument> sbolDocs;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SBOLConversion.class);
-	
-	public SBOLConversion(List<SBOLDocument> sbolDocs) {
+
+	public List<SBOLDocument> getSbolDoc() {
+		return sbolDocs;
+	}
+
+	public void setSbolDoc(List<SBOLDocument> sbolDocs) {
 		this.sbolDocs = sbolDocs;
 	}
-	
-	public DesignSpace convertCombinatorialSBOLToSpace(String outputSpaceID) {
-		// Create a list of component IDs and a list of component roles and use them to create a node space with a single edge for each atom
-		// Should replace with code that extracts this information from sbolDocs
-		
-		ArrayList<String> atom1IDs = new ArrayList<String>();
-		atom1IDs.add("pTac");
-		
-		ArrayList<String> atom1Roles = new ArrayList<String>();
-		atom1Roles.add("promoter");
-		
-		ArrayList<String> atom2IDs = new ArrayList<String>();
-		atom1IDs.add("gfp");
-		
-		ArrayList<String> atom2Roles = new ArrayList<String>();
-		atom1Roles.add("CDS");
-		
-		List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
-		
-		inputSpaces.add(new NodeSpace(atom1IDs, atom1Roles));
-		inputSpaces.add(new NodeSpace(atom2IDs, atom2Roles));
-		
-		// Create output space and apply operators based on combinatorial SBOL
-		// Should replace with code that extracts this information from sbolDocs
-		// The final output should be a design space rather than a node space so that version history can be added to it
-		
-		DesignSpace outputSpace = new DesignSpace(outputSpaceID);
-		
-		JoinOperator.apply(inputSpaces, outputSpace); // Note that an input space can also be the output space of an operator - its graph will be overwritten by the result of applying the operator
-		
-		// Create version history for output design space - single branch and single commit that captures result of conversion
-		
-		outputSpace.createHeadBranch(outputSpaceID);
-		
-		outputSpace.commitToHead();
-		
-		return outputSpace;
+
+	/**
+	 * Iterates through all the uploaded SBOL documents and
+	 * calls the appropriate SBOL parser by checking for CombinatorialDerivations
+	 * @return
+	 */
+	public List<DesignSpace> convertSBOLsToSpaces(){
+
+		List<DesignSpace> allOutputSpaces = new ArrayList<>();
+
+		for(SBOLDocument sbolDoc: sbolDocs){
+			Set<CombinatorialDerivation> derivations = sbolDoc.getCombinatorialDerivations();
+			if (derivations.isEmpty()){
+				allOutputSpaces.addAll(convertSBOL(sbolDoc));
+			}
+
+			allOutputSpaces.addAll(convertCombinatorialSBOL(sbolDoc));
+		}
+
+		return allOutputSpaces;
 	}
-	
-	public DesignSpace convertSBOLToSpace(String outputSpaceID) {
-		NodeSpace unionSpace = new NodeSpace(0);
-		
-		for (SBOLDocument sbolDoc : sbolDocs) {
-    		Set<ComponentDefinition> rootDefs = getRootDNAComponentDefinitions(sbolDoc);
 
-    		for (ComponentDefinition rootDef : rootDefs) {
-    			List<ComponentDefinition> leafDefs = flattenComponentDefinition(rootDef);
+	/**
+	 * Creates one outputSpace per root CombinatorialDerivation
+	 * @param sbolDoc
+	 * @return list of design spaces
+	 */
+	private List<DesignSpace> convertCombinatorialSBOL(SBOLDocument sbolDoc) {
 
-    			Node currentNode = unionSpace.createStartNode();
+		List<DesignSpace> outputSpaces = new ArrayList<>();
+		Set<CombinatorialDerivation> rootCVs = getRootCombinatorialDerivation(sbolDoc);
 
-    			for (int i = 0; i < leafDefs.size(); i++) {
-    				ArrayList<String> compIDs = new ArrayList<String>();
+		for(CombinatorialDerivation rootCV: rootCVs){
+			//iterate through variable components
+			List<NodeSpace> inputSpace = recurseVariableComponents(rootCV);
 
-    				compIDs.add(leafDefs.get(i).getIdentity().toString());
+			DesignSpace outputSpace = new DesignSpace(rootCV.getDisplayId());
+			JoinOperator.apply(inputSpace, outputSpace);
 
-    				ArrayList<String> compRoles = new ArrayList<String>(
-    						convertSOIdentifiersToNames(leafDefs.get(i).getRoles()));
-
-    				Node nextNode;
-    				
-    				if (i < leafDefs.size() - 1) {
-    					nextNode = unionSpace.createNode();
-    				} else {
-    					nextNode = unionSpace.createAcceptNode();
-    				}
-
-    				currentNode.createEdge(nextNode, compIDs, compRoles);
-
-    				currentNode = nextNode;
-    			}
-    			
-    		}
-    	}
-		
-		DesignSpace outputSpace = new DesignSpace(outputSpaceID);
-		
-		if (unionSpace.getNumStartNodes() > 1) {
-			Union union = new Union(unionSpace);
-
-			union.apply();
-
-			union.getSpace().minimizeEdges();
-			
-			outputSpace.shallowCopyNodeSpace(union.getSpace());
-		} else {
-			outputSpace.shallowCopyNodeSpace(unionSpace);
+			// Create version history for output design space - single branch and single commit that captures result of conversion
+			outputSpace.createHeadBranch(rootCV.getDisplayId());
+			outputSpace.commitToHead();
+			outputSpaces.add(outputSpace);
 		}
 		
-		outputSpace.createHeadBranch(outputSpaceID);
+		return outputSpaces;
+	}
+
+	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation){
+		List<NodeSpace> inputSpace = new LinkedList<>();
+
+		// order components by sequence constraints
+		VariableComponent[] sortedVCs = sortVariableComponents(combinatorialDerivation);
+		for (VariableComponent variableComponent : sortedVCs) {
+
+			// recurse through variant derivations
+			Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
+
+			Boolean hasVariants = !variableComponent.getVariants().isEmpty() || !variableComponent.getVariantCollections().isEmpty();
+
+			//handle structure for just repeats
+			if (variantDerivs.size() == 1 && !hasVariants){
+				for (CombinatorialDerivation cv : variantDerivs) {
+					inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+				}
+			}
+
+			//else handle collapsed complex ORs
+			else if (variantDerivs.size() > 0){
+				List<NodeSpace> orSpace = new LinkedList<>();
+				NodeSpace outputSpace = new NodeSpace();
+
+				if (hasVariants){
+					orSpace.add(createNodeSpaceFromVariableComponent(variableComponent)); //add variants
+				}
+
+				for (CombinatorialDerivation cv : variantDerivs) {
+					orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv)));
+				}
+
+				OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
+				List<NodeSpace> tempSpace = new LinkedList<>();
+				tempSpace.add(outputSpace);
+				inputSpace.add(applyOperator(variableComponent.getOperator(), tempSpace));
+			}
+
+			else if (hasVariants){
+				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
+			}
+		}
+
+		return inputSpace;
+	}
+
+	private VariableComponent[] sortVariableComponents(CombinatorialDerivation combinatorialDerivation){
+		//make ordered components from sequence constraints
+		List<Component> orderedComponents = new ArrayList<>();
+		Set<SequenceConstraint> seqConstraints = combinatorialDerivation.getTemplate().getSequenceConstraints();
+		for (SequenceConstraint constraint : seqConstraints) {
+			//subject precedes object
+			Component subject = constraint.getSubject();
+			Component object = constraint.getObject();
+			int subIndex = orderedComponents.indexOf(subject);
+			int objIndex = orderedComponents.indexOf(object);
+			if (subIndex == -1 && objIndex == -1){
+				orderedComponents.add(subject);
+				orderedComponents.add(object);
+			}else if(subIndex > -1){
+				orderedComponents.add(subIndex+1, object);
+			}else if(objIndex > -1){
+				orderedComponents.add(objIndex, subject);
+			}
+		}
+
+		//order variable components based on components array
+		VariableComponent[] orderedVCs;
+		Set<VariableComponent> vcSet = combinatorialDerivation.getVariableComponents();
+		if (vcSet.size() > 1){
+			orderedVCs = new VariableComponent[orderedComponents.size()];
+			for (VariableComponent variableComponent : vcSet) {
+				int index = orderedComponents.indexOf(variableComponent.getVariable());
+				orderedVCs[index] = variableComponent;
+			}
+		}else{
+			orderedVCs = new VariableComponent[1];
+			orderedVCs[0] = vcSet.iterator().next();
+		}
+
+		return orderedVCs;
+	}
+
+	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent){
+		ArrayList<String> atomIDs = new ArrayList<>();
+		ArrayList<String> atomRoles = new ArrayList<>();
 		
-		outputSpace.commitToHead();
-		
+		ComponentDefinition variable = variableComponent.getVariable().getDefinition();
+
+		// Find variant roles
+		for (ComponentDefinition variant : variableComponent.getVariants()) {
+			if (variant.getRoles().isEmpty()) {
+				for (URI role : variable.getRoles()) {
+					atomIDs.add(variant.getIdentity().toString());
+					atomRoles.add(role.toString());
+				}
+			} else {
+				for (URI role : variant.getRoles()) {
+					atomIDs.add(variant.getIdentity().toString());
+					atomRoles.add(role.toString());
+				}
+			}
+		}
+
+		// Find collection roles
+		for (org.sbolstandard.core2.Collection collection : variableComponent.getVariantCollections()) {
+			for (TopLevel member: collection.getMembers()){
+				if (member.getClass() == ComponentDefinition.class){
+					ComponentDefinition def = (ComponentDefinition) member;
+					
+					if (def.getRoles().isEmpty()) {
+						for (URI role : variable.getRoles()) {
+							atomIDs.add(def.getIdentity().toString());
+							atomRoles.add(role.toString());
+						}
+					} else {
+						for (URI role : def.getRoles()) {
+							atomIDs.add(def.getIdentity().toString());
+							atomRoles.add(role.toString());
+						}
+					}
+				}
+			}
+		}
+
+		//create space
+		List<NodeSpace> inputSpace = new LinkedList<>();
+		inputSpace.add(new NodeSpace(atomIDs, atomRoles));
+
+		//check operator
+		return applyOperator(variableComponent.getOperator(), inputSpace);
+	}
+
+	private NodeSpace applyOperator(OperatorType operator, List<NodeSpace> inputSpace){
+		NodeSpace outputSpace = new NodeSpace();
+
+		if (operator == OperatorType.ONEORMORE){
+			RepeatOperator.apply(inputSpace, outputSpace, false);
+		}
+		if (operator == OperatorType.ZEROORMORE){
+			RepeatOperator.apply(inputSpace, outputSpace, true);
+		}
+		if (operator == OperatorType.ZEROORONE){
+			inputSpace.add(new NodeSpace(new ArrayList<String>(), new ArrayList<String>()));
+			
+			OROperator.apply(inputSpace, outputSpace);
+		}
+		if (operator == OperatorType.ONE){
+			JoinOperator.apply(inputSpace, outputSpace);
+		}
 		return outputSpace;
+	}
+
+	private Set<CombinatorialDerivation> getRootCombinatorialDerivation(SBOLDocument doc){
+		Set<CombinatorialDerivation> derivations = doc.getCombinatorialDerivations();
+		for (CombinatorialDerivation combDerivation : doc.getCombinatorialDerivations()) {
+			for (VariableComponent vc: combDerivation.getVariableComponents()){
+				derivations.removeAll(vc.getVariantDerivations());
+			}
+		}
+		return derivations;
+	}
+
+	private List<DesignSpace> convertSBOL(SBOLDocument sbolDoc) {
+		List<DesignSpace> outputSpaces = new ArrayList<>();
+		Set<ComponentDefinition> rootDefs = getRootDNAComponentDefinitions(sbolDoc);
+
+		for (ComponentDefinition rootDef : rootDefs) {
+			List<ComponentDefinition> leafDefs = flattenComponentDefinition(rootDef);
+			NodeSpace unionSpace = new NodeSpace(0);
+			Node currentNode = unionSpace.createStartNode();
+
+			for (int i = 0; i < leafDefs.size(); i++) {
+				ArrayList<String> compIDs = new ArrayList<String>();
+				ArrayList<String> compRoles = new ArrayList<String>();
+				
+				for (URI role : leafDefs.get(i).getRoles()) {
+					compIDs.add(leafDefs.get(i).getIdentity().toString());
+					compRoles.add(role.toString());
+				}
+
+				Node nextNode;
+
+				if (i < leafDefs.size() - 1) {
+					nextNode = unionSpace.createNode();
+				} else {
+					nextNode = unionSpace.createAcceptNode();
+				}
+
+				currentNode.createEdge(nextNode, compIDs, compRoles);
+
+				currentNode = nextNode;
+			}
+
+			// create a separate design space per root CD
+			DesignSpace outputSpace = new DesignSpace(rootDef.getDisplayId());
+			outputSpace.shallowCopyNodeSpace(unionSpace);
+
+			// create version history
+			outputSpace.createHeadBranch(rootDef.getDisplayId());
+			outputSpace.commitToHead();
+
+			outputSpaces.add(outputSpace);
+		}
+
+		return outputSpaces;
 	}
 	
 	private static List<ComponentDefinition> flattenComponentDefinition(ComponentDefinition rootDef) {
@@ -232,36 +386,4 @@ public class SBOLConversion {
 		}
     	return dnaCompDefs;
     }
-	
-	private static Set<String> convertSOIdentifiersToNames(Set<URI> soIdentifiers) {
-        Set<String> roleNames = new HashSet<String>();
-        
-        if (soIdentifiers.isEmpty()) {
-            roleNames.add("engineered_region");
-        } else {
-            SequenceOntology so = new SequenceOntology();
-
-            for (URI soIdentifier : soIdentifiers) {
-                if (soIdentifier.equals(SequenceOntology.PROMOTER)) {
-                    roleNames.add("promoter");
-                } else if (soIdentifier.equals(so.getURIbyId("SO:0000374"))) {
-                    roleNames.add("ribozyme");
-                } else if (soIdentifier.equals(SequenceOntology.INSULATOR)) {
-                    roleNames.add("insulator");
-                } else if (soIdentifier.equals(
-                               SequenceOntology.RIBOSOME_ENTRY_SITE)) {
-                    roleNames.add("ribosome_entry_site");
-                } else if (soIdentifier.equals(SequenceOntology.CDS)) {
-                    roleNames.add("CDS");
-                } else if (soIdentifier.equals(SequenceOntology.TERMINATOR)) {
-                    roleNames.add("terminator");
-                } else {
-                    roleNames.add("engineered_region");
-                }
-            }
-        }
-        
-        return roleNames;
-    }
-
 }

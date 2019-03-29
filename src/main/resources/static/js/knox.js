@@ -187,30 +187,71 @@ function longestListLength(listoflists) {
 export function getSBOLImage(role){
   const sbolpath = "./img/sbol/";
   switch (role) {
-    case "promoter":
-    case "terminator":
-    case "CDS":
-    case "restriction_enzyme_assembly_scar":
-    case "restriction_enzyme_recognition_site":
-    case "protein_stability_element":
-    case "blunt_end_restriction_enzyme_cleavage_site":
-    case "ribonuclease_site":
-    case "restriction_enzyme_five_prime_single_strand_overhang":
-    case "ribosome_entry_site":
-    case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
-    case "RNA_stability_element":
-    case "ribozyme":
-    case "insulator":
-    case "signature":
-    case "operator":
-    case "origin_of_replication":
-    case "restriction_enzyme_three_prime_single_strand_overhang":
-    case "primer_binding_site":
-    case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
-    case "protease_site":
-      return sbolpath + role + ".svg";
+    case "http://identifiers.org/so/SO:0000031":
+      return sbolpath + "aptamer.svg";
+    case "http://identifiers.org/so/SO:0001953":
+      return sbolpath + "assembly-scar.svg";
+    case "http://identifiers.org/so/SO:0001691":
+      return sbolpath + "blunt-restriction-site.svg";
+    case "http://identifiers.org/so/SO:0000316":
+      return sbolpath + "cds.svg";
+    case "http://identifiers.org/so/SO:0001955":
+      return sbolpath + "dna-stability-element.svg";
+    case "http://identifiers.org/so/SO:0000804":
+      return sbolpath + "engineered-region.svg";
+    case "http://identifiers.org/so/SO:0001932":
+      return sbolpath + "five-prime-overhang.svg";
+    case "http://identifiers.org/so/SO:0001975":
+      return sbolpath + "five-prime-sticky-restriction-site.svg";
+    case "http://identifiers.org/so/SO:0000627":
+      return sbolpath + "insulator.svg";
+    case "http://identifiers.org/so/SO:0001263":
+    case "http://identifiers.org/so/SO:0000834":
+      return sbolpath + "ncrna.svg";
+    case "http://identifiers.org/so/SO:0001688":
+    case "http://identifiers.org/so/SO:0001687":
+      return sbolpath + "nuclease-site.svg";
+    case "http://identifiers.org/so/SO:0000057":
+    case "http://identifiers.org/so/SO:0000409":
+      return sbolpath + "operator.svg";
+    case "http://identifiers.org/so/SO:0000296":
+      return sbolpath + "origin-of-replication.svg";
+    case "http://identifiers.org/so/SO:0000724":
+      return sbolpath + "origin-of-transfer.svg";
+    case "http://identifiers.org/so/SO:0000553":
+      return sbolpath + "polyA.svg";
+    case "http://identifiers.org/so/SO:0005850":
+      return sbolpath + "primer-binding-site.svg";
+    case "http://identifiers.org/so/SO:0000167":
+      return sbolpath + "promoter.svg";
+    case "http://identifiers.org/so/SO:0001956":
+      return sbolpath + "protease-site.svg";
+    case "http://identifiers.org/so/SO:0001546":
+      return sbolpath + "protein-stability-element.svg";
+    case "http://identifiers.org/so/SO:0001977":
+      return sbolpath + "ribonuclease-site.svg";
+    case "http://identifiers.org/so/SO:0000139":
+      return sbolpath + "ribosome-entry-site.svg";
+    case "http://identifiers.org/so/SO:0001979":
+      return sbolpath + "rna-stability-element.svg";
+    case "http://identifiers.org/so/SO:0001978":
+      return sbolpath + "signature.svg";
+    case "http://identifiers.org/so/SO:0000299":
+      return sbolpath + "specific-recombination-site.svg";
+    case "http://identifiers.org/so/SO:0000141":
+      return sbolpath + "terminator.svg";
+    case "http://identifiers.org/so/SO:0001933":
+      return sbolpath + "three-prime-overhang.svg";
+    case "http://identifiers.org/so/SO:0001976":
+      return sbolpath + "three-prime-sticky-restriction-site.svg";
+    case "http://identifiers.org/so/SO:0000616":
+      return sbolpath + "transcription-end.svg";
+    case "http://identifiers.org/so/SO:0000319":
+    case "http://identifiers.org/so/SO:0000327":
+      return sbolpath + "translation-end.svg";
+
     default:
-      return sbolpath + "user_defined.svg";
+      return sbolpath + "no-glyph-assigned.svg";
   }
 }
 
