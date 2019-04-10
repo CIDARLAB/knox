@@ -334,17 +334,8 @@ $('#enumerate-designs-tooltip').click(() => {
   let loadingDiv = document.createElement('div');
   loadingDiv.appendChild(document.createTextNode("Loading..."));
 
-  //svg div
-  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.style.display = "block";
-
   //append all
   div.appendChild(loadingDiv);
-  div.appendChild(svg);
-
-  //save x and y max values
-  let maxX = 0;
-  let maxY = 0;
 
   swal({
     title: "Designs",
@@ -353,77 +344,25 @@ $('#enumerate-designs-tooltip').click(() => {
   });
 
   endpoint.enumerateDesigns(currentSpace, (err, data) => {
-    console.log(data);
     if (err) {
       swalError("Enumeration error: " + JSON.stringify(err));
     } else {
       div.removeChild(loadingDiv);
-
-      const celHeight = 80;
-      const celWidth = 50;
-      var pen = { x: 0, y: 0 };
-
+      let para = document.createElement("p");
       data.map((list) => {
-        list.map((element) => {
-
-          var svgimg = document.createElementNS("http://www.w3.org/2000/svg", "image");
-          svgimg.setAttribute("height", "100");
-          svgimg.setAttribute("width", "100");
-          svgimg.style.display = "block";
-          svgimg.setAttributeNS(
-            "http://www.w3.org/1999/xlink",
-            "href", getSBOLImage(element.roles[0]));
-          svgimg.setAttribute("x", "" + pen.x);
-          svgimg.setAttribute("y", "" + pen.y);
-          $(svgimg).tooltipster({
-            content: element.id
-          });
-          svg.appendChild(svgimg);
-
-          var svgtext = document.createElementNS("http://www.w3.org/2000/svg", "text");
-          svgtext.setAttribute("height", "100");
-          svgtext.setAttribute("width", "100");
-          svgtext.setAttribute("id", "testimg2");
-          svgtext.setAttribute("font-family", "sans-serif");
-          svgtext.setAttribute("font-size", "10px");
-          svgtext.setAttribute("fill", "black");
-
-          let text = element.id;
-          if (text.length > 10) {
-            text = text.substring(0, 7) + '...';
+        para.appendChild(document.createTextNode("["));
+        const length = list.length;
+        list.map((element, i) => {
+          para.appendChild(document.createTextNode(element.id));
+          if (length !== i+1){
+            para.appendChild(document.createTextNode(","));
           }
-          svgtext.textContent = text;
-
-          svgtext.style.display = "block";
-          svgtext.setAttribute("x", "" + (pen.x + 0.40*celWidth));
-          if (element.roles[0] === "CDS") {
-            svgtext.setAttribute("y", "" + (pen.y + 1.1*celHeight));
-          } else {
-            svgtext.setAttribute("y", "" + (pen.y + celHeight));
-          }
-          svg.appendChild(svgtext);
-          pen.x += celWidth;
         });
-
-        var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("stroke", "black");
-        line.setAttribute("stroke-width", "4");
-        line.setAttribute("x1", "" + 0);
-        line.setAttribute("y1", "" + (pen.y + celWidth));
-        line.setAttribute("x2", "" + (pen.x + celWidth));
-        line.setAttribute("y2", "" + (pen.y + celWidth));
-        svg.appendChild(line);
-
-        pen.y += celHeight;
-
-        maxY = Math.max(pen.y + celHeight, maxY);
-        maxX = Math.max(pen.x + celWidth, maxX);
-
-        pen.x = 0;
+        para.appendChild(document.createTextNode("]"));
+        para.appendChild(document.createElement('br'));
       });
 
-      svg.setAttribute("height", maxY);
-      svg.setAttribute("width", maxX);
+      div.appendChild(para);
     }
   });
 
