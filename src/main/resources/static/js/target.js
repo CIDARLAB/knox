@@ -84,9 +84,9 @@ export default class Target{
       })
       .attr("r", 7).call(force.drag);
 
-    const sbolImgSize = 50;
+    const sbolImgSize = 30;
 
-    var images = linksEnter.append("svg:image")
+    let images = linksEnter.append("svg:image")
       .attr("height", sbolImgSize)
       .attr("width", sbolImgSize)
       .attr("class", "sboltip")
@@ -142,8 +142,6 @@ export default class Target{
   }
 
   setHistory(graph){
-    console.log(graph);
-
     let zoom = d3.behavior.zoom()
       .scaleExtent([1, 10])
       .on("zoom", () => {
