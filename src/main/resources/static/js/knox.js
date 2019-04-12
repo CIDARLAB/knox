@@ -184,6 +184,13 @@ function longestListLength(listoflists) {
   return maxLength;
 }
 
+//split by / for SBOL identity
+//this may not work well with other import formats
+export function splitElementID(elementID){
+  let splitArr = elementID.split('/');
+  return splitArr.length > 1 ? splitArr[splitArr.length-2] : elementID;
+}
+
 export function getSBOLImage(role){
   const sbolpath = "./img/sbol/";
   switch (role) {
@@ -353,7 +360,8 @@ $('#enumerate-designs-tooltip').click(() => {
         para.appendChild(document.createTextNode("["));
         const length = list.length;
         list.map((element, i) => {
-          para.appendChild(document.createTextNode(element.id));
+          para.appendChild(document.createTextNode(splitElementID(element.id)));
+          //append comma if there are more elements
           if (length !== i+1){
             para.appendChild(document.createTextNode(","));
           }

@@ -1,5 +1,5 @@
 
-import {knoxClass, getSBOLImage} from "./knox.js";
+import {knoxClass, getSBOLImage, splitElementID} from "./knox.js";
 
 // The target class observes an SVG element on the page, and
 // provides methods for setting and clearing graph data. A variable
@@ -92,7 +92,16 @@ export default class Target{
       .attr("class", "sboltip")
       .attr("title", (d) => {
         if (d.hasOwnProperty("componentIDs")) {
-          return d["componentIDs"].toString();
+          let titleStr = "";
+          const length = d["componentIDs"].length;
+          for(let i=0; i<d["componentIDs"].length; i++){
+            titleStr += splitElementID(d["componentIDs"][i]);
+            if (length !== i+1){
+              titleStr += ",";
+            }
+          }
+
+          return titleStr;
         }
       })
       .attr("xlink:href", (d) => {
