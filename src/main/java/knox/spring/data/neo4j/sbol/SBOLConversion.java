@@ -167,16 +167,10 @@ public class SBOLConversion {
 
 		// Find variant roles
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
-			if (variant.getRoles().isEmpty()) {
-				for (URI role : variable.getRoles()) {
-					atomIDs.add(variant.getIdentity().toString());
-					atomRoles.add(role.toString());
-				}
-			} else {
-				for (URI role : variant.getRoles()) {
-					atomIDs.add(variant.getIdentity().toString());
-					atomRoles.add(role.toString());
-				}
+			Set<URI> roles = variant.getRoles().isEmpty()? variable.getRoles(): variant.getRoles();
+			for (URI role : roles) {
+				atomIDs.add(variant.getIdentity().toString());
+				atomRoles.add(role.toString());
 			}
 		}
 
@@ -185,17 +179,10 @@ public class SBOLConversion {
 			for (TopLevel member: collection.getMembers()){
 				if (member.getClass() == ComponentDefinition.class){
 					ComponentDefinition def = (ComponentDefinition) member;
-					
-					if (def.getRoles().isEmpty()) {
-						for (URI role : variable.getRoles()) {
-							atomIDs.add(def.getIdentity().toString());
-							atomRoles.add(role.toString());
-						}
-					} else {
-						for (URI role : def.getRoles()) {
-							atomIDs.add(def.getIdentity().toString());
-							atomRoles.add(role.toString());
-						}
+					Set<URI> roles = def.getRoles().isEmpty()? variable.getRoles(): def.getRoles();
+					for (URI role : roles) {
+						atomIDs.add(def.getIdentity().toString());
+						atomRoles.add(role.toString());
 					}
 				}
 			}
