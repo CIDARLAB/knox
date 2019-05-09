@@ -80,7 +80,7 @@ public class Node {
     
     public Edge copyEdge(Edge edge, Node head) {
     	return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
-    			new ArrayList<String>(edge.getComponentRoles()), edge.getOrientation());
+    			new ArrayList<>(edge.getComponentRoles()), edge.getOrientation());
     }
 
     public Edge createEdge(Node head) {
@@ -100,7 +100,7 @@ public class Node {
     }
     
     public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles,
-    		String orientation) {
+    						Edge.Orientation orientation) {
         Edge edge = new Edge(this, head, compIDs, compRoles, orientation);
         
         addEdge(edge);
@@ -278,7 +278,7 @@ public class Node {
     	return edgesWithHead;
     }
     
-    public Set<Edge> getEdges(String orientation) {
+    public Set<Edge> getEdges(Edge.Orientation orientation) {
     	Set<Edge> edgesWithHead = new HashSet<Edge>();
     	
     	if (hasEdges()) {
@@ -377,7 +377,7 @@ public class Node {
     		
     		for (Edge edge : edges) {
     			if (!edge.isBlank()) {
-    				String code = edge.getHeadID() + edge.getOrientation();
+    				String code = edge.getHeadID() + edge.getOrientation().getValue();
 
     				if (!codeToIncomingEdges.containsKey(code)) {
     					codeToIncomingEdges.put(code, new HashSet<Edge>());
@@ -388,7 +388,7 @@ public class Node {
     				List<List<Edge>> blankPaths = edge.getOrthogonalBlankPaths();
 
     				for (List<Edge> blankPath : blankPaths) {
-    					String code = blankPath.get(blankPath.size() - 1).getHead().getNodeID() + edge.getOrientation();
+    					String code = blankPath.get(blankPath.size() - 1).getHead().getNodeID() + edge.getOrientation().getValue();
 
     					if (!codeToIncomingPaths.containsKey(code)) {
     						codeToIncomingPaths.put(code, new HashSet<List<Edge>>());

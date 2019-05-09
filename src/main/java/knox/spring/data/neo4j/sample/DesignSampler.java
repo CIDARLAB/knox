@@ -238,7 +238,8 @@ public class DesignSampler {
 
 				comp.put("roles", edge.getComponentRoles());
 
-				comp.put("orientation", edge.getOrientation());
+//				comp.put("orientation", edge.getOrientation());
+				comp.put("orientation", edge.getOrientation().getValue()); //does this need to be string?
 
 				if (!designs.isEmpty()) {
 					for (List<Map<String, Object>> design : designs) {

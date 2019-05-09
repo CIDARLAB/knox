@@ -31,16 +31,14 @@ public class Edge {
     ArrayList<String> componentIDs;
     
     ArrayList<String> componentRoles;
-    
-    String orientation;
+
+    Orientation orientation;
 
     double weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Edge.class);
 
-    public Edge() {
-        
-    }
+    public Edge() {}
 
     public Edge(Node tail, Node head) {
         this.tail = tail;
@@ -51,13 +49,13 @@ public class Edge {
         
         componentRoles = new ArrayList<String>();
         
-        orientation = Orientation.NONE.getValue();
+        orientation = Orientation.NONE;
         
         weight = 1.0;
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
-            ArrayList<String> componentRoles) {
+                ArrayList<String> componentRoles) {
         this.tail = tail;
         
         this.head = head;
@@ -67,16 +65,16 @@ public class Edge {
         this.componentRoles = componentRoles;
         
         if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
-            orientation = Orientation.INLINE.getValue();
+            orientation = Orientation.INLINE;
         } else {
-            orientation = Orientation.NONE.getValue();
+            orientation = Orientation.NONE;
         }
         
         weight = 1.0;
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
-            ArrayList<String> componentRoles, String orientation) {
+                ArrayList<String> componentRoles, Orientation orientation) {
         this.tail = tail;
         
         this.head = head;
@@ -88,14 +86,14 @@ public class Edge {
         if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
             this.orientation = orientation;
         } else {
-            this.orientation = Orientation.NONE.getValue();
+            this.orientation = Orientation.NONE;
         }
         
         weight = 1.0;
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
-            ArrayList<String> componentRoles, String orientation, double weight) {
+            ArrayList<String> componentRoles, Orientation orientation, double weight) {
         this.tail = tail;
 
         this.head = head;
@@ -107,14 +105,14 @@ public class Edge {
         if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
             this.orientation = orientation;
         } else {
-            this.orientation = Orientation.NONE.getValue();
+            this.orientation = Orientation.NONE;
         }
 
         this.weight = weight;
     }
     
-    public Edge(ArrayList<String> componentIDs, ArrayList<String> componentRoles, String orientation, 
-            double weight) {
+    public Edge(ArrayList<String> componentIDs, ArrayList<String> componentRoles,
+                Orientation orientation, double weight) {
         this.componentIDs = componentIDs;
 
         this.componentRoles = componentRoles;
@@ -122,7 +120,7 @@ public class Edge {
         if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
             this.orientation = orientation;
         } else {
-            this.orientation = Orientation.NONE.getValue();
+            this.orientation = Orientation.NONE;
         }
 
         this.weight = weight;
@@ -130,17 +128,17 @@ public class Edge {
     
     public Edge copy() {
         return new Edge(new ArrayList<String>(componentIDs),
-                new ArrayList<String>(componentRoles), orientation, weight);
+                new ArrayList<>(componentRoles), orientation, weight);
     }
     
     public Edge copy(Node head) {
         return new Edge(tail, head, new ArrayList<String>(componentIDs),
-                new ArrayList<String>(componentRoles), orientation, weight);
+                new ArrayList<>(componentRoles), orientation, weight);
     }
 
     public Edge copy(Node tail, Node head) {
         return new Edge(tail, head, new ArrayList<String>(componentIDs),
-                new ArrayList<String>(componentRoles), orientation, weight);
+                new ArrayList<>(componentRoles), orientation, weight);
     }
     
     public void delete() {
@@ -335,14 +333,6 @@ public class Edge {
         return componentRoles != null && !componentRoles.isEmpty();
     }
     
-    public boolean hasOrientation() {
-        return isInline() || isReverseComplement();
-    }
-    
-    public boolean hasOrientation(String orientation) {
-        return hasOrientation() && this.orientation.equals(orientation);
-    }
-    
     public void intersectWithEdge(Edge edge, int tolerance) {
         // Map other component IDs to roles and other component roles to IDs
         
@@ -503,14 +493,6 @@ public class Edge {
         }
     }
     
-    public boolean isInline() {
-        return orientation.equals(Orientation.INLINE.getValue());
-    }
-    
-    public boolean isReverseComplement() {
-        return orientation.equals(Orientation.REVERSE_COMPLEMENT.getValue());
-    }
-    
     public boolean isBlank() {
         return !hasComponentIDs() && !hasComponentRoles() && !hasOrientation();
     }
@@ -525,10 +507,6 @@ public class Edge {
 
     public void setTail(Node tail) { 
         this.tail = tail; 
-    }
-    
-    public String getOrientation() {
-        return orientation;
     }
 
     public void setWeight(double weight) {
@@ -547,20 +525,55 @@ public class Edge {
         }
         
     }
-    
+
     public enum Orientation {
         INLINE("inline"),
         REVERSE_COMPLEMENT("reverseComplement"),
         NONE("none");
 
         private final String value;
-        
-        Orientation(String value) { 
+
+        Orientation(String value) {
             this.value = value;
         }
 
         public String getValue() {
-            return value; 
+            return value;
+        }
+    }
+
+    public Orientation getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(Orientation orientation){
+        this.orientation = orientation;
+    }
+
+    public boolean hasOrientation() {
+        return isInline() || isReverseComplement();
+    }
+
+
+    public boolean hasOrientation(Orientation orientation) {
+        return hasOrientation() && this.orientation.equals(orientation);
+    }
+
+    public boolean isInline() {
+        return orientation.equals(Orientation.INLINE);
+    }
+
+    public boolean isReverseComplement() {
+        return orientation.equals(Orientation.REVERSE_COMPLEMENT);
+    }
+
+    public void reverseOrientation(){
+        if(isInline()){
+            setOrientation(Orientation.REVERSE_COMPLEMENT);
+        }
+
+        if(isReverseComplement()){
+            setOrientation(Orientation.INLINE);
         }
     }
 }
