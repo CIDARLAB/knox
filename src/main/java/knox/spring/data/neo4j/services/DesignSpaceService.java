@@ -997,6 +997,8 @@ public class DesignSpaceService {
 	        if (row.containsKey("componentIDs") && row.get("componentIDs") != null) {
 	        	link.put("componentIDs", row.get("componentIDs"));
 	        }
+
+			link.put("orientation", row.get("orientation"));
 	        
 	        links.add(link);
 	    }
