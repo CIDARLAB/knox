@@ -53,6 +53,16 @@ public class NodeSpace {
 		
 		startNode.createEdge(acceptNode, componentIDs, componentRoles);
 	}
+
+	public NodeSpace(ArrayList<String> componentIDs, ArrayList<String> componentRoles, Edge.Orientation orientation) {
+		this(0);
+
+		Node startNode = createStartNode();
+
+		Node acceptNode = createAcceptNode();
+
+		startNode.createEdge(acceptNode, componentIDs, componentRoles, orientation);
+	}
 	
 	public void addNode(Node node) {
 		if (nodes == null) {
