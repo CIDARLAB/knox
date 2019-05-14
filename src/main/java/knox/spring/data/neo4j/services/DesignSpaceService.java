@@ -7,10 +7,7 @@ import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
-import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
-import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
-import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
-import knox.spring.data.neo4j.exception.ParameterEmptyException;
+import knox.spring.data.neo4j.exception.*;
 import knox.spring.data.neo4j.operations.ANDOperator;
 import knox.spring.data.neo4j.operations.Concatenation;
 import knox.spring.data.neo4j.operations.JoinOperator;
@@ -601,7 +598,7 @@ public class DesignSpaceService {
     }
     
     public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID) 
-    		throws SBOLValidationException, IOException, SBOLConversionException {
+    		throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
     	SBOLConversion sbolConv = new SBOLConversion();
 
     	sbolConv.setSbolDoc(sbolDocs);

@@ -15,6 +15,7 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.operations.JoinOperator;
 import knox.spring.data.neo4j.operations.OROperator;
 import knox.spring.data.neo4j.operations.RepeatOperator;
+import knox.spring.data.neo4j.exception.SBOLException;
 
 public class SBOLConversion {
 
@@ -35,7 +36,7 @@ public class SBOLConversion {
 	 * calls the appropriate SBOL parser by checking for CombinatorialDerivations
 	 * @return
 	 */
-	public List<DesignSpace> convertSBOLsToSpaces(){
+	public List<DesignSpace> convertSBOLsToSpaces() throws SBOLException{
 
 		List<DesignSpace> allOutputSpaces = new ArrayList<>();
 
@@ -56,7 +57,7 @@ public class SBOLConversion {
 	 * @param sbolDoc
 	 * @return list of design spaces
 	 */
-	private List<DesignSpace> convertCombinatorialSBOL(SBOLDocument sbolDoc) {
+	private List<DesignSpace> convertCombinatorialSBOL(SBOLDocument sbolDoc) throws SBOLException{
 
 		List<DesignSpace> outputSpaces = new ArrayList<>();
 		Set<CombinatorialDerivation> rootCVs = getRootCombinatorialDerivation(sbolDoc);
@@ -77,7 +78,7 @@ public class SBOLConversion {
 		return outputSpaces;
 	}
 
-	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation){
+	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation) throws SBOLException{
 		ComponentDefinition template = combinatorialDerivation.getTemplate();
 		List<NodeSpace> inputSpace = new LinkedList<>();
 
@@ -161,7 +162,7 @@ public class SBOLConversion {
 		return orderedVCs;
 	}
 
-	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent, ComponentDefinition template){
+	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent, ComponentDefinition template) throws SBOLException{
 		ArrayList<String> atomIDs = new ArrayList<>();
 		ArrayList<String> atomRoles = new ArrayList<>();
 
@@ -209,7 +210,7 @@ public class SBOLConversion {
 		if(Objects.nonNull(annotation)){
 			// throw error if there is more than one location
 			if(annotation.getLocations().size() > 1){
-				throw new RuntimeException("Cannot parse SBOL with more than one Location in SequenceAnnotation");
+				throw new SBOLException("Cannot parse SBOL with more than one Location in SequenceAnnotation");
 			}
 
 			OrientationType orientation = annotation.getLocations().iterator().next().getOrientation();
