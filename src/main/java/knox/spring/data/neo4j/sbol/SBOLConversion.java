@@ -207,19 +207,26 @@ public class SBOLConversion {
 		SequenceAnnotation annotation = template.getSequenceAnnotation(component);
 
 		if(Objects.nonNull(annotation)){
-			// returns the first orientation it finds
-			for(Location location: annotation.getLocations()){
-				OrientationType orientation = location.getOrientation();
-				if(orientation == OrientationType.INLINE){
-					return Edge.Orientation.INLINE;
-				}
-				if(orientation == OrientationType.REVERSECOMPLEMENT){
-					return Edge.Orientation.REVERSE_COMPLEMENT;
-				}
+			// throw error if there is more than one location
+			if(annotation.getLocations().size() > 1){
+				throw new RuntimeException("Cannot parse SBOL with more than one Location in SequenceAnnotation");
+			}
+
+			OrientationType orientation = annotation.getLocations().iterator().next().getOrientation();
+
+			//if orientation does not exist, then it's implicit that the component can be inline or reverse complement
+			if(orientation == null){
+				return Edge.Orientation.UNDECLARED;
+			}
+			if(orientation == OrientationType.INLINE){
+				return Edge.Orientation.INLINE;
+			}
+			if(orientation == OrientationType.REVERSECOMPLEMENT){
+				return Edge.Orientation.REVERSE_COMPLEMENT;
 			}
 		}
 
-		return Edge.Orientation.NONE;
+		return Edge.Orientation.INLINE;
 	}
 
 	private NodeSpace applyOperator(OperatorType operator, List<NodeSpace> inputSpace){

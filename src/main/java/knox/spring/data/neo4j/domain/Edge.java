@@ -529,6 +529,7 @@ public class Edge {
     public enum Orientation {
         INLINE("inline"),
         REVERSE_COMPLEMENT("reverseComplement"),
+        UNDECLARED("undeclared"), //means it can be inline or reverse
         NONE("none");
 
         private final String value;
