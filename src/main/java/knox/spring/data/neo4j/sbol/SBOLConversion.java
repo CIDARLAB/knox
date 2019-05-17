@@ -197,7 +197,20 @@ public class SBOLConversion {
 
 		//create space
 		List<NodeSpace> inputSpace = new LinkedList<>();
-		NodeSpace newSpace = new NodeSpace(atomIDs, atomRoles, orientation);
+		NodeSpace newSpace;
+
+		// if unspecified, create both INLINE and REVERSE
+		if(orientation == Edge.Orientation.UNDECLARED){
+			newSpace = new NodeSpace(atomIDs, atomRoles, Edge.Orientation.INLINE);
+			for(Edge edge : newSpace.getStartNode().getEdges()){
+				Edge duplicateEdge = edge.copy(edge.getTail(), edge.getHead());
+				duplicateEdge.reverseOrientation();
+				newSpace.getStartNode().addEdge(duplicateEdge);
+			}
+		} else {
+			newSpace = new NodeSpace(atomIDs, atomRoles, orientation);
+		}
+
 		inputSpace.add(newSpace);
 
 		//check operator

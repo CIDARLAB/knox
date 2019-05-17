@@ -573,7 +573,7 @@ public class Edge {
             setOrientation(Orientation.REVERSE_COMPLEMENT);
         }
 
-        if(isReverseComplement()){
+        else if(isReverseComplement()){
             setOrientation(Orientation.INLINE);
         }
     }
