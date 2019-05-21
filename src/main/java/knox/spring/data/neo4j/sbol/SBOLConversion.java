@@ -3,6 +3,7 @@ package knox.spring.data.neo4j.sbol;
 import java.net.URI;
 import java.util.*;
 
+import knox.spring.data.neo4j.domain.Edge;
 import org.sbolstandard.core2.*;
 
 import org.slf4j.Logger;
@@ -14,11 +15,12 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.operations.JoinOperator;
 import knox.spring.data.neo4j.operations.OROperator;
 import knox.spring.data.neo4j.operations.RepeatOperator;
+import knox.spring.data.neo4j.exception.SBOLException;
 
 public class SBOLConversion {
 
 	private List<SBOLDocument> sbolDocs;
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(SBOLConversion.class);
 
 	public List<SBOLDocument> getSbolDoc() {
@@ -34,7 +36,7 @@ public class SBOLConversion {
 	 * calls the appropriate SBOL parser by checking for CombinatorialDerivations
 	 * @return
 	 */
-	public List<DesignSpace> convertSBOLsToSpaces(){
+	public List<DesignSpace> convertSBOLsToSpaces() throws SBOLException{
 
 		List<DesignSpace> allOutputSpaces = new ArrayList<>();
 
@@ -55,7 +57,7 @@ public class SBOLConversion {
 	 * @param sbolDoc
 	 * @return list of design spaces
 	 */
-	private List<DesignSpace> convertCombinatorialSBOL(SBOLDocument sbolDoc) {
+	private List<DesignSpace> convertCombinatorialSBOL(SBOLDocument sbolDoc) throws SBOLException{
 
 		List<DesignSpace> outputSpaces = new ArrayList<>();
 		Set<CombinatorialDerivation> rootCVs = getRootCombinatorialDerivation(sbolDoc);
@@ -72,11 +74,12 @@ public class SBOLConversion {
 			outputSpace.commitToHead();
 			outputSpaces.add(outputSpace);
 		}
-		
+
 		return outputSpaces;
 	}
 
-	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation){
+	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation) throws SBOLException{
+		ComponentDefinition template = combinatorialDerivation.getTemplate();
 		List<NodeSpace> inputSpace = new LinkedList<>();
 
 		// order components by sequence constraints
@@ -101,7 +104,7 @@ public class SBOLConversion {
 				NodeSpace outputSpace = new NodeSpace();
 
 				if (hasVariants){
-					orSpace.add(createNodeSpaceFromVariableComponent(variableComponent)); //add variants
+					orSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template)); //add variants
 				}
 
 				for (CombinatorialDerivation cv : variantDerivs) {
@@ -115,7 +118,7 @@ public class SBOLConversion {
 			}
 
 			else if (hasVariants){
-				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent));
+				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template));
 			}
 		}
 
@@ -159,24 +162,19 @@ public class SBOLConversion {
 		return orderedVCs;
 	}
 
-	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent){
+	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent, ComponentDefinition template) throws SBOLException{
 		ArrayList<String> atomIDs = new ArrayList<>();
 		ArrayList<String> atomRoles = new ArrayList<>();
-		
-		ComponentDefinition variable = variableComponent.getVariable().getDefinition();
+
+		Component variable = variableComponent.getVariable();
+		ComponentDefinition variableDefinition = variable.getDefinition();
 
 		// Find variant roles
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
-			if (variant.getRoles().isEmpty()) {
-				for (URI role : variable.getRoles()) {
-					atomIDs.add(variant.getIdentity().toString());
-					atomRoles.add(role.toString());
-				}
-			} else {
-				for (URI role : variant.getRoles()) {
-					atomIDs.add(variant.getIdentity().toString());
-					atomRoles.add(role.toString());
-				}
+			Set<URI> roles = variant.getRoles().isEmpty()? variableDefinition.getRoles(): variant.getRoles();
+			for (URI role : roles) {
+				atomIDs.add(variant.getIdentity().toString());
+				atomRoles.add(role.toString());
 			}
 		}
 
@@ -185,28 +183,64 @@ public class SBOLConversion {
 			for (TopLevel member: collection.getMembers()){
 				if (member.getClass() == ComponentDefinition.class){
 					ComponentDefinition def = (ComponentDefinition) member;
-					
-					if (def.getRoles().isEmpty()) {
-						for (URI role : variable.getRoles()) {
-							atomIDs.add(def.getIdentity().toString());
-							atomRoles.add(role.toString());
-						}
-					} else {
-						for (URI role : def.getRoles()) {
-							atomIDs.add(def.getIdentity().toString());
-							atomRoles.add(role.toString());
-						}
+					Set<URI> roles = def.getRoles().isEmpty()? variableDefinition.getRoles(): def.getRoles();
+					for (URI role : roles) {
+						atomIDs.add(def.getIdentity().toString());
+						atomRoles.add(role.toString());
 					}
 				}
 			}
 		}
 
+		//find orientation
+		Edge.Orientation orientation = getOrientation(variableComponent.getVariable(), template);
+
 		//create space
 		List<NodeSpace> inputSpace = new LinkedList<>();
-		inputSpace.add(new NodeSpace(atomIDs, atomRoles));
+		NodeSpace newSpace;
+
+		// if unspecified, create both INLINE and REVERSE
+		if(orientation == Edge.Orientation.UNDECLARED){
+			newSpace = new NodeSpace(atomIDs, atomRoles, Edge.Orientation.INLINE);
+			for(Edge edge : newSpace.getStartNode().getEdges()){
+				Edge duplicateEdge = edge.copy(edge.getTail(), edge.getHead());
+				duplicateEdge.reverseOrientation();
+				newSpace.getStartNode().addEdge(duplicateEdge);
+			}
+		} else {
+			newSpace = new NodeSpace(atomIDs, atomRoles, orientation);
+		}
+
+		inputSpace.add(newSpace);
 
 		//check operator
 		return applyOperator(variableComponent.getOperator(), inputSpace);
+	}
+
+	private Edge.Orientation getOrientation(Component component, ComponentDefinition template){
+		SequenceAnnotation annotation = template.getSequenceAnnotation(component);
+
+		if(Objects.nonNull(annotation)){
+			// throw error if there is more than one location
+			if(annotation.getLocations().size() > 1){
+				throw new SBOLException("Cannot parse SBOL with more than one Location in SequenceAnnotation");
+			}
+
+			OrientationType orientation = annotation.getLocations().iterator().next().getOrientation();
+
+			//if orientation does not exist, then it's implicit that the component can be inline or reverse complement
+			if(orientation == null){
+				return Edge.Orientation.UNDECLARED;
+			}
+			if(orientation == OrientationType.INLINE){
+				return Edge.Orientation.INLINE;
+			}
+			if(orientation == OrientationType.REVERSECOMPLEMENT){
+				return Edge.Orientation.REVERSE_COMPLEMENT;
+			}
+		}
+
+		return Edge.Orientation.INLINE;
 	}
 
 	private NodeSpace applyOperator(OperatorType operator, List<NodeSpace> inputSpace){
@@ -219,8 +253,7 @@ public class SBOLConversion {
 			RepeatOperator.apply(inputSpace, outputSpace, true);
 		}
 		if (operator == OperatorType.ZEROORONE){
-			inputSpace.add(new NodeSpace(new ArrayList<String>(), new ArrayList<String>()));
-			
+			inputSpace.add(new NodeSpace(new ArrayList<>(), new ArrayList<>()));
 			OROperator.apply(inputSpace, outputSpace);
 		}
 		if (operator == OperatorType.ONE){
