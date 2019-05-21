@@ -5,11 +5,8 @@ import java.io.InputStream;
 import java.util.*;
 
 import knox.spring.data.neo4j.domain.DesignSpace;
+import knox.spring.data.neo4j.exception.*;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
-import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
-import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
-import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
-import knox.spring.data.neo4j.exception.ParameterEmptyException;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
 import knox.spring.data.neo4j.services.DesignSpaceService;
 
@@ -654,7 +651,7 @@ public class KnoxController {
     	
     	try {
 			designSpaceService.importSBOL(sbolDocs, outputSpaceID);
-		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
