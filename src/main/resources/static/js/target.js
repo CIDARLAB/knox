@@ -33,7 +33,6 @@ export default class Target{
   }
 
   setGraph(graph) {
-    // add 'show' and 'optional' flags
     condenseVisualization(graph);
     console.log(graph);
 
@@ -43,6 +42,7 @@ export default class Target{
         svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
       });
 
+    //add SVG container
     var svg = d3.select(this.id).call(zoom).append("svg:g");
     svg.append("defs").append("marker")
       .attr("id", "endArrow")
@@ -55,32 +55,24 @@ export default class Target{
       .attr("d", "M0,-5L10,0L0,5")
       .attr("fill", "#999")
       .attr("opacity", "0.5");
-      var force = (this.layout = d3.layout.force());
-      force.drag().on("dragstart", () => {
-        d3.event.sourceEvent.stopPropagation();
-      });
-      force.charge(-400).linkDistance(100);
-      force.nodes(graph.nodes).links(graph.links).size([
-        $(this.id).parent().width(), $(this.id).parent().height()
-      ]).start();
 
-    var linksEnter = svg.selectAll(".link")
-      .data(graph.links.filter(link => link.show))
-      .enter();
+    let force = (this.layout = d3.layout.force())
+      .charge(-400)
+      .linkDistance(100)
+      .nodes(graph.nodes)
+      .links(graph.links)
+      .size([$(this.id).parent().width(), $(this.id).parent().height()])
+      .start();
+    force.drag().on("dragstart", () => {
+      d3.event.sourceEvent.stopPropagation();
+    });
 
-    var links = linksEnter.append("path")
-      .attr("class", (l) => {
-        if (l.optional){
-          return "link dashed-link";
-        }
-        return "link"
-      });
-
-    var nodesEnter = svg.selectAll(".node")
+    // add nodes (circles)
+    let nodesEnter = svg.selectAll(".node")
       .data(graph.nodes)
       .enter();
 
-    var circles = nodesEnter.append("circle")
+    let circles = nodesEnter.append("circle")
       .attr("class", function(d) {
         if (d.nodeTypes.length === 0) {
           return "node";
@@ -90,10 +82,25 @@ export default class Target{
           return "accept-node";
         }
       })
-      .attr("r", 7).call(force.drag);
+      .attr("r", 7) //radius
+      .call(force.drag);
 
+      // Filter out links if the "show" flag is false
+    let linksEnter = svg.selectAll(".link")
+      .data(graph.links.filter(link => link.show))
+      .enter();
+
+    // Optional links will be rendered as dashed lines
+    let links = linksEnter.append("path")
+      .attr("class", (l) => {
+        if (l.optional){
+          return "link dashed-link";
+        }
+        return "link"
+      });
+
+    //place SBOL svg on links
     const sbolImgSize = 30;
-
     let images = linksEnter.append("svg:image")
       .attr("height", sbolImgSize)
       .attr("width", sbolImgSize)
@@ -112,21 +119,24 @@ export default class Target{
           return titleStr;
         }
       })
-      .attr("xlink:href", (d) => {
+      .attr("href", (d) => {
         if (d.hasOwnProperty("componentRoles")) {
           if (d["componentRoles"].length > 0) {
-            let role = d["componentRoles"][0];
-            return getSBOLImage(role);
+            return getSBOLImage(d["componentRoles"][0]);
           }
         }
         return "";
-    });
+      });
 
+    //place tooltip on the SVG images
     $('.sboltip').tooltipster({
       theme: 'tooltipster-shadow'
     });
 
+    // Handles positioning when moved
     force.on("tick", function () {
+
+      // Position links
       links.attr('d', function(d) {
         var deltaX = d.target.x - d.source.x,
         deltaY = d.target.y - d.source.y,
@@ -142,6 +152,7 @@ export default class Target{
         return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
       });
 
+      // Position circles
       circles.attr("cx", function (d) {
         return d.x;
       })
@@ -149,11 +160,19 @@ export default class Target{
         return d.y;
       });
 
+      // Position SBOL images
       images.attr("x", function (d) {
         return (d.source.x + d.target.x) / 2 - sbolImgSize / 2;
       })
       .attr("y", function (d) {
         return (d.source.y + d.target.y) / 2 - sbolImgSize / 2;
+      })
+      .attr('transform',function(d){
+        if(d.orientation === "REVERSE_COMPLEMENT"){
+          let x1 = (d.source.x + d.target.x) / 2; //the center x about which you want to rotate
+          let y1 = (d.source.y + d.target.y) / 2; //the center y about which you want to rotate
+          return `rotate(180, ${x1}, ${y1})`;
+        }
       });
     });
   }
