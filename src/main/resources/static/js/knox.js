@@ -78,7 +78,7 @@ window.onresize = function(e) {
  * @param graph design space graph
  */
 export function condenseVisualization(graph){
-  let sourceTargetMap = [];
+  let sourceTargetMap = {};
 
   for(let i=0; i<graph.links.length; i++) {
     // add optional flag to all links
@@ -87,8 +87,8 @@ export function condenseVisualization(graph){
     graph.links[i].hasReverseOrient = false;
 
     //get all source/target pairs
-    let sourceNode = graph.links[i].source.nodeID;
-    let targetNode = graph.links[i].target.nodeID;
+    let sourceNode = graph.links[i].source.toString();
+    let targetNode = graph.links[i].target.toString();
     let stPairNum = sourceNode + targetNode;
 
     if(!(stPairNum in sourceTargetMap)){
