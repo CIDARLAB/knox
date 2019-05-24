@@ -74,8 +74,7 @@ window.onresize = function(e) {
  * HELPER FUNCTIONS
  *********************/
 /**
- * Determine and add optional flags to each link
- * and mark redundant links
+ * Determine and add 'show', 'optional', and 'reverseOrient' flags to each link
  * @param graph design space graph
  */
 export function condenseVisualization(graph){
@@ -85,6 +84,7 @@ export function condenseVisualization(graph){
     // add optional flag to all links
     graph.links[i].optional = false; //optional links show dashed lines
     graph.links[i].show = true; //will not be rendered if false
+    graph.links[i].hasReverseOrient = false;
 
     //get all source/target pairs
     let sourceNode = graph.links[i].source.nodeID;
@@ -99,12 +99,37 @@ export function condenseVisualization(graph){
       let dupLink2 = graph.links[i];
 
       if(dupLink1.componentIDs.length && dupLink2.componentIDs.length){
-        // if they both contain components, don't condense
-        // though this should never be the case, I think?
-        continue;
+
+        //check ID equality
+        let sortedComponentIDs1 = dupLink1.componentIDs.sort();
+        let sortedComponentIDs2 = dupLink2.componentIDs.sort();
+        if(sortedComponentIDs1.length !== sortedComponentIDs2.length ||
+          sortedComponentIDs1.every(function(value, index) {
+            return value !== sortedComponentIDs2[index]
+          })){
+          continue;
+        }
+
+        //check role equality
+        let sortedRoles1 = dupLink1.componentRoles.sort();
+        let sortedRoles2 = dupLink2.componentRoles.sort();
+        if(sortedRoles1.length !== sortedRoles2.length ||
+          sortedRoles1.every(function(value, index) {
+            return value !== sortedRoles2[index]
+          })){
+          continue;
+        }
+
+        // check orientation
+        if(dupLink1.orientation !== "NONE" && dupLink2.orientation !== "NONE"
+            && dupLink2.orientation !== dupLink1.orientation){
+          dupLink1.hasReverseOrient = true;
+          dupLink2.hasReverseOrient = true;
+          dupLink2.show = false;
+        }
       }
 
-      if(dupLink1.componentIDs.length){
+      else if(dupLink1.componentIDs.length){
         dupLink1.optional = true;
         dupLink2.show = false;
       } else {
