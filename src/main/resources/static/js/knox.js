@@ -1,642 +1,782 @@
+import Target from './target.js';
+import * as endpoint from "./endpoints.js";
 
-// Wrapper JavaScript interface for the Knox API
-(function() {
-    const extensions = {
-        D3: "/designSpace/graph/d3",
-        List: "/designSpace/list"
-    };
-    
-    window.knox = {
-        // callback is of the form: function(err, jsonObj)
-        getGraph: (id, callback) => {
-            var query = "?targetSpaceID=" + encodeURIComponent(id);
-            d3.json(extensions.D3 + query, callback);
-        },
+/******************
+ * GLOBAL VARIABLES
+ ******************/
+let panelNum = 1; //closed
+let completionSet = new Set();
+export const targets = {
+  search: new Target("#search-svg"),
+  history: new Target("#history-svg")
+};
 
-        listDesignSpaces: (callback) => {
-            d3.json(extensions.List, callback);
-        }
-    };
-})();
+const exploreBtnIDs = {
+  delete: "#delete-btn",
+  combine: "#combine-btn",
+  list: "#list-btn",
+  save: "#save-btn",
+};
+export const knoxClass = {
+  HEAD: "Head",
+  BRANCH: "Branch",
+  COMMIT: "Commit"
+};
+
+let historyNodes;
+export let currentSpace;
+export let currentBranch;
+export function setcurrentBranch(branchName){
+  currentBranch = branchName;
+}
+
+/********************
+ * WINDOW FUNCTIONS
+ ********************/
+window.onload = function() {
+  addTooltips();
+  disableTabs();
+  hideExplorePageBtns();
+
+  $("#search-autocomplete").hide();
+
+  $("body").scrollspy({
+    target: ".navbar-fixed-top",
+    offset: 51
+  });
+
+  $("#mainNav").affix({
+    offset: {
+      top: 100
+    }
+  });
+};
+
+window.onclick = function(event) {
+  if (!event.target.matches("#search-autocomplete")
+    && !event.target.matches("#search-tb")) {
+    $("#search-autocomplete").hide();
+  }
+};
+
+window.onresize = function(e) {
+  var currentHash = window.location.hash.substr(1);
+  var currentSection = document.getElementById(currentHash);
+  if (currentSection) {
+    window.scrollTo(0, currentSection.offsetTop);
+  }
+  Object.keys(targets).map((key, _) => {
+    targets[key].expandToFillParent();
+  });
+};
+
+/*********************
+ * HELPER FUNCTIONS
+ *********************/
 
 // Utility for disabling navigation features.
 // Exposes the function disableTabs.
-(function($) {
-    function disableTabs() {
-        $(document).keydown(function (e) {
-            var keycode1 = (e.keyCode ? e.keyCode : e.which);
-            if (keycode1 == 0 || keycode1 == 9) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+function disableTabs() {
+  $(document).keydown(function (e) {
+    var keycode1 = (e.keyCode ? e.keyCode : e.which);
+    if (keycode1 === 0 || keycode1 === 9) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
+}
+
+export function hideExplorePageBtns() {
+  Object.keys(exploreBtnIDs).map((id, _) => {
+    $(exploreBtnIDs[id]).hide();
+  });
+}
+
+function showExplorePageBtns() {
+  Object.keys(exploreBtnIDs).map((id, _) => {
+    $(exploreBtnIDs[id]).show();
+  });
+}
+
+export function clearAllPages() {
+  Object.keys(targets).map((key, _) => { targets[key].clear(); });
+  $("#search-tb").val("");
+  $("#search-autocomplete").empty();
+  $("#combine-tb-lhs").val("");
+  $("#combine-tb-rhs").val("");
+  hideExplorePageBtns();
+  $('#branch-selector').find('option').not(':first').remove();
+  $('#vh-sidebar').hide();
+  $('#vh-toggle-button').hide();
+}
+
+export function visualizeDesignAndHistory(spaceid) {
+  endpoint.getGraph(spaceid, (err, data) => {
+    if (err) {
+      swalError(JSON.stringify(err));
+    } else {
+      targets.search.clear();
+      targets.search.setGraph(data);
+      $("#search-tb").blur();
+      $("#search-autocomplete").blur();
+      showExplorePageBtns();
+      currentSpace = spaceid;
+    }
+  });
+  visualizeHistory(spaceid);
+
+  //autoshow history
+  if(panelNum === 1){
+    $('#vh-toggle-button').click();
+  }
+}
+
+export function visualizeHistory(spaceid){
+  endpoint.getHistory(spaceid, (err, data) => {
+    if (err) {
+      swalError("Graph error status: " + JSON.stringify(err));
+    } else {
+      targets.history.clear();
+      targets.history.setHistory(data);
+      currentBranch = data.links[0].target.knoxID;
+      historyNodes = data.nodes;
+      populateBranchSelector(data.nodes, $('#branch-selector'));
+      $('#vh-sidebar').show();
+      $('#vh-toggle-button').show();
+    }
+  });
+}
+
+export function populateBranchSelector(nodes, branchSelector){
+  branchSelector.find('option').not(':first').remove();
+
+  //repopulate
+  let branches = nodes.filter(obj => obj.knoxClass === knoxClass.BRANCH);
+  $.each(branches, function(i, b) {
+    let text = b.knoxID;
+    if (text.length > 20) {
+      text = text.substring(0, 19) + '...';
+    }
+
+    let option = $('<option></option>').val(b.knoxID).html(text);
+    if (b.knoxID === currentBranch){
+      option.prop('disabled', true);
+    }
+    branchSelector.append(option);
+  });
+}
+
+export function encodeQueryParameter(parameterName, parameterValue, query) {
+  if (query.length > 1) {
+    return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
+  } else {
+    return parameterName + "=" + encodeURIComponent(parameterValue);
+  }
+}
+
+function longestListLength(listoflists) {
+  var maxLength = 0;
+  listoflists.map((list) => {
+    if (list.length > maxLength) {
+      maxLength = list.length;
+    }
+  });
+  return maxLength;
+}
+
+//split by / for SBOL identity
+//this may not work well with other import formats
+export function splitElementID(elementID){
+  let splitArr = elementID.split('/');
+  return splitArr.length > 1 ? splitArr[splitArr.length-2] : elementID;
+}
+
+export function getSBOLImage(role){
+  const sbolpath = "./img/sbol/";
+  switch (role) {
+    case "http://identifiers.org/so/SO:0000031":
+      return sbolpath + "aptamer.svg";
+    case "http://identifiers.org/so/SO:0001953":
+      return sbolpath + "assembly-scar.svg";
+    case "http://identifiers.org/so/SO:0001691":
+      return sbolpath + "blunt-restriction-site.svg";
+    case "http://identifiers.org/so/SO:0000316":
+      return sbolpath + "cds.svg";
+    case "http://identifiers.org/so/SO:0001955":
+      return sbolpath + "dna-stability-element.svg";
+    case "http://identifiers.org/so/SO:0000804":
+      return sbolpath + "engineered-region.svg";
+    case "http://identifiers.org/so/SO:0001932":
+      return sbolpath + "five-prime-overhang.svg";
+    case "http://identifiers.org/so/SO:0001975":
+      return sbolpath + "five-prime-sticky-restriction-site.svg";
+    case "http://identifiers.org/so/SO:0000627":
+      return sbolpath + "insulator.svg";
+    case "http://identifiers.org/so/SO:0001263":
+    case "http://identifiers.org/so/SO:0000834":
+      return sbolpath + "ncrna.svg";
+    case "http://identifiers.org/so/SO:0001688":
+    case "http://identifiers.org/so/SO:0001687":
+      return sbolpath + "nuclease-site.svg";
+    case "http://identifiers.org/so/SO:0000057":
+    case "http://identifiers.org/so/SO:0000409":
+      return sbolpath + "operator.svg";
+    case "http://identifiers.org/so/SO:0000296":
+      return sbolpath + "origin-of-replication.svg";
+    case "http://identifiers.org/so/SO:0000724":
+      return sbolpath + "origin-of-transfer.svg";
+    case "http://identifiers.org/so/SO:0000553":
+      return sbolpath + "polyA.svg";
+    case "http://identifiers.org/so/SO:0005850":
+      return sbolpath + "primer-binding-site.svg";
+    case "http://identifiers.org/so/SO:0000167":
+      return sbolpath + "promoter.svg";
+    case "http://identifiers.org/so/SO:0001956":
+      return sbolpath + "protease-site.svg";
+    case "http://identifiers.org/so/SO:0001546":
+      return sbolpath + "protein-stability-element.svg";
+    case "http://identifiers.org/so/SO:0001977":
+      return sbolpath + "ribonuclease-site.svg";
+    case "http://identifiers.org/so/SO:0000139":
+      return sbolpath + "ribosome-entry-site.svg";
+    case "http://identifiers.org/so/SO:0001979":
+      return sbolpath + "rna-stability-element.svg";
+    case "http://identifiers.org/so/SO:0001978":
+      return sbolpath + "signature.svg";
+    case "http://identifiers.org/so/SO:0000299":
+      return sbolpath + "specific-recombination-site.svg";
+    case "http://identifiers.org/so/SO:0000141":
+      return sbolpath + "terminator.svg";
+    case "http://identifiers.org/so/SO:0001933":
+      return sbolpath + "three-prime-overhang.svg";
+    case "http://identifiers.org/so/SO:0001976":
+      return sbolpath + "three-prime-sticky-restriction-site.svg";
+    case "http://identifiers.org/so/SO:0000616":
+      return sbolpath + "transcription-end.svg";
+    case "http://identifiers.org/so/SO:0000319":
+    case "http://identifiers.org/so/SO:0000327":
+      return sbolpath + "translation-end.svg";
+
+    default:
+      return sbolpath + "no-glyph-assigned.svg";
+  }
+}
+
+
+/*********************
+ * TOOLTIPS FUNCTIONS
+ *********************/
+function addTooltips(){
+  $('#vh-toggle-button').tooltipster({
+    content: "See version history"
+  });
+
+  let deleteBtn = $('#delete-btn');
+  deleteBtn.tooltipster({
+    content: $('#delete-design-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  deleteBtn.tooltipster({
+    content: $('#delete-branch-tooltip'),
+    multiple: true,
+    side: 'left',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  deleteBtn.tooltipster({
+    content: $('#reset-commit-tooltip'),
+    multiple: true,
+    side: 'bottom',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  deleteBtn.tooltipster({
+    content: $('#revert-commit-tooltip'),
+    multiple: true,
+    side: 'right',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let saveBtn = $('#save-btn');
+  saveBtn.tooltipster({
+    content: $('#make-commit-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  saveBtn.tooltipster({
+    content: $('#make-branch-tooltip'),
+    multiple: true,
+    side: 'bottom',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let listBtn = $('#list-btn');
+  listBtn.tooltipster({
+    content: $('#enumerate-designs-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let operatorBtn = $('#combine-btn');
+  operatorBtn.tooltipster({
+    content: $('#apply-operators-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+}
+
+$('#enumerate-designs-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.height = "inherit";
+  div.style.overflow = "scroll";
+
+  // loading div
+  let loadingDiv = document.createElement('div');
+  loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+  //append all
+  div.appendChild(loadingDiv);
+
+  swal({
+    title: "Designs",
+    content: div,
+    className: "enumeration-swal"
+  });
+
+  endpoint.enumerateDesigns(currentSpace, (err, data) => {
+    if (err) {
+      swalError("Enumeration error: " + JSON.stringify(err));
+    } else {
+      div.removeChild(loadingDiv);
+      let para = document.createElement("p");
+      data.map((list) => {
+        para.appendChild(document.createTextNode("["));
+        const length = list.length;
+        list.map((element, i) => {
+          para.appendChild(document.createTextNode(splitElementID(element.id)));
+          //append comma if there are more elements
+          if (length !== i+1){
+            para.appendChild(document.createTextNode(","));
+          }
         });
+        para.appendChild(document.createTextNode("]"));
+        para.appendChild(document.createElement('br'));
+      });
+
+      div.appendChild(para);
     }
+  });
 
-    window.disableTabs = disableTabs;
-})(jQuery);
+});
 
-(function($) {
-    "use strict";
+$('#apply-operators-tooltip').click(() => {
+  let div = document.createElement('div');
 
-    // The target class observes an SVG element on the page, and
-    // provides methods for setting and clearing graph data. A variable
-    // called 'targets' holds all the svg rendering targets on the page.
-    function Target(id) {
-        this.layout = null;
-        this.id = id;
-        $(id).width($(id).parent().width());
-        $(id).height($(id).parent().height());
+  //input space
+  let inputDiv = document.createElement('div');
+  let inputSpaceInput = document.createElement('input');
+  inputSpaceInput.setAttribute("placeholder", "delimit with comma");
+  makeDiv(inputDiv, inputSpaceInput, 'Combine with: ');
+
+  //output space
+  let outputDiv = document.createElement('div');
+  let outputSpaceInput = document.createElement('input');
+  makeDiv(outputDiv, outputSpaceInput, 'Output space ID: ');
+
+  //operator dropdown
+  let operatorDiv = document.createElement('div');
+  let operatorDropdown = makeOperatorDropdown();
+  makeDiv(operatorDiv, operatorDropdown, 'Operator: ');
+
+  //optional div
+  let optDiv = document.createElement('div');
+  let optionalDropdown = makeOptionalDropdown();
+  makeDiv(optDiv, optionalDropdown, 'Cardinality: ');
+
+  //complete div
+  let comDiv = document.createElement('div');
+  let completeDropdown = makeCompleteDropdown();
+  makeDiv(comDiv, completeDropdown, 'Complete Matches Only: ');
+
+  //tolerance div
+  let tolDiv = document.createElement('div');
+  let toleranceDropdown = makeToleranceDropdown();
+  makeDiv(tolDiv, toleranceDropdown, 'Tolerance: ');
+
+  //append all
+  div.appendChild(inputDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(outputDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(operatorDiv);
+  div.appendChild(document.createElement('br'));
+
+  $(operatorDropdown).change(function() {
+    if(this.value === endpoint.operators.REPEAT){
+      if(div.contains(tolDiv)){
+        div.removeChild(tolDiv);
+      }
+      if(div.contains(comDiv)){
+        div.removeChild(comDiv);
+      }
+      div.appendChild(optDiv);
     }
+    if(this.value === endpoint.operators.AND){
+      if(div.contains(optDiv)){
+        div.removeChild(optDiv);
+      }
+      div.appendChild(tolDiv);
+      div.appendChild(comDiv);
+    }
+    if(this.value === endpoint.operators.MERGE){
+      if(div.contains(optDiv)){
+        div.removeChild(optDiv);
+      }
+      if(div.contains(comDiv)){
+        div.removeChild(comDiv);
+      }
+      div.appendChild(tolDiv);
+    }
+  });
 
-    // function translateRole(role) {
-    //     switch (role) {
-    //     case "ribozyme":
-    //         return "RNA_stability_element";
-    //     }
-    //     return role;
-    // }
-    
-    Target.prototype = {
-        setGraph: function(graph) {
-            var zoom = d3.behavior.zoom()
-	        .scaleExtent([1, 10])
-	        .on("zoom", () => {
-                    svg.attr("transform", "translate(" +
-                             d3.event.translate + ")scale(" + d3.event.scale + ")");
-                });
-
-            var svg = d3.select(this.id).call(zoom).append("svg:g");
-            svg.append("defs").append("marker")
-	        .attr("id", "endArrow")
-	        .attr("viewBox", "0 -5 10 10")
-	        .attr("refX", 6)
-	        .attr("markerWidth", 6)
-	        .attr("markerHeight", 6)
-	        .attr("orient", "auto")
-	        .append("path")
-	        .attr("d", "M0,-5L10,0L0,5")
-	        .attr("fill", "#999")
-                .attr("opacity", "0.5");
-            var force = (this.layout = d3.layout.force());
-            force.drag().on("dragstart", () => {
-                d3.event.sourceEvent.stopPropagation();
-            });
-            force.charge(-400).linkDistance(100);
-            force.nodes(graph.nodes).links(graph.links).size([
-                $(this.id).parent().width(), $(this.id).parent().height()
-            ]).start();
-
-            var linksEnter = svg.selectAll(".link")
-                .data(graph.links)
-                .enter();
-            
-            var links = linksEnter.append("path")
-                .attr("class", "link");
-            
-            var nodesEnter = svg.selectAll(".node")
-                .data(graph.nodes)
-                .enter();
-
-            var circles = nodesEnter.append("circle")
-                .attr("class", function(d) {
-                    if (d.nodeTypes.length == 0) {
-                        return "node";
-                    } else if (d.nodeTypes.indexOf("start") >= 0) {
-                        return "start-node";
-                    } else if (d.nodeTypes.indexOf("accept") >= 0) {
-                        return "accept-node";
-                    }
-                })
-                .attr("r", 7).call(force.drag);
-            
-            const sbolImgSize = 50;
-            
-            var images = linksEnter.append("svg:image")
-                .attr("xlink:href", (d) => {
-                    if (d.hasOwnProperty("componentRoles")) {
-                        const sbolpath = "./img/sbol/";
-                        if (d["componentRoles"].length > 0) {
-                            var role = d["componentRoles"][0];
-                            switch (role) {
-                            case "http://identifiers.org/so/SO:0000031":
-                                return sbolpath + "aptamer.svg";
-                            case "http://identifiers.org/so/SO:0001953":
-                                return sbolpath + "assembly-scar.svg";
-                            case "http://identifiers.org/so/SO:0001691":
-                                return sbolpath + "blunt-restriction-site.svg";
-                            case "http://identifiers.org/so/SO:0000316":
-                                return sbolpath + "cds.svg";
-                            case "http://identifiers.org/so/SO:0001955":
-                                return sbolpath + "dna-stability-element.svg";
-                            case "http://identifiers.org/so/SO:0000804":
-                                return sbolpath + "engineered-region.svg";
-                            case "http://identifiers.org/so/SO:0001932":
-                                return sbolpath + "five-prime-overhang.svg";
-                            case "http://identifiers.org/so/SO:0001975":
-                                return sbolpath + "five-prime-sticky-restriction-site.svg";
-                            case "http://identifiers.org/so/SO:0000627":
-                                return sbolpath + "insulator.svg";
-                            case "http://identifiers.org/so/SO:0001263":
-                            case "http://identifiers.org/so/SO:0000834":
-                                return sbolpath + "ncrna.svg";
-                            case "http://identifiers.org/so/SO:0001688":
-                            case "http://identifiers.org/so/SO:0001687":
-                                return sbolpath + "nuclease-site.svg";
-                            case "http://identifiers.org/so/SO:0000057":
-                            case "http://identifiers.org/so/SO:0000409":
-                                return sbolpath + "operator.svg";
-                            case "http://identifiers.org/so/SO:0000296":
-                                return sbolpath + "origin-of-replication.svg";
-                            case "http://identifiers.org/so/SO:0000724":
-                                return sbolpath + "origin-of-transfer.svg";
-                            case "http://identifiers.org/so/SO:0000553":
-                                return sbolpath + "polyA.svg";
-                            case "http://identifiers.org/so/SO:0005850":
-                                return sbolpath + "primer-binding-site.svg";
-                            case "http://identifiers.org/so/SO:0000167":
-                                return sbolpath + "promoter.svg";
-                            case "http://identifiers.org/so/SO:0001956":
-                                return sbolpath + "protease-site.svg";
-                            case "http://identifiers.org/so/SO:0001546":
-                                return sbolpath + "protein-stability-element.svg";
-                            case "http://identifiers.org/so/SO:0001977":
-                                return sbolpath + "ribonuclease-site.svg";
-                            case "http://identifiers.org/so/SO:0000139":
-                                return sbolpath + "ribosome-entry-site.svg";
-                            case "http://identifiers.org/so/SO:0001979":
-                                return sbolpath + "rna-stability-element.svg";
-                            case "http://identifiers.org/so/SO:0001978":
-                                return sbolpath + "signature.svg";
-                            case "http://identifiers.org/so/SO:0000299":
-                                return sbolpath + "specific-recombination-site.svg";
-                            case "http://identifiers.org/so/SO:0000141":
-                                return sbolpath + "terminator.svg";
-                            case "http://identifiers.org/so/SO:0001933":
-                                return sbolpath + "three-prime-overhang.svg";
-                            case "http://identifiers.org/so/SO:0001976":
-                                return sbolpath + "three-prime-sticky-restriction-site.svg";
-                            case "http://identifiers.org/so/SO:0000616":
-                                return sbolpath + "transcription-end.svg";
-                            case "http://identifiers.org/so/SO:0000319":
-                            case "http://identifiers.org/so/SO:0000327":
-                                return sbolpath + "translation-end.svg";
-
-                            default:
-                                return sbolpath + "no-glyph-assigned.svg";
-                            };
-                        }
-                    }
-                    return "";
-                }).attr("height", sbolImgSize)
-                .attr("width", sbolImgSize)
-                .attr("class", "sboltip")
-                .attr("title", (d) => {
-                    if (d.hasOwnProperty("componentIDs")) {
-                        return d["componentIDs"].toString();
-                    }
-                });
-
-            $('.sboltip').tooltipster({
-                theme: 'tooltipster-shadow'
-            });
-            
-            force.on("tick", function () {
-                links.attr('d', function(d) {
-                    var deltaX = d.target.x - d.source.x,
-                    deltaY = d.target.y - d.source.y,
-                    dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-                    normX = deltaX / dist,
-                    normY = deltaY / dist,
-                    sourcePadding = 12,
-                    targetPadding = 12,
-                    sourceX = d.source.x + normX * sourcePadding,
-                    sourceY = d.source.y + normY * sourcePadding,
-                    targetX = d.target.x - normX * targetPadding,
-                    targetY = d.target.y - normY * targetPadding;
-                    return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
-                });
-                circles.attr("cx", function (d) {
-                    return d.x;
-                }).attr("cy", function (d) {
-                    return d.y;
-                });
-                images.attr("x", function (d) {
-                    return (d.source.x + d.target.x) / 2 - sbolImgSize / 2;
-                }).attr("y", function (d) {
-                    return (d.source.y + d.target.y) / 2 - sbolImgSize / 2;
-                });
-            });
-        },
-
-        clear: function() {
-            d3.select(this.id).selectAll("*").remove();
-            delete this.layout;
-        },
-        
-        removeGraph: function(id) {
-            delete this.layout;
-        },
-
-        expandToFillParent() {
-            var width = $(this.id).parent().width();
-            var height = $(this.id).parent().height();
-            if (this.layout) {
-                this.layout.size([width, height]);
-                this.layout.start();
-            }
-            $(this.id).width($(this.id).parent().width());
-            $(this.id).height($(this.id).parent().height());
+  swal({
+    title: "Apply Operator",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (confirm) {
+      let inputSpaces = [currentSpace];
+      let combineWithSpaces = inputSpaceInput.value.split(",");
+      for (let i = 0; i < combineWithSpaces.length; i++) {
+        if (combineWithSpaces[i].trim().length > 0) {
+          inputSpaces.push(combineWithSpaces[i].trim());
         }
-    };
-    
-    var targets = {
-        search: new Target("#search-svg")
-    };
+      }
+      let outputSpace = outputSpaceInput.value;
+      let isOptional = optionalDropdown.value;
+      let tolerance = toleranceDropdown.value;
+      let isComplete = completeDropdown.value;
 
-    var layouts = {
-        combineModal: null,
-        listModal: null
-    };
-    
-    window.onload = function() {
-        disableTabs();
-        hideExplorePageBtns();
-        $.ajax({
-            url: "/layouts/combine-modal.html",
-            success: (result) => { layouts.combineModal = result; }
-        });
-        $.ajax({
-            url: "/layouts/list-modal.html",
-            success: (result) => { layouts.listModal = result; }
-        });
-    };
+      switch (operatorDropdown.value) {
+        case endpoint.operators.JOIN:
+          endpoint.designSpaceJoin(inputSpaces, outputSpace);
+          break;
 
-    // Implementation of autocomplete. The webapp requests a list of
-    // all design spaces from Knox and caches it. The api exposes one
-    // a couple of functions, one to update the list of completions
-    // with the server, and one that takes a phrase and does string
-    // matching to return a list of design spaces with similar names.
-    (function() {
-        var completionSet = new Set();
-        
-        function populateAutocompleteList(callback) {
-            knox.listDesignSpaces((err, data) => {
-                if (err) {
-                    swal("Unable top populate autocomplete list!", "Are you sure Knox and Neo4j are running?");
-                } else {
-                    completionSet = new Set();
-                    data.map((element) => { completionSet.add(element); });
-                    if (callback) callback();
-                }
-            });
-        }
+        case endpoint.operators.OR:
+          endpoint.designSpaceOr(inputSpaces, outputSpace);
+          break;
 
-        window.populateAutocompleteList = populateAutocompleteList;
+        case endpoint.operators.REPEAT:
+          endpoint.designSpaceRepeat(inputSpaces, outputSpace, isOptional);
+          break;
 
-        // FIXME: A prefix tree could be more efficient.
-        window.suggestCompletions = (phrase) => {
-            var results = [];
-            completionSet.forEach((element) => {
-                if (element.indexOf(phrase) !== -1) {
-                    results.push(element);
-                }
-            });
-            return results;
-        };
-    })();
-    
-    function clearAllPages() {
-        Object.keys(targets).map((key, _) => { targets[key].clear(); });
-        $("#search-tb").val("");
-        $("#search-autocomplete").empty();
-        $("#combine-tb-lhs").val("");
-        $("#combine-tb-rhs").val("");
-        hideExplorePageBtns();
+        case endpoint.operators.AND:
+          endpoint.designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete);
+          break;
+
+        case endpoint.operators.MERGE:
+          endpoint.designSpaceMerge(inputSpaces, outputSpace, tolerance);
+          break;
+      }
     }
-    
-    $("#navigation-bar").on("click", "*", clearAllPages);
-    $("#brand").click(clearAllPages);
+  });
+});
 
-     function encodeQueryParameter(parameterName, parameterValue, query) {
-        if (query.length > 1) {
-            return "&" + parameterName + "=" + encodeURIComponent(parameterValue);
+function makeOperatorDropdown(){
+  let operatorDropdown = document.createElement('select');
+  let operatorOption = new Option("Operations", "", true, true);
+  operatorOption.disabled = true;
+  operatorDropdown.appendChild(operatorOption);
+  for(let key in endpoint.operators){
+    operatorDropdown.appendChild(new Option(endpoint.operators[key]));
+  }
+
+  return operatorDropdown;
+}
+
+function makeOptionalDropdown(){
+  let optionalDropdown = document.createElement('select');
+  optionalDropdown.setAttribute("id", "optional-dropdown");
+  optionalDropdown.appendChild(new Option("one-or-more", false, true, true));
+  optionalDropdown.appendChild(new Option("zero-or-more", true));
+
+  return optionalDropdown;
+}
+
+function makeToleranceDropdown(){
+  let toleranceDropdown = document.createElement('select');
+  toleranceDropdown.setAttribute("id", "tolerance-dropdown");
+  toleranceDropdown.appendChild(new Option("0", "0", true, true));
+  toleranceDropdown.appendChild(new Option("1"));
+  toleranceDropdown.appendChild(new Option("2"));
+  toleranceDropdown.appendChild(new Option("3"));
+
+  return toleranceDropdown;
+}
+
+function makeCompleteDropdown(){
+  let completeDropdown = document.createElement('select');
+  completeDropdown.setAttribute("id", "complete-dropdown");
+  completeDropdown.appendChild(new Option("True", true, true, true));
+  completeDropdown.appendChild(new Option("False", false));
+
+  return completeDropdown;
+}
+
+function makeDiv(div, input, title){
+  div.appendChild(document.createTextNode(title));
+  div.appendChild(input);
+}
+
+$('#delete-design-tooltip').click(() => {
+  swal({
+    title: "Really delete?",
+    text: "You will not be able to recover the data!",
+    icon: "warning",
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      endpoint.deleteDesign();
+    }
+  });
+});
+
+$('#delete-branch-tooltip').click(() => {
+  // create DOM object to add to alert
+  let dropdown = document.createElement("select");
+  let branchOption = new Option("Branches", "", true, true);
+  branchOption.disabled = true;
+  dropdown.appendChild(branchOption);
+  populateBranchSelector(historyNodes, $(dropdown));
+  swal({
+    title: "Really delete?",
+    text: "Select the branch you want to delete (you cannot delete the current active branch)",
+    icon: "warning",
+    buttons: true,
+    content: dropdown
+  }).then((confirm) => {
+    if (confirm) {
+      let branchName = $(dropdown)[0].options[$(dropdown)[0].selectedIndex].value;
+      endpoint.deleteBranch(branchName);
+    }
+  });
+});
+
+$('#reset-commit-tooltip').click(() => {
+  swal({
+    title: "Really reset?",
+    text: "No history of the commit will remain (If you want to preserve history, use revert). ",
+    icon: "warning",
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      endpoint.resetCommit();
+    }
+  });
+});
+
+$('#revert-commit-tooltip').click(() => {
+  swal({
+    title: "Really revert?",
+    text: "A new commit will be made from the previous design.",
+    icon: "warning",
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      endpoint.revertCommit();
+    }
+  });
+});
+
+$('#make-commit-tooltip').click(() => {
+  endpoint.makeCommit();
+});
+
+$('#make-branch-tooltip').click(() => {
+  swal({
+    title: "Create branch",
+    text: "Enter a unique branch name",
+    content: "input",
+    buttons: true
+  }).then((branchName) => {
+    if (branchName){
+      endpoint.makeNewBranch(branchName);
+    }
+  });
+});
+
+export function swalError(errorMsg){
+  swal({
+    title: "Error!",
+    text: errorMsg,
+    icon: "error"
+  });
+}
+
+export function swalSuccess(){
+  swal({
+    title: "Success!",
+    icon: "success"
+  });
+}
+
+
+/**************************
+ * VERSION HISTORY SIDEBAR
+ **************************/
+// change version history visualization when
+// value changes in the drop down
+$("#branch-selector").change(function() {
+  let branchName = this.value;
+  endpoint.checkoutBranch(branchName);
+  visualizeHistory(currentSpace);
+});
+
+$('#vh-toggle-button').click(function() {
+  if (panelNum === 1) {
+    $('#vh-toggle-button span').addClass('fa-chevron-left');
+    $('#vh-toggle-button span').removeClass('fa-chevron-right');
+
+    // show VH sidebar
+    $('#vh-sidebar').animate({
+      left: 0,
+    });
+    // move toggle button dynamically with the sidebar
+    $('#vh-toggle-button').animate({
+      left: 400,
+    });
+    // Update tooltip title
+    $('#vh-toggle-button').tooltipster('content', 'Hide version history');
+    panelNum = 2;
+  } else {
+    $('#vh-toggle-button span').removeClass('fa-chevron-left');
+    $('#vh-toggle-button span').addClass('fa-chevron-right');
+
+    // hide VH sidebar
+    $('#vh-sidebar').animate({
+      left: -380,
+    });
+    // move toggle button dynamically with the sidebar
+    $('#vh-toggle-button').animate({
+      left: 20,
+    });
+    // Update tooltip title
+    $('#vh-toggle-button').tooltipster('content', 'See version history');
+
+    panelNum = 1;
+  }
+});
+
+/************************
+ * NAVIGATION FUNCTIONS
+ ************************/
+$("#brand").click(
+  clearAllPages
+);
+
+/************************
+ * SEARCH BAR FUNCTIONS
+ ************************/
+$("#search-tb").on("input", function() {
+  refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
+});
+
+$("#search-tb").focus(function() {
+  updateAutocompleteVisibility("#search-autocomplete");
+});
+
+$("#search-tb").click(() => {
+  // Currently autocomplete runs when the user clicks on an unfocused
+  // textbox that supports completion. I think that this is reasonable,
+  // but if you find that it is a performance issue you may want to change
+  // the Knox webapp so that it populates the completion list once on
+  // startup, and then only when some event triggers the creation of a new
+  // graph.
+  if (!$(this).is(":focus")) {
+    populateAutocompleteList(() => {
+      refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
+    });
+  }
+});
+
+function updateAutocompleteVisibility(id) {
+  var autoCmpl = $(id);
+  if (autoCmpl.children().length > 0) {
+    autoCmpl.show();
+  } else {
+    autoCmpl.hide();
+  }
+}
+
+function makeAutocompleteRow(text, substr) {
+  var div = document.createElement("div");
+  var textRep = text.replace(substr, "," + substr + ",");
+  var tokens = textRep.split(",");
+  div.className = "autocomplete-entry";
+  tokens.map((token) => {
+    var textNode;
+    if (token === substr) {
+      textNode = document.createElement("strong");
+    } else {
+      textNode = document.createElement("span");
+    }
+    textNode.innerHTML = token;
+    div.appendChild(textNode);
+  });
+  return div;
+}
+
+function refreshCompletions(textInputId, textCompletionsId, onSubmit) {
+  var autoCmpl = $(textCompletionsId);
+  autoCmpl.empty();
+  var val = $(textInputId).val();
+  if (val !== "") {
+    var completions = suggestCompletions(val);
+    completions.map((elem) => {
+      var div = makeAutocompleteRow(elem, val);
+      div.onclick = () => {
+        $(textInputId).val(elem);
+        refreshCompletions(textInputId, textCompletionsId);
+        onSubmit(elem);
+      };
+      autoCmpl.append(div);
+    });
+  }
+  updateAutocompleteVisibility(textCompletionsId);
+}
+
+// Implementation of autocomplete. The webapp requests a list of
+// all design spaces from Knox and caches it. The api exposes one
+// a couple of functions, one to update the list of completions
+// with the server, and one that takes a phrase and does string
+// matching to return a list of design spaces with similar names.
+
+function populateAutocompleteList(callback) {
+    endpoint.listDesignSpaces((err, data) => {
+        if (err) {
+            swalError("Are you sure Knox and Neo4j are running?");
         } else {
-            return parameterName + "=" + encodeURIComponent(parameterValue);
-        }
-    };
-    
-    function updateAutocompleteVisibility(id) {
-        var autoCmpl = $(id);
-        if (autoCmpl.children().length > 0) {
-            autoCmpl.show();
-        } else {
-            autoCmpl.hide();
-        }
-    }
-
-    var exploreBtnIDs = {
-        delete: "#delete-btn",
-        combine: "#combine-btn",
-        list: "#list-btn"
-    };
-
-    function hideExplorePageBtns() {
-        Object.keys(exploreBtnIDs).map((id, _) => {
-            $(exploreBtnIDs[id]).hide();
-        });
-    }
-
-    function showExplorePageBtns() {
-        Object.keys(exploreBtnIDs).map((id, _) => {
-            $(exploreBtnIDs[id]).show();
-        });
-    }
-
-    var currentSpace;
-    
-    function onSearchSubmit(spaceid) {
-        knox.getGraph(spaceid, (err, data) => {
-            if (err) {
-                swal("Graph lookup failed!", "error status: " + JSON.stringify(err));
-            } else {
-                targets.search.clear();
-                targets.search.setGraph(data);
-                $("#search-tb").blur();
-                $("#search-autocomplete").blur();
-                showExplorePageBtns();
-                currentSpace = spaceid;
-            }
-        });
-    }
-
-    function longestListLength(listoflists) {
-        var maxLength = 0;
-        listoflists.map((list) => {
-            if (list.length > maxLength) {
-                maxLength = list.length;
-            }
-        });
-        return maxLength;
-    }
-
-    $(exploreBtnIDs.list).click(() => {
-        swal({
-            title: "Pathways",
-            html: true,
-            text: layouts.listModal,
-            animation: false,
-            confirmButtonColor: "#F05F40"
-        });
-        var query = "/designSpace/enumerate?targetSpaceID="
-            + currentSpace + "&bfs=true";
-        d3.json(query, (err, data) => {
-            if (err) {
-                window.alert(err);
-            } else {
-                const celHeight = 80;
-                const celWidth = 50;
-                var svg = document.getElementById("swal-svg");
-                var loading = document.getElementById("swal-loading");
-                loading.parentNode.removeChild(loading);
-                var yPitch = 3.1*celHeight;
-                var xPitch = (longestListLength(data) + 1) * celWidth;
-                svg.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
-                svg.setAttribute("height", yPitch);
-                svg.setAttribute("width", xPitch);
-                var pen = { x: 0, y: 0 };
-                data.map((list) => {
-                    list.map((element) => {
-                        var svgimg =
-                            document.createElementNS(
-                                "http://www.w3.org/2000/svg", "image");
-                        svgimg.setAttribute("height", "100");
-                        svgimg.setAttribute("width", "100");
-                        svgimg.setAttribute("id", "testimg2");
-                        svgimg.setAttributeNS(
-                            "http://www.w3.org/1999/xlink",
-                            "href", "./img/sbol/" + element.roles[0] + ".svg");
-                        svgimg.setAttribute("x", "" + pen.x);
-                        svgimg.setAttribute("y", "" + pen.y);
-                        svg.appendChild(svgimg);
-                        var svgtext =
-                            document.createElementNS(
-                                "http://www.w3.org/2000/svg", "text");
-                        svgtext.setAttribute("height", "100");
-                        svgtext.setAttribute("width", "100");
-                        svgtext.setAttribute("id", "testimg2");
-                        svgtext.setAttribute("font-family", "sans-serif");
-                        svgtext.setAttribute("font-size", "20px");
-                        svgtext.setAttribute("fill", "black");
-                        svgtext.textContent = element.id;
-                        svgtext.setAttribute("x", "" + (pen.x + 0.85*celWidth));
-                        if (element.roles[0] === "CDS") {
-                            svgtext.setAttribute("y", "" + (pen.y + 1.1*celHeight));
-                        } else {
-                            svgtext.setAttribute("y", "" + (pen.y + celHeight));
-                        }
-                        svg.appendChild(svgtext);
-                        pen.x += celWidth;
-                    });
-                    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("stroke", "black");
-                    line.setAttribute("stroke-width", "4");
-                    line.setAttribute("x1", "" + 0);
-                    line.setAttribute("y1", "" + (pen.y + celWidth));
-                    line.setAttribute("x2", "" + (pen.x + celWidth));
-                    line.setAttribute("y2", "" + (pen.y + celWidth));
-                    svg.appendChild(line);
-
-                    pen.y += celHeight;
-                    pen.x = 0;
-                });
-            }
-        });
-    });
-
-    $(exploreBtnIDs.combine).click(() => {
-        swal({
-            title: "Apply Operator",
-            html: true,
-            animation: false,
-            showCancelButton: true,
-            closeOnConfirm: false,
-            text: layouts.combineModal,
-            confirmButtonColor: "#F05F40"
-        }, function(isconfirm) {
-            if (isconfirm) {
-                var lhs = currentSpace;
-                var rhs = $("#swal-combine-with").val().split(",");
-                var lrhs = [lhs];
-                var i;
-                for (i = 0; i < rhs.length; i++) {
-                    if (rhs[i].length > 0) {
-                        lrhs.push(rhs[i]);
-                    }
-                }
-                var query = "?";
-                query += encodeQueryParameter("inputSpaceIDs", lrhs, query);
-                query += encodeQueryParameter("outputSpaceID", $("#swal-output").val(), query);
-                var request = new XMLHttpRequest();
-                switch ($("#swal-select").val()) {
-                case "Join":
-                    request.open("POST", "/designSpace/join" + query, false);
-                    break;
-
-                case "OR":
-                    request.open("POST", "/designSpace/or" + query, false);
-                    break;
-
-                case "Repeat":
-                    query += encodeQueryParameter("isOptional", $("#swal-cardinality").val(), query);
-                    request.open("POST", "/designSpace/repeat" + query, false);
-                    break;
-
-                case "AND":
-                    query += encodeQueryParameter("tolerance", $("#swal-tolerance").val(), query);
-                    query += encodeQueryParameter("isComplete", $("#swal-complete").val(), query);
-                    request.open("POST", "/designSpace/and" + query, false);
-                    break;
-
-                case "Merge":
-                    query += encodeQueryParameter("tolerance", $("#swal-tolerance").val(), query);
-                    request.open("POST", "/designSpace/merge" + query, false);
-                    break;
-                }
-                request.send(null);
-                if (request.status >= 200 && request.status < 300) {
-                    swal({
-                        title: "Success!",
-                        confirmButtonColor: "#F05F40",
-                        type: "success"
-                    });
-                } else {
-                    swal("Error: Operation failed with error: " + request.response);
-                }
-            }
-        });
-    });
-    
-    $(exploreBtnIDs.delete).click(() => {
-        swal({
-            title: "Really delete?",
-            text: "You will not be able to recover the data!",
-            type: "warning",
-            showCancelButton: true,
-            closeOnConfirm: false,
-            confirmButtonColor: "#F05F40",
-            confirmButtonText: "OK"
-        }, function(isconfirm) {
-            if (isconfirm) {
-                var query = "?targetSpaceID=" + currentSpace;
-                var request = new XMLHttpRequest();
-                request.open("DELETE", "/designSpace" + query, false);
-                request.send(null);
-                if (request.status >= 200 && request.status < 300) {
-                    swal({
-                        title: "Deleted!",
-                        confirmButtonColor: "#F05F40",
-                        type: "success"
-                    });
-                    targets.search.clear();
-                    hideExplorePageBtns();
-                } else {
-                    swal("Error: Failed to delete design space " + currentSpace + ".");
-                }
-            }
-        });
-    });
-    
-    function makeAutocompleteRow(text, substr) {
-        var div = document.createElement("div");
-        var textRep = text.replace(substr, "," + substr + ",");
-        var tokens = textRep.split(",");
-        div.className = "autocomplete-entry";
-        tokens.map((token) => {
-            var textNode;
-            if (token === substr) {
-                textNode = document.createElement("strong");
-            } else {
-                textNode = document.createElement("span");
-            }
-            textNode.innerHTML = token;
-            div.appendChild(textNode);
-        });
-        return div;
-    }
-
-    $("#search-tb").click(() => {
-        // Currently autocomplete runs when the user clicks on an unfocused
-        // textbox that supports completion. I think that this is reasonable,
-        // but if you find that it is a performance issue you may want to change
-        // the Knox webapp so that it populates the completion list once on
-        // startup, and then only when some event triggers the creation of a new
-        // graph.
-        if (!$(this).is(":focus")) {
-            populateAutocompleteList(() => {
-                refreshCompletions("#search-tb", "#search-autocomplete", onSearchSubmit);
-            });
+            completionSet = new Set();
+            data.map((element) => { completionSet.add(element); });
+            if (callback) callback();
         }
     });
+}
 
-    function refreshCompletions(textInputId, textCompletionsId, onSubmit) {
-        var autoCmpl = $(textCompletionsId);
-        autoCmpl.empty();
-        var val = $(textInputId).val();
-        if (val !== "") {
-            var completions = suggestCompletions(val);
-            completions.map((elem) => {
-                var div = makeAutocompleteRow(elem, val);
-                div.onclick = () => {
-                    $(textInputId).val(elem);
-                    refreshCompletions(textInputId, textCompletionsId);
-                    onSubmit(elem);
-                };
-                autoCmpl.append(div);
-            });
-        }
-        updateAutocompleteVisibility(textCompletionsId);
-    }
-    
-    $("#search-tb").on("input", function() {
-        refreshCompletions("#search-tb", "#search-autocomplete", onSearchSubmit);
-    });
-
-    $("#search-autocomplete").hide();
-    
-    $("#search-tb").focus(function() {
-        updateAutocompleteVisibility("#search-autocomplete");
-    });
-    
-    window.onclick = function(event) {
-        if (!event.target.matches("#search-autocomplete")
-            && !event.target.matches("#search-tb")) {
-            $("#search-autocomplete").hide();
-        }
-    };
-
-    window.onresize = function(e) {
-        var currentHash = window.location.hash.substr(1);
-        var currentSection = document.getElementById(currentHash);
-        if (currentSection) {
-            window.scrollTo(0, currentSection.offsetTop);
-        }
-        Object.keys(targets).map((key, _) => {
-            targets[key].expandToFillParent();
-        });
-    };
-    
-    $("body").scrollspy({
-        target: ".navbar-fixed-top",
-        offset: 51
-    });
-
-    $(".navbar-collapse ul li a").click(function() {
-        $(".navbar-toggle:visible").click();
-    });
-
-    $("#mainNav").affix({
-        offset: {
-            top: 100
+// FIXME: A prefix tree could be more efficient.
+function suggestCompletions (phrase){
+    var results = [];
+    completionSet.forEach((element) => {
+        if (element.indexOf(phrase) !== -1) {
+            results.push(element);
         }
     });
-})(jQuery);
+    return results;
+}

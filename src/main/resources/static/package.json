@@ -9,9 +9,10 @@
     "url": "https://github.com/BlackrockDigital/startbootstrap/blob/gh-pages/LICENSE"
   },
   "devDependencies": {
+    "@fortawesome/fontawesome-free": "^5.7.2",
     "bootstrap": "^3.3.7",
     "browser-sync": "^2.13.0",
-    "font-awesome": "^4.6.3",
+    "font-awesome": "^4.7.0",
     "gulp": "^3.9.1",
     "gulp-clean-css": "^2.0.10",
     "gulp-header": "^1.8.7",
@@ -20,10 +21,15 @@
     "gulp-uglify": "^1.5.4",
     "jquery": "^1.11.3",
     "magnific-popup": "^1.1.0",
-    "scrollreveal": "^3.1.4"
+    "scrollreveal": "^3.1.4",
+    "sweetalert": "^2.1.2",
+    "tooltipster": "^4.2.6"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/BlackrockDigital/startbootstrap-creative.git"
+  },
+  "scripts": {
+    "gulp": "gulp"
   }
 }
