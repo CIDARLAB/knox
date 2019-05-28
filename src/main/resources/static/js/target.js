@@ -128,6 +128,23 @@ export default class Target{
         return "";
       });
 
+    // Add images for inline & reverse complements
+    let linksEnter2 = svg.selectAll(".link")
+      .data(graph.links.filter(link => link.hasReverseOrient))
+      .enter();
+
+    let reverseImgs = linksEnter2.append("svg:image")
+      .attr("height", sbolImgSize)
+      .attr("width", sbolImgSize)
+      .attr("href", (d) => {
+        if (d.hasOwnProperty("componentRoles")) {
+          if (d["componentRoles"].length > 0) {
+            return getSBOLImage(d["componentRoles"][0]);
+          }
+        }
+        return "";
+      });
+
     //place tooltip on the SVG images
     $('.sboltip').tooltipster({
       theme: 'tooltipster-shadow'
@@ -162,17 +179,33 @@ export default class Target{
 
       // Position SBOL images
       images.attr("x", function (d) {
-        return (d.source.x + d.target.x) / 2 - sbolImgSize / 2;
+          if(d.hasReverseOrient){
+            return (d.source.x + d.target.x) / 2 - sbolImgSize;
+          }
+          return (d.source.x + d.target.x) / 2 - sbolImgSize / 2;
+        })
+        .attr("y", function (d) {
+          return (d.source.y + d.target.y) / 2 - sbolImgSize / 2;
+        })
+        .attr('transform',function(d){
+          //transform 180 if the orientation is REVERSE_COMPLEMENT
+          if(d.orientation === "REVERSE_COMPLEMENT" && !d.hasReverseOrient){
+            let x1 = (d.source.x + d.target.x) / 2; //the center x about which you want to rotate
+            let y1 = (d.source.y + d.target.y) / 2; //the center y about which you want to rotate
+            return `rotate(180, ${x1}, ${y1})`;
+          }
+        });
+
+      reverseImgs.attr("x", function (d) {
+        return (d.source.x + d.target.x) / 2 - sbolImgSize;
       })
       .attr("y", function (d) {
         return (d.source.y + d.target.y) / 2 - sbolImgSize / 2;
       })
       .attr('transform',function(d){
-        if(d.orientation === "REVERSE_COMPLEMENT"){
-          let x1 = (d.source.x + d.target.x) / 2; //the center x about which you want to rotate
-          let y1 = (d.source.y + d.target.y) / 2; //the center y about which you want to rotate
-          return `rotate(180, ${x1}, ${y1})`;
-        }
+        let x1 = (d.source.x + d.target.x) / 2; //the center x about which you want to rotate
+        let y1 = (d.source.y + d.target.y) / 2; //the center y about which you want to rotate
+        return `rotate(180, ${x1}, ${y1})`;
       });
     });
   }
