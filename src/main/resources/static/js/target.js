@@ -34,7 +34,6 @@ export default class Target{
 
   setGraph(graph) {
     condenseVisualization(graph);
-    console.log(graph);
 
     var zoom = d3.behavior.zoom()
       .scaleExtent([1, 10])
@@ -104,7 +103,12 @@ export default class Target{
     let images = linksEnter.append("svg:image")
       .attr("height", sbolImgSize)
       .attr("width", sbolImgSize)
-      .attr("class", "sboltip")
+      .attr("class", (d) => {
+        if (d.hasOwnProperty("componentRoles") && d["componentRoles"].length > 0) {
+          return "sboltip";
+        }
+        return null;
+      })
       .attr("title", (d) => {
         if (d.hasOwnProperty("componentIDs")) {
           let titleStr = "";
@@ -120,29 +124,22 @@ export default class Target{
         }
       })
       .attr("href", (d) => {
-        if (d.hasOwnProperty("componentRoles")) {
-          if (d["componentRoles"].length > 0) {
-            return getSBOLImage(d["componentRoles"][0]);
-          }
+        if (d.hasOwnProperty("componentRoles") && d["componentRoles"].length > 0) {
+          return getSBOLImage(d["componentRoles"][0]);
         }
-        return "";
+        return null;
       });
 
-    // Add images for inline & reverse complements
-    let linksEnter2 = svg.selectAll(".link")
-      .data(graph.links.filter(link => link.hasReverseOrient))
-      .enter();
-
-    let reverseImgs = linksEnter2.append("svg:image")
+    let reverseImgs = linksEnter.append("svg:image")
       .attr("height", sbolImgSize)
       .attr("width", sbolImgSize)
       .attr("href", (d) => {
         if (d.hasOwnProperty("componentRoles")) {
-          if (d["componentRoles"].length > 0) {
+          if (d["componentRoles"].length > 0 && d.hasReverseOrient) {
             return getSBOLImage(d["componentRoles"][0]);
           }
         }
-        return "";
+        return null;
       });
 
     //place tooltip on the SVG images

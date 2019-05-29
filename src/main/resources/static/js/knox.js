@@ -121,11 +121,14 @@ export function condenseVisualization(graph){
         }
 
         // check orientation
-        if(dupLink1.orientation !== "NONE" && dupLink2.orientation !== "NONE"
-            && dupLink2.orientation !== dupLink1.orientation){
+        if(dupLink1.orientation === "INLINE"){
           dupLink1.hasReverseOrient = true;
           dupLink2.hasReverseOrient = true;
           dupLink2.show = false;
+        } else {
+          dupLink1.hasReverseOrient = true;
+          dupLink2.hasReverseOrient = true;
+          dupLink1.show = false;
         }
       }
 
@@ -136,9 +139,12 @@ export function condenseVisualization(graph){
         dupLink2.optional = true;
         dupLink1.show = false;
       }
+
+      if(dupLink1.orientation === 'NONE'){
+        sourceTargetMap[stPairNum] = i; //save new index
+      }
     }
   }
-
 }
 
 // Utility for disabling navigation features.
