@@ -42,18 +42,12 @@ export default class Target{
       });
 
     //add SVG container
-    var svg = d3.select(this.id).call(zoom).append("svg:g");
-    svg.append("defs").append("marker")
-      .attr("id", "endArrow")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 6)
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#999")
-      .attr("opacity", "0.5");
+    let svg = d3.select(this.id)
+      .call(zoom)
+      .append("svg:g");
+
+    //def objects are not displayed until referenced
+    let defs = svg.append("svg:defs");
 
     let force = (this.layout = d3.layout.force())
       .charge(-400)
@@ -84,18 +78,44 @@ export default class Target{
       .attr("r", 7) //radius
       .call(force.drag);
 
-      // Filter out links if the "show" flag is false
+    // Filter out links if the "show" flag is false
     let linksEnter = svg.selectAll(".link")
       .data(graph.links.filter(link => link.show))
       .enter();
 
+    function marker(isBlank) {
+
+      let fill = isBlank? "none": "#999";
+      let id = "arrow"+fill.replace("#", "");
+
+      defs.append("svg:marker")
+        .attr("id", id)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 6)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("stroke", "#999")
+        .attr("fill", fill);
+
+      return "url(#" + id + ")";
+    }
+
     // Optional links will be rendered as dashed lines
+    // Blank edges will be rendered with an unfilled arrow
     let links = linksEnter.append("path")
       .attr("class", (l) => {
         if (l.optional){
           return "link dashed-link";
         }
         return "link"
+      })
+      .attr("d", "M0,-5L10,0L0,5")
+      .attr("marker-end",(l) => {
+        let isBlank = l["componentRoles"].length === 0 && l["componentIDs"].length === 0;
+        return marker(isBlank);
       });
 
     //place SBOL svg on links

@@ -500,8 +500,6 @@ section {
 
 .link {
     stroke: #999;
-    stroke-opacity: .5;
-    marker-end: url(#endArrow);
 }
 
 .dashed-link {
