@@ -1,5 +1,4 @@
-
-import {knoxClass, getSBOLImage, splitElementID} from "./knox.js";
+import {knoxClass, getSBOLImage, splitElementID, condenseVisualization} from "./knox.js";
 
 // The target class observes an SVG element on the page, and
 // provides methods for setting and clearing graph data. A variable
@@ -34,45 +33,39 @@ export default class Target{
   }
 
   setGraph(graph) {
+    condenseVisualization(graph);
+
     var zoom = d3.behavior.zoom()
       .scaleExtent([1, 10])
       .on("zoom", () => {
         svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
       });
 
-    var svg = d3.select(this.id).call(zoom).append("svg:g");
-    svg.append("defs").append("marker")
-      .attr("id", "endArrow")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 6)
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#999")
-      .attr("opacity", "0.5");
-      var force = (this.layout = d3.layout.force());
-      force.drag().on("dragstart", () => {
-        d3.event.sourceEvent.stopPropagation();
-      });
-      force.charge(-400).linkDistance(100);
-      force.nodes(graph.nodes).links(graph.links).size([
-        $(this.id).parent().width(), $(this.id).parent().height()
-      ]).start();
+    //add SVG container
+    let svg = d3.select(this.id)
+      .call(zoom)
+      .append("svg:g");
 
-    var linksEnter = svg.selectAll(".link")
-      .data(graph.links)
-      .enter();
+    //def objects are not displayed until referenced
+    let defs = svg.append("svg:defs");
 
-    var links = linksEnter.append("path")
-      .attr("class", "link");
+    let force = (this.layout = d3.layout.force())
+      .charge(-400)
+      .linkDistance(100)
+      .nodes(graph.nodes)
+      .links(graph.links)
+      .size([$(this.id).parent().width(), $(this.id).parent().height()])
+      .start();
+    force.drag().on("dragstart", () => {
+      d3.event.sourceEvent.stopPropagation();
+    });
 
-    var nodesEnter = svg.selectAll(".node")
+    // add nodes (circles)
+    let nodesEnter = svg.selectAll(".node")
       .data(graph.nodes)
       .enter();
 
-    var circles = nodesEnter.append("circle")
+    let circles = nodesEnter.append("circle")
       .attr("class", function(d) {
         if (d.nodeTypes.length === 0) {
           return "node";
@@ -82,14 +75,60 @@ export default class Target{
           return "accept-node";
         }
       })
-      .attr("r", 7).call(force.drag);
+      .attr("r", 7) //radius
+      .call(force.drag);
 
+    // Filter out links if the "show" flag is false
+    let linksEnter = svg.selectAll(".link")
+      .data(graph.links.filter(link => link.show))
+      .enter();
+
+    function marker(isBlank) {
+
+      let fill = isBlank? "none": "#999";
+      let id = "arrow"+fill.replace("#", "");
+
+      defs.append("svg:marker")
+        .attr("id", id)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 6)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("stroke", "#999")
+        .attr("fill", fill);
+
+      return "url(#" + id + ")";
+    }
+
+    // Optional links will be rendered as dashed lines
+    // Blank edges will be rendered with an unfilled arrow
+    let links = linksEnter.append("path")
+      .attr("class", (l) => {
+        if (l.optional){
+          return "link dashed-link";
+        }
+        return "link"
+      })
+      .attr("d", "M0,-5L10,0L0,5")
+      .attr("marker-end",(l) => {
+        let isBlank = l["componentRoles"].length === 0 && l["componentIDs"].length === 0;
+        return marker(isBlank);
+      });
+
+    //place SBOL svg on links
     const sbolImgSize = 30;
-
     let images = linksEnter.append("svg:image")
       .attr("height", sbolImgSize)
       .attr("width", sbolImgSize)
-      .attr("class", "sboltip")
+      .attr("class", (d) => {
+        if (d.hasOwnProperty("componentRoles") && d["componentRoles"].length > 0) {
+          return "sboltip";
+        }
+        return null;
+      })
       .attr("title", (d) => {
         if (d.hasOwnProperty("componentIDs")) {
           let titleStr = "";
@@ -104,21 +143,34 @@ export default class Target{
           return titleStr;
         }
       })
-      .attr("xlink:href", (d) => {
+      .attr("href", (d) => {
+        if (d.hasOwnProperty("componentRoles") && d["componentRoles"].length > 0) {
+          return getSBOLImage(d["componentRoles"][0]);
+        }
+        return null;
+      });
+
+    let reverseImgs = linksEnter.append("svg:image")
+      .attr("height", sbolImgSize)
+      .attr("width", sbolImgSize)
+      .attr("href", (d) => {
         if (d.hasOwnProperty("componentRoles")) {
-          if (d["componentRoles"].length > 0) {
-            let role = d["componentRoles"][0];
-            return getSBOLImage(role);
+          if (d["componentRoles"].length > 0 && d.hasReverseOrient) {
+            return getSBOLImage(d["componentRoles"][0]);
           }
         }
-        return "";
-    });
+        return null;
+      });
 
+    //place tooltip on the SVG images
     $('.sboltip').tooltipster({
       theme: 'tooltipster-shadow'
     });
 
+    // Handles positioning when moved
     force.on("tick", function () {
+
+      // Position links
       links.attr('d', function(d) {
         var deltaX = d.target.x - d.source.x,
         deltaY = d.target.y - d.source.y,
@@ -134,6 +186,7 @@ export default class Target{
         return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
       });
 
+      // Position circles
       circles.attr("cx", function (d) {
         return d.x;
       })
@@ -141,11 +194,35 @@ export default class Target{
         return d.y;
       });
 
+      // Position SBOL images
       images.attr("x", function (d) {
-        return (d.source.x + d.target.x) / 2 - sbolImgSize / 2;
+          if(d.hasReverseOrient){
+            return (d.source.x + d.target.x) / 2 - sbolImgSize;
+          }
+          return (d.source.x + d.target.x) / 2 - sbolImgSize / 2;
+        })
+        .attr("y", function (d) {
+          return (d.source.y + d.target.y) / 2 - sbolImgSize / 2;
+        })
+        .attr('transform',function(d){
+          //transform 180 if the orientation is REVERSE_COMPLEMENT
+          if(d.orientation === "REVERSE_COMPLEMENT" && !d.hasReverseOrient){
+            let x1 = (d.source.x + d.target.x) / 2; //the center x about which you want to rotate
+            let y1 = (d.source.y + d.target.y) / 2; //the center y about which you want to rotate
+            return `rotate(180, ${x1}, ${y1})`;
+          }
+        });
+
+      reverseImgs.attr("x", function (d) {
+        return (d.source.x + d.target.x) / 2 - sbolImgSize;
       })
       .attr("y", function (d) {
         return (d.source.y + d.target.y) / 2 - sbolImgSize / 2;
+      })
+      .attr('transform',function(d){
+        let x1 = (d.source.x + d.target.x) / 2; //the center x about which you want to rotate
+        let y1 = (d.source.y + d.target.y) / 2; //the center y about which you want to rotate
+        return `rotate(180, ${x1}, ${y1})`;
       });
     });
   }

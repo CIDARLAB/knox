@@ -73,6 +73,79 @@ window.onresize = function(e) {
 /*********************
  * HELPER FUNCTIONS
  *********************/
+/**
+ * Determine and add 'show', 'optional', and 'reverseOrient' flags to each link
+ * @param graph design space graph
+ */
+export function condenseVisualization(graph){
+  let sourceTargetMap = {};
+
+  for(let i=0; i<graph.links.length; i++) {
+    // add optional flag to all links
+    graph.links[i].optional = false; //optional links show dashed lines
+    graph.links[i].show = true; //will not be rendered if false
+    graph.links[i].hasReverseOrient = false;
+
+    //get all source/target pairs
+    let sourceNode = graph.links[i].source.toString();
+    let targetNode = graph.links[i].target.toString();
+    let stPairNum = sourceNode + targetNode;
+
+    if(!(stPairNum in sourceTargetMap)){
+      sourceTargetMap[stPairNum] = i; //save index
+    }
+    else{
+      let dupLink1 = graph.links[sourceTargetMap[stPairNum]];
+      let dupLink2 = graph.links[i];
+
+      if(dupLink1.componentIDs.length && dupLink2.componentIDs.length){
+
+        //check ID equality
+        let sortedComponentIDs1 = dupLink1.componentIDs.sort();
+        let sortedComponentIDs2 = dupLink2.componentIDs.sort();
+        if(sortedComponentIDs1.length !== sortedComponentIDs2.length ||
+          sortedComponentIDs1.every(function(value, index) {
+            return value !== sortedComponentIDs2[index]
+          })){
+          continue;
+        }
+
+        //check role equality
+        let sortedRoles1 = dupLink1.componentRoles.sort();
+        let sortedRoles2 = dupLink2.componentRoles.sort();
+        if(sortedRoles1.length !== sortedRoles2.length ||
+          sortedRoles1.every(function(value, index) {
+            return value !== sortedRoles2[index]
+          })){
+          continue;
+        }
+
+        // check orientation
+        if(dupLink1.orientation === "INLINE"){
+          dupLink1.hasReverseOrient = true;
+          dupLink2.hasReverseOrient = true;
+          dupLink2.show = false;
+        } else {
+          dupLink1.hasReverseOrient = true;
+          dupLink2.hasReverseOrient = true;
+          dupLink1.show = false;
+        }
+      }
+
+      else if(dupLink1.componentIDs.length){
+        dupLink1.optional = true;
+        dupLink2.show = false;
+      } else {
+        dupLink2.optional = true;
+        dupLink1.show = false;
+      }
+
+      if(dupLink1.orientation === 'NONE'){
+        sourceTargetMap[stPairNum] = i; //save new index
+      }
+    }
+  }
+}
 
 // Utility for disabling navigation features.
 // Exposes the function disableTabs.
