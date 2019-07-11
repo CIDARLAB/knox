@@ -658,6 +658,22 @@ public class KnoxController {
  
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
+
+	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.POST)
+	public ResponseEntity<String> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
+											 @RequestParam(value = "namespace", required = false) String namespace) {
+
+		SBOLDocument sbolDoc;
+
+		try {
+			sbolDoc = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
+		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
+			e.printStackTrace();
+		}
+
+		//TODO should download SBOL document or throw error on the UI
+		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+	}
     
     @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
     public Map<String, Object> d3GraphBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {

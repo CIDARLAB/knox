@@ -27,6 +27,7 @@ import knox.spring.data.neo4j.sample.DesignSampler;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
 
+import knox.spring.data.neo4j.sbol.SBOLGeneration;
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLValidationException;
 import org.sbolstandard.core2.SequenceOntology;
@@ -596,19 +597,27 @@ public class DesignSpaceService {
 		
 		return compIDToRole;
     }
-    
-    public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID) 
-    		throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
-    	SBOLConversion sbolConv = new SBOLConversion();
 
-    	sbolConv.setSbolDoc(sbolDocs);
+	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID)
+			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
+		SBOLConversion sbolConv = new SBOLConversion();
 
-    	List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
+		sbolConv.setSbolDoc(sbolDocs);
+
+		List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
 
 		for (DesignSpace outputSpace: outputSpaces){
 			saveDesignSpace(outputSpace);
 		}
-    }
+	}
+
+	public SBOLDocument exportCombinatorial(String targetSpaceID, String namespace)
+			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
+
+		DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+		SBOLGeneration sbolGenerator = new SBOLGeneration(targetSpace, namespace);
+		return sbolGenerator.createSBOLDocument();
+	}
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
         designSpaceRepository.deleteBranch(targetSpaceID, targetBranchID);
