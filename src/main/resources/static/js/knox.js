@@ -517,6 +517,15 @@ $('#apply-operators-tooltip').click(() => {
       }
       div.appendChild(tolDiv);
     }
+    if(this.value === endpoint.operators.REVERSE){
+        if(div.contains(inputDiv)){
+            div.removeChild(inputDiv);
+        }
+        const guidance = document.createElement("P");
+        const text = document.createTextNode("The current designSpace will be reversed.");
+        guidance.appendChild(text);
+        div.appendChild(guidance);
+    }
   });
 
   swal({
@@ -556,6 +565,11 @@ $('#apply-operators-tooltip').click(() => {
 
         case endpoint.operators.MERGE:
           endpoint.designSpaceMerge(inputSpaces, outputSpace, tolerance);
+          break;
+
+        case endpoint.operators.REVERSE:
+          // the reverse operator would only reverse one inputSpace
+          endpoint.designSpaceReverse(inputSpaces[0], outputSpace);
           break;
       }
     }

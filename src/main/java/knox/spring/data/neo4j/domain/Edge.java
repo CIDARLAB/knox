@@ -555,7 +555,6 @@ public class Edge {
         return isInline() || isReverseComplement();
     }
 
-
     public boolean hasOrientation(Orientation orientation) {
         return hasOrientation() && this.orientation.equals(orientation);
     }
