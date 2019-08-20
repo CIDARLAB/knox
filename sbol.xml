@@ -1,0 +1,59 @@
+<?xml version="1.0" ?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sbol="http://sbols.org/v2#" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:prov="http://www.w3.org/ns/prov#" xmlns:om="http://www.ontology-of-units-of-measure.org/resource/om-2/">
+  <sbol:Collection rdf:about="http://knox.org/CDS_collection/1">
+    <sbol:persistentIdentity rdf:resource="http://knox.org/CDS_collection"/>
+    <sbol:displayId>CDS_collection</sbol:displayId>
+    <sbol:version>1</sbol:version>
+    <sbol:member rdf:resource="http://knox.org/BBa_E1010/1"/>
+    <sbol:member rdf:resource="http://knox.org/BBa_E0040/1"/>
+  </sbol:Collection>
+  <sbol:Collection rdf:about="http://knox.org/promoter_collection/1">
+    <sbol:persistentIdentity rdf:resource="http://knox.org/promoter_collection"/>
+    <sbol:displayId>promoter_collection</sbol:displayId>
+    <sbol:version>1</sbol:version>
+    <sbol:member rdf:resource="http://knox.org/BBa_R0040/1"/>
+    <sbol:member rdf:resource="http://knox.org/BBa_J23100/1"/>
+  </sbol:Collection>
+  <sbol:ComponentDefinition rdf:about="http://knox.org/BBa_R0040/1">
+    <sbol:persistentIdentity rdf:resource="http://knox.org/BBa_R0040"/>
+    <sbol:displayId>BBa_R0040</sbol:displayId>
+    <sbol:version>1</sbol:version>
+    <sbol:type rdf:resource="http://www.biopax.org/release/biopax-level3.owl#DnaRegion"/>
+    <sbol:role rdf:resource="http://identifiers.org/so/SO:0000167"/>
+  </sbol:ComponentDefinition>
+  <sbol:ComponentDefinition rdf:about="http://knox.org/promoter/1">
+    <sbol:persistentIdentity rdf:resource="http://knox.org/promoter"/>
+    <sbol:displayId>promoter</sbol:displayId>
+    <sbol:version>1</sbol:version>
+    <sbol:type rdf:resource="http://www.biopax.org/release/biopax-level3.owl#DnaRegion"/>
+    <sbol:role rdf:resource="http://identifiers.org/so/SO:0000167"/>
+  </sbol:ComponentDefinition>
+  <sbol:ComponentDefinition rdf:about="http://knox.org/CDS/1">
+    <sbol:persistentIdentity rdf:resource="http://knox.org/CDS"/>
+    <sbol:displayId>CDS</sbol:displayId>
+    <sbol:version>1</sbol:version>
+    <sbol:type rdf:resource="http://www.biopax.org/release/biopax-level3.owl#DnaRegion"/>
+    <sbol:role rdf:resource="http://identifiers.org/so/SO:0000316"/>
+  </sbol:ComponentDefinition>
+  <sbol:ComponentDefinition rdf:about="http://knox.org/BBa_E0040/1">
+    <sbol:persistentIdentity rdf:resource="http://knox.org/BBa_E0040"/>
+    <sbol:displayId>BBa_E0040</sbol:displayId>
+    <sbol:version>1</sbol:version>
+    <sbol:type rdf:resource="http://www.biopax.org/release/biopax-level3.owl#DnaRegion"/>
+    <sbol:role rdf:resource="http://identifiers.org/so/SO:0000316"/>
+  </sbol:ComponentDefinition>
+  <sbol:ComponentDefinition rdf:about="http://knox.org/BBa_E1010/1">
+    <sbol:persistentIdentity rdf:resource="http://knox.org/BBa_E1010"/>
+    <sbol:displayId>BBa_E1010</sbol:displayId>
+    <sbol:version>1</sbol:version>
+    <sbol:type rdf:resource="http://www.biopax.org/release/biopax-level3.owl#DnaRegion"/>
+    <sbol:role rdf:resource="http://identifiers.org/so/SO:0000316"/>
+  </sbol:ComponentDefinition>
+  <sbol:ComponentDefinition rdf:about="http://knox.org/BBa_J23100/1">
+    <sbol:persistentIdentity rdf:resource="http://knox.org/BBa_J23100"/>
+    <sbol:displayId>BBa_J23100</sbol:displayId>
+    <sbol:version>1</sbol:version>
+    <sbol:type rdf:resource="http://www.biopax.org/release/biopax-level3.owl#DnaRegion"/>
+    <sbol:role rdf:resource="http://identifiers.org/so/SO:0000167"/>
+  </sbol:ComponentDefinition>
+</rdf:RDF>

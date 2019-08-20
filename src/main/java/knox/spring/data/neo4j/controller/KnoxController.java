@@ -2,13 +2,18 @@ package knox.spring.data.neo4j.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.net.URISyntaxException;
 import java.util.*;
 
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.exception.*;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
+import knox.spring.data.neo4j.sbol.SBOLGeneration;
 import knox.spring.data.neo4j.services.DesignSpaceService;
+import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLDocument;
@@ -31,6 +36,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController("/")
 public class KnoxController {
 	final DesignSpaceService designSpaceService;
+
+	@Autowired DesignSpaceRepository designSpaceRepository;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
@@ -591,6 +598,30 @@ public class KnoxController {
 	    }
 	}
 
+
+//	@RequestMapping(value = "/designSpace/export", method = RequestMethod.POST)
+//	public ResponseEntity<String> exportDesignSpaces(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+//													 @RequestParam(value = "targetBranchID", required = false) String targetBranchID) {
+//		try {
+//			long startTime = System.nanoTime();
+//
+//			DesignSpace target = designSpaceRepository.findBySpaceID(targetSpaceID);
+//			SBOLGeneration sbolGen = new SBOLGeneration(target, "http://knox.org");
+//
+//			SBOLDocument document = sbolGen.createSBOLDocument();
+//
+//
+//			return new ResponseEntity<String>("{\"message\": \"Design space successfully exported as SBOL" +
+//					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+//		} catch (ParameterEmptyException | DesignSpaceNotFoundException |
+//				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+//			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
+//					HttpStatus.BAD_REQUEST);
+//		}
+//	}
+
+
+
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
     		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
@@ -659,20 +690,43 @@ public class KnoxController {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
-	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.POST)
+//	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.POST)
+//	public ResponseEntity<String> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
+//											 @RequestParam(value = "namespace", required = false) String namespace) {
+//
+//		SBOLDocument sbolDoc;
+//
+//		try {
+//			sbolDoc = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
+//			sbolDoc.write("sbol.xml", SBOLDocument.RDF);
+//
+//		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException | URISyntaxException e) {
+//			e.printStackTrace();
+//			return new ResponseEntity<String>("{\"message\": \"" + e.getMessage() + "\"}",
+//					HttpStatus.BAD_REQUEST);
+//		}
+//
+//		//TODO should download SBOL document or throw error on the UI
+//		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+//	}
+
+	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.GET)
 	public ResponseEntity<String> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
 											 @RequestParam(value = "namespace", required = false) String namespace) {
 
-		SBOLDocument sbolDoc;
-
+		String goldbar;
 		try {
-			sbolDoc = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
-		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
+			goldbar = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
+//			return new ResponseEntity<String>(goldbar, HttpStatus.NO_CONTENT);
+
+		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException | URISyntaxException e) {
 			e.printStackTrace();
+			return new ResponseEntity<String>("{\"message\": \"" + e.getMessage() + "\"}",
+					HttpStatus.BAD_REQUEST);
 		}
 
 		//TODO should download SBOL document or throw error on the UI
-		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+		return new ResponseEntity<String>(goldbar, HttpStatus.OK);
 	}
     
     @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)

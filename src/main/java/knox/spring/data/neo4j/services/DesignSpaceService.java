@@ -41,6 +41,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -611,12 +612,22 @@ public class DesignSpaceService {
 		}
 	}
 
-	public SBOLDocument exportCombinatorial(String targetSpaceID, String namespace)
-			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
+//	public SBOLDocument exportCombinatorial(String targetSpaceID, String namespace)
+//			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException, URISyntaxException {
+//
+//		DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+//		SBOLGeneration sbolGenerator = new SBOLGeneration(targetSpace, namespace);
+//		return sbolGenerator.createSBOLDocument();
+////		return sbolGenerator.createGOLDBAR();
+//	}
+
+	public String exportCombinatorial(String targetSpaceID, String namespace)
+			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException, URISyntaxException {
 
 		DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
 		SBOLGeneration sbolGenerator = new SBOLGeneration(targetSpace, namespace);
 		return sbolGenerator.createSBOLDocument();
+//		return sbolGenerator.createGOLDBAR();
 	}
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {

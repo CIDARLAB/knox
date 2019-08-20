@@ -1,4 +1,7 @@
 
+import * as constellation from "../constellation-js/lib/constellation.js";
+
+
 import {currentSpace,
   currentBranch,
   setcurrentBranch,
@@ -23,6 +26,8 @@ const endpoints = {
 
   BRANCH: "/branch", //post vs delete
   DESIGN: "/designSpace", //post vs delete
+
+  SBOL:"/sbol/exportCombinatorial"
 };
 
 export const operators = {
@@ -208,6 +213,19 @@ export function deleteDesign(){
   }
 }
 
+// export function getDate() {
+//   let d = new Date();
+//   let month = '' + (d.getMonth() + 1);
+//   let day = '' + d.getDate();
+//   let year = d.getFullYear();
+//
+//   if (month.length < 2) month = '0' + month;
+//   if (day.length < 2) day = '0' + day;
+//
+//   return [year, month, day].join('-');
+// }
+
+
 /************************
  * DESIGN SPACE ENDPOINTS
  ************************/
@@ -287,5 +305,42 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance){
     swalSuccess();
   } else {
     swalError(request.response);
+  }
+}
+
+
+export function exportDesign(){
+
+  let request = new XMLHttpRequest();
+  let query = "?";
+  query += encodeQueryParameter("targetSpaceID", currentSpace, query);
+  query += encodeQueryParameter("namespace", "http://knox.org", query);
+  request.open("GET", endpoints.SBOL + query, false);
+  request.send(null);
+
+  // on success
+  if (request.status >= 200 && request.status < 300) {
+    // console.log(request.status, request.response);
+    let langText = request.response;
+    let categories = {"promoter": ["BBa_R0040", "BBa_J23100"],
+      "ribosome_entry_site": ["BBa_B0032", "BBa_B0034"],
+      "cds": ["BBa_E0040", "BBa_E1010"],
+      "nonCodingRna": ["BBa_F0010"],
+      "terminator": ["BBa_B0010"]};
+    let numDesigns = 1;
+    let cycleDepth = 1;
+
+    // requirejs(['constellation-js'], function (constellation) {
+    //   let result = constellation(langText, categories, numDesigns, cycleDepth);
+    //   console.log(JSON.stringify(result));
+    // });
+    console.log("args --> ", currentSpace, langText, categories, numDesigns, cycleDepth);
+    let result = constellation.goldbar(currentSpace, langText, categories, numDesigns, cycleDepth, "EDGE");
+    console.log(JSON.stringify(result));
+
+    swalSuccess();
+    visualizeDesignAndHistory(currentSpace);
+  } else {
+    swalError("Failed to download");
   }
 }

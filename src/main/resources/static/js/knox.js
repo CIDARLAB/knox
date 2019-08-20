@@ -16,6 +16,7 @@ const exploreBtnIDs = {
   combine: "#combine-btn",
   list: "#list-btn",
   save: "#save-btn",
+  sbol: "#sbol-btn",
 };
 export const knoxClass = {
   HEAD: "Head",
@@ -403,7 +404,21 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
+
+  let sbolBtn = $('#sbol-btn');
+  sbolBtn.tooltipster({
+    content: $('#export-sbol-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
 }
+
+
+$('#export-sbol-tooltip').click(() => {
+  endpoint.exportDesign();
+});
+
 
 $('#enumerate-designs-tooltip').click(() => {
   let div = document.createElement('div');
