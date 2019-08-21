@@ -1,5 +1,5 @@
 
-import * as constellation from "../constellation-js/lib/constellation.js";
+// import * as constellation from "../constellation-js/lib/constellation.js";
 
 
 import {currentSpace,
@@ -322,11 +322,11 @@ export function exportDesign(){
   if (request.status >= 200 && request.status < 300) {
     // console.log(request.status, request.response);
     let langText = request.response;
-    let categories = {"promoter": ["BBa_R0040", "BBa_J23100"],
+    let categories = `{"promoter": ["BBa_R0040", "BBa_J23100"],
       "ribosome_entry_site": ["BBa_B0032", "BBa_B0034"],
       "cds": ["BBa_E0040", "BBa_E1010"],
       "nonCodingRna": ["BBa_F0010"],
-      "terminator": ["BBa_B0010"]};
+      "terminator": ["BBa_B0010"]}`;
     let numDesigns = 1;
     let cycleDepth = 1;
 

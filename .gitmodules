@@ -1,3 +1,0 @@
-[submodule "src/main/resources/static/constellation-js"]
-	path = src/main/resources/static/constellation-js
-	url = https://github.com/hicsail/constellation-js.git
