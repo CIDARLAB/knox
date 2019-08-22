@@ -309,6 +309,17 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance){
 }
 
 
+function downloadSBOL(text, filename) {
+  let element = document.createElement('a');
+  element.setAttribute('href', 'data:application/xml,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
+
 export function exportDesign(){
 
   let request = new XMLHttpRequest();
@@ -320,7 +331,12 @@ export function exportDesign(){
 
   // on success
   if (request.status >= 200 && request.status < 300) {
-    // console.log(request.status, request.response);
+    let designNameArray = currentSpace.split("_");
+    console.log("currentSpace --> ", typeof currentSpace, currentSpace);
+    designNameArray.pop();
+    designNameArray.pop();
+    let designName = designNameArray.join("_");
+
     let langText = request.response;
     let categories = `{"promoter": ["BBa_R0040", "BBa_J23100"],
       "ribosome_entry_site": ["BBa_B0032", "BBa_B0034"],
@@ -330,13 +346,8 @@ export function exportDesign(){
     let numDesigns = 1;
     let cycleDepth = 1;
 
-    // requirejs(['constellation-js'], function (constellation) {
-    //   let result = constellation(langText, categories, numDesigns, cycleDepth);
-    //   console.log(JSON.stringify(result));
-    // });
-    console.log("args --> ", currentSpace, langText, categories, numDesigns, cycleDepth);
-    let result = constellation.goldbar(currentSpace, langText, categories, numDesigns, cycleDepth, "EDGE");
-    console.log(JSON.stringify(result));
+    let result = constellation.goldbar(designName, langText, categories, numDesigns, cycleDepth, "EDGE").sbol;
+    downloadSBOL(result, "knox_" + designName + "_sbol.xml");
 
     swalSuccess();
     visualizeDesignAndHistory(currentSpace);
