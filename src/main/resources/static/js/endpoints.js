@@ -337,12 +337,10 @@ export function exportDesign(){
     designNameArray.pop();
     let designName = designNameArray.join("_");
 
-    let langText = request.response;
-    let categories = `{"promoter": ["BBa_R0040", "BBa_J23100"],
-      "ribosome_entry_site": ["BBa_B0032", "BBa_B0034"],
-      "cds": ["BBa_E0040", "BBa_E1010"],
-      "nonCodingRna": ["BBa_F0010"],
-      "terminator": ["BBa_B0010"]}`;
+    let res = JSON.parse(request.response);
+
+    let langText = res[0];
+    let categories = res[1];
     let numDesigns = 1;
     let cycleDepth = 1;
 

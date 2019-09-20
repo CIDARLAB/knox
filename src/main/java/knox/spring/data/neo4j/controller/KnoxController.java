@@ -690,43 +690,27 @@ public class KnoxController {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
-//	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.POST)
-//	public ResponseEntity<String> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
-//											 @RequestParam(value = "namespace", required = false) String namespace) {
-//
-//		SBOLDocument sbolDoc;
-//
-//		try {
-//			sbolDoc = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
-//			sbolDoc.write("sbol.xml", SBOLDocument.RDF);
-//
-//		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException | URISyntaxException e) {
-//			e.printStackTrace();
-//			return new ResponseEntity<String>("{\"message\": \"" + e.getMessage() + "\"}",
-//					HttpStatus.BAD_REQUEST);
-//		}
-//
-//		//TODO should download SBOL document or throw error on the UI
-//		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
-//	}
-
+	// LIST VER
 	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.GET)
-	public ResponseEntity<String> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
+	public ResponseEntity<List<String>> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
 											 @RequestParam(value = "namespace", required = false) String namespace) {
 
-		String goldbar;
+		List<String> res;
 		try {
-			goldbar = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
+			res = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
 //			return new ResponseEntity<String>(goldbar, HttpStatus.NO_CONTENT);
+			System.out.println("end of try");
 
 		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException | URISyntaxException e) {
 			e.printStackTrace();
-			return new ResponseEntity<String>("{\"message\": \"" + e.getMessage() + "\"}",
-					HttpStatus.BAD_REQUEST);
+			res = Arrays.asList("{\"message\": \"" + e.getMessage() + "\"}");
+			System.out.println("before returning bad request");
+			return new ResponseEntity<List<String>>(res, HttpStatus.BAD_REQUEST);
 		}
 
 		//TODO should download SBOL document or throw error on the UI
-		return new ResponseEntity<String>(goldbar, HttpStatus.OK);
+		System.out.println("before returning data");
+		return new ResponseEntity<List<String>>(res, HttpStatus.OK);
 	}
     
     @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)

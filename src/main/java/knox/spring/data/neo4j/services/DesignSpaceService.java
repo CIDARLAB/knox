@@ -612,22 +612,12 @@ public class DesignSpaceService {
 		}
 	}
 
-//	public SBOLDocument exportCombinatorial(String targetSpaceID, String namespace)
-//			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException, URISyntaxException {
-//
-//		DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
-//		SBOLGeneration sbolGenerator = new SBOLGeneration(targetSpace, namespace);
-//		return sbolGenerator.createSBOLDocument();
-////		return sbolGenerator.createGOLDBAR();
-//	}
-
-	public String exportCombinatorial(String targetSpaceID, String namespace)
+	public List<String> exportCombinatorial(String targetSpaceID, String namespace)
 			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException, URISyntaxException {
 
 		DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
 		SBOLGeneration sbolGenerator = new SBOLGeneration(targetSpace, namespace);
 		return sbolGenerator.createSBOLDocument();
-//		return sbolGenerator.createGOLDBAR();
 	}
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
