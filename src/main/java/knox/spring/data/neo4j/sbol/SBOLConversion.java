@@ -85,40 +85,41 @@ public class SBOLConversion {
 		// order components by sequence constraints
 		VariableComponent[] sortedVCs = sortVariableComponents(combinatorialDerivation);
 		for (VariableComponent variableComponent : sortedVCs) {
+			if (variableComponent != null) {
+				// recurse through variant derivations
+				Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
 
-			// recurse through variant derivations
-			Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
+				Boolean hasVariants = !variableComponent.getVariants().isEmpty() || !variableComponent.getVariantCollections().isEmpty();
 
-			Boolean hasVariants = !variableComponent.getVariants().isEmpty() || !variableComponent.getVariantCollections().isEmpty();
-
-			//handle structure for just repeats
-			if (variantDerivs.size() == 1 && !hasVariants){
-				for (CombinatorialDerivation cv : variantDerivs) {
-					inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
-				}
-			}
-
-			//else handle collapsed complex ORs
-			else if (variantDerivs.size() > 0){
-				List<NodeSpace> orSpace = new LinkedList<>();
-				NodeSpace outputSpace = new NodeSpace();
-
-				if (hasVariants){
-					orSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template)); //add variants
+				//handle structure for just repeats
+				if (variantDerivs.size() == 1 && !hasVariants){
+					for (CombinatorialDerivation cv : variantDerivs) {
+						inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+					}
 				}
 
-				for (CombinatorialDerivation cv : variantDerivs) {
-					orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv)));
+				//else handle collapsed complex ORs
+				else if (variantDerivs.size() > 0){
+					List<NodeSpace> orSpace = new LinkedList<>();
+					NodeSpace outputSpace = new NodeSpace();
+
+					if (hasVariants){
+						orSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template)); //add variants
+					}
+
+					for (CombinatorialDerivation cv : variantDerivs) {
+						orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv)));
+					}
+
+					OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
+					List<NodeSpace> tempSpace = new LinkedList<>();
+					tempSpace.add(outputSpace);
+					inputSpace.add(applyOperator(variableComponent.getOperator(), tempSpace));
 				}
 
-				OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
-				List<NodeSpace> tempSpace = new LinkedList<>();
-				tempSpace.add(outputSpace);
-				inputSpace.add(applyOperator(variableComponent.getOperator(), tempSpace));
-			}
-
-			else if (hasVariants){
-				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template));
+				else if (hasVariants){
+					inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template));
+				}
 			}
 		}
 
@@ -128,20 +129,69 @@ public class SBOLConversion {
 	private VariableComponent[] sortVariableComponents(CombinatorialDerivation combinatorialDerivation){
 		//make ordered components from sequence constraints
 		List<Component> orderedComponents = new ArrayList<>();
-		Set<SequenceConstraint> seqConstraints = combinatorialDerivation.getTemplate().getSequenceConstraints();
+		
+		ComponentDefinition template = combinatorialDerivation.getTemplate();
+		Set<SequenceConstraint> seqConstraints = template.getSequenceConstraints();
+		
+		//check if total ordering
+		Set<URI> subjectURIs = new HashSet<URI>();
+		Set<URI> objectURIs = new HashSet<URI>();
+		
+		Set<URI> firstURI = new HashSet<URI>();
+		Set<URI> lastURI = new HashSet<URI>();
+		
+		HashMap<URI,URI> precedesMap = new HashMap<URI,URI>();
+		
 		for (SequenceConstraint constraint : seqConstraints) {
-			//subject precedes object
-			Component subject = constraint.getSubject();
-			Component object = constraint.getObject();
-			int subIndex = orderedComponents.indexOf(subject);
-			int objIndex = orderedComponents.indexOf(object);
-			if (subIndex == -1 && objIndex == -1){
-				orderedComponents.add(subject);
-				orderedComponents.add(object);
-			}else if(subIndex > -1){
-				orderedComponents.add(subIndex+1, object);
-			}else if(objIndex > -1){
-				orderedComponents.add(objIndex, subject);
+			if (constraint.getRestriction().equals(RestrictionType.PRECEDES)) {
+				subjectURIs.add(constraint.getSubjectURI());
+				objectURIs.add(constraint.getObjectURI());
+
+				firstURI.add(constraint.getSubjectURI());
+				lastURI.add(constraint.getObjectURI());
+				
+				precedesMap.put(constraint.getSubjectURI(), constraint.getObjectURI());
+			}
+		}
+		
+		firstURI.removeAll(objectURIs);
+		lastURI.removeAll(subjectURIs);
+		
+		boolean totalOrdering;
+		
+		if (firstURI.size() == 1 && lastURI.size() == 1) {
+			URI currentURI = firstURI.iterator().next();
+			
+			orderedComponents.add(template.getComponent(currentURI));
+			
+			while (precedesMap.containsKey(currentURI)) {
+				currentURI = precedesMap.get(currentURI);
+				
+				orderedComponents.add(template.getComponent(currentURI));
+			}
+			
+			totalOrdering = currentURI.equals(lastURI.iterator().next());
+		} else {
+			totalOrdering = false;
+		}
+		
+		if (!totalOrdering) {
+			orderedComponents.clear();
+			
+			for (SequenceConstraint constraint : seqConstraints) {
+				//subject precedes object
+				Component subject = constraint.getSubject();
+				Component object = constraint.getObject();
+				int subIndex = orderedComponents.indexOf(subject);
+				int objIndex = orderedComponents.indexOf(object);
+				if (subIndex == -1 && objIndex == -1){
+					orderedComponents.add(subject);
+					orderedComponents.add(object);
+				}else if(subIndex > -1){
+					orderedComponents.add(subIndex+1, object);
+				}else if(objIndex > -1){
+					orderedComponents.add(objIndex, subject);
+				}
 			}
 		}
 

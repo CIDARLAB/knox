@@ -830,15 +830,16 @@ public class NodeSpace {
     }
     
     public boolean deleteBlankEdge(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
-    	if ((nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1 || edge.getTail().getNumEdges() == 1) 
+    	if (((nodeIDToIncomingEdges.containsKey(edge.getHeadID()) && nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
+    				|| edge.getTail().getNumEdges() == 1) 
     			&& !edge.getTail().hasDiffNodeType(edge.getHead())
     			&& (!edge.getTail().isAcceptNode() || edge.getHead().isAcceptNode() 
     					|| nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
     			&& (!edge.getHead().isStartNode() || edge.getTail().isStartNode() 
     					|| edge.getTail().getNumEdges() == 1)
     			&& (!edge.getTail().isStartNode() 
-    					|| nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1
-    					|| !nodeIDToIncomingEdges.get(edge.getTailID()).isEmpty())) {
+    					|| (nodeIDToIncomingEdges.containsKey(edge.getHeadID()) && nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
+    					|| (nodeIDToIncomingEdges.containsKey(edge.getTailID()) && !nodeIDToIncomingEdges.get(edge.getTailID()).isEmpty()))) {
     		edge.delete();
     		
     		Set<Edge> headEdges = edge.getHead().removeEdges();
@@ -851,11 +852,13 @@ public class NodeSpace {
     		
     		Set<Edge> incomingHeadEdges = new HashSet<Edge>();
     		
-    		for (Edge incomingHeadEdge : nodeIDToIncomingEdges.get(edge.getHeadID())) {
-    			if (incomingHeadEdge != edge) {
-    				incomingHeadEdge.setHead(edge.getTail());
-    				
-    				incomingHeadEdges.add(incomingHeadEdge);
+    		if (nodeIDToIncomingEdges.containsKey(edge.getHeadID())) {
+    			for (Edge incomingHeadEdge : nodeIDToIncomingEdges.get(edge.getHeadID())) {
+    				if (incomingHeadEdge != edge) {
+    					incomingHeadEdge.setHead(edge.getTail());
+
+    					incomingHeadEdges.add(incomingHeadEdge);
+    				}
     			}
     		}
     		
