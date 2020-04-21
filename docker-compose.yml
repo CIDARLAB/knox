@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  knox-db:
+    image: neo4j:3.4.1-enterprise
+    ports:
+      - '7474:7474'
+      - '7687:7687' # for bolt
+    container_name: knox-db
+    environment:
+      - NEO4J_AUTH=neo4j/kn0x
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+    volumes:
+    # local_folder:container_folder
+    # for persistence
+      - ./data:/data
+      - ./logs:/logs
+  knox-app:
+    build:
+      context: .
+    ports:
+      - '8080:8080'
+    container_name: knox-app
+    environment:
+      - spring.data.neo4j.uri=bolt://knox-db:7687
+    depends_on:
+      - knox-db
