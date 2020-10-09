@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.sbol;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 import knox.spring.data.neo4j.domain.Edge;
@@ -212,84 +213,238 @@ public class SBOLConversion {
 		return orderedVCs;
 	}
 	
+	private Set<String> getSOTermsByAccessionURI(URI accessionURI) {
+		Set<String> soTerms = new HashSet<String>();
+		
+		switch (accessionURI.toString()) {
+		case "http://identifiers.org/so/SO:0000031":
+			soTerms.add("aptamer");
+			break;
+		case "http://identifiers.org/so/SO:0001953":
+			soTerms.add("restriction_enzyme_assembly_scar");
+			break;
+		case "http://identifiers.org/so/SO:0001691":
+			soTerms.add("blunt_end_restriction_enzyme_cleavage_site");
+			break;
+		case "http://identifiers.org/so/SO:0000316":
+			soTerms.add("CDS");
+			break;
+		case "http://identifiers.org/so/SO:0001955":
+			soTerms.add("protein_stability_element");
+			break;
+		case "http://identifiers.org/so/SO:0000804":
+			soTerms.add("engineered_region");
+			break;
+		case "http://identifiers.org/so/SO:0001932":
+			soTerms.add("restriction_enzyme_five_prime_single_strand_overhang");
+			break;
+		case "http://identifiers.org/so/SO:0001975":
+			soTerms.add("five_prime_sticky_end_restriction_enzyme_cleavage_site");
+			break;
+		case "http://identifiers.org/so/SO:0000627":
+			soTerms.add("insulator");
+			break;
+		case "http://identifiers.org/so/SO:0001263":
+			soTerms.add("ncRNA_gene");
+			break;
+		case "http://identifiers.org/so/SO:0000834":
+			soTerms.add("mature_transcript_region");
+			break;
+		case "http://identifiers.org/so/SO:0001688":
+			soTerms.add("restriction_enzyme_cleavage_junction");
+			break;
+		case "http://identifiers.org/so/SO:0001687":
+			soTerms.add("restriction_enzyme_recognition_site");
+			break;
+		case "http://identifiers.org/so/SO:0000057":
+			soTerms.add("operator");
+			break;
+		case "http://identifiers.org/so/SO:0000409":
+			soTerms.add("binding_site");
+			break;
+		case "http://identifiers.org/so/SO:0000296":
+			soTerms.add("origin_of_replication");
+			break;
+		case "http://identifiers.org/so/SO:0000724":
+			soTerms.add("oriT");
+			break;
+		case "http://identifiers.org/so/SO:0000553":
+			soTerms.add("polyA_site");
+			break;
+		case "http://identifiers.org/so/SO:0005850":
+			soTerms.add("primer_binding_site");
+			break;
+		case "http://identifiers.org/so/SO:0000167":
+			soTerms.add("promoter");
+			break;
+		case "http://identifiers.org/so/SO:0001956":
+			soTerms.add("protease_site");
+			break;
+		case "http://identifiers.org/so/SO:0001546":
+			soTerms.add("transcript_stability_variant");
+			break;
+		case "http://identifiers.org/so/SO:0001977":
+			soTerms.add("ribonuclease_site");
+			break;
+		case "http://identifiers.org/so/SO:0000139":
+			soTerms.add("ribosome_entry_site");
+			break;
+		case "http://identifiers.org/so/SO:0000374":
+			soTerms.add("ribozyme");
+			break;
+		case "http://identifiers.org/so/SO:0001979":
+			soTerms.add("RNA_stability_element");
+			break;
+		case "http://identifiers.org/so/SO:0001978":
+			soTerms.add("signature");
+			break;
+		case "http://identifiers.org/so/SO:0000299":
+			soTerms.add("specific_recombination_site");
+			break;
+		case "http://identifiers.org/so/SO:0000141":
+			soTerms.add("terminator");
+			break;
+		case "http://identifiers.org/so/SO:0001933":
+			soTerms.add("restriction_enzyme_three_prime_single_strand_overhang");
+			break;
+		case "http://identifiers.org/so/SO:0001976":
+			soTerms.add("three_prime_sticky_end_restriction_enzyme_cleavage_site");
+			break;
+		case "http://identifiers.org/so/SO:0000616":
+			soTerms.add("transcription_end_site");
+			break;
+		case "http://identifiers.org/so/SO:0000319":
+			soTerms.add("stop_codon");
+			break;
+		case "http://identifiers.org/so/SO:0000327":
+			soTerms.add("coding_end");
+			break;
+		}
+		
+		return soTerms;
+	}
+	
+	private Set<URI> getAccessionURIsBySOTerm(String soTerm) {
+		Set<URI> accessionURIs = new HashSet<URI>();
+		
+		try {
+			switch (soTerm) {
+			case "aptamer":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000031"));
+				break;
+			case "restriction_enzyme_assembly_scar":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001953"));
+				break;
+			case "blunt_end_restriction_enzyme_cleavage_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001691"));
+				break;
+			case "CDS":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000316"));
+				break;
+			case "protein_stability_element":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001955"));
+				break;
+			case "engineered_region":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000804"));
+				break;
+			case "restriction_enzyme_five_prime_single_strand_overhang":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001932"));
+				break;
+			case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001975"));
+				break;
+			case "ribozyme":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000374"));
+				break;
+			case "insulator":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000627"));
+				break;
+			case "ncRNA_gene":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001263"));
+				break;
+			case "mature_transcript_region":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000834"));
+				break;
+			case "restriction_enzyme_cleavage_junction":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001688"));
+				break;
+			case "restriction_enzyme_recognition_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001687"));
+				break;
+			case "operator":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000057"));
+				break;
+			case "binding_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000409"));
+				break;
+			case "origin_of_replication":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000296"));
+				break;
+			case "oriT":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000724"));
+				break;
+			case "polyA_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000553"));
+				break;
+			case "primer_binding_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0005850"));
+				break;
+			case "promoter":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000167"));
+				break;
+			case "protease_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001956"));
+				break;
+			case "transcript_stability_variant":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001546"));
+				break;
+			case "ribonuclease_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001977"));
+				break;
+			case "ribosome_entry_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000139"));
+				break;
+			case "RNA_stability_element":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001979"));
+				break;
+			case "signature":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001978"));
+				break;
+			case "specific_recombination_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000299"));
+				break;
+			case "terminator":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000141"));
+				break;
+			case "restriction_enzyme_three_prime_single_strand_overhang":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001933"));
+				break;
+			case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001976"));
+				break;
+			case "transcription_end_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000616"));
+				break;
+			case "stop_codon":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000319"));
+				break;
+			case "coding_end":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000327"));
+				break;
+			}
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return accessionURIs;
+	}
+	
 	private Set<String> getSOTermsByAccessionURIs(Set<URI> accessionURIs) {
 		Set<String> soTerms = new HashSet<String>();
 		
 		for (URI accessionURI : accessionURIs) {
-			switch (accessionURI.toString()) {
-			case "http://identifiers.org/so/SO:0000031":
-				soTerms.add("aptamer");
-			case "http://identifiers.org/so/SO:0001953":
-				soTerms.add("restriction_enzyme_assembly_scar");
-			case "http://identifiers.org/so/SO:0001691":
-				soTerms.add("blunt_end_restriction_enzyme_cleavage_site");
-			case "http://identifiers.org/so/SO:0000316":
-				soTerms.add("CDS");
-			case "http://identifiers.org/so/SO:0001955":
-				soTerms.add("protein_stability_element");
-			case "http://identifiers.org/so/SO:0000804":
-				soTerms.add("engineered_region");
-			case "http://identifiers.org/so/SO:0001932":
-				soTerms.add("restriction_enzyme_five_prime_single_strand_overhang");
-			case "http://identifiers.org/so/SO:0001975":
-				soTerms.add("five_prime_sticky_end_restriction_enzyme_cleavage_site");
-			// Currently no SBOL glyph for ribozyme in particular,
-			// but RiboJ is listed as a prototypical insulator
-			case "http://identifiers.org/so/SO:0000627":
-				soTerms.add("insulator");
-				soTerms.add("ribozyme");
-			case "http://identifiers.org/so/SO:0001263":
-				soTerms.add("ncRNA_gene");
-			case "http://identifiers.org/so/SO:0000834":
-				soTerms.add("mature_transcript_region");
-			case "http://identifiers.org/so/SO:0001688":
-				soTerms.add("restriction_enzyme_cleavage_junction");
-			case "http://identifiers.org/so/SO:0001687":
-				soTerms.add("restriction_enzyme_recognition_site");
-			case "http://identifiers.org/so/SO:0000057":
-				soTerms.add("operator");
-			case "http://identifiers.org/so/SO:0000409":
-				soTerms.add("binding_site");
-			case "http://identifiers.org/so/SO:0000296":
-				soTerms.add("origin_of_replication");
-			case "http://identifiers.org/so/SO:0000724":
-				soTerms.add("oriT");
-			case "http://identifiers.org/so/SO:0000553":
-				soTerms.add("polyA_site");
-			case "http://identifiers.org/so/SO:0005850":
-				soTerms.add("primer_binding_site");
-			case "http://identifiers.org/so/SO:0000167":
-				soTerms.add("promoter");
-			case "http://identifiers.org/so/SO:0001956":
-				soTerms.add("protease_site");
-			case "http://identifiers.org/so/SO:0001546":
-				soTerms.add("transcript_stability_variant");
-			case "http://identifiers.org/so/SO:0001977":
-				soTerms.add("ribonuclease_site");
-			case "http://identifiers.org/so/SO:0000139":
-				soTerms.add("ribosome_entry_site");
-			// See comment above on insulator
-			case "http://identifiers.org/so/SO:0000374":
-				soTerms.add("ribozyme");
-			case "http://identifiers.org/so/SO:0001979":
-				soTerms.add("RNA_stability_element");
-			case "http://identifiers.org/so/SO:0001978":
-				soTerms.add("signature");
-			case "http://identifiers.org/so/SO:0000299":
-				soTerms.add("specific_recombination_site");
-			case "http://identifiers.org/so/SO:0000141":
-				soTerms.add("terminator");
-			case "http://identifiers.org/so/SO:0001933":
-				soTerms.add("restriction_enzyme_three_prime_single_strand_overhang");
-			case "http://identifiers.org/so/SO:0001976":
-				soTerms.add("three_prime_sticky_end_restriction_enzyme_cleavage_site");
-			case "http://identifiers.org/so/SO:0000616":
-				soTerms.add("transcription_end_site");
-			case "http://identifiers.org/so/SO:0000319":
-				soTerms.add("stop_codon");
-			case "http://identifiers.org/so/SO:0000327":
-				soTerms.add("coding_end");
-			}
+			soTerms.addAll(getSOTermsByAccessionURI(accessionURI));
 		}
 		
 		return soTerms;
@@ -307,8 +462,8 @@ public class SBOLConversion {
 			Set<URI> roles = variant.getRoles().isEmpty()? variableDefinition.getRoles(): variant.getRoles();
 			Set<String> roleTerms = getSOTermsByAccessionURIs(roles);
 			
-			if (roleTerms.contains(variant.getDisplayId())) {
-				for (URI role : roles) {
+			if (roleTerms.contains(variant.getDisplayId()) && variant.getSequences().isEmpty()) {
+				for (URI role : getAccessionURIsBySOTerm(variant.getDisplayId())) {
 					atomRoles.add(role.toString());
 				}
 			} else {
@@ -328,8 +483,8 @@ public class SBOLConversion {
 					Set<URI> roles = def.getRoles().isEmpty()? variableDefinition.getRoles(): def.getRoles();
 					Set<String> roleTerms = getSOTermsByAccessionURIs(roles);
 					
-					if (roleTerms.contains(def.getDisplayId())) {
-						for (URI role : roles) {
+					if (roleTerms.contains(def.getDisplayId()) && def.getSequences().isEmpty()) {
+						for (URI role : getAccessionURIsBySOTerm(def.getDisplayId())) {
 							atomRoles.add(role.toString());
 						}
 					} else {

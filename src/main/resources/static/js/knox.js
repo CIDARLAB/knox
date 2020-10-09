@@ -285,6 +285,10 @@ export function getSBOLImage(role){
       return sbolpath + "five-prime-sticky-restriction-site.svg";
     case "http://identifiers.org/so/SO:0000627":
       return sbolpath + "insulator.svg";
+    // There is no SBOL visual glyph mapped to the SO term ribozyme,
+    // but RiboJ is listed as a prototypical example of the insulator glyph.
+    case "http://identifiers.org/so/SO:0000374":
+      return sbolpath + "insulator.svg";
     case "http://identifiers.org/so/SO:0001263":
     case "http://identifiers.org/so/SO:0000834":
       return sbolpath + "ncrna.svg";
