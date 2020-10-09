@@ -211,6 +211,89 @@ public class SBOLConversion {
 
 		return orderedVCs;
 	}
+	
+	private Set<String> getSOTermsByAccessionURIs(Set<URI> accessionURIs) {
+		Set<String> soTerms = new HashSet<String>();
+		
+		for (URI accessionURI : accessionURIs) {
+			switch (accessionURI.toString()) {
+			case "http://identifiers.org/so/SO:0000031":
+				soTerms.add("aptamer");
+			case "http://identifiers.org/so/SO:0001953":
+				soTerms.add("restriction_enzyme_assembly_scar");
+			case "http://identifiers.org/so/SO:0001691":
+				soTerms.add("blunt_end_restriction_enzyme_cleavage_site");
+			case "http://identifiers.org/so/SO:0000316":
+				soTerms.add("CDS");
+			case "http://identifiers.org/so/SO:0001955":
+				soTerms.add("protein_stability_element");
+			case "http://identifiers.org/so/SO:0000804":
+				soTerms.add("engineered_region");
+			case "http://identifiers.org/so/SO:0001932":
+				soTerms.add("restriction_enzyme_five_prime_single_strand_overhang");
+			case "http://identifiers.org/so/SO:0001975":
+				soTerms.add("five_prime_sticky_end_restriction_enzyme_cleavage_site");
+			// Currently no SBOL glyph for ribozyme in particular,
+			// but RiboJ is listed as a prototypical insulator
+			case "http://identifiers.org/so/SO:0000627":
+				soTerms.add("insulator");
+				soTerms.add("ribozyme");
+			case "http://identifiers.org/so/SO:0001263":
+				soTerms.add("ncRNA_gene");
+			case "http://identifiers.org/so/SO:0000834":
+				soTerms.add("mature_transcript_region");
+			case "http://identifiers.org/so/SO:0001688":
+				soTerms.add("restriction_enzyme_cleavage_junction");
+			case "http://identifiers.org/so/SO:0001687":
+				soTerms.add("restriction_enzyme_recognition_site");
+			case "http://identifiers.org/so/SO:0000057":
+				soTerms.add("operator");
+			case "http://identifiers.org/so/SO:0000409":
+				soTerms.add("binding_site");
+			case "http://identifiers.org/so/SO:0000296":
+				soTerms.add("origin_of_replication");
+			case "http://identifiers.org/so/SO:0000724":
+				soTerms.add("oriT");
+			case "http://identifiers.org/so/SO:0000553":
+				soTerms.add("polyA_site");
+			case "http://identifiers.org/so/SO:0005850":
+				soTerms.add("primer_binding_site");
+			case "http://identifiers.org/so/SO:0000167":
+				soTerms.add("promoter");
+			case "http://identifiers.org/so/SO:0001956":
+				soTerms.add("protease_site");
+			case "http://identifiers.org/so/SO:0001546":
+				soTerms.add("transcript_stability_variant");
+			case "http://identifiers.org/so/SO:0001977":
+				soTerms.add("ribonuclease_site");
+			case "http://identifiers.org/so/SO:0000139":
+				soTerms.add("ribosome_entry_site");
+			// See comment above on insulator
+			case "http://identifiers.org/so/SO:0000374":
+				soTerms.add("ribozyme");
+			case "http://identifiers.org/so/SO:0001979":
+				soTerms.add("RNA_stability_element");
+			case "http://identifiers.org/so/SO:0001978":
+				soTerms.add("signature");
+			case "http://identifiers.org/so/SO:0000299":
+				soTerms.add("specific_recombination_site");
+			case "http://identifiers.org/so/SO:0000141":
+				soTerms.add("terminator");
+			case "http://identifiers.org/so/SO:0001933":
+				soTerms.add("restriction_enzyme_three_prime_single_strand_overhang");
+			case "http://identifiers.org/so/SO:0001976":
+				soTerms.add("three_prime_sticky_end_restriction_enzyme_cleavage_site");
+			case "http://identifiers.org/so/SO:0000616":
+				soTerms.add("transcription_end_site");
+			case "http://identifiers.org/so/SO:0000319":
+				soTerms.add("stop_codon");
+			case "http://identifiers.org/so/SO:0000327":
+				soTerms.add("coding_end");
+			}
+		}
+		
+		return soTerms;
+	}
 
 	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent, ComponentDefinition template) throws SBOLException{
 		ArrayList<String> atomIDs = new ArrayList<>();
@@ -222,9 +305,17 @@ public class SBOLConversion {
 		// Find variant roles
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
 			Set<URI> roles = variant.getRoles().isEmpty()? variableDefinition.getRoles(): variant.getRoles();
-			for (URI role : roles) {
-				atomIDs.add(variant.getIdentity().toString());
-				atomRoles.add(role.toString());
+			Set<String> roleTerms = getSOTermsByAccessionURIs(roles);
+			
+			if (roleTerms.contains(variant.getDisplayId())) {
+				for (URI role : roles) {
+					atomRoles.add(role.toString());
+				}
+			} else {
+				for (URI role : roles) {
+					atomIDs.add(variant.getIdentity().toString());
+					atomRoles.add(role.toString());
+				}
 			}
 		}
 
@@ -233,10 +324,19 @@ public class SBOLConversion {
 			for (TopLevel member: collection.getMembers()){
 				if (member.getClass() == ComponentDefinition.class){
 					ComponentDefinition def = (ComponentDefinition) member;
+					
 					Set<URI> roles = def.getRoles().isEmpty()? variableDefinition.getRoles(): def.getRoles();
-					for (URI role : roles) {
-						atomIDs.add(def.getIdentity().toString());
-						atomRoles.add(role.toString());
+					Set<String> roleTerms = getSOTermsByAccessionURIs(roles);
+					
+					if (roleTerms.contains(def.getDisplayId())) {
+						for (URI role : roles) {
+							atomRoles.add(role.toString());
+						}
+					} else {
+						for (URI role : roles) {
+							atomIDs.add(def.getIdentity().toString());
+							atomRoles.add(role.toString());
+						}
 					}
 				}
 			}
