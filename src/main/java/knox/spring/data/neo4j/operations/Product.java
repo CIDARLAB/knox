@@ -147,11 +147,7 @@ public class Product {
 
 					Edge productEdge = productTail.copyEdge(colEdge, productHead);
 
-					if (tolerance <= 0 || tolerance == 2) {
-						productEdge.intersectWithEdge(rowEdge, tolerance);
-					} else if (tolerance == 1 || tolerance >= 3) {
-						productEdge.unionWithEdge(rowEdge);
-					}
+					productEdge.intersectWithEdge(rowEdge, tolerance);
 					
 					rowIDsToProductEdges.get(rowIDs).add(productEdge);
 					colIDsToProductEdges.get(colIDs).add(productEdge);
@@ -224,45 +220,29 @@ public class Product {
     	List<Set<Node>> productHeads = new LinkedList<Set<Node>>();
     	productHeads.add(new HashSet<Node>());
     	
-    	Stack<Edge> edgeStack = new Stack<Edge>();
+    	Stack<Edge> blankEdgeStack = new Stack<Edge>();
     	
-    	edgeStack.push(blankEdge);
+    	blankEdgeStack.push(blankEdge);
     	
-    	Set<Edge> headEdges = new HashSet<Edge>();
+    	Set<Edge> traversedEdges = new HashSet<Edge>();
     	
-    	while (!edgeStack.isEmpty()) {
-    		Edge tempEdge = edgeStack.pop();
+    	while (!blankEdgeStack.isEmpty()) {
+    		Edge tempBlankEdge = blankEdgeStack.pop();
     		
-    		Set<Node> tempProductHeads = idToProductNodes.get(tempEdge.getHeadID());
+    		traversedEdges.add(tempBlankEdge);
+    		
+    		Set<Node> tempProductHeads = idToProductNodes.get(tempBlankEdge.getHeadID());
     		
     		if (tempProductHeads.isEmpty()) {
-    			if (tempEdge.getHead().hasEdges()) {
-    				for (Edge headEdge : tempEdge.getHead().getEdges()) {
-    					if (headEdge.isBlank()) {
-    						edgeStack.push(headEdge);
+    			if (tempBlankEdge.getHead().hasEdges()) {
+    				for (Edge headEdge : tempBlankEdge.getHead().getEdges()) {
+    					if (headEdge.isBlank() && !traversedEdges.contains(headEdge)) {
+    						blankEdgeStack.push(headEdge);
     					}
     				}
     			}
     		} else {
     			productHeads.get(productHeads.size() - 1).addAll(tempProductHeads);
-    			
-    			if (tempEdge.getHead().hasEdges()) {
-    				for (Edge headEdge : tempEdge.getHead().getEdges()) {
-    					if (headEdge.isBlank()) {
-    						headEdges.add(headEdge);
-    					}
-    				}
-    			}
-    		}
-    		
-    		if (edgeStack.isEmpty() && !headEdges.isEmpty()) {
-    			for (Edge headEdge : headEdges) {
-    				edgeStack.push(headEdge);
-    			}
-    			
-    			headEdges.clear();
-    			
-    			productHeads.add(new HashSet<Node>());
     		}
     	}
     	

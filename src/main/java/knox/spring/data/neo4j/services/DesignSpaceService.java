@@ -237,15 +237,22 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
+//    	long startTime = System.nanoTime();
     	ANDOperator.apply(inputSpaces, outputSpace, tolerance, isComplete, roles);
+//    	long endTime = System.nanoTime();
+//    	long duration = (endTime - startTime);
+//    	LOG.info("AND TIME: " + duration);
+//    	LOG.info("AND NODES: " + outputSpace.getNodes().size());
+//    	LOG.info("AND EDGES: " + outputSpace.getEdges().size());
     	
-    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+//      No version history
+//    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+//    	
+//    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
+//    			outputSpace, inputSnaps);
+//    	
+//    	ANDOperator.apply(inputSnaps, outputSnap, tolerance, isComplete, roles);
     	
-    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
-    			outputSpace, inputSnaps);
-    	
-    	ANDOperator.apply(inputSnaps, outputSnap, tolerance, isComplete, roles);
-
     	saveDesignSpace(outputSpace);
     }
     
@@ -290,14 +297,21 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
+//    	long startTime = System.nanoTime();
     	MergeOperator.apply(inputSpaces, outputSpace, tolerance, roles);
+//    	long endTime = System.nanoTime();
+//    	long duration = (endTime - startTime);
+//    	LOG.info("MERGE TIME: " + duration);
+//    	LOG.info("MERGE NODES: " + outputSpace.getNodes().size());
+//    	LOG.info("MERGE EDGES: " + outputSpace.getEdges().size());
     	
-    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
-    	
-    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
-    			outputSpace, inputSnaps);
-    	
-    	MergeOperator.apply(inputSnaps, outputSnap, tolerance, roles);
+//      No version history
+//    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+//    	
+//    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
+//    			outputSpace, inputSnaps);
+//    	
+//    	MergeOperator.apply(inputSnaps, outputSnap, tolerance, roles);
 
     	saveDesignSpace(outputSpace);
     }
@@ -865,9 +879,10 @@ public class DesignSpaceService {
 	private DesignSpace loadDesignSpace(String targetSpaceID) {
 		DesignSpace targetSpace = designSpaceRepository.findOne(getDesignSpaceGraphID(targetSpaceID), 3);
 
-		for (Commit commit : targetSpace.getCommits()) {
-			commit.setSnapshot(reloadSnapshot(commit.getSnapshot()));
-		}
+//      No version history
+//		for (Commit commit : targetSpace.getCommits()) {
+//			commit.setSnapshot(reloadSnapshot(commit.getSnapshot()));
+//		}
 
 		return targetSpace;
 	}
@@ -1099,26 +1114,28 @@ public class DesignSpaceService {
 		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
 
 		space.clearEdges();
-
-		Set<Commit> commits = space.getCommits();
-
-		HashMap<String, HashMap<String, Set<Edge>>> commitIDToEdges = new HashMap<String, HashMap<String, Set<Edge>>>();
-
-		for (Commit commit : commits) {
-			commitIDToEdges.put(commit.getCommitID(), 
-					commit.getSnapshot().mapNodeIDsToEdges());
-
-			commit.getSnapshot().clearEdges();
-		}
+		
+//      No version history
+//		Set<Commit> commits = space.getCommits();
+//
+//		HashMap<String, HashMap<String, Set<Edge>>> commitIDToEdges = new HashMap<String, HashMap<String, Set<Edge>>>();
+//
+//		for (Commit commit : commits) {
+//			commitIDToEdges.put(commit.getCommitID(), 
+//					commit.getSnapshot().mapNodeIDsToEdges());
+//
+//			commit.getSnapshot().clearEdges();
+//		}
 		
 		designSpaceRepository.save(space);
 
 		space.loadEdges(nodeIDToEdges);
-
-		for (Commit commit : commits) {
-			commit.getSnapshot().loadEdges(commitIDToEdges.get(commit.getCommitID()));
-
-		}
+		
+//      No version history
+//		for (Commit commit : commits) {
+//			commit.getSnapshot().loadEdges(commitIDToEdges.get(commit.getCommitID()));
+//
+//		}
 
 		designSpaceRepository.save(space);
 	}

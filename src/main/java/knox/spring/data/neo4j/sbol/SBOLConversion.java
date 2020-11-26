@@ -454,19 +454,11 @@ public class SBOLConversion {
 		ArrayList<String> atomIDs = new ArrayList<>();
 		ArrayList<String> atomRoles = new ArrayList<>();
 
-		Component variable = variableComponent.getVariable();
-		ComponentDefinition variableDefinition = variable.getDefinition();
-
-		// Find variant roles
+		// Add IDs and roles for concrete parts from variants
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
-			Set<URI> roles = variant.getRoles().isEmpty()? variableDefinition.getRoles(): variant.getRoles();
-			Set<String> roleTerms = getSOTermsByAccessionURIs(roles);
-			
-			if (roleTerms.contains(variant.getDisplayId()) && variant.getSequences().isEmpty()) {
-				for (URI role : getAccessionURIsBySOTerm(variant.getDisplayId())) {
-					atomRoles.add(role.toString());
-				}
-			} else {
+			if (!variant.getSequenceURIs().isEmpty()) {
+				Set<URI> roles = variant.getRoles();
+				
 				for (URI role : roles) {
 					atomIDs.add(variant.getIdentity().toString());
 					atomRoles.add(role.toString());
@@ -474,22 +466,45 @@ public class SBOLConversion {
 			}
 		}
 
-		// Find collection roles
+		// Add IDs and roles for concrete parts from variant collections
 		for (org.sbolstandard.core2.Collection collection : variableComponent.getVariantCollections()) {
 			for (TopLevel member: collection.getMembers()){
 				if (member.getClass() == ComponentDefinition.class){
 					ComponentDefinition def = (ComponentDefinition) member;
 					
-					Set<URI> roles = def.getRoles().isEmpty()? variableDefinition.getRoles(): def.getRoles();
-					Set<String> roleTerms = getSOTermsByAccessionURIs(roles);
-					
-					if (roleTerms.contains(def.getDisplayId()) && def.getSequences().isEmpty()) {
-						for (URI role : getAccessionURIsBySOTerm(def.getDisplayId())) {
-							atomRoles.add(role.toString());
-						}
-					} else {
+					if (!def.getSequenceURIs().isEmpty()) {
+						Set<URI> roles = def.getRoles();
+						
 						for (URI role : roles) {
 							atomIDs.add(def.getIdentity().toString());
+							atomRoles.add(role.toString());
+						}
+					}
+				}
+			}
+		}
+		
+		// Add roles for abstract parts from variants
+		for (ComponentDefinition variant : variableComponent.getVariants()) {
+			if (variant.getSequenceURIs().isEmpty()) {
+				Set<URI> roles = variant.getRoles();
+				
+				for (URI role : roles) {
+					atomRoles.add(role.toString());
+				}
+			}
+		}
+		
+		// Add IDs and roles for concrete parts from variant collections
+		for (org.sbolstandard.core2.Collection collection : variableComponent.getVariantCollections()) {
+			for (TopLevel member: collection.getMembers()){
+				if (member.getClass() == ComponentDefinition.class){
+					ComponentDefinition def = (ComponentDefinition) member;
+
+					if (def.getSequenceURIs().isEmpty()) {
+						Set<URI> roles = def.getRoles();
+
+						for (URI role : roles) {
 							atomRoles.add(role.toString());
 						}
 					}

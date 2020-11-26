@@ -310,6 +310,26 @@ public class Edge {
     public ArrayList<String> getComponentRoles() { 
         return componentRoles; 
     }
+    
+    public ArrayList<String> getAbstractComponentRoles() { 
+    	ArrayList<String> abstractComponentRoles = new ArrayList<String>();
+    	
+    	for (int i = componentIDs.size(); i < componentRoles.size(); i++) {
+    		abstractComponentRoles.add(componentRoles.get(i));
+    	}
+    	
+        return abstractComponentRoles; 
+    }
+    
+    public ArrayList<String> getConcreteComponentRoles() { 
+    	ArrayList<String> concreteComponentRoles = new ArrayList<String>();
+    	
+    	for (int i = 0; i < componentIDs.size(); i++) {
+    		concreteComponentRoles.add(componentRoles.get(i));
+    	}
+    	
+        return concreteComponentRoles; 
+    }
 
     public boolean hasComponentIDs() {
         return componentIDs != null && !componentIDs.isEmpty();
@@ -343,77 +363,79 @@ public class Edge {
         HashMap<String, Set<String>> otherComponentRoleToIDs = new HashMap<String, Set<String>>();
         
         for (int i = 0; i < otherComponentIDs.size(); i++) {
-            if (!otherComponentIDToRoles.containsKey(otherComponentIDs.get(i))) {
-                otherComponentIDToRoles.put(otherComponentIDs.get(i), new HashSet<String>());
-            }
+        	if (!otherComponentIDToRoles.containsKey(otherComponentIDs.get(i))) {
+        		otherComponentIDToRoles.put(otherComponentIDs.get(i), new HashSet<String>());
+        	}
 
-            otherComponentIDToRoles.get(otherComponentIDs.get(i)).add(otherComponentRoles.get(i));
-            
-            if (!otherComponentRoleToIDs.containsKey(otherComponentRoles.get(i))) {
-                otherComponentRoleToIDs.put(otherComponentRoles.get(i), new HashSet<String>());
-            }
+        	otherComponentIDToRoles.get(otherComponentIDs.get(i)).add(otherComponentRoles.get(i));
+        		
+        	if (!otherComponentRoleToIDs.containsKey(otherComponentRoles.get(i))) {
+        		otherComponentRoleToIDs.put(otherComponentRoles.get(i), new HashSet<String>());
+        	}
 
-            otherComponentRoleToIDs.get(otherComponentRoles.get(i)).add(otherComponentIDs.get(i));
+        	otherComponentRoleToIDs.get(otherComponentRoles.get(i)).add(otherComponentIDs.get(i));
         }
         
-        // Remove non-intersecting component IDs and roles
+        ArrayList<String> abstractRoles = getAbstractComponentRoles();
+        Set<String> otherAbstractRoles = new HashSet<String>(edge.getAbstractComponentRoles());
+        
+        // Remove component IDs and roles based on intersection
         
         for (int i = 0; i < componentRoles.size(); i++) {
             if (i < componentIDs.size()) {
                 if (!otherComponentIDToRoles.containsKey(componentIDs.get(i)) 
-                        && (tolerance < 2 || !otherComponentRoleToIDs.containsKey(componentRoles.get(i)))) {
+                        && (tolerance < 1 || !otherAbstractRoles.contains(componentRoles.get(i)))) {
                     componentIDs.remove(i);
                     componentRoles.remove(i);
 
                     i = i - 1;
                 }
-            } else if (tolerance < 2 || !otherComponentRoleToIDs.containsKey(componentRoles.get(i))) {
+            } else if (tolerance < 1 || otherComponentRoleToIDs.containsKey(componentRoles.get(i))
+            			|| tolerance < 2 || !otherAbstractRoles.contains(componentRoles.get(i))) {
                 componentRoles.remove(i);
 
                 i = i - 1;
             }
         }
         
-        // Map component IDs to roles
+        // Add missing component roles associated with intersecting component IDs
         
         HashMap<String, Set<String>> componentIDToRoles = new HashMap<String, Set<String>>();
-
+        
         for (int i = 0; i < componentIDs.size(); i++) {
-            if (!componentIDToRoles.containsKey(componentIDs.get(i))) {
-                componentIDToRoles.put(componentIDs.get(i), new HashSet<String>());
-            }
+        	if (!componentIDToRoles.containsKey(componentIDs.get(i))) {
+        		componentIDToRoles.put(componentIDs.get(i), new HashSet<String>());
+        	}
 
-            componentIDToRoles.get(componentIDs.get(i)).add(componentRoles.get(i));
+        	componentIDToRoles.get(componentIDs.get(i)).add(componentRoles.get(i));
         }
         
-        // Add missing component roles associated with intersecting component IDs
-
         for (String componentID : componentIDToRoles.keySet()) {
-            for (String otherComponentRole : otherComponentIDToRoles.get(componentID)) {
-                if (!componentIDToRoles.get(componentID).contains(otherComponentRole)) {
-                    componentIDs.add(0, componentID);
-                    componentRoles.add(0, otherComponentRole);
-                }
-            }
+        	if (otherComponentIDToRoles.containsKey(componentID)) {
+        		for (String otherComponentRole : otherComponentIDToRoles.get(componentID)) {
+        			Set<String> concreteRoles = componentIDToRoles.get(componentID);
+        			
+        			if (!concreteRoles.contains(otherComponentRole)) {
+        				componentIDs.add(0, componentID);
+        				componentRoles.add(0, otherComponentRole);
+        			}
+        		}
+        	}
         }
         
         // Add missing component IDs associated with intersecting component roles
         
-        if (tolerance >= 2) {
-            for (int i = componentIDs.size(); i < componentRoles.size(); i++) {
-                if (otherComponentRoleToIDs.containsKey(componentRoles.get(i))) {
-                    for (String otherComponentID : otherComponentRoleToIDs.get(componentRoles.get(i))) {
-                        componentIDs.add(0, otherComponentID);
-                        componentRoles.add(0, componentRoles.get(i));
-
-                        i = i + 1;
-                    }
-                    
-                    componentRoles.remove(i);
-
-                    i = i - 1;
-                }
-            }
+        if (tolerance > 0) {
+        	for (String abstractRole : abstractRoles) {
+        		if (otherComponentRoleToIDs.containsKey(abstractRole)) { 
+        			for (String otherComponentID : otherComponentRoleToIDs.get(abstractRole)) {
+        				if (!componentIDToRoles.containsKey(otherComponentID)) {
+        					componentIDs.add(0, otherComponentID);
+        					componentRoles.add(0, abstractRole);
+        				}
+        			}
+        		}
+        	}
         }
     }
     
@@ -454,7 +476,7 @@ public class Edge {
     
     public boolean isMatching(Edge edge, int tolerance, Set<String> roles) {
         return hasSameOrientation(edge)
-                && (hasSharedComponentIDs(edge) || tolerance >= 2 && hasSharedComponentRoles(edge, roles));
+                && (hasSharedComponentIDs(edge) || tolerance >= 1 && hasSharedComponentRoles(edge, roles, tolerance));
     }
     
     public boolean hasSameOrientation(Edge edge) {
@@ -475,19 +497,39 @@ public class Edge {
         }
    }
 
-    public boolean hasSharedComponentRoles(Edge edge, Set<String> roles) {
-        if (hasComponentRoles() && edge.hasComponentRoles()) {
-                Set<String> compRoles1 = new HashSet<String>(componentRoles);
-                
-                Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
+    public boolean hasSharedComponentRoles(Edge edge, Set<String> roles, int tolerance) {
+        if (hasComponentRoles() && edge.hasComponentRoles() && (tolerance == 1 || tolerance == 2)) {
+        	Set<String> concreteRoles1 = new HashSet<String>(getConcreteComponentRoles());
+        	Set<String> concreteRoles2 = new HashSet<String>(edge.getConcreteComponentRoles());
 
-                compRoles1.retainAll(compRoles2);
-                
-                if (!roles.isEmpty()) {
-                    compRoles1.retainAll(roles);
-                }
+        	Set<String> abstractRoles1 = new HashSet<String>(getAbstractComponentRoles());
+        	Set<String> abstractRoles2 = new HashSet<String>(edge.getAbstractComponentRoles());
 
-                return !compRoles1.isEmpty();
+        	concreteRoles1.retainAll(abstractRoles2);
+
+        	if (!roles.isEmpty()) {
+        		concreteRoles1.retainAll(roles);
+        	}
+
+        	concreteRoles2.retainAll(abstractRoles1);
+
+        	if (!roles.isEmpty()) {
+        		concreteRoles2.retainAll(roles);
+        	}
+        	
+        	if (!concreteRoles1.isEmpty() || !concreteRoles2.isEmpty()) {
+        		return true;
+        	} else if (tolerance == 2) {
+        		abstractRoles1.retainAll(abstractRoles2);
+
+        		if (!roles.isEmpty()) {
+        			abstractRoles1.retainAll(roles);
+        		}
+
+        		return !abstractRoles1.isEmpty();
+        	} else {
+                return false;
+            }
         } else {
             return false;
         }
