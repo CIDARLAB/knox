@@ -4,10 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.exception.*;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
-import knox.spring.data.neo4j.sbol.SBOLConversion;
 import knox.spring.data.neo4j.services.DesignSpaceService;
 
 import org.sbolstandard.core2.SBOLConversionException;
@@ -518,6 +516,38 @@ public class KnoxController {
 		} catch (ParameterEmptyException | DesignSpaceNotFoundException | 
 				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
 			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+					HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	/**
+	 * @api {post} /designSpace/reverse Reverse
+	 * @apiName reverseDesignSpace
+	 * @apiGroup DesignSpace
+	 *
+	 * @apiParam {String} inputSpaceID ID for the input design space to be reversed.
+	 * @apiParam {String} outputSpaceID ID for the output design space resulting from reverse.  If omitted, then the result is
+	 *  stored in the input design space.
+	 *
+	 * @apiDescription Reverse the edges from the input design space.
+	 */
+	@RequestMapping(value = "/designSpace/reverse", method = RequestMethod.POST)
+	public ResponseEntity<String> reverseDesignSpace(@RequestParam(value = "inputSpaceID", required = true) String inputSpaceID,
+													 @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+		try {
+			long startTime = System.nanoTime();
+
+			if (outputSpaceID == null) {
+				designSpaceService.reverseDesignSpace(inputSpaceID);
+			} else {
+				designSpaceService.reverseDesignSpace(inputSpaceID, outputSpaceID);
+			}
+
+			return new ResponseEntity<String>("{\"message\": \"Design space was successfully reversed after " +
+					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+		} catch (ParameterEmptyException | DesignSpaceNotFoundException |
+				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
 					HttpStatus.BAD_REQUEST);
 		}
 	}

@@ -30,7 +30,8 @@ export const operators = {
   OR: 'or',
   AND: 'and',
   MERGE: 'merge',
-  REPEAT: 'repeat'
+  REPEAT: 'repeat',
+  REVERSE: 'reverse'
 };
 
 
@@ -288,4 +289,19 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance){
   } else {
     swalError(request.response);
   }
+}
+
+export function designSpaceReverse(inputSpace, outputSpace){
+    let query = "?";
+    query += encodeQueryParameter("inputSpaceID", inputSpace, query);
+    query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+
+    let request = new XMLHttpRequest();
+    request.open("POST", endpoints.DESIGN + "/" + operators.REVERSE + query, false);
+    request.send(null);
+    if (request.status >= 200 && request.status < 300) {
+        swalSuccess();
+    } else {
+        swalError(request.response);
+    }
 }

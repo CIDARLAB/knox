@@ -9,14 +9,11 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.exception.*;
 import knox.spring.data.neo4j.operations.ANDOperator;
-import knox.spring.data.neo4j.operations.Concatenation;
 import knox.spring.data.neo4j.operations.JoinOperator;
 import knox.spring.data.neo4j.operations.MergeOperator;
 import knox.spring.data.neo4j.operations.OROperator;
-import knox.spring.data.neo4j.operations.Product;
+import knox.spring.data.neo4j.operations.ReverseOperator;
 import knox.spring.data.neo4j.operations.RepeatOperator;
-import knox.spring.data.neo4j.operations.Star;
-import knox.spring.data.neo4j.operations.Union;
 import knox.spring.data.neo4j.repositories.BranchRepository;
 import knox.spring.data.neo4j.repositories.CommitRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
@@ -325,7 +322,31 @@ public class DesignSpaceService {
         
         saveDesignSpace(targetSpace);
     }
-	
+
+	public void reverseDesignSpace(String inputSpaceID) {
+		reverseDesignSpace(inputSpaceID, inputSpaceID);
+	}
+
+	public void reverseDesignSpace(String inputSpaceID, String outputSpaceID) {
+		List<String> inputSpaceIDs = new ArrayList<>();
+		inputSpaceIDs.add(inputSpaceID);
+		List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
+
+		DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+
+		ReverseOperator.apply(inputSpaces.get(0), outputSpace);
+
+
+		List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+
+		NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces),
+				outputSpace, inputSnaps);
+
+		ReverseOperator.apply(inputSnaps.get(0), outputSnap);
+
+		saveDesignSpace(outputSpace);
+	}
+
 	private DesignSpace loadIOSpaces(List<String> inputSpaceIDs, String outputSpaceID,
     		List<NodeSpace> inputSpaces) {
     	for (String inputSpaceID : inputSpaceIDs) {
@@ -863,7 +884,8 @@ public class DesignSpaceService {
     }
 
 	private DesignSpace loadDesignSpace(String targetSpaceID) {
-		DesignSpace targetSpace = designSpaceRepository.findOne(getDesignSpaceGraphID(targetSpaceID), 3);
+		Long keyID = getDesignSpaceGraphID(targetSpaceID);
+		DesignSpace targetSpace = designSpaceRepository.findOne(keyID, 3);
 
 		for (Commit commit : targetSpace.getCommits()) {
 			commit.setSnapshot(reloadSnapshot(commit.getSnapshot()));

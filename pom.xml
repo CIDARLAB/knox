@@ -82,6 +82,13 @@
         	<version>2.4.0</version>
         </dependency>
 
+        <!-- hot swapping, enable live reload -->
+        <!-- It would be automatically disabled in production environments -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
@@ -91,10 +98,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
-
-
     </build>
-
 
     <repositories>
         <repository>
@@ -117,7 +121,5 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
-
-
 
 </project>
