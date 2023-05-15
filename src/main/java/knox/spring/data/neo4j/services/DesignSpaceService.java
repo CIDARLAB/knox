@@ -40,6 +40,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,12 +88,12 @@ public class DesignSpaceService {
 
     	JoinOperator.apply(inputSpaces, outputSpace);
     	
-    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
-    	
-    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
-    			outputSpace, inputSnaps);
-
-    	JoinOperator.apply(inputSnaps, outputSnap);
+//    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+//    	
+//    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
+//    			outputSpace, inputSnaps);
+//
+//    	JoinOperator.apply(inputSnaps, outputSnap);
 
     	saveDesignSpace(outputSpace);
     }
@@ -137,12 +139,12 @@ public class DesignSpaceService {
     	
     	OROperator.apply(inputSpaces, outputSpace);
     	
-    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
-    	
-    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
-    			outputSpace, inputSnaps);
-    	
-    	OROperator.apply(inputSnaps, outputSnap);
+//    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+//    	
+//    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
+//    			outputSpace, inputSnaps);
+//    	
+//    	OROperator.apply(inputSnaps, outputSnap);
 
     	saveDesignSpace(outputSpace);
     }
@@ -188,12 +190,12 @@ public class DesignSpaceService {
     	
     	RepeatOperator.apply(inputSpaces, outputSpace, isOptional);
     	
-    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
-    	
-    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
-    			outputSpace, inputSnaps);
-    	
-    	RepeatOperator.apply(inputSnaps, outputSnap, isOptional);
+//    	List<NodeSpace> inputSnaps = new ArrayList<NodeSpace>(inputSpaces.size());
+//    	
+//    	NodeSpace outputSnap = mergeVersionHistories(castNodeSpacesToDesignSpaces(inputSpaces), 
+//    			outputSpace, inputSnaps);
+//    	
+//    	RepeatOperator.apply(inputSnaps, outputSnap, isOptional);
 
     	saveDesignSpace(outputSpace);
     }
@@ -231,13 +233,13 @@ public class DesignSpaceService {
     		boolean isComplete, Set<String> roles)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+//    	long startTime = System.nanoTime();
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
 
     	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-//    	long startTime = System.nanoTime();
     	ANDOperator.apply(inputSpaces, outputSpace, tolerance, isComplete, roles);
 //    	long endTime = System.nanoTime();
 //    	long duration = (endTime - startTime);
@@ -291,13 +293,13 @@ public class DesignSpaceService {
     		Set<String> roles)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+//    	long startTime = System.nanoTime();
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
 
     	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-//    	long startTime = System.nanoTime();
     	MergeOperator.apply(inputSpaces, outputSpace, tolerance, roles);
 //    	long endTime = System.nanoTime();
 //    	long duration = (endTime - startTime);
@@ -508,28 +510,16 @@ public class DesignSpaceService {
     	}
     	
     	if (!csvSpaces.isEmpty()) {
+    		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix);
+    		
     		if (isMerge) {
-    			DesignSpace csvSpace = (DesignSpace) csvSpaces.get(0);
+    			MergeOperator.apply(csvSpaces, outputSpace, 0, new HashSet<String>());
 
-    			csvSpace.setSpaceID(outputSpacePrefix);
-
-    			MergeOperator.apply(csvSpaces, csvSpace, 1, new HashSet<String>());
-
-    			csvSpace.createHeadBranch(csvSpace.getSpaceID());
-
-    			saveDesignSpace(csvSpace);
-    			
-    			commitToHeadBranch(csvSpace.getSpaceID());
+    			saveDesignSpace(outputSpace);
     		} else {
-    			for (int i = 0; i < csvSpaces.size(); i++) {
-    				DesignSpace csvSpace = (DesignSpace) csvSpaces.get(i);
-
-    				csvSpace.createHeadBranch(csvSpace.getSpaceID());
-
-    				saveDesignSpace(csvSpace);
-
-    				commitToHeadBranch(csvSpace.getSpaceID());
-    			}
+    			OROperator.apply(csvSpaces, outputSpace);
+    			
+    			saveDesignSpace(outputSpace);
     		}
     	}
     }
@@ -599,12 +589,8 @@ public class DesignSpaceService {
 		while ((csvLine = csvReader.readLine()) != null) {
 			List<String> csvArray = csvToArrayList(csvLine);
 			
-			if (csvArray.size() >= 3) {
-				System.out.println("loading " + csvArray.get(0));
-				
-				compIDToRole.put(csvArray.get(0), csvArray.get(1));
-				
-				compIDToRole.put("r" + csvArray.get(0), csvArray.get(1));
+			if (csvArray.size() >= 2) {
+				compIDToRole.put(csvArray.get(0), convertCSVRole(csvArray.get(1)));
 			}
 		}
 		
@@ -804,11 +790,18 @@ public class DesignSpaceService {
     
     public List<List<Map<String, Object>>> enumerateDesignSpace(String targetSpaceID, 
     		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType) {
+    	long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        return designSampler.enumerate(numDesigns, minLength, maxLength, enumerateType);
+        List<List<Map<String, Object>>> samplerOutput = designSampler.enumerate(numDesigns, minLength, maxLength, enumerateType);
+        
+        long endTime = System.nanoTime();
+    	long duration = (endTime - startTime);
+//    	LOG.info("ENUMERATE TIME: " + duration);
+        
+        return samplerOutput;
     }
     
     public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns) {
@@ -1139,6 +1132,21 @@ public class DesignSpaceService {
 
 		designSpaceRepository.save(space);
 	}
+	
+	private String convertCSVRole(String csvRole) {
+		switch (csvRole) {
+		case "cds":
+			return "http://identifiers.org/so/SO:0000316";
+		case "promoter":
+			return "http://identifiers.org/so/SO:0000167";
+		case "ribosomeBindingSite":
+			return "http://identifiers.org/so/SO:0000139";
+		case "terminator":
+			return "http://identifiers.org/so/SO:0000141";
+		default:
+			return "http://knox.org/role/" + csvRole;
+		}
+	}
 
     private void validateListParameter(String parameterName, List<String> parameter)
         throws ParameterEmptyException {
@@ -1183,32 +1191,32 @@ public class DesignSpaceService {
             throw new DesignSpaceConflictException(outputSpaceID);
         }
 
-        Set<String> conflictingSpaceIDs = new HashSet<String>();
+//        Set<String> conflictingSpaceIDs = new HashSet<String>();
 
-        Set<String> conflictingBranchIDs = new HashSet<String>();
-
-        HashMap<String, String> branchIDToSpaceID =
-            new HashMap<String, String>();
-
-        for (String inputSpaceID : inputSpaceIDs) {
-            for (String branchID : getBranchIDs(inputSpaceID)) {
-                if (!branchIDToSpaceID.containsKey(branchID)) {
-                    branchIDToSpaceID.put(branchID, inputSpaceID);
-                } else if (!branchIDToSpaceID.get(branchID).equals(
-                               inputSpaceID)) {
-                    conflictingSpaceIDs.add(branchIDToSpaceID.get(branchID));
-
-                    conflictingSpaceIDs.add(inputSpaceID);
-
-                    conflictingBranchIDs.add(branchID);
-                }
-            }
-        }
-
-        if (conflictingBranchIDs.size() > 0) {
-            throw new DesignSpaceBranchesConflictException(conflictingSpaceIDs, 
-            		conflictingBranchIDs);
-        }
+//        Set<String> conflictingBranchIDs = new HashSet<String>();
+//
+//        HashMap<String, String> branchIDToSpaceID =
+//            new HashMap<String, String>();
+//
+//        for (String inputSpaceID : inputSpaceIDs) {
+//            for (String branchID : getBranchIDs(inputSpaceID)) {
+//                if (!branchIDToSpaceID.containsKey(branchID)) {
+//                    branchIDToSpaceID.put(branchID, inputSpaceID);
+//                } else if (!branchIDToSpaceID.get(branchID).equals(
+//                               inputSpaceID)) {
+//                    conflictingSpaceIDs.add(branchIDToSpaceID.get(branchID));
+//
+//                    conflictingSpaceIDs.add(inputSpaceID);
+//
+//                    conflictingBranchIDs.add(branchID);
+//                }
+//            }
+//        }
+//
+//        if (conflictingBranchIDs.size() > 0) {
+//            throw new DesignSpaceBranchesConflictException(conflictingSpaceIDs, 
+//            		conflictingBranchIDs);
+//        }
     }
 
     private void printSpace(DesignSpace d) {

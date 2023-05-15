@@ -15,7 +15,7 @@ const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
-  save: "#save-btn",
+  // save: "#save-btn",
 };
 export const knoxClass = {
   HEAD: "Head",
@@ -355,42 +355,42 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
-  deleteBtn.tooltipster({
-    content: $('#delete-branch-tooltip'),
-    multiple: true,
-    side: 'left',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
-  deleteBtn.tooltipster({
-    content: $('#reset-commit-tooltip'),
-    multiple: true,
-    side: 'bottom',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
-  deleteBtn.tooltipster({
-    content: $('#revert-commit-tooltip'),
-    multiple: true,
-    side: 'right',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
+  // deleteBtn.tooltipster({
+  //   content: $('#delete-branch-tooltip'),
+  //   multiple: true,
+  //   side: 'left',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
+  // deleteBtn.tooltipster({
+  //   content: $('#reset-commit-tooltip'),
+  //   multiple: true,
+  //   side: 'bottom',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
+  // deleteBtn.tooltipster({
+  //   content: $('#revert-commit-tooltip'),
+  //   multiple: true,
+  //   side: 'right',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
 
-  let saveBtn = $('#save-btn');
-  saveBtn.tooltipster({
-    content: $('#make-commit-tooltip'),
-    side: 'top',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
-  saveBtn.tooltipster({
-    content: $('#make-branch-tooltip'),
-    multiple: true,
-    side: 'bottom',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
+  // let saveBtn = $('#save-btn');
+  // saveBtn.tooltipster({
+  //   content: $('#make-commit-tooltip'),
+  //   side: 'top',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
+  // saveBtn.tooltipster({
+  //   content: $('#make-branch-tooltip'),
+  //   multiple: true,
+  //   side: 'bottom',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
 
   let listBtn = $('#list-btn');
   listBtn.tooltipster({
@@ -494,32 +494,34 @@ $('#apply-operators-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(operatorDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(tolDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(optDiv);
+  div.appendChild(document.createElement('br'));
+
+  tolDiv.style.visibility = 'hidden';
+  optDiv.style.visibility = 'hidden';
 
   $(operatorDropdown).change(function() {
+    if(this.value === endpoint.operators.JOIN){
+      tolDiv.style.visibility = 'hidden';
+      optDiv.style.visibility = 'hidden';
+    }
+    if(this.value === endpoint.operators.OR){
+      tolDiv.style.visibility = 'hidden';
+      optDiv.style.visibility = 'hidden';
+    }
     if(this.value === endpoint.operators.REPEAT){
-      if(div.contains(tolDiv)){
-        div.removeChild(tolDiv);
-      }
-      if(div.contains(comDiv)){
-        div.removeChild(comDiv);
-      }
-      div.appendChild(optDiv);
+      tolDiv.style.visibility = 'hidden';
+      optDiv.style.visibility = 'visible';
     }
     if(this.value === endpoint.operators.AND){
-      if(div.contains(optDiv)){
-        div.removeChild(optDiv);
-      }
-      div.appendChild(tolDiv);
-      div.appendChild(comDiv);
+      tolDiv.style.visibility = 'visible';
+      optDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.MERGE){
-      if(div.contains(optDiv)){
-        div.removeChild(optDiv);
-      }
-      if(div.contains(comDiv)){
-        div.removeChild(comDiv);
-      }
-      div.appendChild(tolDiv);
+      tolDiv.style.visibility = 'hidden';
+      optDiv.style.visibility = 'hidden';
     }
   });
 
@@ -593,7 +595,6 @@ function makeToleranceDropdown(){
   toleranceDropdown.appendChild(new Option("0", "0", true, true));
   toleranceDropdown.appendChild(new Option("1"));
   toleranceDropdown.appendChild(new Option("2"));
-  toleranceDropdown.appendChild(new Option("3"));
 
   return toleranceDropdown;
 }
@@ -625,69 +626,69 @@ $('#delete-design-tooltip').click(() => {
   });
 });
 
-$('#delete-branch-tooltip').click(() => {
-  // create DOM object to add to alert
-  let dropdown = document.createElement("select");
-  let branchOption = new Option("Branches", "", true, true);
-  branchOption.disabled = true;
-  dropdown.appendChild(branchOption);
-  populateBranchSelector(historyNodes, $(dropdown));
-  swal({
-    title: "Really delete?",
-    text: "Select the branch you want to delete (you cannot delete the current active branch)",
-    icon: "warning",
-    buttons: true,
-    content: dropdown
-  }).then((confirm) => {
-    if (confirm) {
-      let branchName = $(dropdown)[0].options[$(dropdown)[0].selectedIndex].value;
-      endpoint.deleteBranch(branchName);
-    }
-  });
-});
+// $('#delete-branch-tooltip').click(() => {
+//   // create DOM object to add to alert
+//   let dropdown = document.createElement("select");
+//   let branchOption = new Option("Branches", "", true, true);
+//   branchOption.disabled = true;
+//   dropdown.appendChild(branchOption);
+//   populateBranchSelector(historyNodes, $(dropdown));
+//   swal({
+//     title: "Really delete?",
+//     text: "Select the branch you want to delete (you cannot delete the current active branch)",
+//     icon: "warning",
+//     buttons: true,
+//     content: dropdown
+//   }).then((confirm) => {
+//     if (confirm) {
+//       let branchName = $(dropdown)[0].options[$(dropdown)[0].selectedIndex].value;
+//       endpoint.deleteBranch(branchName);
+//     }
+//   });
+// });
 
-$('#reset-commit-tooltip').click(() => {
-  swal({
-    title: "Really reset?",
-    text: "No history of the commit will remain (If you want to preserve history, use revert). ",
-    icon: "warning",
-    buttons: true
-  }).then((confirm) => {
-    if (confirm) {
-      endpoint.resetCommit();
-    }
-  });
-});
+// $('#reset-commit-tooltip').click(() => {
+//   swal({
+//     title: "Really reset?",
+//     text: "No history of the commit will remain (If you want to preserve history, use revert). ",
+//     icon: "warning",
+//     buttons: true
+//   }).then((confirm) => {
+//     if (confirm) {
+//       endpoint.resetCommit();
+//     }
+//   });
+// });
 
-$('#revert-commit-tooltip').click(() => {
-  swal({
-    title: "Really revert?",
-    text: "A new commit will be made from the previous design.",
-    icon: "warning",
-    buttons: true
-  }).then((confirm) => {
-    if (confirm) {
-      endpoint.revertCommit();
-    }
-  });
-});
+// $('#revert-commit-tooltip').click(() => {
+//   swal({
+//     title: "Really revert?",
+//     text: "A new commit will be made from the previous design.",
+//     icon: "warning",
+//     buttons: true
+//   }).then((confirm) => {
+//     if (confirm) {
+//       endpoint.revertCommit();
+//     }
+//   });
+// });
 
-$('#make-commit-tooltip').click(() => {
-  endpoint.makeCommit();
-});
+// $('#make-commit-tooltip').click(() => {
+//   endpoint.makeCommit();
+// });
 
-$('#make-branch-tooltip').click(() => {
-  swal({
-    title: "Create branch",
-    text: "Enter a unique branch name",
-    content: "input",
-    buttons: true
-  }).then((branchName) => {
-    if (branchName){
-      endpoint.makeNewBranch(branchName);
-    }
-  });
-});
+// $('#make-branch-tooltip').click(() => {
+//   swal({
+//     title: "Create branch",
+//     text: "Enter a unique branch name",
+//     content: "input",
+//     buttons: true
+//   }).then((branchName) => {
+//     if (branchName){
+//       endpoint.makeNewBranch(branchName);
+//     }
+//   });
+// });
 
 export function swalError(errorMsg){
   swal({

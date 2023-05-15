@@ -607,7 +607,7 @@ public class KnoxController {
     		}
     	}
     	
-		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false);
 		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
@@ -718,7 +718,7 @@ public class KnoxController {
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
-        return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, 
-        		enumerateType);
+        return designSpaceService.enumerateDesignSpace(targetSpaceID, 6, minLength, maxLength, 
+        		EnumerateType.BFS);
     }
 }

@@ -640,7 +640,7 @@ public class SBOLConversion {
 	private static List<ComponentDefinition> flattenComponentDefinition(ComponentDefinition rootDef) {
 		List<ComponentDefinition> leafDefs = new LinkedList<ComponentDefinition>();
 		
-		if (rootDef.getSequences().isEmpty() || rootDef.getSequenceAnnotations().isEmpty()) {
+		if (rootDef.getSequenceAnnotations().isEmpty()) {
 			leafDefs.add(rootDef);
 			
 			return leafDefs;
@@ -675,41 +675,41 @@ public class SBOLConversion {
 			
 			List<Component> leafComps = new LinkedList<Component>();
 			
-			int lastEnd = 0;
+//			int lastEnd = 0;
 			
 			for (SequenceAnnotation compAnno : sortedCompAnnos) {
-				List<Range> sortedRanges = new LinkedList<Range>();
+//				List<Range> sortedRanges = new LinkedList<Range>();
 				
-				for (Location loc : compAnno.getSortedLocations()) {
-					if (loc instanceof Range) {
-						sortedRanges.add((Range) loc);
-					}
-				}
+//				for (Location loc : compAnno.getSortedLocations()) {
+//					if (loc instanceof Range) {
+//						sortedRanges.add((Range) loc);
+//					}
+//				}
 				
-				if (lastEnd > 0 && sortedRanges.get(0).getStart() != lastEnd + 1) {
-					leafDefs.add(rootDef);
-					
-					return leafDefs;
-				}
-				
-				for (int i = 1; i < sortedRanges.size(); i++) {
-					if (sortedRanges.get(i).getStart() != sortedRanges.get(i - 1).getEnd() + 1) {
-						leafDefs.add(rootDef);
-						
-						return leafDefs;
-					}
-				}
+//				if (lastEnd > 0 && sortedRanges.get(0).getStart() != lastEnd + 1) {
+//					leafDefs.add(rootDef);
+//					
+//					return leafDefs;
+//				}
+//				
+//				for (int i = 1; i < sortedRanges.size(); i++) {
+//					if (sortedRanges.get(i).getStart() != sortedRanges.get(i - 1).getEnd() + 1) {
+//						leafDefs.add(rootDef);
+//						
+//						return leafDefs;
+//					}
+//				}
 
 				leafComps.add(compAnno.getComponent());
 				
-				lastEnd = sortedRanges.get(sortedRanges.size() - 1).getEnd();
+//				lastEnd = sortedRanges.get(sortedRanges.size() - 1).getEnd();
 			}
 			
-			if (lastEnd != rootDef.getSequenceByEncoding(Sequence.IUPAC_DNA).getElements().length()) {
-				leafDefs.add(rootDef);
-			
-				return leafDefs;
-			}
+//			if (lastEnd != rootDef.getSequenceByEncoding(Sequence.IUPAC_DNA).getElements().length()) {
+//				leafDefs.add(rootDef);
+//			
+//				return leafDefs;
+//			}
 			
 			for (Component leafComp : leafComps) {
 				ComponentDefinition leafDef = leafComp.getDefinition();

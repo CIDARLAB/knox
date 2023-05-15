@@ -71,9 +71,9 @@
       <span class="circle-float-btn" id="combine-btn">
         <img id="combine-img" class="btn-img" src="img/ic_merge.png"/>
       </span>
-      <span class="circle-float-btn" id="save-btn">
+      <!-- <span class="circle-float-btn" id="save-btn">
         <img id="save-img" class="btn-img" src="img/save.png"/>
-      </span>
+      </span> -->
       <span class="circle-float-btn" id="delete-btn">
         <img id="delete-img" class="btn-img" src="img/ic_delete.png"/>
       </span>
@@ -95,7 +95,14 @@
         <input type="file" name="inputCSVFiles[]" multiple>
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
-        <input type="submit" value="Import">
+        <input type="submit" value="Import (OR)">
+      </form>
+      <form method="POST" enctype="multipart/form-data"
+            action="merge/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <input type="file" name="inputCSVFiles[]" multiple>
+        <input type="text" name="outputSpacePrefix" placeholder="Space ID"
+               class="form-control" aria-label="..." size="10">
+        <input type="submit" value="Import (MERGE)">
       </form>
     </div>
     <div id="Eugene" class="tab-pane fade">

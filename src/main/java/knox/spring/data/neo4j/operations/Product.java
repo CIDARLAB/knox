@@ -668,7 +668,7 @@ public class Product {
     			Set<Edge> diffEdges = diffNode.getOtherEdges(feedbackEdges, linkerEdges);
     			Set<Edge> incomingDiffEdges = diffNode.getOtherIncomingEdges(nodeIDToIncomingEdges, feedbackEdges, 
     					linkerEdges);
-    			
+
     			if (diffEdges.isEmpty() && !incomingDiffEdges.isEmpty()) {
     				for (Node productNode : idToProductNodes.get(id)) {
     					if (productNode.hasEdges()) {
