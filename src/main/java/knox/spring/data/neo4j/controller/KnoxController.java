@@ -593,7 +593,7 @@ public class KnoxController {
 
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
+    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "1.0", required = false) String weight) {
     	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
     	
     	for (MultipartFile inputCSVFile : inputCSVFiles) {
@@ -607,14 +607,14 @@ public class KnoxController {
     		}
     	}
     	
-		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false, weight);
 		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value = "/merge/csv", method = RequestMethod.POST)
     public ResponseEntity<String> mergeCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
+            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "1.0", required = false) String weight) {
         List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
 
         for (MultipartFile inputCSVFile : inputCSVFiles) {
@@ -628,7 +628,7 @@ public class KnoxController {
             }
         }
 
-        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true);
+        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true, weight);
 
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }

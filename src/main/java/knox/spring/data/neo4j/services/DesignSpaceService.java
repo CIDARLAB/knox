@@ -445,7 +445,7 @@ public class DesignSpaceService {
     }
 
     public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix, 
-    		boolean isMerge) {
+    		boolean isMerge, String weight) {
     	List<BufferedReader> designReaders = new LinkedList<BufferedReader>();
     	
     	List<BufferedReader> compReaders = new LinkedList<BufferedReader>();
@@ -495,7 +495,7 @@ public class DesignSpaceService {
     	
     	for (BufferedReader designReader : designReaders) {
     		try {
-    			csvSpaces.addAll(processCSVDesigns(designReader, outputSpacePrefix, compIDToRole));
+    			csvSpaces.addAll(processCSVDesigns(designReader, outputSpacePrefix, compIDToRole, weight));
     		} catch (IOException e) {
     			e.printStackTrace();
     		} finally {
@@ -525,7 +525,7 @@ public class DesignSpaceService {
     }
     
     public List<DesignSpace> processCSVDesigns(BufferedReader csvReader, String outputSpacePrefix, 
-    		HashMap<String, String> compIDToRole) throws IOException {
+    		HashMap<String, String> compIDToRole, String defaultWeight) throws IOException {
     	List<DesignSpace> csvSpaces = new LinkedList<DesignSpace>();
     	
     	SequenceOntology so = new SequenceOntology();
@@ -533,6 +533,8 @@ public class DesignSpaceService {
     	String csvLine;
     	
 		int j = -1;
+
+		double default_Weight = Double.parseDouble(defaultWeight);
 		
 		while ((csvLine = csvReader.readLine()) != null) {
 			List<String> csvArray = csvToArrayList(csvLine);
@@ -568,7 +570,7 @@ public class DesignSpaceService {
 							outputNode = outputSpace.createAcceptNode();
 						}
 
-						outputPredecessor.createEdge(outputNode, compIDs, compRoles);
+						outputPredecessor.createEdge(outputNode, compIDs, compRoles, Edge.Orientation.INLINE, default_Weight);
 
 						outputPredecessor = outputNode;
 					}

@@ -93,6 +93,7 @@
       <form method="POST" enctype="multipart/form-data"
             action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
         <input type="file" name="inputCSVFiles[]" multiple>
+        <input type="number" name="weight" placeholder=1.0>
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
         <input type="submit" value="Import (OR)">
@@ -100,6 +101,7 @@
       <form method="POST" enctype="multipart/form-data"
             action="merge/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
         <input type="file" name="inputCSVFiles[]" multiple>
+        <input type="number" name="weight" placeholder=1.0>
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
         <input type="submit" value="Import (MERGE)">

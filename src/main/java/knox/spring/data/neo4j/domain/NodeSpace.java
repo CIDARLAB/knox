@@ -895,4 +895,53 @@ public class NodeSpace {
     	
     	return spaceMap;
     }
+
+	public void weightBlankEdges() {
+		
+		Set<Edge> blankEdges = getBlankEdges();
+
+		// Remove current weight
+		for (Edge e : blankEdges) {
+			e.emptyWeight();
+		}
+
+		// Determine weights for blankEdges
+		for (Edge edge : blankEdges) {
+			avgWeight(edge);
+
+		}
+
+
+	}
+
+	public void avgWeight(Edge edge){
+
+		Node head = edge.getHead();
+
+		Set<Edge> allEdges = head.getEdges();
+
+		double weight = 0;
+
+		int countEdges = 0;
+
+		for (Edge e : allEdges) {
+			if (edge.getHeadID() == e.getTailID()) {
+				if (e.isBlank() && e.weight == 0) {
+					avgWeight(e);
+
+					weight += e.weight;
+					countEdges += 1;
+				}
+
+				else {
+					weight += e.weight;
+					countEdges += 1;
+				}
+			}
+		}
+
+		double averageWeight = weight / countEdges;
+		edge.weight = averageWeight;
+
+	}
 }

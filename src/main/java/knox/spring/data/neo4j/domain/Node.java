@@ -80,7 +80,7 @@ public class Node {
     
     public Edge copyEdge(Edge edge, Node head) {
     	return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
-    			new ArrayList<>(edge.getComponentRoles()), edge.getOrientation());
+    			new ArrayList<>(edge.getComponentRoles()), edge.getOrientation(), edge.getWeight());
     }
 
     public Edge createEdge(Node head) {
@@ -102,6 +102,15 @@ public class Node {
     public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles,
     						Edge.Orientation orientation) {
         Edge edge = new Edge(this, head, compIDs, compRoles, orientation);
+        
+        addEdge(edge);
+        
+        return edge;
+    }
+
+	public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles,
+    						Edge.Orientation orientation, double weight) {
+        Edge edge = new Edge(this, head, compIDs, compRoles, orientation, weight);
         
         addEdge(edge);
         

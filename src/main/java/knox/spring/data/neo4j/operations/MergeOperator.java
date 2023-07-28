@@ -29,5 +29,7 @@ public class MergeOperator {
 		union.getSpace().removeBlankCycles();
 
 		outputSpace.shallowCopyNodeSpace(union.getSpace());
+
+		outputSpace.weightBlankEdges();
 	}
 }

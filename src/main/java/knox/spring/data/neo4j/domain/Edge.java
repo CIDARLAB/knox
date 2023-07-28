@@ -437,6 +437,11 @@ public class Edge {
         		}
         	}
         }
+
+        // Sum weights
+
+        this.weight = this.weight + edge.weight;
+
     }
     
     public void unionWithEdge(Edge edge) {
@@ -553,6 +558,10 @@ public class Edge {
 
     public void setWeight(double weight) {
         this.weight = weight;
+    }
+
+    public void emptyWeight() {
+        this.weight = 0;
     }
 
     public double getWeight() { 
