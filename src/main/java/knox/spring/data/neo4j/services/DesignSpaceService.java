@@ -806,6 +806,19 @@ public class DesignSpaceService {
         return samplerOutput;
     }
     
+    public String getGraphScore(String targetSpaceID) {
+    	
+		long startTime = System.nanoTime();
+    	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+    	
+        String graphScore = designSpace.getScore();
+        
+        long endTime = System.nanoTime();
+    	long duration = (endTime - startTime);
+        
+        return graphScore;
+    }
+    
     public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	

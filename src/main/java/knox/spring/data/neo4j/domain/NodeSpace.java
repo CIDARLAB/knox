@@ -944,4 +944,23 @@ public class NodeSpace {
 		edge.weight = averageWeight;
 
 	}
+
+	public String getScore() {
+		Set<Edge> allEdges = getEdges();
+		Set<Edge> blankEdges = getBlankEdges();
+
+		double totalWeight = 0;
+		double blankEdgesTotalWeight = 0;
+
+		for (Edge e : allEdges) {
+			totalWeight += e.weight;
+		}
+
+		for (Edge b : blankEdges) {
+			blankEdgesTotalWeight += b.weight;
+		}
+
+		return String.valueOf(totalWeight - blankEdgesTotalWeight);
+
+	}
 }

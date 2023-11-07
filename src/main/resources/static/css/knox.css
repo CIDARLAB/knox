@@ -716,6 +716,10 @@ VERSION HISTORY SIDEBAR
     height: 400px
 }
 
+.score-swal .swal-content{
+    height: 400px
+}
+
 /*************
  DESIGN SPACE
 **************/

@@ -721,4 +721,10 @@ public class KnoxController {
         return designSpaceService.enumerateDesignSpace(targetSpaceID, 6, minLength, maxLength, 
         		EnumerateType.BFS);
     }
+
+	@RequestMapping(value = "/designSpace/score", method = RequestMethod.GET)
+    public String graphScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return designSpaceService.getGraphScore(targetSpaceID);
+    }
 }

@@ -15,6 +15,7 @@ const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
+  score: "#score-btn"
   // save: "#save-btn",
 };
 export const knoxClass = {
@@ -400,6 +401,14 @@ function addTooltips(){
     theme: 'tooltipster-noir'
   });
 
+  let scoreBtn = $('#score-btn');
+  scoreBtn.tooltipster({
+    content: $('#graph-score-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
   let operatorBtn = $('#combine-btn');
   operatorBtn.tooltipster({
     content: $('#apply-operators-tooltip'),
@@ -447,6 +456,41 @@ $('#enumerate-designs-tooltip').click(() => {
         para.appendChild(document.createElement('br'));
       });
 
+      div.appendChild(para);
+    }
+  });
+
+});
+
+$('#graph-score-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.height = "inherit";
+  
+  // loading div
+  let loadingDiv = document.createElement('div');
+  loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+  //append all
+  div.appendChild(loadingDiv);
+
+  swal({
+    title: "Graph Score",
+    content: div,
+    className: "score-swal"
+  }); 
+
+  endpoint.getGraphScore(currentSpace, (err, data) => {
+    if (err) {
+      swalError("Score error: " + JSON.stringify(err));
+    } else {
+      div.removeChild(loadingDiv);
+
+      let para = document.createElement("p");
+      para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
+      para.appendChild(document.createElement('br'));
+      
+      para.appendChild(document.createTextNode(data));
+      para.appendChild(document.createElement('br'));
       div.appendChild(para);
     }
   });
