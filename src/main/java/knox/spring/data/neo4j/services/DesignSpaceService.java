@@ -806,17 +806,34 @@ public class DesignSpaceService {
         return samplerOutput;
     }
     
-    public String getGraphScore(String targetSpaceID) {
+    public List<String> getGraphScore(String targetSpaceID) {
     	
 		long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
-        String graphScore = designSpace.getScore();
+		// Total Score of All Non-Blank Edges
+        String graphScoreOfNonBlankEdges = designSpace.getTotalScoreOfNonBlankEdges();
+
+		// Total Score of All Non-Blank Edges
+        String graphScoreOfEdges = designSpace.getTotalScoreOfEdges();
+
+		// Average Score of All Non-Blank Edges
+		String avgScoreOfAllNonBlankEdges = designSpace.getAvgScoreofAllNonBlankEdges();
+
+		// Average Score of All Non-Blank Edges
+		String avgScoreOfAllEdges = designSpace.getAvgScoreofAllEdges();
+
+		// Make List of Scores
+		List<String> scores = new ArrayList<String>();
+		scores.add(graphScoreOfNonBlankEdges);
+		scores.add(graphScoreOfEdges);
+		scores.add(avgScoreOfAllNonBlankEdges);
+		scores.add(avgScoreOfAllEdges);
         
         long endTime = System.nanoTime();
     	long duration = (endTime - startTime);
         
-        return graphScore;
+        return scores;
     }
 
 	public List<List<Map<String, Object>>> getBestPath(String targetSpaceID) {

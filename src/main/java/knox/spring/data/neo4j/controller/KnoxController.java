@@ -723,7 +723,7 @@ public class KnoxController {
     }
 
 	@RequestMapping(value = "/designSpace/score", method = RequestMethod.GET)
-    public String graphScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+    public List<String> graphScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
         
         return designSpaceService.getGraphScore(targetSpaceID);
     }

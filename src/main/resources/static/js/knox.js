@@ -503,7 +503,7 @@ $('#best-path-tooltip').click(() => {
           para.appendChild(document.createElement('br'));
           para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
           para.appendChild(document.createElement('br'));
-          
+
           para.appendChild(document.createTextNode(data2));
           para.appendChild(document.createElement('br'));
         }
@@ -556,8 +556,28 @@ $('#graph-score-tooltip').click(() => {
       para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
       para.appendChild(document.createElement('br'));
       
-      para.appendChild(document.createTextNode(data));
+      para.appendChild(document.createTextNode(data[0]));
       para.appendChild(document.createElement('br'));
+
+      para.appendChild(document.createTextNode('Total Weight of All Edges:'));
+      para.appendChild(document.createElement('br'));
+      
+      para.appendChild(document.createTextNode(data[1]));
+      para.appendChild(document.createElement('br'));
+
+      para.appendChild(document.createTextNode('Average Weight of All Non-Blank Edges:'));
+      para.appendChild(document.createElement('br'));
+      
+      para.appendChild(document.createTextNode(data[2]));
+      para.appendChild(document.createElement('br'));
+
+      para.appendChild(document.createTextNode('Average Weight of All Edges:'));
+      para.appendChild(document.createElement('br'));
+      
+      para.appendChild(document.createTextNode(data[3]));
+      para.appendChild(document.createElement('br'));
+
+      
       div.appendChild(para);
     }
   });

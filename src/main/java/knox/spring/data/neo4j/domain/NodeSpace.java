@@ -950,7 +950,7 @@ public class NodeSpace {
 
 	}
 
-	public String getScore() {
+	public String getTotalScoreOfNonBlankEdges() {
 		Set<Edge> allEdges = getEdges();
 		Set<Edge> blankEdges = getBlankEdges();
 
@@ -966,7 +966,48 @@ public class NodeSpace {
 		}
 
 		return String.valueOf(totalWeight - blankEdgesTotalWeight);
+	}
 
+	public String getTotalScoreOfEdges() {
+		Set<Edge> allEdges = getEdges();
+
+		double totalWeight = 0;
+
+		for (Edge e : allEdges) {
+			totalWeight += e.weight;
+		}
+
+		return String.valueOf(totalWeight);
+	}
+
+	public String getAvgScoreofAllNonBlankEdges() {
+		Set<Edge> allEdges = getEdges();
+
+		double totalNumberOfNonBlankEdges = 0;
+		double totalWeightOfNonBlankEdges = 0;
+
+		for (Edge e : allEdges) {
+			if (!e.isBlank()) {
+				totalNumberOfNonBlankEdges = totalNumberOfNonBlankEdges + 1;
+				totalWeightOfNonBlankEdges = totalWeightOfNonBlankEdges + e.weight;
+			}
+		}
+
+		return String.valueOf(totalWeightOfNonBlankEdges / totalNumberOfNonBlankEdges);
+	}
+
+	public String getAvgScoreofAllEdges() {
+		Set<Edge> allEdges = getEdges();
+
+		double totalNumberOfEdges = 0;
+		double totalWeightOfEdges = 0;
+
+		for (Edge e : allEdges) {
+			totalNumberOfEdges = totalNumberOfEdges + 1;
+			totalWeightOfEdges = totalWeightOfEdges + e.weight;
+		}
+
+		return String.valueOf(totalWeightOfEdges / totalNumberOfEdges);
 	}
 
 	public List<List<Map<String, Object>>> getBestPath() {		
