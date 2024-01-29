@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Map;
 
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
@@ -28,6 +29,10 @@ public class NodeSpace {
     Long id;
 	
 	int nodeIndex;
+
+	double bestPathScore;
+
+	double worstPathScore;
 	
 	@Relationship(type = "CONTAINS") 
     Set<Node> nodes;
@@ -962,5 +967,205 @@ public class NodeSpace {
 
 		return String.valueOf(totalWeight - blankEdgesTotalWeight);
 
+	}
+
+	public List<List<Map<String, Object>>> getBestPath() {		
+		List<List<Map<String, Object>>> bestPaths = new LinkedList<List<Map<String, Object>>>();		
+		List<Map<String, Object>> bestPath = new ArrayList<Map<String, Object>>();
+		
+		Node startNode = getStartNode();
+		Set<Node> acceptNodes = getAcceptNodes();
+		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
+		clearNodeWeights();
+
+		double startNodeWeight = 0.0;
+		startNode.setWeight(startNodeWeight);
+
+		// Check nodes have edges
+		if (startNode.getEdges() == null) {
+			return bestPaths;
+		}
+
+		// Update each Node's weight
+		double bestPathScore = 0.0;
+		for (Node node : acceptNodes) {
+			getBestNodeWeight2();
+
+			bestPathScore = node.weight;
+		}
+		this.bestPathScore = bestPathScore;
+
+		
+		List<Node> sortedBestNodes = sortBestNodes();
+		
+
+		// Find Edge to each Node
+		for (Node node: sortedBestNodes) {
+			Edge bestEdge = getBestEdge(node, nodeIDToIncomingEdges);
+			List<String> componentIDs = bestEdge.getComponentIDs();
+			
+			
+			for (String compID: componentIDs) {
+				Map<String, Object> comp = new HashMap<String, Object>();
+
+				comp.put("id", compID);
+
+				bestPath.add(comp);
+			}
+		}
+
+		bestPaths.add(bestPath);
+
+		return bestPaths;
+	}
+
+	public void clearNodeWeights() {
+		Set<Node> nodes = getNodes();
+		for (Node node: nodes) {
+			node.hasWeight = false;
+		}
+	}
+
+	public void getBestNodeWeight2() {
+		List<Node> topologicalSort = topologicalSort();
+
+		for (Node node: topologicalSort) {
+
+			Set<Edge> edges = node.getEdges();
+			for (Edge edge: edges) {
+				if (edge.getTailID() == node.getNodeID()) {
+					
+					if (edge.isBlank()) {
+						if (edge.head.hasWeight) {
+							if (edge.tail.weight > edge.head.weight) {
+								edge.head.setWeight(edge.tail.weight);
+							}
+						} else {
+							edge.head.setWeight(edge.tail.weight);
+						}
+
+
+					} else {
+						if (edge.head.hasWeight) {
+							if ((edge.tail.weight + edge.weight) > edge.head.weight) {
+								edge.head.setWeight(edge.tail.weight + edge.weight);
+							}
+						} else {
+							edge.head.setWeight(edge.tail.weight + edge.weight);
+						}
+					}
+
+					if (!nodes.contains(edge.head)) {
+						nodes.add(edge.head);
+					}
+				}
+			}
+
+			
+		}
+	}
+
+	public List<Node> topologicalSort() {
+		int numNodes = getNumNodes();
+		Node startNode = getStartNode();
+
+		List<Node> ordering = new ArrayList<Node>();
+		List<Node> queue = new ArrayList<Node>();
+
+		queue.add(startNode);
+
+		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
+		Map<String, Integer> nodeDegrees = new HashMap<String, Integer>();
+		for (Node node: nodes) {
+			nodeDegrees.put(node.nodeID, node.getIncomingEdges(nodeIDToIncomingEdges).size());
+		}
+
+		while (ordering.size() < numNodes) {
+			Node node = queue.get(0);
+			ordering.add(node);
+			queue.remove(0);
+
+			for (Edge edge: node.getEdges()) {
+				if (edge.getTailID() == node.nodeID) {
+					nodeDegrees.merge(edge.head.nodeID, -1, Integer::sum);
+
+					if (nodeDegrees.get(edge.head.nodeID) == 0) {
+						queue.add(edge.head);
+					}
+
+				}
+			}
+		}
+
+		return ordering;
+	}
+
+	public List<Node> sortBestNodes() {
+		List<Node> sortedNodes = new ArrayList<Node>();
+		
+		Set<Node> acceptNodes = getAcceptNodes();
+
+		Node node = acceptNodes.iterator().next();
+
+		while(!node.isStartNode()) {
+			sortedNodes.add(0, node);
+
+			node = prevBestNode(node);
+		}
+
+		return sortedNodes;
+	}
+
+	public Node prevBestNode(Node node) {
+		Node prevBestNode = new Node();
+		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = mapNodeIDsToIncomingEdges();
+
+		Set<Edge> edges = node.getIncomingEdges(nodeIDToIncomingEdges);
+
+		for (Edge edge: edges) {
+			if (edge.getHeadID() == node.getNodeID()) {
+
+				if (edge.isBlank()) {
+					if (edge.tail.weight == node.weight) {
+						prevBestNode = edge.tail;
+					}
+				} else {
+					if (edge.tail.weight + edge.weight == node.weight) {
+						prevBestNode = edge.tail;
+					}
+				}
+				
+			}
+		}
+
+		return prevBestNode;
+		
+	}
+
+	public Edge getBestEdge(Node node, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+		Set<Edge> incomingEdges = node.getIncomingEdges(nodeIDToIncomingEdges);
+		Edge bestEdge = new Edge();
+
+		for (Edge edge: incomingEdges) {
+			if (edge.isBlank()) {
+				if (edge.tail.weight == node.weight) {
+					bestEdge = edge;
+					break;
+				}
+			} else {
+				if (edge.tail.weight + edge.weight == node.weight) {
+					bestEdge = edge;
+					break;
+				}
+			}
+		}
+
+		return bestEdge;
+	}
+
+	public double getBestPathScore() {
+		getBestPath();
+
+		return this.bestPathScore;
 	}
 }

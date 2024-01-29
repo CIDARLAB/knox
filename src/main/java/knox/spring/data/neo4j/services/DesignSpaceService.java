@@ -818,6 +818,26 @@ public class DesignSpaceService {
         
         return graphScore;
     }
+
+	public List<List<Map<String, Object>>> getBestPath(String targetSpaceID) {
+    	
+		long startTime = System.nanoTime();
+    	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+    	
+        List<List<Map<String, Object>>> bestPath = designSpace.getBestPath();
+        
+        long endTime = System.nanoTime();
+    	long duration = (endTime - startTime);
+        
+        return bestPath;
+    }
+
+	public double getBestPathScore(String targetSpaceID) {
+    	
+    	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+    	
+        return designSpace.getBestPathScore();
+    }
     
     public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);

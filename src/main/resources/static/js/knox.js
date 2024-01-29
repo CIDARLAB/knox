@@ -15,7 +15,8 @@ const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
-  score: "#score-btn"
+  score: "#score-btn",
+  bestPath: "#bestpath-btn"
   // save: "#save-btn",
 };
 export const knoxClass = {
@@ -401,6 +402,15 @@ function addTooltips(){
     theme: 'tooltipster-noir'
   });
 
+  let bestPathBtn = $('#bestpath-btn');
+  bestPathBtn.tooltipster({
+    content: $('#best-path-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  
+
   let scoreBtn = $('#score-btn');
   scoreBtn.tooltipster({
     content: $('#graph-score-tooltip'),
@@ -447,6 +457,63 @@ $('#enumerate-designs-tooltip').click(() => {
         const length = list.length;
         list.map((element, i) => {
           para.appendChild(document.createTextNode(splitElementID(element.id)));
+          //append comma if there are more elements
+          if (length !== i+1){
+            para.appendChild(document.createTextNode(","));
+          }
+        });
+        para.appendChild(document.createTextNode("]"));
+        para.appendChild(document.createElement('br'));
+      });
+
+      div.appendChild(para);
+    }
+  });
+
+});
+
+$('#best-path-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.height = "inherit";
+  div.style.overflow = "scroll";
+
+  // loading div
+  let loadingDiv = document.createElement('div');
+  loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+  //append all
+  div.appendChild(loadingDiv);
+
+  swal({
+    title: "Best Paths",
+    content: div,
+    className: "score-swal"
+  });
+
+  endpoint.getBestPath(currentSpace, (err, data1) => {
+    if (err) {
+      swalError("Graph error: " + JSON.stringify(err));
+    } else {
+      div.removeChild(loadingDiv);
+      let para = document.createElement("p");
+      endpoint.getBestPathScore(currentSpace, (err, data2) => {
+        if (err) {
+          swalError("Graph error: " + JSON.stringify(err));
+        } else {
+          para.appendChild(document.createElement('br'));
+          para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
+          para.appendChild(document.createElement('br'));
+          
+          para.appendChild(document.createTextNode(data2));
+          para.appendChild(document.createElement('br'));
+        }
+      });
+
+      data1.map((list) => {
+        para.appendChild(document.createTextNode("["));
+        const length = list.length;
+        list.map((element, i) => {
+          para.appendChild(document.createTextNode(element.id));
           //append comma if there are more elements
           if (length !== i+1){
             para.appendChild(document.createTextNode(","));

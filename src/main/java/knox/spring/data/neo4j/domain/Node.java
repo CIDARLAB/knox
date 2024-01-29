@@ -27,6 +27,10 @@ public class Node {
     @Relationship(type = "PRECEDES") Set<Edge> edges = new HashSet<>();
     
     ArrayList<String> nodeTypes;
+
+	boolean hasWeight;
+
+	double weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Node.class);
 
@@ -36,12 +40,16 @@ public class Node {
     	this.nodeID = nodeID;
     	
     	this.nodeTypes = new ArrayList<String>();
+
+		this.hasWeight = false;
     }
     
     public Node(String nodeID, ArrayList<String> nodeTypes) {
         this.nodeID = nodeID;
         
         this.nodeTypes = nodeTypes;
+
+		this.hasWeight = false;
     }
 
     public void addEdge(Edge edge) {
@@ -599,4 +607,13 @@ public class Node {
     	
     	return nonBlankEdges;
     }
+
+	public void setWeight(double weight){
+		this.weight = weight;
+		this.hasWeight = true;
+	}
+
+	public double getWeight() {
+		return this.weight;
+	}
 }

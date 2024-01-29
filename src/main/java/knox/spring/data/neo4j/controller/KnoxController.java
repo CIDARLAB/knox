@@ -727,4 +727,16 @@ public class KnoxController {
         
         return designSpaceService.getGraphScore(targetSpaceID);
     }
+
+	@RequestMapping(value = "/designSpace/bestPath", method = RequestMethod.GET)
+    public List<List<Map<String, Object>>> getBestPath(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return designSpaceService.getBestPath(targetSpaceID);
+    }
+
+	@RequestMapping(value = "/designSpace/bestPathScore", method = RequestMethod.GET)
+    public String getBestPathScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return String.valueOf(designSpaceService.getBestPathScore(targetSpaceID));
+    }
 }
