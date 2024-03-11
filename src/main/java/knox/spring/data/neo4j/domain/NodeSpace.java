@@ -1030,7 +1030,7 @@ public class NodeSpace {
 		// Update each Node's weight
 		double bestPathScore = 0.0;
 		for (Node node : acceptNodes) {
-			getBestNodeWeight2();
+			getBestNodeWeight_TotalScore();
 
 			bestPathScore = node.weight;
 		}
@@ -1067,7 +1067,7 @@ public class NodeSpace {
 		}
 	}
 
-	public void getBestNodeWeight2() {
+	public void getBestNodeWeight_TotalScore() {
 		List<Node> topologicalSort = topologicalSort();
 
 		for (Node node: topologicalSort) {
