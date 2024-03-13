@@ -30,8 +30,6 @@ public class MergeOperator {
 
 		outputSpace.shallowCopyNodeSpace(union.getSpace());
 
-		outputSpace.weightBlankEdges();
-
 		outputSpace.deleteUnacceptableNodes();
 	}
 }
