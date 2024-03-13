@@ -651,7 +651,7 @@ $('#apply-operators-tooltip').click(() => {
       optDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.MERGE){
-      tolDiv.style.visibility = 'hidden';
+      tolDiv.style.visibility = 'visible';
       optDiv.style.visibility = 'hidden';
     }
   });
@@ -726,6 +726,8 @@ function makeToleranceDropdown(){
   toleranceDropdown.appendChild(new Option("0", "0", true, true));
   toleranceDropdown.appendChild(new Option("1"));
   toleranceDropdown.appendChild(new Option("2"));
+  toleranceDropdown.appendChild(new Option("3"));
+  toleranceDropdown.appendChild(new Option("4"));
 
   return toleranceDropdown;
 }
