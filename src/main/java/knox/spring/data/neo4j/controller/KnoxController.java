@@ -719,6 +719,7 @@ public class KnoxController {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
         return designSpaceService.enumerateDesignSpace(targetSpaceID, 6, minLength, maxLength, 
+        return designSpaceService.enumerateDesignSpace(targetSpaceID, 50, minLength, maxLength, 
         		EnumerateType.BFS);
     }
 
