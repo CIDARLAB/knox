@@ -51,7 +51,7 @@ public class Edge {
         
         orientation = Orientation.NONE;
         
-        weight = 1.0;
+        weight = 0.0;
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
@@ -70,7 +70,7 @@ public class Edge {
             orientation = Orientation.NONE;
         }
         
-        weight = 1.0;
+        weight = 0.0;
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
@@ -89,7 +89,7 @@ public class Edge {
             this.orientation = Orientation.NONE;
         }
         
-        weight = 1.0;
+        weight = 0.0;
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
