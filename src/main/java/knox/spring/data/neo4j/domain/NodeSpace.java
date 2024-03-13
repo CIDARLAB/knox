@@ -260,6 +260,13 @@ public class NodeSpace {
 
 		return edges;
 	}
+
+	public void printAllEdges() {
+		Set<Edge> edges = getEdges();
+		for (Edge edge : edges) {
+			System.out.println(edge);
+		}
+	}
 	
 	public Set<Edge> getBlankEdges() {
 		return getBlankEdges(getEdges());
