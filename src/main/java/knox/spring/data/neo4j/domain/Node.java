@@ -394,7 +394,11 @@ public class Node {
     		
     		for (Edge edge : edges) {
     			if (!edge.isBlank()) {
+					// Only Merge Edges with the same Head Node, Tail node, Orientation, componentIds
     				String code = edge.getHeadID() + edge.getOrientation().getValue();
+					for (String id : edge.getComponentIDs()) {
+						code = code + id;
+					}
 
     				if (!codeToIncomingEdges.containsKey(code)) {
     					codeToIncomingEdges.put(code, new HashSet<Edge>());
