@@ -860,6 +860,8 @@ public class DesignSpaceService {
     	
 		long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+
+		designSpace.weightBlankEdges();
     	
 		// Total Score of All Non-Blank Edges
         String graphScoreOfNonBlankEdges = designSpace.getTotalScoreOfNonBlankEdges();
