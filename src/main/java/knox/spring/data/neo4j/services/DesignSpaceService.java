@@ -1,5 +1,6 @@
 package knox.spring.data.neo4j.services;
 
+import knox.spring.data.neo4j.analysis.DesignAnalysis;
 import knox.spring.data.neo4j.domain.Branch;
 import knox.spring.data.neo4j.domain.Commit;
 import knox.spring.data.neo4j.domain.DesignSpace;
@@ -892,8 +893,10 @@ public class DesignSpaceService {
     	
 		long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+
+		DesignAnalysis designAnalysis = new DesignAnalysis(designSpace);
     	
-        List<List<Map<String, Object>>> bestPath = designSpace.getBestPath();
+        List<List<Map<String, Object>>> bestPath = designAnalysis.getBestPath();
         
         long endTime = System.nanoTime();
     	long duration = (endTime - startTime);
@@ -904,8 +907,12 @@ public class DesignSpaceService {
 	public double getBestPathScore(String targetSpaceID) {
     	
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+
+		DesignAnalysis designAnalysis = new DesignAnalysis(designSpace);
     	
-        return designSpace.getBestPathScore();
+        List<List<Map<String, Object>>> bestPath = designAnalysis.getBestPath();
+    	
+        return designAnalysis.getBestPathScore();
     }
     
     public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns) {

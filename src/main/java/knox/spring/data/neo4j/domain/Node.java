@@ -620,4 +620,8 @@ public class Node {
 	public double getWeight() {
 		return this.weight;
 	}
+
+	public boolean hasWeight() {
+		return this.hasWeight;
+	}
 }
