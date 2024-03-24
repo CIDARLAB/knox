@@ -660,6 +660,7 @@ public class DesignSpaceService {
 
 		for (DesignSpace outputSpace: outputSpaces){
 			correctComponentIds(outputSpace);
+			outputSpace.splitEdges();
 			saveDesignSpace(outputSpace);
 		}
     }

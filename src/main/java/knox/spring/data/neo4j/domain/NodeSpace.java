@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.Map;
 
+import knox.spring.data.neo4j.domain.Edge.Orientation;
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -920,6 +921,30 @@ public class NodeSpace {
 		}
 
 
+	}
+
+	public void splitEdges() {
+		// Edges can have at most 1 componentID
+		Set<Edge> edges = getEdges();
+
+		for (Edge edge : edges) {
+			Node tailNode = edge.getTail();
+
+			if (edge.getComponentIDs().size() > 1) {
+
+				for (int i = 0; i < edge.getComponentIDs().size(); i++) {
+					ArrayList<String> compId = new ArrayList<>();
+					ArrayList<String> compRole = new ArrayList<>();
+
+					compId.add(edge.getComponentIDs().get(i));
+					compRole.add(edge.getComponentRoles().get(i));
+
+					tailNode.createEdge(edge.getHead(), compId, compRole, Orientation.INLINE, edge.getWeight());
+				}
+
+				tailNode.deleteEdge(edge);
+			}
+		}
 	}
 
 	public void avgWeight(Edge edge){
