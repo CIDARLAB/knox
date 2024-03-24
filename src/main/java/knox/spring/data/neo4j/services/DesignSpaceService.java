@@ -659,9 +659,32 @@ public class DesignSpaceService {
     	List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
 
 		for (DesignSpace outputSpace: outputSpaces){
+			correctComponentIds(outputSpace);
 			saveDesignSpace(outputSpace);
 		}
     }
+
+	private void correctComponentIds(DesignSpace designSpace) {
+		// Keeps only the part name in the Components Ids
+		
+		Set<Edge> edges = designSpace.getEdges();
+
+		for (Edge edge : edges) {
+
+			ArrayList<String> IDs = edge.getComponentIDs();
+
+			for (int i = 0; i < IDs.size(); i++) {
+				if (IDs.get(i).contains("constellationcad.org/")){
+					String newID = IDs.get(i).substring(28, IDs.get(i).lastIndexOf('/'));
+					IDs.set(i, newID);
+				}
+			}
+
+			edge.setComponentIDs(IDs);			
+		}
+
+		designSpace.printAllEdges();
+	}
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
         designSpaceRepository.deleteBranch(targetSpaceID, targetBranchID);
