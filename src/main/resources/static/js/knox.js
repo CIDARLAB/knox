@@ -460,6 +460,9 @@ $('#enumerate-designs-tooltip').click(() => {
           //append comma if there are more elements
           if (length !== i+1){
             para.appendChild(document.createTextNode(","));
+          } else {
+            para.appendChild(document.createTextNode(","));
+            para.appendChild(document.createTextNode(element.average_weight));
           }
         });
         para.appendChild(document.createTextNode("]"));

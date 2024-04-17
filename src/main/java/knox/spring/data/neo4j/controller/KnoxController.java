@@ -701,8 +701,10 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/sample", method = RequestMethod.GET)
     public Set<List<String>> sample(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns) {
-        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns);
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns,
+			@RequestParam(value = "length", required = false, defaultValue = "0") int length,
+			@RequestParam(value = "isWeighted", required = false, defaultValue = "false") boolean isWeighted) {
+        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns, length, isWeighted);
     }
 
     @RequestMapping(value = "/designSpace/list", method = RequestMethod.GET)
@@ -712,15 +714,15 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/enumerate", method = RequestMethod.GET)
     public List<List<Map<String, Object>>> enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "20") int numDesigns,
+			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
             @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
             @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
-        return designSpaceService.enumerateDesignSpace(targetSpaceID, 6, minLength, maxLength, 
-        return designSpaceService.enumerateDesignSpace(targetSpaceID, 50, minLength, maxLength, 
-        		EnumerateType.BFS);
+        return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, 
+        		EnumerateType.BFS, isWeighted);
     }
 
 	@RequestMapping(value = "/designSpace/score", method = RequestMethod.GET)

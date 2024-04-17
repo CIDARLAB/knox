@@ -866,14 +866,38 @@ public class DesignSpaceService {
     }
     
     public List<List<Map<String, Object>>> enumerateDesignSpace(String targetSpaceID, 
-    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType) {
+    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted) {
     	long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
         List<List<Map<String, Object>>> samplerOutput = designSampler.enumerate(numDesigns, minLength, maxLength, enumerateType);
-        
+
+		//System.out.println(samplerOutput);
+		if (isWeighted) {
+		int i = 0;
+			for (List<Map<String,Object>> design : samplerOutput) {
+				double total = 0.0;
+				double length = design.size();
+				//System.out.println("\n");
+				for (Map<String,Object> element : design) {
+					total = total + (double) element.get("weight");
+					//System.out.println(element.get("id") + " : " + element.get("weight"));
+				}
+				double averageWeight = total / length;
+
+				//System.out.println(averageWeight);
+
+				for (Map<String,Object> element : design) {
+					element.put("average_weight", averageWeight);
+				}
+
+				i++;
+				System.out.println(i);
+			}
+		}
+
         long endTime = System.nanoTime();
     	long duration = (endTime - startTime);
 //    	LOG.info("ENUMERATE TIME: " + duration);
@@ -939,12 +963,12 @@ public class DesignSpaceService {
         return designAnalysis.getBestPathScore();
     }
     
-    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns) {
+    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int length, boolean isWeighted) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        return designSampler.sample(numDesigns);
+        return designSampler.sample(numDesigns, length, isWeighted);
     }
 
 	// Utility which converts CSV to ArrayList using split operation
