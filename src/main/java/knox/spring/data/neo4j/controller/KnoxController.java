@@ -500,7 +500,7 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-			@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
+			@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
