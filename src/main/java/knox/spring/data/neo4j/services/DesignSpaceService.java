@@ -933,7 +933,7 @@ public class DesignSpaceService {
         
         long endTime = System.nanoTime();
     	long duration = (endTime - startTime);
-        
+
         return scores;
     }
 
@@ -1029,12 +1029,15 @@ public class DesignSpaceService {
     }
 
 	private DesignSpace loadDesignSpace(String targetSpaceID) {
+		System.out.println("\nLoad Design Space\n");
 		DesignSpace targetSpace = designSpaceRepository.findOne(getDesignSpaceGraphID(targetSpaceID), 3);
 
 //      No version history
 //		for (Commit commit : targetSpace.getCommits()) {
 //			commit.setSnapshot(reloadSnapshot(commit.getSnapshot()));
 //		}
+
+		System.out.println("Design Space Loaded\n");
 
 		return targetSpace;
 	}
@@ -1288,7 +1291,8 @@ public class DesignSpaceService {
 //			commit.getSnapshot().loadEdges(commitIDToEdges.get(commit.getCommitID()));
 //
 //		}
-
+		System.out.println("\nSaving DesignSpace!\n");
+		
 		designSpaceRepository.save(space);
 	}
 	
