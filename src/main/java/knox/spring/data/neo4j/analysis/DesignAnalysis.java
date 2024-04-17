@@ -73,7 +73,7 @@ public class DesignAnalysis {
 		return bestPaths;
     }
     public void getBestNodeWeight_TotalScore() {
-		List<Node> topologicalSort = topologicalSort();
+		List<Node> topologicalSort = topologicalSort(this.space);
 
 		for (Node node: topologicalSort) {
 
@@ -111,18 +111,18 @@ public class DesignAnalysis {
 		}
 	}
 
-    public List<Node> topologicalSort() {
-		int numNodes = this.space.getNumNodes();
-		Node startNode = this.space.getStartNode();
+    public List<Node> topologicalSort(NodeSpace nodeSpace) {
+		int numNodes = nodeSpace.getNumNodes();
+		Node startNode = nodeSpace.getStartNode();
 
 		List<Node> ordering = new ArrayList<Node>();
 		List<Node> queue = new ArrayList<Node>();
 
 		queue.add(startNode);
 
-		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = this.space.mapNodeIDsToIncomingEdges();
+		HashMap<String, Set<Edge>> nodeIDToIncomingEdges = nodeSpace.mapNodeIDsToIncomingEdges();
 		Map<String, Integer> nodeDegrees = new HashMap<String, Integer>();
-		for (Node node: this.space.getNodes()) {
+		for (Node node: nodeSpace.getNodes()) {
 			nodeDegrees.put(node.getNodeID(), node.getIncomingEdges(nodeIDToIncomingEdges).size());
 		}
 
