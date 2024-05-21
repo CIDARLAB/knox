@@ -542,7 +542,7 @@ public class DesignSpaceService {
     		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix);
     		
     		if (isMerge) {
-    			MergeOperator.apply(csvSpaces, outputSpace, 0, new HashSet<String>());
+    			MergeOperator.apply(csvSpaces, outputSpace, 1, new HashSet<String>());
 
     			saveDesignSpace(outputSpace);
     		} else {
@@ -900,6 +900,8 @@ public class DesignSpaceService {
 				System.out.println(i);
 			}
 		}
+
+		System.out.println("\nEnumerated!");
 
         long endTime = System.nanoTime();
     	long duration = (endTime - startTime);

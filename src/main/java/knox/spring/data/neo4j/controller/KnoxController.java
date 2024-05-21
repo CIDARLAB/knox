@@ -500,7 +500,7 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-			@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance,
+			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -593,7 +593,7 @@ public class KnoxController {
 
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "1.0", required = false) String weight) {
+    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
     	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
     	
     	for (MultipartFile inputCSVFile : inputCSVFiles) {
@@ -614,7 +614,7 @@ public class KnoxController {
 
     @RequestMapping(value = "/merge/csv", method = RequestMethod.POST)
     public ResponseEntity<String> mergeCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "1.0", required = false) String weight) {
+            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
         List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
 
         for (MultipartFile inputCSVFile : inputCSVFiles) {
