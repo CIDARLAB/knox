@@ -59,7 +59,9 @@ public class DesignSampler {
 					// Add up the total weights
 					double totalWeights = 0.0;
 					for (Edge e: node.getEdges()) {
-						totalWeights += e.getWeight();
+						for (Double weight : e.getWeight()) {
+							totalWeights += weight;
+						}
 					}
 
 					// Choose edge based on weight
@@ -67,7 +69,9 @@ public class DesignSampler {
 
 					double countWeights = 0.0;
 					for (Edge e: node.getEdges()) {
-						countWeights += e.getWeight();
+						for (Double weight : e.getWeight()) {
+							countWeights += 1.0;
+						}
 						if (countWeights >= rWeight) {
 							edge = e;
 							break;
@@ -250,6 +254,10 @@ public class DesignSampler {
 				comboDesigns.add(comboDesign);
 			}
 		} else {
+
+			HashMap<String, Double> componentIDstoWeights = edge.componentIDtoWeight();
+			System.out.println(componentIDstoWeights);
+
 			for (String compID : edge.getComponentIDs()) {
 				Map<String, Object> comp = new HashMap<String, Object>();
 
@@ -257,7 +265,7 @@ public class DesignSampler {
 
 				comp.put("roles", edge.getComponentRoles());
 
-				comp.put("weight", edge.getWeight());
+				comp.put("weight", componentIDstoWeights.get(compID));
 
 //				comp.put("orientation", edge.getOrientation());
 				comp.put("orientation", edge.getOrientation().getValue()); //does this need to be string?
@@ -317,6 +325,9 @@ public class DesignSampler {
 				Edge edge = edgeStack.pop();
 				
 				designs = multiplyDesigns(designs, edge);
+
+				System.out.println("\nCurrent Number of Designs: ");
+				System.out.println(allDesigns.size());
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {

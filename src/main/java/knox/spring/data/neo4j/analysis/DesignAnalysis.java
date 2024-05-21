@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.Collections;
 
 public class DesignAnalysis {
     private static final Logger LOG = LoggerFactory.getLogger(DesignAnalysis.class);
@@ -58,14 +59,14 @@ public class DesignAnalysis {
 			Edge bestEdge = getBestEdge(node, nodeIDToIncomingEdges);
 			List<String> componentIDs = bestEdge.getComponentIDs();
 			
-			
-			for (String compID: componentIDs) {
-				Map<String, Object> comp = new HashMap<String, Object>();
+			// Select Component ID with highest Weight
+			String compID = bestEdge.getComponentIDs().get(bestEdge.getWeight().indexOf(bestEdge.getMaxWeight()));
 
-				comp.put("id", compID);
+			Map<String, Object> comp = new HashMap<String, Object>();
 
-				bestPath.add(comp);
-			}
+			comp.put("id", compID);
+
+			bestPath.add(comp);
 		}
 
 		bestPaths.add(bestPath);
@@ -93,11 +94,11 @@ public class DesignAnalysis {
 
 					} else {
 						if (edge.getHead().hasWeight()) {
-							if ((edge.getTail().getWeight() + edge.getWeight()) > edge.getHead().getWeight()) {
-								edge.getHead().setWeight(edge.getTail().getWeight() + edge.getWeight());
+							if ((edge.getTail().getWeight() + edge.getMaxWeight()) > edge.getHead().getWeight()) {
+								edge.getHead().setWeight(edge.getTail().getWeight() + edge.getMaxWeight());
 							}
 						} else {
-							edge.getHead().setWeight(edge.getTail().getWeight() + edge.getWeight());
+							edge.getHead().setWeight(edge.getTail().getWeight() + edge.getMaxWeight());
 						}
 					}
 
@@ -176,7 +177,7 @@ public class DesignAnalysis {
 						prevBestNode = edge.getTail();
 					}
 				} else {
-					if (edge.getTail().getWeight() + edge.getWeight() == node.getWeight()) {
+					if (edge.getTail().getWeight() + edge.getMaxWeight() == node.getWeight()) {
 						prevBestNode = edge.getTail();
 					}
 				}
@@ -199,7 +200,7 @@ public class DesignAnalysis {
 					break;
 				}
 			} else {
-				if (edge.getTail().getWeight() + edge.getWeight() == node.getWeight()) {
+				if (edge.getTail().getWeight() + edge.getMaxWeight() == node.getWeight()) {
 					bestEdge = edge;
 					break;
 				}

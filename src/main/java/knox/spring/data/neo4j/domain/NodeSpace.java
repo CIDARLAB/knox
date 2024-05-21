@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.domain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -955,25 +956,29 @@ public class NodeSpace {
 
 		double weight = 0;
 
-		int countEdges = 0;
+		int countParts = 0;
 
 		for (Edge e : allEdges) {
 			if (edge.getHeadID() == e.getTailID()) {
-				if (e.isBlank() && e.weight == 0) {
+				if (e.isBlank() && e.weight.get(0) == 0) {
 					avgWeight(e);
 
-					weight += e.weight;
-					countEdges += 1;
+					weight += e.weight.get(0);
+					countParts += 1;
 				}
 
 				else {
-					weight += e.weight;
-					countEdges += 1;
+					for (Double w : e.weight) {
+						weight += w;
+						countParts += 1;
+					}
 				}
 			}
 		}
 
-		double averageWeight = weight / countEdges;
+		ArrayList<Double> averageWeight = new ArrayList<Double>(
+            Arrays.asList(weight / countParts));
+
 		edge.weight = averageWeight;
 
 	}
@@ -986,11 +991,13 @@ public class NodeSpace {
 		double blankEdgesTotalWeight = 0;
 
 		for (Edge e : allEdges) {
-			totalWeight += e.weight;
+			for (Double w : e.weight) {
+				totalWeight += w;
+			}
 		}
 
 		for (Edge b : blankEdges) {
-			blankEdgesTotalWeight += b.weight;
+			blankEdgesTotalWeight += b.weight.get(0);
 		}
 
 		return String.valueOf(totalWeight - blankEdgesTotalWeight);
@@ -1002,7 +1009,9 @@ public class NodeSpace {
 		double totalWeight = 0;
 
 		for (Edge e : allEdges) {
-			totalWeight += e.weight;
+			for (Double w : e.weight) {
+				totalWeight += w;
+			}
 		}
 
 		return String.valueOf(totalWeight);
@@ -1017,7 +1026,7 @@ public class NodeSpace {
 		for (Edge e : allEdges) {
 			if (!e.isBlank()) {
 				totalNumberOfNonBlankEdges = totalNumberOfNonBlankEdges + 1;
-				totalWeightOfNonBlankEdges = totalWeightOfNonBlankEdges + e.weight;
+				totalWeightOfNonBlankEdges = totalWeightOfNonBlankEdges + e.weight.get(0);
 			}
 		}
 
@@ -1032,7 +1041,7 @@ public class NodeSpace {
 
 		for (Edge e : allEdges) {
 			totalNumberOfEdges = totalNumberOfEdges + 1;
-			totalWeightOfEdges = totalWeightOfEdges + e.weight;
+			totalWeightOfEdges = totalWeightOfEdges + e.weight.get(0);
 		}
 
 		return String.valueOf(totalWeightOfEdges / totalNumberOfEdges);

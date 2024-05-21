@@ -44,6 +44,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -568,12 +569,14 @@ public class DesignSpaceService {
 			List<String> csvArray = csvToArrayList(csvLine);
 
 			// Use Input weight or CSV weights
-			double default_Weight = 1;
+			Double default_Weight = 0.0;
 			if (weightCSV) {
 				default_Weight = Double.parseDouble(defaultWeight.get(designNumber));
 			} else {
 				default_Weight = Double.parseDouble(defaultWeight.get(0));
 			}
+
+			ArrayList<Double> weight = new ArrayList<Double>(Arrays.asList(default_Weight));
 
 			if (csvArray.size() > 0 && csvArray.get(0).length() > 0) {
 				j++;
@@ -607,7 +610,7 @@ public class DesignSpaceService {
 							outputNode = outputSpace.createAcceptNode();
 						}
 
-						outputPredecessor.createEdge(outputNode, compIDs, compRoles, Edge.Orientation.INLINE, default_Weight);
+						outputPredecessor.createEdge(outputNode, compIDs, compRoles, Edge.Orientation.INLINE, weight);
 
 						outputPredecessor = outputNode;
 					}

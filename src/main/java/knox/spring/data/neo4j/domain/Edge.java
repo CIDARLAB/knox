@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.domain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Collections;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -34,7 +36,7 @@ public class Edge {
 
     Orientation orientation;
 
-    double weight;
+    ArrayList<Double> weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Edge.class);
 
@@ -51,7 +53,7 @@ public class Edge {
         
         orientation = Orientation.NONE;
         
-        weight = 0.0;
+        weight = new ArrayList<Double>();
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
@@ -70,7 +72,10 @@ public class Edge {
             orientation = Orientation.NONE;
         }
         
-        weight = 0.0;
+        weight = new ArrayList<Double>();
+        for (String ID : componentIDs) {
+            weight.add(0.0);
+        }
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
@@ -89,11 +94,14 @@ public class Edge {
             this.orientation = Orientation.NONE;
         }
         
-        weight = 0.0;
+        weight = new ArrayList<Double>();
+        for (String ID : componentIDs) {
+            weight.add(0.0);
+        }
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
-            ArrayList<String> componentRoles, Orientation orientation, double weight) {
+            ArrayList<String> componentRoles, Orientation orientation, ArrayList<Double> weight) {
         this.tail = tail;
 
         this.head = head;
@@ -112,7 +120,7 @@ public class Edge {
     }
     
     public Edge(ArrayList<String> componentIDs, ArrayList<String> componentRoles,
-                Orientation orientation, double weight) {
+                Orientation orientation, ArrayList<Double> weight) {
         this.componentIDs = componentIDs;
 
         this.componentRoles = componentRoles;
@@ -354,6 +362,12 @@ public class Edge {
     }
     
     public void intersectWithEdge(Edge edge, int tolerance) {
+        
+        // Map componentIDs to Weight
+
+        HashMap<String, Double> componentIDstoWeight = componentIDtoWeight();
+        HashMap<String, Double> otherComponentIDstoWeight = new HashMap<String, Double>(edge.componentIDtoWeight());
+
         // Map other component IDs to roles and other component roles to IDs
         
         ArrayList<String> otherComponentIDs = edge.getComponentIDs();
@@ -438,13 +452,29 @@ public class Edge {
         	}
         }
 
-        // Sum weights
+        // Update Edge Weights (Sum Weights)
 
-        this.weight = this.weight + edge.weight;
+        ArrayList<Double> newWeights = new ArrayList<Double>();
 
+        for (String ID : componentIDs) {
+            if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
+                newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID));
+
+            } else if (componentIDstoWeight.containsKey(ID)) {
+                newWeights.add(componentIDstoWeight.get(ID));
+
+            } else if (otherComponentIDstoWeight.containsKey(ID)) {
+                newWeights.add(otherComponentIDstoWeight.get(ID));
+            }
+        }
+
+        this.weight = newWeights;
     }
     
     public void unionWithEdge(Edge edge) {
+        HashMap<String, Double> componentIDstoWeight = componentIDtoWeight();
+        HashMap<String, Double> otherComponentIDstoWeight = new HashMap<String, Double>(edge.componentIDtoWeight());
+
         ArrayList<String> otherComponentIDs = edge.getComponentIDs();
         ArrayList<String> otherComponentRoles = edge.getComponentRoles();
 
@@ -477,6 +507,24 @@ public class Edge {
                 i = i + 1;
             }
         }
+
+        // Update Edge Weights
+
+        ArrayList<Double> newWeights = new ArrayList<Double>();
+
+        for (String ID : componentIDs) {
+            if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
+                newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID));
+
+            } else if (componentIDstoWeight.containsKey(ID)) {
+                newWeights.add(componentIDstoWeight.get(ID));
+
+            } else if (otherComponentIDstoWeight.containsKey(ID)) {
+                newWeights.add(otherComponentIDstoWeight.get(ID));
+            }
+        }
+
+        this.weight = newWeights;
     }
     
     public boolean isMatching(Edge edge, int tolerance, Set<String> roles) {
@@ -539,6 +587,16 @@ public class Edge {
             return false;
         }
     }
+
+    public HashMap<String, Double> componentIDtoWeight() {
+        HashMap<String, Double> componentIDstoWeight = new HashMap<String, Double>();
+
+        for (int i = 0; i < componentIDs.size(); i++) {
+            componentIDstoWeight.put(componentIDs.get(i), weight.get(i));
+        }
+
+        return componentIDstoWeight;
+    }
     
     public boolean isBlank() {
         return !hasComponentIDs() && !hasComponentRoles() && !hasOrientation();
@@ -556,15 +614,20 @@ public class Edge {
         this.tail = tail; 
     }
 
-    public void setWeight(double weight) {
+    public void setWeight(ArrayList<Double> weight) {
         this.weight = weight;
     }
 
     public void emptyWeight() {
-        this.weight = 0;
+        this.weight = new ArrayList<Double>(
+            Arrays.asList(0.0));
     }
 
-    public double getWeight() { 
+    public Double getMaxWeight() {
+        return Collections.max(weight);
+    }
+
+    public ArrayList<Double> getWeight() { 
         return weight; 
     }
     
