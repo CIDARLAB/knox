@@ -28,6 +28,7 @@ import knox.spring.data.neo4j.sample.DesignSampler;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
 
+import knox.spring.data.neo4j.sbol.SBOLGeneration;
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLValidationException;
 import org.sbolstandard.core2.SequenceOntology;
@@ -639,6 +640,7 @@ public class DesignSpaceService {
 		return compIDToRole;
     }
 
+
 	public List<String> processCSVWeights(BufferedReader csvReader) throws IOException {
 		List<String> weights = new ArrayList<String>();
 
@@ -652,21 +654,30 @@ public class DesignSpaceService {
 
 		return weights;
 	}
-    
-    public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID) 
-    		throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
-    	SBOLConversion sbolConv = new SBOLConversion();
 
-    	sbolConv.setSbolDoc(sbolDocs);
+	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID)
+			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
+		SBOLConversion sbolConv = new SBOLConversion();
 
-    	List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
+		sbolConv.setSbolDoc(sbolDocs);
+
+		List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
 
 		for (DesignSpace outputSpace: outputSpaces){
 			correctComponentIds(outputSpace);
 			//outputSpace.splitEdges();
 			saveDesignSpace(outputSpace);
 		}
-    }
+
+	}
+  
+	public List<String> exportCombinatorial(String targetSpaceID, String namespace)
+			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException, URISyntaxException {
+
+		DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
+		SBOLGeneration sbolGenerator = new SBOLGeneration(targetSpace, namespace);
+		return sbolGenerator.createSBOLDocument();
+  }
 
 	private void correctComponentIds(DesignSpace designSpace) {
 		// Keeps only the part name in the Components Ids

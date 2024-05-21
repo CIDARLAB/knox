@@ -31,5 +31,8 @@
   },
   "scripts": {
     "gulp": "gulp"
+  },
+  "dependencies": {
+    "constellation-js": "^1.0.0"
   }
 }

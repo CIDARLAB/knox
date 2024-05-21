@@ -10,3 +10,4 @@ target
 .DS_Store
 **/node_modules
 **package-lock.json
+../src/main/java/knox/spring/data/neo4j/sbol/args.txt

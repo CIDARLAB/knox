@@ -33,6 +33,7 @@ export default class Target{
   }
 
   setGraph(graph) {
+    console.log(graph);
     condenseVisualization(graph);
 
     var zoom = d3.behavior.zoom()

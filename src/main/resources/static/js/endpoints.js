@@ -1,4 +1,7 @@
 
+// import * as constellation from "../constellation-js/lib/constellation.js";
+
+
 import {currentSpace,
   currentBranch,
   setcurrentBranch,
@@ -26,6 +29,8 @@ const endpoints = {
 
   BRANCH: "/branch", //post vs delete
   DESIGN: "/designSpace", //post vs delete
+
+  SBOL:"/sbol/exportCombinatorial"
 };
 
 export const operators = {
@@ -226,6 +231,19 @@ export function deleteDesign(){
   }
 }
 
+// export function getDate() {
+//   let d = new Date();
+//   let month = '' + (d.getMonth() + 1);
+//   let day = '' + d.getDate();
+//   let year = d.getFullYear();
+//
+//   if (month.length < 2) month = '0' + month;
+//   if (day.length < 2) day = '0' + day;
+//
+//   return [year, month, day].join('-');
+// }
+
+
 /************************
  * DESIGN SPACE ENDPOINTS
  ************************/
@@ -305,5 +323,51 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance){
     swalSuccess();
   } else {
     swalError(request.response);
+  }
+}
+
+
+function downloadSBOL(text, filename) {
+  let element = document.createElement('a');
+  element.setAttribute('href', 'data:application/xml,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
+
+export function exportDesign(){
+
+  let request = new XMLHttpRequest();
+  let query = "?";
+  query += encodeQueryParameter("targetSpaceID", currentSpace, query);
+  query += encodeQueryParameter("namespace", "http://knox.org", query);
+  request.open("GET", endpoints.SBOL + query, false);
+  request.send(null);
+
+  // on success
+  if (request.status >= 200 && request.status < 300) {
+    let designNameArray = currentSpace.split("_");
+    console.log("currentSpace --> ", typeof currentSpace, currentSpace);
+    designNameArray.pop();
+    designNameArray.pop();
+    let designName = designNameArray.join("_");
+
+    let res = JSON.parse(request.response);
+
+    let langText = res[0];
+    let categories = res[1];
+    let numDesigns = 1;
+    let cycleDepth = 1;
+
+    let result = constellation.goldbar(designName, langText, categories, numDesigns, cycleDepth, "EDGE").sbol;
+    downloadSBOL(result, "knox_" + designName + "_sbol.xml");
+
+    swalSuccess();
+    visualizeDesignAndHistory(currentSpace);
+  } else {
+    swalError("Failed to download");
   }
 }
