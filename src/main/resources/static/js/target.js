@@ -164,7 +164,14 @@ export default class Target{
 
     //place tooltip on the SVG images
     $('.sboltip').tooltipster({
-      theme: 'tooltipster-shadow'
+      theme: 'tooltipster-shadow',
+      trigger: 'custom',
+      triggerOpen: {
+      mouseenter: true
+      },
+      triggerClose: {
+      click: true,
+      }
     });
 
     // Handles positioning when moved
