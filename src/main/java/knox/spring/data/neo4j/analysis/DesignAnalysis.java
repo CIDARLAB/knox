@@ -60,13 +60,15 @@ public class DesignAnalysis {
 			List<String> componentIDs = bestEdge.getComponentIDs();
 			
 			// Select Component ID with highest Weight
-			String compID = bestEdge.getComponentIDs().get(bestEdge.getWeight().indexOf(bestEdge.getMaxWeight()));
+			if (!bestEdge.isBlank()) {
+				String compID = bestEdge.getComponentIDs().get(bestEdge.getWeight().indexOf(bestEdge.getMaxWeight()));
 
-			Map<String, Object> comp = new HashMap<String, Object>();
+				Map<String, Object> comp = new HashMap<String, Object>();
 
-			comp.put("id", compID);
+				comp.put("id", compID);
 
-			bestPath.add(comp);
+				bestPath.add(comp);
+			}
 		}
 
 		bestPaths.add(bestPath);

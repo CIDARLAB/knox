@@ -619,8 +619,7 @@ public class Edge {
     }
 
     public void emptyWeight() {
-        this.weight = new ArrayList<Double>(
-            Arrays.asList(0.0));
+        this.weight = new ArrayList<Double>();
     }
 
     public Double getMaxWeight() {

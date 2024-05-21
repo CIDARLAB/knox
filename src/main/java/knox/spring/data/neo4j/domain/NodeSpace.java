@@ -911,8 +911,8 @@ public class NodeSpace {
 		Set<Edge> blankEdges = getBlankEdges();
 
 		// Remove current weight
-		for (Edge e : blankEdges) {
-			e.emptyWeight();
+		for (Edge edge : blankEdges) {
+			edge.emptyWeight();
 		}
 
 		// Determine weights for blankEdges
@@ -958,19 +958,34 @@ public class NodeSpace {
 
 		int countParts = 0;
 
-		for (Edge e : allEdges) {
-			if (edge.getHeadID() == e.getTailID()) {
-				if (e.isBlank() && e.weight.get(0) == 0) {
-					avgWeight(e);
+		if (allEdges.size() == 0) {
+			// Blank Edges that led to accept node will have a weight equal to average of edges to accept node
+			Node tail = edge.getTail();
 
-					weight += e.weight.get(0);
-					countParts += 1;
-				}
-
-				else {
-					for (Double w : e.weight) {
+			for (Edge e : tail.getEdges()) {
+				if (!e.isBlank()) {
+					for (Double w : e.getWeight()) {
 						weight += w;
 						countParts += 1;
+					}
+				}
+			}
+			
+		} else {
+			for (Edge e : allEdges) {
+				if (edge.getHeadID() == e.getTailID()) {
+					if (e.isBlank() && e.weight.size() == 0) {
+						avgWeight(e);
+
+						weight += e.weight.get(0);
+						countParts += 1;
+					}
+
+					else {
+						for (Double w : e.weight) {
+							weight += w;
+							countParts += 1;
+						}
 					}
 				}
 			}
@@ -1025,8 +1040,10 @@ public class NodeSpace {
 
 		for (Edge e : allEdges) {
 			if (!e.isBlank()) {
-				totalNumberOfNonBlankEdges = totalNumberOfNonBlankEdges + 1;
-				totalWeightOfNonBlankEdges = totalWeightOfNonBlankEdges + e.weight.get(0);
+				for (Double w : e.getWeight()) {
+					totalNumberOfNonBlankEdges = totalNumberOfNonBlankEdges + 1;
+					totalWeightOfNonBlankEdges = totalWeightOfNonBlankEdges + w;
+				}
 			}
 		}
 
@@ -1040,8 +1057,10 @@ public class NodeSpace {
 		double totalWeightOfEdges = 0;
 
 		for (Edge e : allEdges) {
-			totalNumberOfEdges = totalNumberOfEdges + 1;
-			totalWeightOfEdges = totalWeightOfEdges + e.weight.get(0);
+			for (Double w : e.getWeight()) {
+				totalNumberOfEdges = totalNumberOfEdges + 1;
+				totalWeightOfEdges = totalWeightOfEdges + w;
+			}
 		}
 
 		return String.valueOf(totalWeightOfEdges / totalNumberOfEdges);

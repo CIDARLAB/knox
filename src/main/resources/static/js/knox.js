@@ -583,13 +583,13 @@ $('#graph-score-tooltip').click(() => {
       para.appendChild(document.createTextNode(data[1]));
       para.appendChild(document.createElement('br'));
 
-      para.appendChild(document.createTextNode('Average Weight of All Non-Blank Edges:'));
+      para.appendChild(document.createTextNode('Average Weight of All Parts:'));
       para.appendChild(document.createElement('br'));
       
       para.appendChild(document.createTextNode(data[2]));
       para.appendChild(document.createElement('br'));
 
-      para.appendChild(document.createTextNode('Average Weight of All Edges:'));
+      para.appendChild(document.createTextNode('Average Weight of All Parts and Blank Edges:'));
       para.appendChild(document.createElement('br'));
       
       para.appendChild(document.createTextNode(data[3]));
