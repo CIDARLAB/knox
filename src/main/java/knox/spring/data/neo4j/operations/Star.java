@@ -1,8 +1,10 @@
 package knox.spring.data.neo4j.operations;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 
@@ -13,9 +15,13 @@ public class Star {
 	public Star(List<NodeSpace> spaces) {
 		Concatenation concat = new Concatenation();
 		
+		Set<Edge> blankEdges = new HashSet<Edge>();
+		
 		for (NodeSpace space : spaces) {
-			concat.apply(space);
+			blankEdges.addAll(concat.apply(space));
 		}
+		
+		concat.getSpace().deleteBlankEdges(blankEdges);
 		
 		starSpace = concat.getSpace().shallowCopy();
 	}

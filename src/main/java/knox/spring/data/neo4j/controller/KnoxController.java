@@ -507,7 +507,7 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-			@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
+			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -624,7 +624,7 @@ public class KnoxController {
 
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
+    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
     	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
     	
     	for (MultipartFile inputCSVFile : inputCSVFiles) {
@@ -638,14 +638,14 @@ public class KnoxController {
     		}
     	}
     	
-		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false, weight);
 		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value = "/merge/csv", method = RequestMethod.POST)
     public ResponseEntity<String> mergeCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
+            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
         List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
 
         for (MultipartFile inputCSVFile : inputCSVFiles) {
@@ -659,7 +659,7 @@ public class KnoxController {
             }
         }
 
-        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true);
+        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true, weight);
 
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
@@ -755,8 +755,10 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/sample", method = RequestMethod.GET)
     public Set<List<String>> sample(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns) {
-        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns);
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns,
+			@RequestParam(value = "length", required = false, defaultValue = "0") int length,
+			@RequestParam(value = "isWeighted", required = false, defaultValue = "false") boolean isWeighted) {
+        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns, length, isWeighted);
     }
 
     @RequestMapping(value = "/designSpace/list", method = RequestMethod.GET)
@@ -766,13 +768,32 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/enumerate", method = RequestMethod.GET)
     public List<List<Map<String, Object>>> enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "20") int numDesigns,
+			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
             @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
             @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
         return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, 
-        		enumerateType);
+        		EnumerateType.BFS, isWeighted);
+    }
+
+	@RequestMapping(value = "/designSpace/score", method = RequestMethod.GET)
+    public List<String> graphScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return designSpaceService.getGraphScore(targetSpaceID);
+    }
+
+	@RequestMapping(value = "/designSpace/bestPath", method = RequestMethod.GET)
+    public List<List<Map<String, Object>>> getBestPath(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return designSpaceService.getBestPath(targetSpaceID);
+    }
+
+	@RequestMapping(value = "/designSpace/bestPathScore", method = RequestMethod.GET)
+    public String getBestPathScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return String.valueOf(designSpaceService.getBestPathScore(targetSpaceID));
     }
 }

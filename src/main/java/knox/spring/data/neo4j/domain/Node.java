@@ -27,6 +27,10 @@ public class Node {
     @Relationship(type = "PRECEDES") Set<Edge> edges = new HashSet<>();
     
     ArrayList<String> nodeTypes;
+
+	boolean hasWeight;
+
+	double weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Node.class);
 
@@ -36,12 +40,16 @@ public class Node {
     	this.nodeID = nodeID;
     	
     	this.nodeTypes = new ArrayList<String>();
+
+		this.hasWeight = false;
     }
     
     public Node(String nodeID, ArrayList<String> nodeTypes) {
         this.nodeID = nodeID;
         
         this.nodeTypes = nodeTypes;
+
+		this.hasWeight = false;
     }
 
     public void addEdge(Edge edge) {
@@ -80,7 +88,7 @@ public class Node {
     
     public Edge copyEdge(Edge edge, Node head) {
     	return createEdge(head, new ArrayList<String>(edge.getComponentIDs()),
-    			new ArrayList<>(edge.getComponentRoles()), edge.getOrientation());
+    			new ArrayList<>(edge.getComponentRoles()), edge.getOrientation(), edge.getWeight());
     }
 
     public Edge createEdge(Node head) {
@@ -102,6 +110,15 @@ public class Node {
     public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles,
     						Edge.Orientation orientation) {
         Edge edge = new Edge(this, head, compIDs, compRoles, orientation);
+        
+        addEdge(edge);
+        
+        return edge;
+    }
+
+	public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles,
+    						Edge.Orientation orientation, ArrayList<Double> weight) {
+        Edge edge = new Edge(this, head, compIDs, compRoles, orientation, weight);
         
         addEdge(edge);
         
@@ -377,7 +394,11 @@ public class Node {
     		
     		for (Edge edge : edges) {
     			if (!edge.isBlank()) {
+					// Only Merge Edges with the same Head Node, Tail node, Orientation, componentIds
     				String code = edge.getHeadID() + edge.getOrientation().getValue();
+					for (String id : edge.getComponentIDs()) {
+						code = code + id;
+					}
 
     				if (!codeToIncomingEdges.containsKey(code)) {
     					codeToIncomingEdges.put(code, new HashSet<Edge>());
@@ -590,4 +611,17 @@ public class Node {
     	
     	return nonBlankEdges;
     }
+
+	public void setWeight(double weight){
+		this.weight = weight;
+		this.hasWeight = true;
+	}
+
+	public double getWeight() {
+		return this.weight;
+	}
+
+	public boolean hasWeight() {
+		return this.hasWeight;
+	}
 }

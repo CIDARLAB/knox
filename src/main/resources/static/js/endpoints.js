@@ -17,6 +17,9 @@ const endpoints = {
   D3: "/graph/d3",
   LIST: "/designSpace/list",
   ENUMERATE: "/designSpace/enumerate",
+  SCORE: "/designSpace/score",
+  BESTPATH: "/designSpace/bestPath",
+  BESTPATHSCORE: "/designSpace/bestPathScore",
 
   D3HISTORY: "/branch/graph/d3",
   CHECKOUT: "/branch/checkout",
@@ -60,6 +63,21 @@ export function getHistory (id, callback){
 export function enumerateDesigns(id, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id) + "&bfs=true";
   d3.json(endpoints.ENUMERATE + query, callback);
+}
+
+export function getGraphScore(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.SCORE + query, callback);
+}
+
+export function getBestPath(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.BESTPATH + query, callback);
+}
+
+export function getBestPathScore(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.BESTPATHSCORE + query, callback);
 }
 
 /***************************

@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.domain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,7 +10,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Map;
 
+import knox.spring.data.neo4j.domain.Edge.Orientation;
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -254,6 +257,13 @@ public class NodeSpace {
 		}
 
 		return edges;
+	}
+
+	public void printAllEdges() {
+		Set<Edge> edges = getEdges();
+		for (Edge edge : edges) {
+			System.out.println(edge);
+		}
 	}
 	
 	public Set<Edge> getBlankEdges() {
@@ -830,15 +840,16 @@ public class NodeSpace {
     }
     
     public boolean deleteBlankEdge(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
-    	if ((nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1 || edge.getTail().getNumEdges() == 1) 
+    	if (((nodeIDToIncomingEdges.containsKey(edge.getHeadID()) && nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
+    				|| edge.getTail().getNumEdges() == 1) 
     			&& !edge.getTail().hasDiffNodeType(edge.getHead())
     			&& (!edge.getTail().isAcceptNode() || edge.getHead().isAcceptNode() 
     					|| nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
     			&& (!edge.getHead().isStartNode() || edge.getTail().isStartNode() 
     					|| edge.getTail().getNumEdges() == 1)
     			&& (!edge.getTail().isStartNode() 
-    					|| nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1
-    					|| !nodeIDToIncomingEdges.get(edge.getTailID()).isEmpty())) {
+    					|| (nodeIDToIncomingEdges.containsKey(edge.getHeadID()) && nodeIDToIncomingEdges.get(edge.getHeadID()).size() == 1)
+    					|| (nodeIDToIncomingEdges.containsKey(edge.getTailID()) && !nodeIDToIncomingEdges.get(edge.getTailID()).isEmpty()))) {
     		edge.delete();
     		
     		Set<Edge> headEdges = edge.getHead().removeEdges();
@@ -851,11 +862,13 @@ public class NodeSpace {
     		
     		Set<Edge> incomingHeadEdges = new HashSet<Edge>();
     		
-    		for (Edge incomingHeadEdge : nodeIDToIncomingEdges.get(edge.getHeadID())) {
-    			if (incomingHeadEdge != edge) {
-    				incomingHeadEdge.setHead(edge.getTail());
-    				
-    				incomingHeadEdges.add(incomingHeadEdge);
+    		if (nodeIDToIncomingEdges.containsKey(edge.getHeadID())) {
+    			for (Edge incomingHeadEdge : nodeIDToIncomingEdges.get(edge.getHeadID())) {
+    				if (incomingHeadEdge != edge) {
+    					incomingHeadEdge.setHead(edge.getTail());
+
+    					incomingHeadEdges.add(incomingHeadEdge);
+    				}
     			}
     		}
     		
@@ -892,4 +905,153 @@ public class NodeSpace {
     	
     	return spaceMap;
     }
+
+	public void weightBlankEdges() {
+		
+		Set<Edge> blankEdges = getBlankEdges();
+
+		// Remove current weight
+		for (Edge e : blankEdges) {
+			e.emptyWeight();
+		}
+
+		// Determine weights for blankEdges
+		for (Edge edge : blankEdges) {
+			avgWeight(edge);
+
+		}
+
+
+	}
+
+	public void splitEdges() {
+		// Edges can have at most 1 componentID
+		Set<Edge> edges = getEdges();
+
+		for (Edge edge : edges) {
+			Node tailNode = edge.getTail();
+
+			if (edge.getComponentIDs().size() > 1) {
+
+				for (int i = 0; i < edge.getComponentIDs().size(); i++) {
+					ArrayList<String> compId = new ArrayList<>();
+					ArrayList<String> compRole = new ArrayList<>();
+
+					compId.add(edge.getComponentIDs().get(i));
+					compRole.add(edge.getComponentRoles().get(i));
+
+					tailNode.createEdge(edge.getHead(), compId, compRole, Orientation.INLINE, edge.getWeight());
+				}
+
+				tailNode.deleteEdge(edge);
+			}
+		}
+	}
+
+	public void avgWeight(Edge edge){
+
+		Node head = edge.getHead();
+
+		Set<Edge> allEdges = head.getEdges();
+
+		double weight = 0;
+
+		int countParts = 0;
+
+		for (Edge e : allEdges) {
+			if (edge.getHeadID() == e.getTailID()) {
+				if (e.isBlank() && e.weight.get(0) == 0) {
+					avgWeight(e);
+
+					weight += e.weight.get(0);
+					countParts += 1;
+				}
+
+				else {
+					for (Double w : e.weight) {
+						weight += w;
+						countParts += 1;
+					}
+				}
+			}
+		}
+
+		ArrayList<Double> averageWeight = new ArrayList<Double>(
+            Arrays.asList(weight / countParts));
+
+		edge.weight = averageWeight;
+
+	}
+
+	public String getTotalScoreOfNonBlankEdges() {
+		Set<Edge> allEdges = getEdges();
+		Set<Edge> blankEdges = getBlankEdges();
+
+		double totalWeight = 0;
+		double blankEdgesTotalWeight = 0;
+
+		for (Edge e : allEdges) {
+			for (Double w : e.weight) {
+				totalWeight += w;
+			}
+		}
+
+		for (Edge b : blankEdges) {
+			blankEdgesTotalWeight += b.weight.get(0);
+		}
+
+		return String.valueOf(totalWeight - blankEdgesTotalWeight);
+	}
+
+	public String getTotalScoreOfEdges() {
+		Set<Edge> allEdges = getEdges();
+
+		double totalWeight = 0;
+
+		for (Edge e : allEdges) {
+			for (Double w : e.weight) {
+				totalWeight += w;
+			}
+		}
+
+		return String.valueOf(totalWeight);
+	}
+
+	public String getAvgScoreofAllNonBlankEdges() {
+		Set<Edge> allEdges = getEdges();
+
+		double totalNumberOfNonBlankEdges = 0;
+		double totalWeightOfNonBlankEdges = 0;
+
+		for (Edge e : allEdges) {
+			if (!e.isBlank()) {
+				totalNumberOfNonBlankEdges = totalNumberOfNonBlankEdges + 1;
+				totalWeightOfNonBlankEdges = totalWeightOfNonBlankEdges + e.weight.get(0);
+			}
+		}
+
+		return String.valueOf(totalWeightOfNonBlankEdges / totalNumberOfNonBlankEdges);
+	}
+
+	public String getAvgScoreofAllEdges() {
+		Set<Edge> allEdges = getEdges();
+
+		double totalNumberOfEdges = 0;
+		double totalWeightOfEdges = 0;
+
+		for (Edge e : allEdges) {
+			totalNumberOfEdges = totalNumberOfEdges + 1;
+			totalWeightOfEdges = totalWeightOfEdges + e.weight.get(0);
+		}
+
+		return String.valueOf(totalWeightOfEdges / totalNumberOfEdges);
+	}
+
+	public void clearNodeWeights() {
+		Set<Node> nodes = getNodes();
+		for (Node node: nodes) {
+			node.hasWeight = false;
+		}
+	}
+
 }

@@ -68,12 +68,18 @@
       <span class="circle-float-btn" id="list-btn">
         <img id="list-img" class="btn-img" src="img/ic_list.png"/>
       </span>
+      <span class="circle-float-btn" id="bestpath-btn">
+        <img id="bestpath-img" class="btn-img" src="img/ic_best_path.png"/>
+      </span> 
+      <span class="circle-float-btn" id="score-btn">
+        <img id="score-img" class="btn-img" src="img/ic_score.png"/>
+      </span>
       <span class="circle-float-btn" id="combine-btn">
         <img id="combine-img" class="btn-img" src="img/ic_merge.png"/>
       </span>
-      <span class="circle-float-btn" id="save-btn">
+      <!-- <span class="circle-float-btn" id="save-btn">
         <img id="save-img" class="btn-img" src="img/save.png"/>
-      </span>
+      </span> -->
       <span class="circle-float-btn" id="sbol-btn">
         <img id="sbol-img" class="btn-img" src="img/save.png"/>
       </span>
@@ -82,7 +88,6 @@
       </span>
     </div>
   </div>
-
 </section>
 
 <section id="import">
@@ -96,9 +101,18 @@
       <form method="POST" enctype="multipart/form-data"
             action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
         <input type="file" name="inputCSVFiles[]" multiple>
+        <input type="number" name="weight" placeholder=0.0>
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
-        <input type="submit" value="Import">
+        <input type="submit" value="Import (OR)">
+      </form>
+      <form method="POST" enctype="multipart/form-data"
+            action="merge/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <input type="file" name="inputCSVFiles[]" multiple>
+        <input type="number" name="weight" placeholder=0.0>
+        <input type="text" name="outputSpacePrefix" placeholder="Space ID"
+               class="form-control" aria-label="..." size="10">
+        <input type="submit" value="Import (MERGE)">
       </form>
     </div>
     <div id="Eugene" class="tab-pane fade">
@@ -134,6 +148,9 @@
   <a id="enumerate-designs-tooltip">Enumerate Designs</a>
 
   <a id="export-sbol-tooltip">Export as SBOL</a>
+
+  <a id="graph-score-tooltip">Graph Score</a> 
+  <a id="best-path-tooltip">Best Path</a>
 </div>
 
 <footer>

@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.sbol;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 import knox.spring.data.neo4j.domain.Edge;
@@ -85,40 +86,41 @@ public class SBOLConversion {
 		// order components by sequence constraints
 		VariableComponent[] sortedVCs = sortVariableComponents(combinatorialDerivation);
 		for (VariableComponent variableComponent : sortedVCs) {
+			if (variableComponent != null) {
+				// recurse through variant derivations
+				Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
 
-			// recurse through variant derivations
-			Set<CombinatorialDerivation> variantDerivs = variableComponent.getVariantDerivations();
+				Boolean hasVariants = !variableComponent.getVariants().isEmpty() || !variableComponent.getVariantCollections().isEmpty();
 
-			Boolean hasVariants = !variableComponent.getVariants().isEmpty() || !variableComponent.getVariantCollections().isEmpty();
-
-			//handle structure for just repeats
-			if (variantDerivs.size() == 1 && !hasVariants){
-				for (CombinatorialDerivation cv : variantDerivs) {
-					inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
-				}
-			}
-
-			//else handle collapsed complex ORs
-			else if (variantDerivs.size() > 0){
-				List<NodeSpace> orSpace = new LinkedList<>();
-				NodeSpace outputSpace = new NodeSpace();
-
-				if (hasVariants){
-					orSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template)); //add variants
+				//handle structure for just repeats
+				if (variantDerivs.size() == 1 && !hasVariants){
+					for (CombinatorialDerivation cv : variantDerivs) {
+						inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+					}
 				}
 
-				for (CombinatorialDerivation cv : variantDerivs) {
-					orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv)));
+				//else handle collapsed complex ORs
+				else if (variantDerivs.size() > 0){
+					List<NodeSpace> orSpace = new LinkedList<>();
+					NodeSpace outputSpace = new NodeSpace();
+
+					if (hasVariants){
+						orSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template)); //add variants
+					}
+
+					for (CombinatorialDerivation cv : variantDerivs) {
+						orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv)));
+					}
+
+					OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
+					List<NodeSpace> tempSpace = new LinkedList<>();
+					tempSpace.add(outputSpace);
+					inputSpace.add(applyOperator(variableComponent.getOperator(), tempSpace));
 				}
 
-				OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
-				List<NodeSpace> tempSpace = new LinkedList<>();
-				tempSpace.add(outputSpace);
-				inputSpace.add(applyOperator(variableComponent.getOperator(), tempSpace));
-			}
-
-			else if (hasVariants){
-				inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template));
+				else if (hasVariants){
+					inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template));
+				}
 			}
 		}
 
@@ -128,20 +130,69 @@ public class SBOLConversion {
 	private VariableComponent[] sortVariableComponents(CombinatorialDerivation combinatorialDerivation){
 		//make ordered components from sequence constraints
 		List<Component> orderedComponents = new ArrayList<>();
-		Set<SequenceConstraint> seqConstraints = combinatorialDerivation.getTemplate().getSequenceConstraints();
+		
+		ComponentDefinition template = combinatorialDerivation.getTemplate();
+		Set<SequenceConstraint> seqConstraints = template.getSequenceConstraints();
+		
+		//check if total ordering
+		Set<URI> subjectURIs = new HashSet<URI>();
+		Set<URI> objectURIs = new HashSet<URI>();
+		
+		Set<URI> firstURI = new HashSet<URI>();
+		Set<URI> lastURI = new HashSet<URI>();
+		
+		HashMap<URI,URI> precedesMap = new HashMap<URI,URI>();
+		
 		for (SequenceConstraint constraint : seqConstraints) {
-			//subject precedes object
-			Component subject = constraint.getSubject();
-			Component object = constraint.getObject();
-			int subIndex = orderedComponents.indexOf(subject);
-			int objIndex = orderedComponents.indexOf(object);
-			if (subIndex == -1 && objIndex == -1){
-				orderedComponents.add(subject);
-				orderedComponents.add(object);
-			}else if(subIndex > -1){
-				orderedComponents.add(subIndex+1, object);
-			}else if(objIndex > -1){
-				orderedComponents.add(objIndex, subject);
+			if (constraint.getRestriction().equals(RestrictionType.PRECEDES)) {
+				subjectURIs.add(constraint.getSubjectURI());
+				objectURIs.add(constraint.getObjectURI());
+
+				firstURI.add(constraint.getSubjectURI());
+				lastURI.add(constraint.getObjectURI());
+				
+				precedesMap.put(constraint.getSubjectURI(), constraint.getObjectURI());
+			}
+		}
+		
+		firstURI.removeAll(objectURIs);
+		lastURI.removeAll(subjectURIs);
+		
+		boolean totalOrdering;
+		
+		if (firstURI.size() == 1 && lastURI.size() == 1) {
+			URI currentURI = firstURI.iterator().next();
+			
+			orderedComponents.add(template.getComponent(currentURI));
+			
+			while (precedesMap.containsKey(currentURI)) {
+				currentURI = precedesMap.get(currentURI);
+				
+				orderedComponents.add(template.getComponent(currentURI));
+			}
+			
+			totalOrdering = currentURI.equals(lastURI.iterator().next());
+		} else {
+			totalOrdering = false;
+		}
+		
+		if (!totalOrdering) {
+			orderedComponents.clear();
+			
+			for (SequenceConstraint constraint : seqConstraints) {
+				//subject precedes object
+				Component subject = constraint.getSubject();
+				Component object = constraint.getObject();
+				int subIndex = orderedComponents.indexOf(subject);
+				int objIndex = orderedComponents.indexOf(object);
+				if (subIndex == -1 && objIndex == -1){
+					orderedComponents.add(subject);
+					orderedComponents.add(object);
+				}else if(subIndex > -1){
+					orderedComponents.add(subIndex+1, object);
+				}else if(objIndex > -1){
+					orderedComponents.add(objIndex, subject);
+				}
 			}
 		}
 
@@ -161,32 +212,301 @@ public class SBOLConversion {
 
 		return orderedVCs;
 	}
+	
+	private Set<String> getSOTermsByAccessionURI(URI accessionURI) {
+		Set<String> soTerms = new HashSet<String>();
+		
+		switch (accessionURI.toString()) {
+		case "http://identifiers.org/so/SO:0000031":
+			soTerms.add("aptamer");
+			break;
+		case "http://identifiers.org/so/SO:0001953":
+			soTerms.add("restriction_enzyme_assembly_scar");
+			break;
+		case "http://identifiers.org/so/SO:0001691":
+			soTerms.add("blunt_end_restriction_enzyme_cleavage_site");
+			break;
+		case "http://identifiers.org/so/SO:0000316":
+			soTerms.add("CDS");
+			break;
+		case "http://identifiers.org/so/SO:0001955":
+			soTerms.add("protein_stability_element");
+			break;
+		case "http://identifiers.org/so/SO:0000804":
+			soTerms.add("engineered_region");
+			break;
+		case "http://identifiers.org/so/SO:0001932":
+			soTerms.add("restriction_enzyme_five_prime_single_strand_overhang");
+			break;
+		case "http://identifiers.org/so/SO:0001975":
+			soTerms.add("five_prime_sticky_end_restriction_enzyme_cleavage_site");
+			break;
+		case "http://identifiers.org/so/SO:0000627":
+			soTerms.add("insulator");
+			break;
+		case "http://identifiers.org/so/SO:0001263":
+			soTerms.add("ncRNA_gene");
+			break;
+		case "http://identifiers.org/so/SO:0000834":
+			soTerms.add("mature_transcript_region");
+			break;
+		case "http://identifiers.org/so/SO:0001688":
+			soTerms.add("restriction_enzyme_cleavage_junction");
+			break;
+		case "http://identifiers.org/so/SO:0001687":
+			soTerms.add("restriction_enzyme_recognition_site");
+			break;
+		case "http://identifiers.org/so/SO:0000057":
+			soTerms.add("operator");
+			break;
+		case "http://identifiers.org/so/SO:0000409":
+			soTerms.add("binding_site");
+			break;
+		case "http://identifiers.org/so/SO:0000296":
+			soTerms.add("origin_of_replication");
+			break;
+		case "http://identifiers.org/so/SO:0000724":
+			soTerms.add("oriT");
+			break;
+		case "http://identifiers.org/so/SO:0000553":
+			soTerms.add("polyA_site");
+			break;
+		case "http://identifiers.org/so/SO:0005850":
+			soTerms.add("primer_binding_site");
+			break;
+		case "http://identifiers.org/so/SO:0000167":
+			soTerms.add("promoter");
+			break;
+		case "http://identifiers.org/so/SO:0001956":
+			soTerms.add("protease_site");
+			break;
+		case "http://identifiers.org/so/SO:0001546":
+			soTerms.add("transcript_stability_variant");
+			break;
+		case "http://identifiers.org/so/SO:0001977":
+			soTerms.add("ribonuclease_site");
+			break;
+		case "http://identifiers.org/so/SO:0000139":
+			soTerms.add("ribosome_entry_site");
+			break;
+		case "http://identifiers.org/so/SO:0000374":
+			soTerms.add("ribozyme");
+			break;
+		case "http://identifiers.org/so/SO:0001979":
+			soTerms.add("RNA_stability_element");
+			break;
+		case "http://identifiers.org/so/SO:0001978":
+			soTerms.add("signature");
+			break;
+		case "http://identifiers.org/so/SO:0000299":
+			soTerms.add("specific_recombination_site");
+			break;
+		case "http://identifiers.org/so/SO:0000141":
+			soTerms.add("terminator");
+			break;
+		case "http://identifiers.org/so/SO:0001933":
+			soTerms.add("restriction_enzyme_three_prime_single_strand_overhang");
+			break;
+		case "http://identifiers.org/so/SO:0001976":
+			soTerms.add("three_prime_sticky_end_restriction_enzyme_cleavage_site");
+			break;
+		case "http://identifiers.org/so/SO:0000616":
+			soTerms.add("transcription_end_site");
+			break;
+		case "http://identifiers.org/so/SO:0000319":
+			soTerms.add("stop_codon");
+			break;
+		case "http://identifiers.org/so/SO:0000327":
+			soTerms.add("coding_end");
+			break;
+		}
+		
+		return soTerms;
+	}
+	
+	private Set<URI> getAccessionURIsBySOTerm(String soTerm) {
+		Set<URI> accessionURIs = new HashSet<URI>();
+		
+		try {
+			switch (soTerm) {
+			case "aptamer":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000031"));
+				break;
+			case "restriction_enzyme_assembly_scar":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001953"));
+				break;
+			case "blunt_end_restriction_enzyme_cleavage_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001691"));
+				break;
+			case "CDS":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000316"));
+				break;
+			case "protein_stability_element":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001955"));
+				break;
+			case "engineered_region":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000804"));
+				break;
+			case "restriction_enzyme_five_prime_single_strand_overhang":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001932"));
+				break;
+			case "five_prime_sticky_end_restriction_enzyme_cleavage_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001975"));
+				break;
+			case "ribozyme":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000374"));
+				break;
+			case "insulator":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000627"));
+				break;
+			case "ncRNA_gene":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001263"));
+				break;
+			case "mature_transcript_region":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000834"));
+				break;
+			case "restriction_enzyme_cleavage_junction":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001688"));
+				break;
+			case "restriction_enzyme_recognition_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001687"));
+				break;
+			case "operator":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000057"));
+				break;
+			case "binding_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000409"));
+				break;
+			case "origin_of_replication":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000296"));
+				break;
+			case "oriT":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000724"));
+				break;
+			case "polyA_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000553"));
+				break;
+			case "primer_binding_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0005850"));
+				break;
+			case "promoter":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000167"));
+				break;
+			case "protease_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001956"));
+				break;
+			case "transcript_stability_variant":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001546"));
+				break;
+			case "ribonuclease_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001977"));
+				break;
+			case "ribosome_entry_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000139"));
+				break;
+			case "RNA_stability_element":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001979"));
+				break;
+			case "signature":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001978"));
+				break;
+			case "specific_recombination_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000299"));
+				break;
+			case "terminator":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000141"));
+				break;
+			case "restriction_enzyme_three_prime_single_strand_overhang":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001933"));
+				break;
+			case "three_prime_sticky_end_restriction_enzyme_cleavage_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0001976"));
+				break;
+			case "transcription_end_site":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000616"));
+				break;
+			case "stop_codon":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000319"));
+				break;
+			case "coding_end":
+				accessionURIs.add(new URI("http://identifiers.org/so/SO:0000327"));
+				break;
+			}
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return accessionURIs;
+	}
+	
+	private Set<String> getSOTermsByAccessionURIs(Set<URI> accessionURIs) {
+		Set<String> soTerms = new HashSet<String>();
+		
+		for (URI accessionURI : accessionURIs) {
+			soTerms.addAll(getSOTermsByAccessionURI(accessionURI));
+		}
+		
+		return soTerms;
+	}
 
 	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent, ComponentDefinition template) throws SBOLException{
 		ArrayList<String> atomIDs = new ArrayList<>();
 		ArrayList<String> atomRoles = new ArrayList<>();
 
-		Component variable = variableComponent.getVariable();
-		ComponentDefinition variableDefinition = variable.getDefinition();
-
-		// Find variant roles
+		// Add IDs and roles for concrete parts from variants
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
-			Set<URI> roles = variant.getRoles().isEmpty()? variableDefinition.getRoles(): variant.getRoles();
-			for (URI role : roles) {
-				atomIDs.add(variant.getIdentity().toString());
-				atomRoles.add(role.toString());
+			if (!variant.getSequenceURIs().isEmpty()) {
+				Set<URI> roles = variant.getRoles();
+				
+				for (URI role : roles) {
+					atomIDs.add(variant.getIdentity().toString());
+					atomRoles.add(role.toString());
+				}
 			}
 		}
 
-		// Find collection roles
+		// Add IDs and roles for concrete parts from variant collections
 		for (org.sbolstandard.core2.Collection collection : variableComponent.getVariantCollections()) {
 			for (TopLevel member: collection.getMembers()){
 				if (member.getClass() == ComponentDefinition.class){
 					ComponentDefinition def = (ComponentDefinition) member;
-					Set<URI> roles = def.getRoles().isEmpty()? variableDefinition.getRoles(): def.getRoles();
-					for (URI role : roles) {
-						atomIDs.add(def.getIdentity().toString());
-						atomRoles.add(role.toString());
+					
+					if (!def.getSequenceURIs().isEmpty()) {
+						Set<URI> roles = def.getRoles();
+						
+						for (URI role : roles) {
+							atomIDs.add(def.getIdentity().toString());
+							atomRoles.add(role.toString());
+						}
+					}
+				}
+			}
+		}
+		
+		// Add roles for abstract parts from variants
+		for (ComponentDefinition variant : variableComponent.getVariants()) {
+			if (variant.getSequenceURIs().isEmpty()) {
+				Set<URI> roles = variant.getRoles();
+				
+				for (URI role : roles) {
+					atomRoles.add(role.toString());
+				}
+			}
+		}
+		
+		// Add IDs and roles for concrete parts from variant collections
+		for (org.sbolstandard.core2.Collection collection : variableComponent.getVariantCollections()) {
+			for (TopLevel member: collection.getMembers()){
+				if (member.getClass() == ComponentDefinition.class){
+					ComponentDefinition def = (ComponentDefinition) member;
+
+					if (def.getSequenceURIs().isEmpty()) {
+						Set<URI> roles = def.getRoles();
+
+						for (URI role : roles) {
+							atomRoles.add(role.toString());
+						}
 					}
 				}
 			}
@@ -320,7 +640,7 @@ public class SBOLConversion {
 	private static List<ComponentDefinition> flattenComponentDefinition(ComponentDefinition rootDef) {
 		List<ComponentDefinition> leafDefs = new LinkedList<ComponentDefinition>();
 		
-		if (rootDef.getSequences().isEmpty() || rootDef.getSequenceAnnotations().isEmpty()) {
+		if (rootDef.getSequenceAnnotations().isEmpty()) {
 			leafDefs.add(rootDef);
 			
 			return leafDefs;
@@ -355,41 +675,41 @@ public class SBOLConversion {
 			
 			List<Component> leafComps = new LinkedList<Component>();
 			
-			int lastEnd = 0;
+//			int lastEnd = 0;
 			
 			for (SequenceAnnotation compAnno : sortedCompAnnos) {
-				List<Range> sortedRanges = new LinkedList<Range>();
+//				List<Range> sortedRanges = new LinkedList<Range>();
 				
-				for (Location loc : compAnno.getSortedLocations()) {
-					if (loc instanceof Range) {
-						sortedRanges.add((Range) loc);
-					}
-				}
+//				for (Location loc : compAnno.getSortedLocations()) {
+//					if (loc instanceof Range) {
+//						sortedRanges.add((Range) loc);
+//					}
+//				}
 				
-				if (lastEnd > 0 && sortedRanges.get(0).getStart() != lastEnd + 1) {
-					leafDefs.add(rootDef);
-					
-					return leafDefs;
-				}
-				
-				for (int i = 1; i < sortedRanges.size(); i++) {
-					if (sortedRanges.get(i).getStart() != sortedRanges.get(i - 1).getEnd() + 1) {
-						leafDefs.add(rootDef);
-						
-						return leafDefs;
-					}
-				}
+//				if (lastEnd > 0 && sortedRanges.get(0).getStart() != lastEnd + 1) {
+//					leafDefs.add(rootDef);
+//					
+//					return leafDefs;
+//				}
+//				
+//				for (int i = 1; i < sortedRanges.size(); i++) {
+//					if (sortedRanges.get(i).getStart() != sortedRanges.get(i - 1).getEnd() + 1) {
+//						leafDefs.add(rootDef);
+//						
+//						return leafDefs;
+//					}
+//				}
 
 				leafComps.add(compAnno.getComponent());
 				
-				lastEnd = sortedRanges.get(sortedRanges.size() - 1).getEnd();
+//				lastEnd = sortedRanges.get(sortedRanges.size() - 1).getEnd();
 			}
 			
-			if (lastEnd != rootDef.getSequenceByEncoding(Sequence.IUPAC_DNA).getElements().length()) {
-				leafDefs.add(rootDef);
-			
-				return leafDefs;
-			}
+//			if (lastEnd != rootDef.getSequenceByEncoding(Sequence.IUPAC_DNA).getElements().length()) {
+//				leafDefs.add(rootDef);
+//			
+//				return leafDefs;
+//			}
 			
 			for (Component leafComp : leafComps) {
 				ComponentDefinition leafDef = leafComp.getDefinition();

@@ -15,8 +15,10 @@ const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
-  save: "#save-btn",
   sbol: "#sbol-btn",
+  score: "#score-btn",
+  bestPath: "#bestpath-btn"
+  // save: "#save-btn",
 };
 export const knoxClass = {
   HEAD: "Head",
@@ -286,6 +288,10 @@ export function getSBOLImage(role){
       return sbolpath + "five-prime-sticky-restriction-site.svg";
     case "http://identifiers.org/so/SO:0000627":
       return sbolpath + "insulator.svg";
+    // There is no SBOL visual glyph mapped to the SO term ribozyme,
+    // but RiboJ is listed as a prototypical example of the insulator glyph.
+    case "http://identifiers.org/so/SO:0000374":
+      return sbolpath + "insulator.svg";
     case "http://identifiers.org/so/SO:0001263":
     case "http://identifiers.org/so/SO:0000834":
       return sbolpath + "ncrna.svg";
@@ -352,46 +358,63 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
-  deleteBtn.tooltipster({
-    content: $('#delete-branch-tooltip'),
-    multiple: true,
-    side: 'left',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
-  deleteBtn.tooltipster({
-    content: $('#reset-commit-tooltip'),
-    multiple: true,
-    side: 'bottom',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
-  deleteBtn.tooltipster({
-    content: $('#revert-commit-tooltip'),
-    multiple: true,
-    side: 'right',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
+  // deleteBtn.tooltipster({
+  //   content: $('#delete-branch-tooltip'),
+  //   multiple: true,
+  //   side: 'left',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
+  // deleteBtn.tooltipster({
+  //   content: $('#reset-commit-tooltip'),
+  //   multiple: true,
+  //   side: 'bottom',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
+  // deleteBtn.tooltipster({
+  //   content: $('#revert-commit-tooltip'),
+  //   multiple: true,
+  //   side: 'right',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
 
-  let saveBtn = $('#save-btn');
-  saveBtn.tooltipster({
-    content: $('#make-commit-tooltip'),
-    side: 'top',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
-  saveBtn.tooltipster({
-    content: $('#make-branch-tooltip'),
-    multiple: true,
-    side: 'bottom',
-    interactive: true,
-    theme: 'tooltipster-noir'
-  });
+  // let saveBtn = $('#save-btn');
+  // saveBtn.tooltipster({
+  //   content: $('#make-commit-tooltip'),
+  //   side: 'top',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
+  // saveBtn.tooltipster({
+  //   content: $('#make-branch-tooltip'),
+  //   multiple: true,
+  //   side: 'bottom',
+  //   interactive: true,
+  //   theme: 'tooltipster-noir'
+  // });
 
   let listBtn = $('#list-btn');
   listBtn.tooltipster({
     content: $('#enumerate-designs-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let bestPathBtn = $('#bestpath-btn');
+  bestPathBtn.tooltipster({
+    content: $('#best-path-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+  
+
+  let scoreBtn = $('#score-btn');
+  scoreBtn.tooltipster({
+    content: $('#graph-score-tooltip'),
     side: 'top',
     interactive: true,
     theme: 'tooltipster-noir'
@@ -452,12 +475,127 @@ $('#enumerate-designs-tooltip').click(() => {
           //append comma if there are more elements
           if (length !== i+1){
             para.appendChild(document.createTextNode(","));
+          } else {
+            para.appendChild(document.createTextNode(","));
+            para.appendChild(document.createTextNode(element.average_weight));
           }
         });
         para.appendChild(document.createTextNode("]"));
         para.appendChild(document.createElement('br'));
       });
 
+      div.appendChild(para);
+    }
+  });
+
+});
+
+$('#best-path-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.height = "inherit";
+  div.style.overflow = "scroll";
+
+  // loading div
+  let loadingDiv = document.createElement('div');
+  loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+  //append all
+  div.appendChild(loadingDiv);
+
+  swal({
+    title: "Best Paths",
+    content: div,
+    className: "score-swal"
+  });
+
+  endpoint.getBestPath(currentSpace, (err, data1) => {
+    if (err) {
+      swalError("Graph error: " + JSON.stringify(err));
+    } else {
+      div.removeChild(loadingDiv);
+      let para = document.createElement("p");
+      endpoint.getBestPathScore(currentSpace, (err, data2) => {
+        if (err) {
+          swalError("Graph error: " + JSON.stringify(err));
+        } else {
+          para.appendChild(document.createElement('br'));
+          para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
+          para.appendChild(document.createElement('br'));
+
+          para.appendChild(document.createTextNode(data2));
+          para.appendChild(document.createElement('br'));
+        }
+      });
+
+      data1.map((list) => {
+        para.appendChild(document.createTextNode("["));
+        const length = list.length;
+        list.map((element, i) => {
+          para.appendChild(document.createTextNode(element.id));
+          //append comma if there are more elements
+          if (length !== i+1){
+            para.appendChild(document.createTextNode(","));
+          }
+        });
+        para.appendChild(document.createTextNode("]"));
+        para.appendChild(document.createElement('br'));
+      });
+
+      div.appendChild(para);
+    }
+  });
+
+});
+
+$('#graph-score-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.height = "inherit";
+  
+  // loading div
+  let loadingDiv = document.createElement('div');
+  loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+  //append all
+  div.appendChild(loadingDiv);
+
+  swal({
+    title: "Graph Score",
+    content: div,
+    className: "score-swal"
+  }); 
+
+  endpoint.getGraphScore(currentSpace, (err, data) => {
+    if (err) {
+      swalError("Score error: " + JSON.stringify(err));
+    } else {
+      div.removeChild(loadingDiv);
+
+      let para = document.createElement("p");
+      para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
+      para.appendChild(document.createElement('br'));
+      
+      para.appendChild(document.createTextNode(data[0]));
+      para.appendChild(document.createElement('br'));
+
+      para.appendChild(document.createTextNode('Total Weight of All Edges:'));
+      para.appendChild(document.createElement('br'));
+      
+      para.appendChild(document.createTextNode(data[1]));
+      para.appendChild(document.createElement('br'));
+
+      para.appendChild(document.createTextNode('Average Weight of All Non-Blank Edges:'));
+      para.appendChild(document.createElement('br'));
+      
+      para.appendChild(document.createTextNode(data[2]));
+      para.appendChild(document.createElement('br'));
+
+      para.appendChild(document.createTextNode('Average Weight of All Edges:'));
+      para.appendChild(document.createElement('br'));
+      
+      para.appendChild(document.createTextNode(data[3]));
+      para.appendChild(document.createElement('br'));
+
+      
       div.appendChild(para);
     }
   });
@@ -505,32 +643,34 @@ $('#apply-operators-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(operatorDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(tolDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(optDiv);
+  div.appendChild(document.createElement('br'));
+
+  tolDiv.style.visibility = 'hidden';
+  optDiv.style.visibility = 'hidden';
 
   $(operatorDropdown).change(function() {
+    if(this.value === endpoint.operators.JOIN){
+      tolDiv.style.visibility = 'hidden';
+      optDiv.style.visibility = 'hidden';
+    }
+    if(this.value === endpoint.operators.OR){
+      tolDiv.style.visibility = 'hidden';
+      optDiv.style.visibility = 'hidden';
+    }
     if(this.value === endpoint.operators.REPEAT){
-      if(div.contains(tolDiv)){
-        div.removeChild(tolDiv);
-      }
-      if(div.contains(comDiv)){
-        div.removeChild(comDiv);
-      }
-      div.appendChild(optDiv);
+      tolDiv.style.visibility = 'hidden';
+      optDiv.style.visibility = 'visible';
     }
     if(this.value === endpoint.operators.AND){
-      if(div.contains(optDiv)){
-        div.removeChild(optDiv);
-      }
-      div.appendChild(tolDiv);
-      div.appendChild(comDiv);
+      tolDiv.style.visibility = 'visible';
+      optDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.MERGE){
-      if(div.contains(optDiv)){
-        div.removeChild(optDiv);
-      }
-      if(div.contains(comDiv)){
-        div.removeChild(comDiv);
-      }
-      div.appendChild(tolDiv);
+      tolDiv.style.visibility = 'visible';
+      optDiv.style.visibility = 'hidden';
     }
   });
 
@@ -605,6 +745,7 @@ function makeToleranceDropdown(){
   toleranceDropdown.appendChild(new Option("1"));
   toleranceDropdown.appendChild(new Option("2"));
   toleranceDropdown.appendChild(new Option("3"));
+  toleranceDropdown.appendChild(new Option("4"));
 
   return toleranceDropdown;
 }
@@ -636,69 +777,69 @@ $('#delete-design-tooltip').click(() => {
   });
 });
 
-$('#delete-branch-tooltip').click(() => {
-  // create DOM object to add to alert
-  let dropdown = document.createElement("select");
-  let branchOption = new Option("Branches", "", true, true);
-  branchOption.disabled = true;
-  dropdown.appendChild(branchOption);
-  populateBranchSelector(historyNodes, $(dropdown));
-  swal({
-    title: "Really delete?",
-    text: "Select the branch you want to delete (you cannot delete the current active branch)",
-    icon: "warning",
-    buttons: true,
-    content: dropdown
-  }).then((confirm) => {
-    if (confirm) {
-      let branchName = $(dropdown)[0].options[$(dropdown)[0].selectedIndex].value;
-      endpoint.deleteBranch(branchName);
-    }
-  });
-});
+// $('#delete-branch-tooltip').click(() => {
+//   // create DOM object to add to alert
+//   let dropdown = document.createElement("select");
+//   let branchOption = new Option("Branches", "", true, true);
+//   branchOption.disabled = true;
+//   dropdown.appendChild(branchOption);
+//   populateBranchSelector(historyNodes, $(dropdown));
+//   swal({
+//     title: "Really delete?",
+//     text: "Select the branch you want to delete (you cannot delete the current active branch)",
+//     icon: "warning",
+//     buttons: true,
+//     content: dropdown
+//   }).then((confirm) => {
+//     if (confirm) {
+//       let branchName = $(dropdown)[0].options[$(dropdown)[0].selectedIndex].value;
+//       endpoint.deleteBranch(branchName);
+//     }
+//   });
+// });
 
-$('#reset-commit-tooltip').click(() => {
-  swal({
-    title: "Really reset?",
-    text: "No history of the commit will remain (If you want to preserve history, use revert). ",
-    icon: "warning",
-    buttons: true
-  }).then((confirm) => {
-    if (confirm) {
-      endpoint.resetCommit();
-    }
-  });
-});
+// $('#reset-commit-tooltip').click(() => {
+//   swal({
+//     title: "Really reset?",
+//     text: "No history of the commit will remain (If you want to preserve history, use revert). ",
+//     icon: "warning",
+//     buttons: true
+//   }).then((confirm) => {
+//     if (confirm) {
+//       endpoint.resetCommit();
+//     }
+//   });
+// });
 
-$('#revert-commit-tooltip').click(() => {
-  swal({
-    title: "Really revert?",
-    text: "A new commit will be made from the previous design.",
-    icon: "warning",
-    buttons: true
-  }).then((confirm) => {
-    if (confirm) {
-      endpoint.revertCommit();
-    }
-  });
-});
+// $('#revert-commit-tooltip').click(() => {
+//   swal({
+//     title: "Really revert?",
+//     text: "A new commit will be made from the previous design.",
+//     icon: "warning",
+//     buttons: true
+//   }).then((confirm) => {
+//     if (confirm) {
+//       endpoint.revertCommit();
+//     }
+//   });
+// });
 
-$('#make-commit-tooltip').click(() => {
-  endpoint.makeCommit();
-});
+// $('#make-commit-tooltip').click(() => {
+//   endpoint.makeCommit();
+// });
 
-$('#make-branch-tooltip').click(() => {
-  swal({
-    title: "Create branch",
-    text: "Enter a unique branch name",
-    content: "input",
-    buttons: true
-  }).then((branchName) => {
-    if (branchName){
-      endpoint.makeNewBranch(branchName);
-    }
-  });
-});
+// $('#make-branch-tooltip').click(() => {
+//   swal({
+//     title: "Create branch",
+//     text: "Enter a unique branch name",
+//     content: "input",
+//     buttons: true
+//   }).then((branchName) => {
+//     if (branchName){
+//       endpoint.makeNewBranch(branchName);
+//     }
+//   });
+// });
 
 export function swalError(errorMsg){
   swal({

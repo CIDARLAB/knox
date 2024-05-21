@@ -19,17 +19,13 @@ public class ANDOperator {
 		Product product = new Product(inputSpaces.get(0));
 
 		for (int i = 1; i < inputSpaces.size(); i++) {
-			List<Set<Edge>> blankEdges;
-
 			if (isComplete) {
-				blankEdges = product.applyTensor(inputSpaces.get(i), tolerance, 2, roles);
+				product.applyTensor(inputSpaces.get(i), tolerance, 2, roles);
 			} else {
-				blankEdges = product.applyTensor(inputSpaces.get(i), tolerance, 0, roles);
+				product.applyTensor(inputSpaces.get(i), tolerance, 0, roles);
 			}
-
-			for (int j = 0; j < blankEdges.size(); j++) {
-				product.getSpace().deleteBlankEdges(blankEdges.get(j));
-			}
+			
+			product.getSpace().deleteBlankEdges(product.getSpace().getBlankEdges());
 		}
 		
 		if (product.getSpace().hasNodes()) {
