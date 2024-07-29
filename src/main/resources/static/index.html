@@ -10,11 +10,21 @@
   <link rel="stylesheet" type="text/css" href="vendor/tooltipster/tooltipster.bundle.min.css"/>
   <link rel="stylesheet" type="text/css" href="vendor/tooltipster/tooltipster-sideTip-noir.min.css"/>
   <link rel="stylesheet" type="text/css" href="vendor/font-awesome/css/font-awesome.min.css" >
+
+  <link rel="stylesheet" href="css/codemirror.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme/solarized.css">
+  <link rel="stylesheet" href="css/theme/ambiance.css">
+
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
   <link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
   <link href="vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
   <link href="css/knox.css" rel="stylesheet">
+
+  <!--link href="https://fonts.googleapis.com/css?family=Montserrat:200,300" rel="stylesheet"-->
+  <!--link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+        integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous"-->
 </head>
 <body id="page-top">
 <nav id="mainNav" class="navbar navbar-default navbar-fixed-top">
@@ -26,6 +36,7 @@
       <ul class="nav navbar-nav navbar-right" id="navigation-bar">
         <li><a data-toggle="tabs" href="#explore">Explore</a></li>
         <li><a data-toggle="tabs" href="#import">Import</a></li>
+        <li><a data-toggle="tabs" href="#goldbar">GOLDBAR</a></li>
       </ul>
     </div>
   </div>
@@ -134,6 +145,59 @@
   </div>
 </section>
 
+<section id="goldbar">
+  <!--  GOLDBAR Description -->
+  <div class="main-content container"></div>
+    <div class="card card-main">
+      <div class="card-body">
+        <p class="goldbar-desc"><b>IMPORT GOLDBAR via Constellation-js</b>
+        </p>
+      </div>
+    </div>
+    <!--  End GOLDBAR Description -->
+    <br>
+    <div class="card card-main">
+      <!--  Input GOLDBAR Section  -->
+        <div class="card-body">
+          <!--  GOLDBAR Parameters  -->
+          <div id="goldbar-parameters">
+            <div class="row">
+              <div class="col-sm">
+                <label id="designName" for="designNameInput"><h5>Design name:</h5></label>
+                <input id="designNameInput" type="text" placeholder="constellation-design">
+              </div>
+            </div>
+          </div>
+          <!--  End GOLDBAR Parameters  -->
+          <!--  GOLDBAR Specification and Categories  -->
+          <div class="col">
+            <div id="spec-categories-row-0" class="row">
+              <div id="spec-col-0" class="col-sm">
+                <label id="goldbar-label-0" for="goldbar-input-0">Specification</label>
+                <textarea class="codemirror" id="goldbar-input-0" name="paragraph_text" cols="50" rows="10"></textarea>
+              </div>
+              <div id="categories-col-0" class="col-sm">
+                <label id="cat-label-0" for="categories-0">Categories</label>
+                <textarea class="codemirror" id="categories-0" cols="50" rows="10"></textarea>
+              </div>
+            </div>
+          </div>
+          <!--  End GOLDBAR Specification and Categories  -->
+          <!-- Submit -->
+          <div class="text-center">
+            <div id="spinner" class="spinner hidden">
+                  <p><i class="fa fa-spinner fa-spin"></i>  Loading...</p>
+            </div>
+            <button id="goldbarDownloadSbolBtn" class="btn btn-outline-warning mt-2">Download SBOL</button>
+            <button id="goldbarSubmitBtn" class="btn btn-outline-warning mt-2">Import Design Space</button>
+            <button id="goldbarSubmitAndDownloadBtn" class="btn btn-outline-warning mt-2">Import Design Space And Download SBOL</button>
+          </div>
+        </div>
+    </div>
+  </div>
+
+</section>
+
 <!--Hidden templates-->
 <div class="tooltip-templates">
   <a id="delete-design-tooltip">Delete Design</a>
@@ -161,10 +225,23 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
   <script src="vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
   <script type="text/javascript" src="vendor/tooltipster/tooltipster.bundle.min.js"></script>
-  <script src="constellation.js"></script>
+  
+  <!--script src="constellation.js"></script-->
+
   <script type="module" src="js/knox.js"></script>
   <script type="module" src="js/target.js"></script>
   <script type="module" src="js/endpoints.js"></script>
+
+  <!--script type="module" src="js/constellation.js"></script-->
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gojs/1.8.2/go-debug.js"></script>
+  <!--script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script-->
+
+  <!--script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script-->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        
+  <script type="application/javascript" src="js/codemirror.js"></script>
+  <script type="application/javascript" src="js/scheme.js"></script>
 </footer>
 </body>
 </html>

@@ -1,6 +1,4 @@
 
-// import * as constellation from "../constellation-js/lib/constellation.js";
-
 
 import {currentSpace,
   currentBranch,
@@ -30,7 +28,8 @@ const endpoints = {
   BRANCH: "/branch", //post vs delete
   DESIGN: "/designSpace", //post vs delete
 
-  SBOL:"/sbol/exportCombinatorial"
+  SBOL: "/sbol/exportCombinatorial",
+  GOLDBAR: "/goldbarSBOL/import"
 };
 
 export const operators = {
@@ -326,8 +325,18 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance){
   }
 }
 
+export function importGoldbarSBOL(sbolDoc){
+  let query = "?"
+  query += encodeQueryParameter("sbolDoc", sbolDoc, query)
 
-function downloadSBOL(text, filename) {
+  let request = new XMLHttpRequest();
+  request.open("POST", endpoints.GOLDBAR + query, false);
+  request.send(null);
+
+}
+
+
+export function downloadSBOL(text, filename) {
   let element = document.createElement('a');
   element.setAttribute('href', 'data:application/xml,' + encodeURIComponent(text));
   element.setAttribute('download', filename);
@@ -350,9 +359,6 @@ export function exportDesign(){
   // on success
   if (request.status >= 200 && request.status < 300) {
     let designNameArray = currentSpace.split("_");
-    console.log("currentSpace --> ", typeof currentSpace, currentSpace);
-    designNameArray.pop();
-    designNameArray.pop();
     let designName = designNameArray.join("_");
 
     let res = JSON.parse(request.response);
@@ -362,8 +368,12 @@ export function exportDesign(){
     let numDesigns = 1;
     let cycleDepth = 1;
 
-    let result = constellation.goldbar(designName, langText, categories, numDesigns, cycleDepth, "EDGE").sbol;
-    downloadSBOL(result, "knox_" + designName + "_sbol.xml");
+    try {
+      let result = constellation.goldbar(designName, langText, categories, numDesigns, cycleDepth, "EDGE").sbol;
+      downloadSBOL(result, "knox_" + designName + "_sbol.xml");
+    } catch(error) {
+      swalError(error.message);
+    }
 
     swalSuccess();
     visualizeDesignAndHistory(currentSpace);

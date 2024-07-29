@@ -11,6 +11,24 @@ export const targets = {
   history: new Target("#history-svg")
 };
 
+const THEME = 'ambiance';
+
+let sbolDoc;
+
+const editors = {
+  "specEditor": CodeMirror.fromTextArea(document.getElementById('goldbar-input-0'), {
+    lineNumbers: true,
+    lineWrapping:true
+  }),
+  "catEditor": CodeMirror.fromTextArea(document.getElementById('categories-0'), {
+    lineNumbers: true,
+    lineWrapping:true
+  })
+};
+
+editors.specEditor.setOption("theme", THEME);
+editors.catEditor.setOption("theme", THEME);
+
 const exploreBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
@@ -20,6 +38,7 @@ const exploreBtnIDs = {
   bestPath: "#bestpath-btn"
   // save: "#save-btn",
 };
+
 export const knoxClass = {
   HEAD: "Head",
   BRANCH: "Branch",
@@ -442,7 +461,6 @@ $('#export-sbol-tooltip').click(() => {
   endpoint.exportDesign();
 });
 
-
 $('#enumerate-designs-tooltip').click(() => {
   let div = document.createElement('div');
   div.style.height = "inherit";
@@ -601,6 +619,7 @@ $('#graph-score-tooltip').click(() => {
   });
 
 });
+
 
 $('#apply-operators-tooltip').click(() => {
   let div = document.createElement('div');
@@ -909,6 +928,152 @@ $('#vh-toggle-button').click(function() {
 $("#brand").click(
   clearAllPages
 );
+
+/************************
+ * GOLDBAR Functions
+ ************************/
+
+// Download Only
+$("#goldbarDownloadSbolBtn").click(function() {
+
+  $('#spinner').removeClass('hidden'); // show spinner
+
+  // Inputs
+  let specification = editors.specEditor.getValue();
+  let categories = editors.catEditor.getValue();
+  let designName = document.getElementById('designNameInput').value;
+
+  //replace all spaces and special characters for SBOL
+  designName = designName.replace(/[^A-Z0-9]/ig, "_");
+
+  // Constants
+  const REPRESENTATION = 'EDGE';
+  let numDesigns = 1;
+  let maxCycles = 1;
+  
+  $.post('http://localhost:8082/postSpecs', {
+    "designName": designName,
+    "specification": specification,
+    "categories": categories,
+    "numDesigns": numDesigns,
+    "maxCycles": maxCycles,
+    "number": "2.0",
+    "name": "specificationname",
+    "clientid": "userid",
+    "representation": REPRESENTATION
+  }, function (data) {
+    
+    sbolDoc = data.sbol;
+
+    try {
+      endpoint.downloadSBOL(sbolDoc, "knox_" + designName + "_sbol.xml");
+      $("#spinner").addClass('hidden');
+      swalSuccess();
+    } catch (error) {
+      $("#spinner").addClass('hidden');
+      swalError("Failed to Download");
+    }
+
+  }).fail((response) => {
+    alert("Is Constellation-js running on Port:8082?");
+    $("#spinner").addClass('hidden');
+  });
+});
+
+// Import Only
+$("#goldbarSubmitBtn").click(function() {
+
+  $('#spinner').removeClass('hidden'); // show spinner
+
+  // Inputs
+  let specification = editors.specEditor.getValue();
+  let categories = editors.catEditor.getValue();
+  let designName = document.getElementById('designNameInput').value;
+
+  //replace all spaces and special characters for SBOL
+  designName = designName.replace(/[^A-Z0-9]/ig, "_");
+
+  // Constants
+  const REPRESENTATION = 'EDGE';
+  let numDesigns = 1;
+  let maxCycles = 1;
+  
+  $.post('http://localhost:8082/postSpecs', {
+    "designName": designName,
+    "specification": specification,
+    "categories": categories,
+    "numDesigns": numDesigns,
+    "maxCycles": maxCycles,
+    "number": "2.0",
+    "name": "specificationname",
+    "clientid": "userid",
+    "representation": REPRESENTATION
+  }, function (data) {
+    
+    sbolDoc = data.sbol;
+
+    try {
+      endpoint.importGoldbarSBOL(sbolDoc);
+      $("#spinner").addClass('hidden');
+      swalSuccess("GOLDBAR Sucessfully Imported");
+    } catch (error) {
+      $("#spinner").addClass('hidden');
+      swalError("Failed to Import");
+    }
+
+  }).fail((response) => {
+    alert("Is Constellation-js running on Port:8082?");
+    $("#spinner").addClass('hidden');
+  });
+});
+
+// Import and Download
+$("#goldbarSubmitAndDownloadBtn").click(function() {
+
+  $('#spinner').removeClass('hidden'); // show spinner
+
+  // Inputs
+  let specification = editors.specEditor.getValue();
+  let categories = editors.catEditor.getValue();
+  let designName = document.getElementById('designNameInput').value;
+
+  //replace all spaces and special characters for SBOL
+  designName = designName.replace(/[^A-Z0-9]/ig, "_");
+
+  // Constants
+  const REPRESENTATION = 'EDGE';
+  let numDesigns = 1;
+  let maxCycles = 1;
+  
+  $.post('http://localhost:8082/postSpecs', {
+    "designName": designName,
+    "specification": specification,
+    "categories": categories,
+    "numDesigns": numDesigns,
+    "maxCycles": maxCycles,
+    "number": "2.0",
+    "name": "specificationname",
+    "clientid": "userid",
+    "representation": REPRESENTATION
+  }, function (data) {
+    
+    sbolDoc = data.sbol;
+
+    try {
+      endpoint.downloadSBOL(sbolDoc, "knox_" + designName + "_sbol.xml");
+      endpoint.importGoldbarSBOL(sbolDoc);
+      $("#spinner").addClass('hidden');
+      swalSuccess("GOLDBAR Sucessfully Imported and SBOL Downloaded");
+    } catch (error) {
+      $("#spinner").addClass('hidden');
+      swalError();
+    }
+
+  }).fail((response) => {
+    alert("Is Constellation-js running on Port:8082?");
+    $("#spinner").addClass('hidden');
+  });
+});
 
 /************************
  * SEARCH BAR FUNCTIONS

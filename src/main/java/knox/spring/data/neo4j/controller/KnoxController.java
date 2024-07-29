@@ -2,10 +2,21 @@ package knox.spring.data.neo4j.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.FileWriter;
+import java.io.ByteArrayInputStream;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.*;
+
+import javax.sql.rowset.serial.SerialBlob;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import java.sql.Blob;
 
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.exception.*;
@@ -15,10 +26,12 @@ import knox.spring.data.neo4j.sbol.SBOLGeneration;
 import knox.spring.data.neo4j.services.DesignSpaceService;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 
+import org.jdom.Document;
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLDocument;
 import org.sbolstandard.core2.SBOLReader;
 import org.sbolstandard.core2.SBOLValidationException;
+import org.sbolstandard.core2.SBOLWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +42,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javassist.bytecode.ByteArray;
 
 /**
  * @author Nicholas Roehner
@@ -689,6 +706,33 @@ public class KnoxController {
  
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
+
+	@RequestMapping(value = "/goldbarSBOL/import", method = RequestMethod.POST)
+	public ResponseEntity<String> importGoldbarSBOL(@RequestParam(value = "sbolDoc", required = true) String sbolDoc,
+			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) throws IOException {
+		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
+		SBOLDocument sbolDocument = new SBOLDocument();
+
+		InputStream sbolStream = org.apache.commons.io.IOUtils.toInputStream(sbolDoc, "UTF-8");
+		
+		try {
+			sbolDocument = SBOLReader.read(sbolStream);
+			sbolDocs.add(sbolDocument);
+
+		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+			e.printStackTrace();
+		}
+
+
+		try {
+			designSpaceService.importSBOL(sbolDocs, outputSpaceID);
+		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+	}
 
 	// LIST VER
 	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.GET)
