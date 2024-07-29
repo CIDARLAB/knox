@@ -2,18 +2,36 @@ package knox.spring.data.neo4j.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.FileWriter;
+import java.io.ByteArrayInputStream;
+import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.*;
+
+import javax.sql.rowset.serial.SerialBlob;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import java.sql.Blob;
 
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.exception.*;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
+import knox.spring.data.neo4j.sbol.SBOLGeneration;
 import knox.spring.data.neo4j.services.DesignSpaceService;
+import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 
+import org.jdom.Document;
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLDocument;
 import org.sbolstandard.core2.SBOLReader;
 import org.sbolstandard.core2.SBOLValidationException;
+import org.sbolstandard.core2.SBOLWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +42,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javassist.bytecode.ByteArray;
 
 /**
  * @author Nicholas Roehner
@@ -31,6 +53,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController("/")
 public class KnoxController {
 	final DesignSpaceService designSpaceService;
+
+	@Autowired DesignSpaceRepository designSpaceRepository;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
@@ -500,7 +524,7 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-			@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
+			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -591,9 +615,33 @@ public class KnoxController {
 	    }
 	}
 
+
+//	@RequestMapping(value = "/designSpace/export", method = RequestMethod.POST)
+//	public ResponseEntity<String> exportDesignSpaces(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+//													 @RequestParam(value = "targetBranchID", required = false) String targetBranchID) {
+//		try {
+//			long startTime = System.nanoTime();
+//
+//			DesignSpace target = designSpaceRepository.findBySpaceID(targetSpaceID);
+//			SBOLGeneration sbolGen = new SBOLGeneration(target, "http://knox.org");
+//
+//			SBOLDocument document = sbolGen.createSBOLDocument();
+//
+//
+//			return new ResponseEntity<String>("{\"message\": \"Design space successfully exported as SBOL" +
+//					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+//		} catch (ParameterEmptyException | DesignSpaceNotFoundException |
+//				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+//			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
+//					HttpStatus.BAD_REQUEST);
+//		}
+//	}
+
+
+
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
+    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
     	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
     	
     	for (MultipartFile inputCSVFile : inputCSVFiles) {
@@ -607,14 +655,14 @@ public class KnoxController {
     		}
     	}
     	
-		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false, weight);
 		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value = "/merge/csv", method = RequestMethod.POST)
     public ResponseEntity<String> mergeCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix) {
+            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
         List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
 
         for (MultipartFile inputCSVFile : inputCSVFiles) {
@@ -628,7 +676,7 @@ public class KnoxController {
             }
         }
 
-        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true);
+        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true, weight);
 
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
@@ -658,6 +706,56 @@ public class KnoxController {
  
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
+
+	@RequestMapping(value = "/goldbarSBOL/import", method = RequestMethod.POST)
+	public ResponseEntity<String> importGoldbarSBOL(@RequestParam(value = "sbolDoc", required = true) String sbolDoc,
+			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) throws IOException {
+		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
+		SBOLDocument sbolDocument = new SBOLDocument();
+
+		InputStream sbolStream = org.apache.commons.io.IOUtils.toInputStream(sbolDoc, "UTF-8");
+		
+		try {
+			sbolDocument = SBOLReader.read(sbolStream);
+			sbolDocs.add(sbolDocument);
+
+		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+			e.printStackTrace();
+		}
+
+
+		try {
+			designSpaceService.importSBOL(sbolDocs, outputSpaceID);
+		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+	}
+
+	// LIST VER
+	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.GET)
+	public ResponseEntity<List<String>> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
+											 @RequestParam(value = "namespace", required = false) String namespace) {
+
+		List<String> res;
+		try {
+			res = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
+//			return new ResponseEntity<String>(goldbar, HttpStatus.NO_CONTENT);
+			System.out.println("end of try");
+
+		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException | URISyntaxException e) {
+			e.printStackTrace();
+			res = Arrays.asList("{\"message\": \"" + e.getMessage() + "\"}");
+			System.out.println("before returning bad request");
+			return new ResponseEntity<List<String>>(res, HttpStatus.BAD_REQUEST);
+		}
+
+		//TODO should download SBOL document or throw error on the UI
+		System.out.println("before returning data");
+		return new ResponseEntity<List<String>>(res, HttpStatus.OK);
+	}
     
     @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
     public Map<String, Object> d3GraphBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
@@ -701,8 +799,10 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/sample", method = RequestMethod.GET)
     public Set<List<String>> sample(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns) {
-        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns);
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns,
+			@RequestParam(value = "length", required = false, defaultValue = "0") int length,
+			@RequestParam(value = "isWeighted", required = false, defaultValue = "false") boolean isWeighted) {
+        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns, length, isWeighted);
     }
 
     @RequestMapping(value = "/designSpace/list", method = RequestMethod.GET)
@@ -712,13 +812,32 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/enumerate", method = RequestMethod.GET)
     public List<List<Map<String, Object>>> enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "20") int numDesigns,
+			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
             @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
             @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
         return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, 
-        		enumerateType);
+        		EnumerateType.BFS, isWeighted);
+    }
+
+	@RequestMapping(value = "/designSpace/score", method = RequestMethod.GET)
+    public List<String> graphScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return designSpaceService.getGraphScore(targetSpaceID);
+    }
+
+	@RequestMapping(value = "/designSpace/bestPath", method = RequestMethod.GET)
+    public List<List<Map<String, Object>>> getBestPath(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return designSpaceService.getBestPath(targetSpaceID);
+    }
+
+	@RequestMapping(value = "/designSpace/bestPathScore", method = RequestMethod.GET)
+    public String getBestPathScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+        
+        return String.valueOf(designSpaceService.getBestPathScore(targetSpaceID));
     }
 }

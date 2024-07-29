@@ -33,6 +33,7 @@ export default class Target{
   }
 
   setGraph(graph) {
+    console.log(graph);
     condenseVisualization(graph);
 
     var zoom = d3.behavior.zoom()
@@ -164,7 +165,14 @@ export default class Target{
 
     //place tooltip on the SVG images
     $('.sboltip').tooltipster({
-      theme: 'tooltipster-shadow'
+      theme: 'tooltipster-shadow',
+      trigger: 'custom',
+      triggerOpen: {
+      mouseenter: true
+      },
+      triggerClose: {
+      click: true,
+      }
     });
 
     // Handles positioning when moved

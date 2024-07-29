@@ -27,63 +27,86 @@ public class DesignSampler {
 
 		Arguments:
 			- int numSamples: the number of samples that the user wants returned
+			- int length: the length of samples that the user wants returned
 
 		Returns:
 			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
 								 the specific component ids.
 	 */
 	
-	public Set<List<String>> sample(int numberOfDesigns) {
+	public Set<List<String>> sample(int numberOfDesigns, int length, boolean isWeighted) {
 		Set<List<String>> designs = new HashSet<List<String>>();
 		
 		Random rand = new Random();
 
-		while (designs.size() < numberOfDesigns) {
+		int tries = 0;
+
+		System.out.println("Begin Sampling");
+
+		while ((designs.size() < numberOfDesigns) && (tries < numberOfDesigns*2)) {
+			tries++;
+
 			List<String> design = new LinkedList<String>();
 			
 			Node node = startNodes.get(rand.nextInt(startNodes.size()));
 			
             Edge edge = new Edge();
 
-            while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
-				// Get the number of edges w no probability
-//				int numZero = 0; 
-//				for (Edge e : node.getEdges()) {
-//					if (e.getWeight() == 0.0)
-//						numZero += 1;
-//				}
 
-				// Add up the total weights
-				double totalWeights = 0.0;
-				for (Edge e: node.getEdges()) {
-//					if (e.getWeight() == 0.0)
-//						e.setProbability(1.0/numZero);
+            while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1) && (design.size() != length || length == 0)) {
 
-					totalWeights += e.getWeight();
-				}
-
-				// Choose edge based on weight
-				double rWeight = rand.nextDouble() * totalWeights;
-
-				double countWeights = 0.0;
-				for (Edge e: node.getEdges()) {
-					countWeights += e.getWeight();
-					if (countWeights >= rWeight) {
-						edge = e;
-						break;
+				if (isWeighted) {
+					// Add up the total weights
+					double totalWeights = 0.0;
+					for (Edge e: node.getEdges()) {
+						for (Double weight : e.getWeight()) {
+							totalWeights += weight;
+						}
 					}
+
+					// Choose edge based on weight
+					double rWeight = rand.nextDouble() * totalWeights;
+
+					double countWeights = 0.0;
+					for (Edge e: node.getEdges()) {
+						for (Double weight : e.getWeight()) {
+							countWeights += 1.0;
+						}
+						if (countWeights >= rWeight) {
+							edge = e;
+							break;
+						}
+					}
+				} else {
+					
+					int item = new Random().nextInt(node.getEdges().size());
+					int i = 0;
+					for (Edge e : node.getEdges()) {
+						if (i == item) {
+							edge = e;
+							break;
+						} else {
+							i++;
+						}
+
+					}
+					
 				}
 
 				
-				if (edge.hasComponentRoles()) {
-					design.add(edge.getComponentRoles().get(rand.nextInt(edge.getComponentRoles().size())));
+				if (edge.hasComponentIDs()) {
+					design.add(edge.getComponentIDs().get(rand.nextInt(edge.getComponentIDs().size())));
 				}
 				
 				node = edge.getHead();
 			}
+
+			System.out.println(design);
 			
 			designs.add(design);
 		}
+
+		System.out.println("Done Sampling");
 		
 		return designs;
 	}
@@ -231,12 +254,18 @@ public class DesignSampler {
 				comboDesigns.add(comboDesign);
 			}
 		} else {
+
+			HashMap<String, Double> componentIDstoWeights = edge.componentIDtoWeight();
+			System.out.println(componentIDstoWeights);
+
 			for (String compID : edge.getComponentIDs()) {
 				Map<String, Object> comp = new HashMap<String, Object>();
 
 				comp.put("id", compID);
 
 				comp.put("roles", edge.getComponentRoles());
+
+				comp.put("weight", componentIDstoWeights.get(compID));
 
 //				comp.put("orientation", edge.getOrientation());
 				comp.put("orientation", edge.getOrientation().getValue()); //does this need to be string?
@@ -296,6 +325,9 @@ public class DesignSampler {
 				Edge edge = edgeStack.pop();
 				
 				designs = multiplyDesigns(designs, edge);
+
+				System.out.println("\nCurrent Number of Designs: ");
+				System.out.println(allDesigns.size());
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {

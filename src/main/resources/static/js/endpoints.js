@@ -1,4 +1,5 @@
 
+
 import {currentSpace,
   currentBranch,
   setcurrentBranch,
@@ -14,6 +15,9 @@ const endpoints = {
   D3: "/graph/d3",
   LIST: "/designSpace/list",
   ENUMERATE: "/designSpace/enumerate",
+  SCORE: "/designSpace/score",
+  BESTPATH: "/designSpace/bestPath",
+  BESTPATHSCORE: "/designSpace/bestPathScore",
 
   D3HISTORY: "/branch/graph/d3",
   CHECKOUT: "/branch/checkout",
@@ -23,6 +27,9 @@ const endpoints = {
 
   BRANCH: "/branch", //post vs delete
   DESIGN: "/designSpace", //post vs delete
+
+  SBOL: "/sbol/exportCombinatorial",
+  GOLDBAR: "/goldbarSBOL/import"
 };
 
 export const operators = {
@@ -55,6 +62,21 @@ export function getHistory (id, callback){
 export function enumerateDesigns(id, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id) + "&bfs=true";
   d3.json(endpoints.ENUMERATE + query, callback);
+}
+
+export function getGraphScore(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.SCORE + query, callback);
+}
+
+export function getBestPath(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.BESTPATH + query, callback);
+}
+
+export function getBestPathScore(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.BESTPATHSCORE + query, callback);
 }
 
 /***************************
@@ -208,6 +230,19 @@ export function deleteDesign(){
   }
 }
 
+// export function getDate() {
+//   let d = new Date();
+//   let month = '' + (d.getMonth() + 1);
+//   let day = '' + d.getDate();
+//   let year = d.getFullYear();
+//
+//   if (month.length < 2) month = '0' + month;
+//   if (day.length < 2) day = '0' + day;
+//
+//   return [year, month, day].join('-');
+// }
+
+
 /************************
  * DESIGN SPACE ENDPOINTS
  ************************/
@@ -287,5 +322,62 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance){
     swalSuccess();
   } else {
     swalError(request.response);
+  }
+}
+
+export function importGoldbarSBOL(sbolDoc){
+  let query = "?"
+  query += encodeQueryParameter("sbolDoc", sbolDoc, query)
+
+  let request = new XMLHttpRequest();
+  request.open("POST", endpoints.GOLDBAR + query, false);
+  request.send(null);
+
+}
+
+
+export function downloadSBOL(text, filename) {
+  let element = document.createElement('a');
+  element.setAttribute('href', 'data:application/xml,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
+
+export function exportDesign(){
+
+  let request = new XMLHttpRequest();
+  let query = "?";
+  query += encodeQueryParameter("targetSpaceID", currentSpace, query);
+  query += encodeQueryParameter("namespace", "http://knox.org", query);
+  request.open("GET", endpoints.SBOL + query, false);
+  request.send(null);
+
+  // on success
+  if (request.status >= 200 && request.status < 300) {
+    let designNameArray = currentSpace.split("_");
+    let designName = designNameArray.join("_");
+
+    let res = JSON.parse(request.response);
+
+    let langText = res[0];
+    let categories = res[1];
+    let numDesigns = 1;
+    let cycleDepth = 1;
+
+    try {
+      let result = constellation.goldbar(designName, langText, categories, numDesigns, cycleDepth, "EDGE").sbol;
+      downloadSBOL(result, "knox_" + designName + "_sbol.xml");
+    } catch(error) {
+      swalError(error.message);
+    }
+
+    swalSuccess();
+    visualizeDesignAndHistory(currentSpace);
+  } else {
+    swalError("Failed to download");
   }
 }

@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.domain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Collections;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -34,7 +36,7 @@ public class Edge {
 
     Orientation orientation;
 
-    double weight;
+    ArrayList<Double> weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Edge.class);
 
@@ -51,7 +53,7 @@ public class Edge {
         
         orientation = Orientation.NONE;
         
-        weight = 1.0;
+        weight = new ArrayList<Double>();
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
@@ -70,7 +72,10 @@ public class Edge {
             orientation = Orientation.NONE;
         }
         
-        weight = 1.0;
+        weight = new ArrayList<Double>();
+        for (String ID : componentIDs) {
+            weight.add(0.0);
+        }
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
@@ -89,11 +94,14 @@ public class Edge {
             this.orientation = Orientation.NONE;
         }
         
-        weight = 1.0;
+        weight = new ArrayList<Double>();
+        for (String ID : componentIDs) {
+            weight.add(0.0);
+        }
     }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
-            ArrayList<String> componentRoles, Orientation orientation, double weight) {
+            ArrayList<String> componentRoles, Orientation orientation, ArrayList<Double> weight) {
         this.tail = tail;
 
         this.head = head;
@@ -112,7 +120,7 @@ public class Edge {
     }
     
     public Edge(ArrayList<String> componentIDs, ArrayList<String> componentRoles,
-                Orientation orientation, double weight) {
+                Orientation orientation, ArrayList<Double> weight) {
         this.componentIDs = componentIDs;
 
         this.componentRoles = componentRoles;
@@ -310,6 +318,26 @@ public class Edge {
     public ArrayList<String> getComponentRoles() { 
         return componentRoles; 
     }
+    
+    public ArrayList<String> getAbstractComponentRoles() { 
+    	ArrayList<String> abstractComponentRoles = new ArrayList<String>();
+    	
+    	for (int i = componentIDs.size(); i < componentRoles.size(); i++) {
+    		abstractComponentRoles.add(componentRoles.get(i));
+    	}
+    	
+        return abstractComponentRoles; 
+    }
+    
+    public ArrayList<String> getConcreteComponentRoles() { 
+    	ArrayList<String> concreteComponentRoles = new ArrayList<String>();
+    	
+    	for (int i = 0; i < componentIDs.size(); i++) {
+    		concreteComponentRoles.add(componentRoles.get(i));
+    	}
+    	
+        return concreteComponentRoles; 
+    }
 
     public boolean hasComponentIDs() {
         return componentIDs != null && !componentIDs.isEmpty();
@@ -334,6 +362,12 @@ public class Edge {
     }
     
     public void intersectWithEdge(Edge edge, int tolerance) {
+        
+        // Map componentIDs to Weight
+
+        HashMap<String, Double> componentIDstoWeight = componentIDtoWeight();
+        HashMap<String, Double> otherComponentIDstoWeight = new HashMap<String, Double>(edge.componentIDtoWeight());
+
         // Map other component IDs to roles and other component roles to IDs
         
         ArrayList<String> otherComponentIDs = edge.getComponentIDs();
@@ -343,81 +377,104 @@ public class Edge {
         HashMap<String, Set<String>> otherComponentRoleToIDs = new HashMap<String, Set<String>>();
         
         for (int i = 0; i < otherComponentIDs.size(); i++) {
-            if (!otherComponentIDToRoles.containsKey(otherComponentIDs.get(i))) {
-                otherComponentIDToRoles.put(otherComponentIDs.get(i), new HashSet<String>());
-            }
+        	if (!otherComponentIDToRoles.containsKey(otherComponentIDs.get(i))) {
+        		otherComponentIDToRoles.put(otherComponentIDs.get(i), new HashSet<String>());
+        	}
 
-            otherComponentIDToRoles.get(otherComponentIDs.get(i)).add(otherComponentRoles.get(i));
-            
-            if (!otherComponentRoleToIDs.containsKey(otherComponentRoles.get(i))) {
-                otherComponentRoleToIDs.put(otherComponentRoles.get(i), new HashSet<String>());
-            }
+        	otherComponentIDToRoles.get(otherComponentIDs.get(i)).add(otherComponentRoles.get(i));
+        		
+        	if (!otherComponentRoleToIDs.containsKey(otherComponentRoles.get(i))) {
+        		otherComponentRoleToIDs.put(otherComponentRoles.get(i), new HashSet<String>());
+        	}
 
-            otherComponentRoleToIDs.get(otherComponentRoles.get(i)).add(otherComponentIDs.get(i));
+        	otherComponentRoleToIDs.get(otherComponentRoles.get(i)).add(otherComponentIDs.get(i));
         }
         
-        // Remove non-intersecting component IDs and roles
+        ArrayList<String> abstractRoles = getAbstractComponentRoles();
+        Set<String> otherAbstractRoles = new HashSet<String>(edge.getAbstractComponentRoles());
+        
+        // Remove component IDs and roles based on intersection
         
         for (int i = 0; i < componentRoles.size(); i++) {
             if (i < componentIDs.size()) {
                 if (!otherComponentIDToRoles.containsKey(componentIDs.get(i)) 
-                        && (tolerance < 2 || !otherComponentRoleToIDs.containsKey(componentRoles.get(i)))) {
+                        && (tolerance < 1 || !otherAbstractRoles.contains(componentRoles.get(i)))) {
                     componentIDs.remove(i);
                     componentRoles.remove(i);
 
                     i = i - 1;
                 }
-            } else if (tolerance < 2 || !otherComponentRoleToIDs.containsKey(componentRoles.get(i))) {
+            } else if (tolerance < 1 || otherComponentRoleToIDs.containsKey(componentRoles.get(i))
+            			|| tolerance < 2 || !otherAbstractRoles.contains(componentRoles.get(i))) {
                 componentRoles.remove(i);
 
                 i = i - 1;
             }
         }
         
-        // Map component IDs to roles
+        // Add missing component roles associated with intersecting component IDs
         
         HashMap<String, Set<String>> componentIDToRoles = new HashMap<String, Set<String>>();
-
+        
         for (int i = 0; i < componentIDs.size(); i++) {
-            if (!componentIDToRoles.containsKey(componentIDs.get(i))) {
-                componentIDToRoles.put(componentIDs.get(i), new HashSet<String>());
-            }
+        	if (!componentIDToRoles.containsKey(componentIDs.get(i))) {
+        		componentIDToRoles.put(componentIDs.get(i), new HashSet<String>());
+        	}
 
-            componentIDToRoles.get(componentIDs.get(i)).add(componentRoles.get(i));
+        	componentIDToRoles.get(componentIDs.get(i)).add(componentRoles.get(i));
         }
         
-        // Add missing component roles associated with intersecting component IDs
-
         for (String componentID : componentIDToRoles.keySet()) {
-            for (String otherComponentRole : otherComponentIDToRoles.get(componentID)) {
-                if (!componentIDToRoles.get(componentID).contains(otherComponentRole)) {
-                    componentIDs.add(0, componentID);
-                    componentRoles.add(0, otherComponentRole);
-                }
-            }
+        	if (otherComponentIDToRoles.containsKey(componentID)) {
+        		for (String otherComponentRole : otherComponentIDToRoles.get(componentID)) {
+        			Set<String> concreteRoles = componentIDToRoles.get(componentID);
+        			
+        			if (!concreteRoles.contains(otherComponentRole)) {
+        				componentIDs.add(0, componentID);
+        				componentRoles.add(0, otherComponentRole);
+        			}
+        		}
+        	}
         }
         
         // Add missing component IDs associated with intersecting component roles
         
-        if (tolerance >= 2) {
-            for (int i = componentIDs.size(); i < componentRoles.size(); i++) {
-                if (otherComponentRoleToIDs.containsKey(componentRoles.get(i))) {
-                    for (String otherComponentID : otherComponentRoleToIDs.get(componentRoles.get(i))) {
-                        componentIDs.add(0, otherComponentID);
-                        componentRoles.add(0, componentRoles.get(i));
+        if (tolerance > 0) {
+        	for (String abstractRole : abstractRoles) {
+        		if (otherComponentRoleToIDs.containsKey(abstractRole)) { 
+        			for (String otherComponentID : otherComponentRoleToIDs.get(abstractRole)) {
+        				if (!componentIDToRoles.containsKey(otherComponentID)) {
+        					componentIDs.add(0, otherComponentID);
+        					componentRoles.add(0, abstractRole);
+        				}
+        			}
+        		}
+        	}
+        }
 
-                        i = i + 1;
-                    }
-                    
-                    componentRoles.remove(i);
+        // Update Edge Weights (Sum Weights)
 
-                    i = i - 1;
-                }
+        ArrayList<Double> newWeights = new ArrayList<Double>();
+
+        for (String ID : componentIDs) {
+            if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
+                newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID));
+
+            } else if (componentIDstoWeight.containsKey(ID)) {
+                newWeights.add(componentIDstoWeight.get(ID));
+
+            } else if (otherComponentIDstoWeight.containsKey(ID)) {
+                newWeights.add(otherComponentIDstoWeight.get(ID));
             }
         }
+
+        this.weight = newWeights;
     }
     
     public void unionWithEdge(Edge edge) {
+        HashMap<String, Double> componentIDstoWeight = componentIDtoWeight();
+        HashMap<String, Double> otherComponentIDstoWeight = new HashMap<String, Double>(edge.componentIDtoWeight());
+
         ArrayList<String> otherComponentIDs = edge.getComponentIDs();
         ArrayList<String> otherComponentRoles = edge.getComponentRoles();
 
@@ -450,11 +507,29 @@ public class Edge {
                 i = i + 1;
             }
         }
+
+        // Update Edge Weights
+
+        ArrayList<Double> newWeights = new ArrayList<Double>();
+
+        for (String ID : componentIDs) {
+            if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
+                newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID));
+
+            } else if (componentIDstoWeight.containsKey(ID)) {
+                newWeights.add(componentIDstoWeight.get(ID));
+
+            } else if (otherComponentIDstoWeight.containsKey(ID)) {
+                newWeights.add(otherComponentIDstoWeight.get(ID));
+            }
+        }
+
+        this.weight = newWeights;
     }
     
     public boolean isMatching(Edge edge, int tolerance, Set<String> roles) {
         return hasSameOrientation(edge)
-                && (hasSharedComponentIDs(edge) || tolerance >= 2 && hasSharedComponentRoles(edge, roles));
+                && (hasSharedComponentIDs(edge) || tolerance >= 1 && hasSharedComponentRoles(edge, roles, tolerance));
     }
     
     public boolean hasSameOrientation(Edge edge) {
@@ -475,22 +550,52 @@ public class Edge {
         }
    }
 
-    public boolean hasSharedComponentRoles(Edge edge, Set<String> roles) {
-        if (hasComponentRoles() && edge.hasComponentRoles()) {
-                Set<String> compRoles1 = new HashSet<String>(componentRoles);
-                
-                Set<String> compRoles2 = new HashSet<String>(edge.getComponentRoles());
+    public boolean hasSharedComponentRoles(Edge edge, Set<String> roles, int tolerance) {
+        if (hasComponentRoles() && edge.hasComponentRoles() && (tolerance == 1 || tolerance == 2)) {
+        	Set<String> concreteRoles1 = new HashSet<String>(getConcreteComponentRoles());
+        	Set<String> concreteRoles2 = new HashSet<String>(edge.getConcreteComponentRoles());
 
-                compRoles1.retainAll(compRoles2);
-                
-                if (!roles.isEmpty()) {
-                    compRoles1.retainAll(roles);
-                }
+        	Set<String> abstractRoles1 = new HashSet<String>(getAbstractComponentRoles());
+        	Set<String> abstractRoles2 = new HashSet<String>(edge.getAbstractComponentRoles());
 
-                return !compRoles1.isEmpty();
+        	concreteRoles1.retainAll(abstractRoles2);
+
+        	if (!roles.isEmpty()) {
+        		concreteRoles1.retainAll(roles);
+        	}
+
+        	concreteRoles2.retainAll(abstractRoles1);
+
+        	if (!roles.isEmpty()) {
+        		concreteRoles2.retainAll(roles);
+        	}
+        	
+        	if (!concreteRoles1.isEmpty() || !concreteRoles2.isEmpty()) {
+        		return true;
+        	} else if (tolerance == 2) {
+        		abstractRoles1.retainAll(abstractRoles2);
+
+        		if (!roles.isEmpty()) {
+        			abstractRoles1.retainAll(roles);
+        		}
+
+        		return !abstractRoles1.isEmpty();
+        	} else {
+                return false;
+            }
         } else {
             return false;
         }
+    }
+
+    public HashMap<String, Double> componentIDtoWeight() {
+        HashMap<String, Double> componentIDstoWeight = new HashMap<String, Double>();
+
+        for (int i = 0; i < componentIDs.size(); i++) {
+            componentIDstoWeight.put(componentIDs.get(i), weight.get(i));
+        }
+
+        return componentIDstoWeight;
     }
     
     public boolean isBlank() {
@@ -509,11 +614,19 @@ public class Edge {
         this.tail = tail; 
     }
 
-    public void setWeight(double weight) {
+    public void setWeight(ArrayList<Double> weight) {
         this.weight = weight;
     }
 
-    public double getWeight() { 
+    public void emptyWeight() {
+        this.weight = new ArrayList<Double>();
+    }
+
+    public Double getMaxWeight() {
+        return Collections.max(weight);
+    }
+
+    public ArrayList<Double> getWeight() { 
         return weight; 
     }
     
