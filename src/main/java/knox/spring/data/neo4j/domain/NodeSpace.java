@@ -1075,6 +1075,24 @@ public class NodeSpace {
 		return String.valueOf(totalWeightOfEdges / totalNumberOfEdges);
 	}
 
+	public double getStdev() {
+		// Sample Standard Deviation Formula
+		double avgWeight = Double.parseDouble(getAvgScoreofAllNonBlankEdges());
+		double sumSquared = 0;
+		double n = 0;
+
+		for (Edge e : getEdges()){
+			if (!e.isBlank()) {
+				for (double w : e.getWeight()){
+					sumSquared = sumSquared + ((w - avgWeight) * (w - avgWeight));
+					n++;
+				} 
+			}
+		}
+
+		return java.lang.Math.sqrt(sumSquared / (n-1));
+	}
+
 	public void clearNodeWeights() {
 		Set<Node> nodes = getNodes();
 		for (Node node: nodes) {
