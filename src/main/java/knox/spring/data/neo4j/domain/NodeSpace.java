@@ -5,24 +5,28 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
-import java.util.Map;
 
-import knox.spring.data.neo4j.domain.Edge.Orientation;
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+import knox.spring.data.neo4j.domain.Edge.Orientation;
+import knox.spring.data.neo4j.domain.Node.NodeType;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NodeEntity
@@ -960,15 +964,20 @@ public class NodeSpace {
 
 		if (allEdges.size() == 0) {
 			// Blank Edges that led to accept node will have a weight equal to average of edges to accept node
-			Node tail = edge.getTail();
 
-			for (Edge e : tail.getEdges()) {
+			for (Edge e : head.getIncomingEdges(mapNodeIDsToIncomingEdges())) {
 				if (!e.isBlank()) {
 					for (Double w : e.getWeight()) {
 						weight += w;
 						countParts += 1;
 					}
 				}
+			}
+
+			// If all edges to the accept node are blank, then the weight of blank edge is 0
+			if (weight==0 || countParts==0) {
+				weight = 0;
+				countParts = 1;
 			}
 			
 		} else {
