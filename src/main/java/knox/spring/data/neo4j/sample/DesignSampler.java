@@ -27,56 +27,133 @@ public class DesignSampler {
 
 		Arguments:
 			- int numSamples: the number of samples that the user wants returned
-			- int length: the length of samples that the user wants returned
 
 		Returns:
 			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
 								 the specific component ids.
 	 */
 	
-	public Set<List<String>> sample(int numberOfDesigns, int length, boolean isWeighted) {
+
+	public Set<List<String>> sample(int numberOfDesigns, int length, boolean isWeighted, boolean positiveOnly) {
+
 		Set<List<String>> designs = new HashSet<List<String>>();
 		
 		Random rand = new Random();
-
 		int tries = 0;
+
+		double avgWeight = 0;
+		double stdev = 0;
+		if (isWeighted && !positiveOnly) {
+			// Get average weight of edges and standard deviation.
+			avgWeight = Double.parseDouble(space.getAvgScoreofAllNonBlankEdges());
+			stdev = space.getStdev();
+		}
 
 		System.out.println("Begin Sampling");
 
 		while ((designs.size() < numberOfDesigns) && (tries < numberOfDesigns*2)) {
 			tries++;
-
 			List<String> design = new LinkedList<String>();
+
+			Double probability = 1.0;
 			
 			Node node = startNodes.get(rand.nextInt(startNodes.size()));
 			
             Edge edge = new Edge();
 
-
-            while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1) && (design.size() != length || length == 0)) {
+            while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
 
 				if (isWeighted) {
-					// Add up the total weights
+
+					ArrayList<String> parts = new ArrayList<>();
+					ArrayList<Edge> edges = new ArrayList<>();
+					ArrayList<Double> weights = new ArrayList<>();
+					ArrayList<Double> weightsStandardScaled = new ArrayList<>();
+					ArrayList<Double> weightsScaled = new ArrayList<>();
 					double totalWeights = 0.0;
-					for (Edge e: node.getEdges()) {
-						for (Double weight : e.getWeight()) {
-							totalWeights += weight;
+					
+					if (node.getEdges().size() > 1 || node.getEdges().iterator().next().getComponentIDs().size() > 1) {
+
+						// Add up the total weights and populate lists above for a given node
+						for (Edge e: node.getEdges()) {
+
+							int i = 0;
+							for (Double weight : e.getWeight()) {
+
+								if ((weight > 0) || (!positiveOnly)){
+
+									// Blank Egdes Naming
+									if (e.isBlank()) {
+										parts.add("blank");
+									} else {
+										parts.add(e.getComponentIDs().get(i));
+									}
+
+									totalWeights += weight;
+									edges.add(e);
+									weights.add(weight);
+								}
+
+								i++;
+							}
+						}
+
+						// if not positive only, perform transformation to [0, 1]
+						if (!positiveOnly) {
+							double to_min = 0;
+							double to_max = 1;
+							double from_min = -3;
+							double from_max = 3;
+
+							// Standard Scaled
+							for (double x : weights) {
+								weightsStandardScaled.add((x - avgWeight) / stdev);
+							}
+
+							totalWeights = 0.0;
+							for (double x : weightsStandardScaled) {
+								double y = (x - from_min) / (from_max - from_min) * (to_max - to_min) + to_min;
+
+								weightsScaled.add(y);
+								totalWeights += y;
+							}
+
+							// Update weights
+							weights = weightsScaled;
+						}
+						
+
+						// random number
+						double rWeight = rand.nextDouble();
+
+						// part selection
+						int partIndex = 0;
+						double currentWeight = (weights.get(partIndex) / totalWeights);
+						while (rWeight > currentWeight) {
+							partIndex++;
+
+							currentWeight += (weights.get(partIndex) / totalWeights); 
+						}
+
+						// Update Probability
+						probability = probability * (weights.get(partIndex) / totalWeights);
+				
+
+						// Selected Edge
+						edge = edges.get(partIndex);
+
+						if (edge.hasComponentIDs()) {
+							design.add(parts.get(partIndex));
+						}
+					} else {
+						// Node only has one outgoing edge
+						edge = node.getEdges().iterator().next();
+
+						if (edge.hasComponentIDs()) {
+							design.add(edge.getComponentIDs().get(0));
 						}
 					}
 
-					// Choose edge based on weight
-					double rWeight = rand.nextDouble() * totalWeights;
-
-					double countWeights = 0.0;
-					for (Edge e: node.getEdges()) {
-						for (Double weight : e.getWeight()) {
-							countWeights += 1.0;
-						}
-						if (countWeights >= rWeight) {
-							edge = e;
-							break;
-						}
-					}
 				} else {
 					
 					int item = new Random().nextInt(node.getEdges().size());
@@ -90,19 +167,27 @@ public class DesignSampler {
 						}
 
 					}
-					
-				}
 
 				
-				if (edge.hasComponentIDs()) {
-					design.add(edge.getComponentIDs().get(rand.nextInt(edge.getComponentIDs().size())));
+					if (edge.hasComponentIDs()) {
+						design.add(edge.getComponentIDs().get(rand.nextInt(edge.getComponentIDs().size())));
+					}
 				}
 				
 				node = edge.getHead();
 			}
 
+			// Add probability to the end of the design
+			if (isWeighted) {
+				design.add(String.valueOf(probability));
+				design.add(String.valueOf(avgWeight));
+				design.add(String.valueOf(stdev));
+			}
+
+			// print design
 			System.out.println(design);
 			
+			// add design to designs
 			designs.add(design);
 		}
 

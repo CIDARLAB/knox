@@ -698,7 +698,7 @@ public class DesignSpaceService {
 			edge.setComponentIDs(IDs);			
 		}
 
-		designSpace.printAllEdges();
+		//designSpace.printAllEdges();
 	}
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
@@ -890,7 +890,7 @@ public class DesignSpaceService {
 
 		//System.out.println(samplerOutput);
 		if (isWeighted) {
-		int i = 0;
+			int i = 0;
 			for (List<Map<String,Object>> design : samplerOutput) {
 				double total = 0.0;
 				double length = design.size();
@@ -957,6 +957,8 @@ public class DesignSpaceService {
     	
 		long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+		
+		designSpace.weightBlankEdges();
 
 		DesignAnalysis designAnalysis = new DesignAnalysis(designSpace);
     	
@@ -979,12 +981,16 @@ public class DesignSpaceService {
         return designAnalysis.getBestPathScore();
     }
     
-    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int length, boolean isWeighted) {
+    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int length, boolean isWeighted, boolean positiveOnly) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+
+		if (isWeighted) {
+			designSpace.weightBlankEdges();
+		}
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        return designSampler.sample(numDesigns, length, isWeighted);
+        return designSampler.sample(numDesigns, length, isWeighted, positiveOnly);
     }
 
 	// Utility which converts CSV to ArrayList using split operation
