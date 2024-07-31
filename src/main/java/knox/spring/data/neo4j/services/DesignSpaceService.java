@@ -993,6 +993,76 @@ public class DesignSpaceService {
         return designSampler.sample(numDesigns, length, isWeighted, positiveOnly);
     }
 
+	public Boolean createSampleSpace(String targetSpaceID) {
+		DesignSpace inputSpace = loadDesignSpace(targetSpaceID);
+		
+
+		if (listDesignSpaces().contains(targetSpaceID + "_sampleSpace")) {
+			return false;
+		
+		} else {
+			DesignSpace outputSpace = new DesignSpace(targetSpaceID + "_sampleSpace");
+
+			inputSpace.weightBlankEdges();
+
+			double avgWeight = Double.parseDouble(inputSpace.getAvgScoreofAllNonBlankEdges());
+			double stdev = inputSpace.getStdev();
+
+			outputSpace.copyNodeSpace(inputSpace);
+
+			for (Node node : outputSpace.getNodes()) {
+
+				HashMap<Edge, ArrayList<Double>> edgeToWeights = new HashMap<>();
+
+
+				System.out.println(node);
+
+				double totalWeight = 0.0;
+
+				for (Edge edge : node.getEdges()) {
+					ArrayList<Double> scaledWeights = new ArrayList<>();
+
+					double to_min = 0;
+					double to_max = 1;
+					double from_min = -3;
+					double from_max = 3;
+
+					for (Double weight : edge.getWeight()) {
+						double x = (weight - avgWeight) / stdev;
+						double y = (x - from_min) / (from_max - from_min) * (to_max - to_min) + to_min;
+						totalWeight = totalWeight + y;
+
+						scaledWeights.add(y);
+					}
+
+					edgeToWeights.put(edge, scaledWeights);
+				}
+
+				
+				if (node.getEdges().size() == 1 && node.getEdges().iterator().next().getWeight().size() == 1) {
+					ArrayList<Double> newWeights = new ArrayList<>();
+					newWeights.add(1.0);
+					node.getEdges().iterator().next().setWeight(newWeights);
+
+				} else {
+
+					for (Edge edge : edgeToWeights.keySet()) {
+						ArrayList<Double> newWeights = new ArrayList<>();
+						
+						for (Double weight : edgeToWeights.get(edge)) {
+							newWeights.add(weight / totalWeight);
+						}
+
+						edge.setWeight(newWeights);
+					}
+				}
+			}
+
+			saveDesignSpace(outputSpace);
+			return true;
+		}
+	}
+
 	// Utility which converts CSV to ArrayList using split operation
 	public static ArrayList<String> csvToArrayList(String csvLine) {
 		ArrayList<String> csvArray = new ArrayList<String>();
