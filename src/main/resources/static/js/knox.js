@@ -463,50 +463,217 @@ $('#export-sbol-tooltip').click(() => {
 
 $('#enumerate-designs-tooltip').click(() => {
   let div = document.createElement('div');
-  div.style.height = "inherit";
-  div.style.overflow = "scroll";
+  
+  // enumerate dropdown
+  let enumerateDiv = document.createElement('div');
+  let enumerateDropdown = makeEnumerateDropdown();
+  makeDiv(enumerateDiv, enumerateDropdown, 'Options: ');
 
-  // loading div
-  let loadingDiv = document.createElement('div');
-  loadingDiv.appendChild(document.createTextNode("Loading..."));
+  // num designs div
+  let numDesignsDiv = document.createElement('div');
+  let numDesignsInput = document.createElement('input');
+  numDesignsInput.setAttribute("type", "number");
+  numDesignsInput.setAttribute("value", "5");
+  numDesignsInput.setAttribute("min", "0");
+  makeDiv(numDesignsDiv, numDesignsInput, 'Number of Designs: ');
 
-  //append all
-  div.appendChild(loadingDiv);
+  // min length div
+  let minLengthDiv = document.createElement('div');
+  let minLengthInput = document.createElement('input');
+  minLengthInput.setAttribute("type", "number");
+  minLengthInput.setAttribute("value", "0");
+  minLengthInput.setAttribute("min", "0");
+  makeDiv(minLengthDiv, minLengthInput, 'Minimum Length of Designs (0 means no Min): ');
 
-  swal({
-    title: "Designs",
-    content: div,
-    className: "enumeration-swal"
-  });
+  // max length div
+  let maxLengthDiv = document.createElement('div');
+  let maxLengthInput = document.createElement('input');
+  maxLengthInput.setAttribute("type", "number");
+  maxLengthInput.setAttribute("value", "0");
+  maxLengthInput.setAttribute("min", "0");
+  makeDiv(maxLengthDiv, maxLengthInput, 'Maximum Length of Designs (0 means no Max): ');
 
-  endpoint.enumerateDesigns(currentSpace, (err, data) => {
-    if (err) {
-      swalError("Enumeration error: " + JSON.stringify(err));
-    } else {
-      div.removeChild(loadingDiv);
-      let para = document.createElement("p");
-      data.map((list) => {
-        para.appendChild(document.createTextNode("["));
-        const length = list.length;
-        list.map((element, i) => {
-          para.appendChild(document.createTextNode(splitElementID(element.id)));
-          //append comma if there are more elements
-          if (length !== i+1){
-            para.appendChild(document.createTextNode(","));
-          } else {
-            para.appendChild(document.createTextNode(","));
-            para.appendChild(document.createTextNode(element.average_weight));
-          }
-        });
-        para.appendChild(document.createTextNode("]"));
-        para.appendChild(document.createElement('br'));
-      });
+  // is weighted div
+  let isWeightedDiv = document.createElement('div');
+  let isWeightedInput = document.createElement('input');
+  isWeightedInput.setAttribute("type", "checkbox");
+  isWeightedInput.checked = true;
+  makeDiv(isWeightedDiv, isWeightedInput, 'Is Space Weighted?: ');
 
-      div.appendChild(para);
+  // append all
+  div.appendChild(enumerateDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(numDesignsDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(isWeightedDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(maxLengthDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(minLengthDiv);
+  div.appendChild(document.createElement('br'));
+
+  numDesignsDiv.style.visibility = 'hidden';
+  isWeightedDiv.style.visibility = 'hidden';
+  maxLengthDiv.style.visibility = 'hidden';
+  minLengthDiv.style.visibility = 'hidden';
+
+  $(enumerateDropdown).change(function() {
+    if(this.value === endpoint.enumerate.ENUMERATE){
+      numDesignsDiv.style.visibility = 'visible';
+      isWeightedDiv.style.visibility = 'visible';
+      maxLengthDiv.style.visibility = 'visible';
+      minLengthDiv.style.visibility = 'visible';
+    }
+    if(this.value === endpoint.enumerate.SAMPLE){
+      numDesignsDiv.style.visibility = 'visible';
+      isWeightedDiv.style.visibility = 'visible';
+      maxLengthDiv.style.visibility = 'visible';
+      minLengthDiv.style.visibility = 'hidden';
+    }
+    if(this.value === endpoint.enumerate.CREATESAMPLESPACE){
+      numDesignsDiv.style.visibility = 'hidden';
+      isWeightedDiv.style.visibility = 'hidden';
+      maxLengthDiv.style.visibility = 'hidden';
+      minLengthDiv.style.visibility = 'hidden';
     }
   });
 
+  swal({
+    title: "Enumerate / Sample",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (confirm) {
+
+      let loadingDiv = document.createElement('div');
+      let div = document.createElement('div');
+
+      let numDesigns = numDesignsInput.value;
+      let maxLength = maxLengthInput.value;
+      let minLength = minLengthInput.value;
+      let isWeighted = isWeightedInput.value;
+
+      switch (enumerateDropdown.value) {
+        case endpoint.enumerate.ENUMERATE:
+
+          div.style.height = "inherit";
+          div.style.overflow = "scroll";
+
+          // loading div
+          loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+          //append all
+          div.appendChild(loadingDiv);
+
+          swal({
+            title: "Enumerated Designs",
+            content: div,
+            className: "enumeration-swal"
+          });
+          endpoint.enumerateDesigns(currentSpace, numDesigns, minLength, maxLength, isWeighted, (err, data) => {
+            if (err) {
+              swalError("Enumeration error: " + JSON.stringify(err));
+            } else {
+              div.removeChild(loadingDiv);
+              let para = document.createElement("p");
+              data.map((list) => {
+                para.appendChild(document.createTextNode("["));
+                const length = list.length;
+                list.map((element, i) => {
+                  para.appendChild(document.createTextNode(splitElementID(element.id)));
+                  //append comma if there are more elements
+                  if (length !== i+1){
+                    para.appendChild(document.createTextNode(","));
+                  } else {
+                    para.appendChild(document.createTextNode(","));
+                    para.appendChild(document.createTextNode(element.average_weight));
+                  }
+                });
+                para.appendChild(document.createTextNode("]"));
+                para.appendChild(document.createElement('br'));
+              });
+        
+              div.appendChild(para);
+            }
+          });
+          break;
+
+        case endpoint.enumerate.SAMPLE:
+
+          div.style.height = "inherit";
+          div.style.overflow = "scroll";
+
+          // loading div
+          loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+          //append all
+          div.appendChild(loadingDiv);
+
+          swal({
+            title: "Sampled Designs",
+            content: div,
+            className: "enumeration-swal"
+          });
+          endpoint.sampleDesigns(currentSpace, numDesigns, maxLength, isWeighted, (err, data) => {
+            if (err) {
+              swalError("Sampling error: " + JSON.stringify(err));
+            } else {
+              div.removeChild(loadingDiv);
+              let para = document.createElement("p");
+              data.map((list) => {
+                para.appendChild(document.createTextNode("["));
+                const length = list.length;
+                list.map((element, i) => {
+                  para.appendChild(document.createTextNode(splitElementID(element)));
+                  //append comma if there are more elements
+                  if (length !== i+1){
+                    para.appendChild(document.createTextNode(","));
+                  }
+                });
+                para.appendChild(document.createTextNode("]"));
+                para.appendChild(document.createElement('br'));
+              });
+        
+              div.appendChild(para);
+            }
+          });
+          break;
+
+        case endpoint.enumerate.CREATESAMPLESPACE:
+          enumerateDiv.style.visibility = 'hidden'
+          numDesignsDiv.style.visibility = 'hidden';
+          minLengthDiv.style.visibility = 'hidden';
+          maxLengthDiv.style.visibility = 'hidden';
+          isWeightedDiv.style.visibility = 'hidden';
+          endpoint.createSampleSpace(currentSpace, (err, data) => {
+            if (err) {
+              swalError("Error While Creating Sample Space: " + JSON.stringify(err));
+            } else {
+              if (data === true) {
+                swalSuccess("Sample Space Successfully Created")
+              } else {
+                swalSuccess("Sample Space Already Created")
+              }
+            }
+          });
+          break; 
+      }
+    }
+  }); 
+
 });
+
+function makeEnumerateDropdown(){
+  let enumerateDropdown = document.createElement('select');
+  let enumerateOption = new Option("please select", "", true, true);
+  enumerateOption.disabled = true;
+  enumerateDropdown.appendChild(enumerateOption);
+  for(let key in endpoint.enumerate){
+    enumerateDropdown.appendChild(new Option(endpoint.enumerate[key]));
+  }
+
+  return enumerateDropdown;
+}
 
 $('#best-path-tooltip').click(() => {
   let div = document.createElement('div');
