@@ -34,7 +34,7 @@ public class DesignSampler {
 	 */
 	
 
-	public Set<List<String>> sample(int numberOfDesigns, int length, boolean isWeighted, boolean positiveOnly) {
+	public Set<List<String>> sample(int numberOfDesigns, int length, boolean isWeighted, boolean positiveOnly, boolean isSampleSpace) {
 
 		Set<List<String>> designs = new HashSet<List<String>>();
 		
@@ -43,7 +43,7 @@ public class DesignSampler {
 
 		double avgWeight = 0;
 		double stdev = 0;
-		if (isWeighted && !positiveOnly) {
+		if (isWeighted && !positiveOnly && !isSampleSpace) {
 			// Get average weight of edges and standard deviation.
 			avgWeight = Double.parseDouble(space.getAvgScoreofAllNonBlankEdges());
 			stdev = space.getStdev();
@@ -63,7 +63,7 @@ public class DesignSampler {
 
             while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
 
-				if (isWeighted) {
+				if (isWeighted && !isSampleSpace) {
 
 					ArrayList<String> parts = new ArrayList<>();
 					ArrayList<Edge> edges = new ArrayList<>();
@@ -131,7 +131,6 @@ public class DesignSampler {
 						double currentWeight = (weights.get(partIndex) / totalWeights);
 						while (rWeight > currentWeight) {
 							partIndex++;
-
 							currentWeight += (weights.get(partIndex) / totalWeights); 
 						}
 
@@ -142,6 +141,7 @@ public class DesignSampler {
 						// Selected Edge
 						edge = edges.get(partIndex);
 
+						// Add Part to Design
 						if (edge.hasComponentIDs()) {
 							design.add(parts.get(partIndex));
 						}
@@ -152,6 +152,53 @@ public class DesignSampler {
 						if (edge.hasComponentIDs()) {
 							design.add(edge.getComponentIDs().get(0));
 						}
+					}
+
+				} else if (isSampleSpace) {
+					ArrayList<Edge> edges = new ArrayList<>();
+					ArrayList<String> parts = new ArrayList<>();
+					ArrayList<Double> weights = new ArrayList<>();
+					
+					for (Edge e : node.getEdges()) {
+						
+						int i = 0;
+						for (Double w : e.getWeight()) {
+							edges.add(e);
+							
+							// Blank Egdes Naming
+							if (e.isBlank()) {
+								parts.add("blank");
+							} else {
+								parts.add(e.getComponentIDs().get(i));
+							}
+
+							weights.add(w);
+							i++;
+						}
+					}
+
+					// random number
+					double rWeight = rand.nextDouble();
+
+					// part selection
+					int partIndex = 0;
+					double currentWeight = weights.get(partIndex);
+					while (rWeight > currentWeight) {
+						partIndex++;
+						currentWeight += weights.get(partIndex); 
+					}
+
+					// Update Probability
+					probability = probability * weights.get(partIndex);
+					System.out.println(probability);
+					System.out.println(weights);
+
+					// Selected Edge
+					edge = edges.get(partIndex);
+
+					// Add Part to Design
+					if (edge.hasComponentIDs()) {
+						design.add(parts.get(partIndex));
 					}
 
 				} else {
@@ -178,10 +225,12 @@ public class DesignSampler {
 			}
 
 			// Add probability to the end of the design
-			if (isWeighted) {
+			if (isWeighted && !isSampleSpace) {
 				design.add(String.valueOf(probability));
 				design.add(String.valueOf(avgWeight));
 				design.add(String.valueOf(stdev));
+			} else if (isSampleSpace) {
+				design.add(String.valueOf(probability));
 			}
 
 			// print design

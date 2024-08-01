@@ -69,18 +69,19 @@ export function getHistory (id, callback){
 
 export function enumerateDesigns(id, numDesigns, minLength, maxLength, isWeighted, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id) + "&bfs=true";
-  query += "&numDesigns=" + encodeURIComponent(numDesigns)
-  query += "&minLength=" + encodeURIComponent(minLength)
-  query += "&maxLength=" + encodeURIComponent(maxLength)
-  query += "&isWeighted=" + encodeURIComponent(isWeighted)
+  query += "&numDesigns=" + encodeURIComponent(numDesigns);
+  query += "&minLength=" + encodeURIComponent(minLength);
+  query += "&maxLength=" + encodeURIComponent(maxLength);
+  query += "&isWeighted=" + encodeURIComponent(isWeighted);
   d3.json(endpoints.ENUMERATE + query, callback);
 }
 
-export function sampleDesigns(id, numDesigns, length, isWeighted, callback){
+export function sampleDesigns(id, numDesigns, length, isWeighted, isSampleSpace, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
-  query += "&numDesigns=" + encodeURIComponent(numDesigns)
-  query += "&length=" + encodeURIComponent(length)
-  query += "&isWeighted=" + encodeURIComponent(isWeighted)
+  query += "&numDesigns=" + encodeURIComponent(numDesigns);
+  query += "&length=" + encodeURIComponent(length);
+  query += "&isWeighted=" + encodeURIComponent(isWeighted);
+  query += "&isSampleSpace=" + encodeURIComponent(isSampleSpace);
   d3.json(endpoints.SAMPLE + query, callback);
 }
 

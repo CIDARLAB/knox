@@ -981,16 +981,16 @@ public class DesignSpaceService {
         return designAnalysis.getBestPathScore();
     }
     
-    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int length, boolean isWeighted, boolean positiveOnly) {
+    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int length, boolean isWeighted, boolean positiveOnly, boolean isSampleSpace) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
 
-		if (isWeighted) {
+		if (isWeighted && !isSampleSpace) {
 			designSpace.weightBlankEdges();
 		}
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        return designSampler.sample(numDesigns, length, isWeighted, positiveOnly);
+        return designSampler.sample(numDesigns, length, isWeighted, positiveOnly, isSampleSpace);
     }
 
 	public Boolean createSampleSpace(String targetSpaceID) {

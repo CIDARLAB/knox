@@ -500,6 +500,13 @@ $('#enumerate-designs-tooltip').click(() => {
   isWeightedInput.checked = true;
   makeDiv(isWeightedDiv, isWeightedInput, 'Is Space Weighted?: ');
 
+  // is sample space div
+  let isSampleSpaceDiv = document.createElement('div');
+  let isSampleSpaceInput = document.createElement('input');
+  isSampleSpaceInput.setAttribute("type", "checkbox");
+  isSampleSpaceInput.checked = true;
+  makeDiv(isSampleSpaceDiv, isSampleSpaceInput, 'Is Sample Space?: ');
+
   // append all
   div.appendChild(enumerateDiv);
   div.appendChild(document.createElement('br'));
@@ -511,11 +518,14 @@ $('#enumerate-designs-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(minLengthDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(isSampleSpaceDiv);
+  div.appendChild(document.createElement('br'));
 
   numDesignsDiv.style.visibility = 'hidden';
   isWeightedDiv.style.visibility = 'hidden';
   maxLengthDiv.style.visibility = 'hidden';
   minLengthDiv.style.visibility = 'hidden';
+  isSampleSpaceDiv.style.visibility='hidden';
 
   $(enumerateDropdown).change(function() {
     if(this.value === endpoint.enumerate.ENUMERATE){
@@ -523,18 +533,21 @@ $('#enumerate-designs-tooltip').click(() => {
       isWeightedDiv.style.visibility = 'visible';
       maxLengthDiv.style.visibility = 'visible';
       minLengthDiv.style.visibility = 'visible';
+      isSampleSpaceDiv.style.visibility='hidden';
     }
     if(this.value === endpoint.enumerate.SAMPLE){
       numDesignsDiv.style.visibility = 'visible';
       isWeightedDiv.style.visibility = 'visible';
       maxLengthDiv.style.visibility = 'visible';
       minLengthDiv.style.visibility = 'hidden';
+      isSampleSpaceDiv.style.visibility='visible';
     }
     if(this.value === endpoint.enumerate.CREATESAMPLESPACE){
       numDesignsDiv.style.visibility = 'hidden';
       isWeightedDiv.style.visibility = 'hidden';
       maxLengthDiv.style.visibility = 'hidden';
       minLengthDiv.style.visibility = 'hidden';
+      isSampleSpaceDiv.style.visibility='hidden';
     }
   });
 
@@ -552,6 +565,7 @@ $('#enumerate-designs-tooltip').click(() => {
       let maxLength = maxLengthInput.value;
       let minLength = minLengthInput.value;
       let isWeighted = isWeightedInput.value;
+      let isSampleSpace = isSampleSpaceInput.value;
 
       switch (enumerateDropdown.value) {
         case endpoint.enumerate.ENUMERATE:
@@ -614,7 +628,7 @@ $('#enumerate-designs-tooltip').click(() => {
             content: div,
             className: "enumeration-swal"
           });
-          endpoint.sampleDesigns(currentSpace, numDesigns, maxLength, isWeighted, (err, data) => {
+          endpoint.sampleDesigns(currentSpace, numDesigns, maxLength, isWeighted, isSampleSpace, (err, data) => {
             if (err) {
               swalError("Sampling error: " + JSON.stringify(err));
             } else {
