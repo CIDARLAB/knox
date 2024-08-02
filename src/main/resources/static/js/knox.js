@@ -590,6 +590,9 @@ $('#enumerate-designs-tooltip').click(() => {
             } else {
               div.removeChild(loadingDiv);
               let para = document.createElement("p");
+              para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
+              para.appendChild(document.createElement('br'));
+              para.appendChild(document.createElement('br'));
               data.map((list) => {
                 para.appendChild(document.createTextNode("["));
                 const length = list.length;
@@ -634,6 +637,9 @@ $('#enumerate-designs-tooltip').click(() => {
             } else {
               div.removeChild(loadingDiv);
               let para = document.createElement("p");
+              para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
+              para.appendChild(document.createElement('br'));
+              para.appendChild(document.createElement('br'));
               data.map((list) => {
                 para.appendChild(document.createTextNode("["));
                 const length = list.length;

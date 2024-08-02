@@ -227,8 +227,8 @@ public class DesignSampler {
 			// Add probability to the end of the design
 			if (isWeighted && !isSampleSpace) {
 				design.add(String.valueOf(probability));
-				design.add(String.valueOf(avgWeight));
-				design.add(String.valueOf(stdev));
+				//design.add(String.valueOf(avgWeight));
+				//design.add(String.valueOf(stdev));
 			} else if (isSampleSpace) {
 				design.add(String.valueOf(probability));
 			}
