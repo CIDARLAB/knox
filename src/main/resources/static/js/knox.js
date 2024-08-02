@@ -660,11 +660,6 @@ $('#enumerate-designs-tooltip').click(() => {
           break;
 
         case endpoint.enumerate.CREATESAMPLESPACE:
-          enumerateDiv.style.visibility = 'hidden'
-          numDesignsDiv.style.visibility = 'hidden';
-          minLengthDiv.style.visibility = 'hidden';
-          maxLengthDiv.style.visibility = 'hidden';
-          isWeightedDiv.style.visibility = 'hidden';
           endpoint.createSampleSpace(currentSpace, (err, data) => {
             if (err) {
               swalError("Error While Creating Sample Space: " + JSON.stringify(err));
