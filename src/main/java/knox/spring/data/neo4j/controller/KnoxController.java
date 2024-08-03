@@ -800,11 +800,12 @@ public class KnoxController {
     @RequestMapping(value = "/designSpace/sample", method = RequestMethod.GET)
     public Set<List<String>> sample(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns,
-			@RequestParam(value = "length", required = false, defaultValue = "0") int length,
+			@RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
+			@RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "false") boolean isWeighted,
 			@RequestParam(value = "positiveOnly", required = false, defaultValue = "false") boolean positiveOnly,
 			@RequestParam(value = "isSampleSpace", required = false, defaultValue = "false") boolean isSampleSpace) {
-        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns, length, isWeighted, positiveOnly, isSampleSpace);
+        return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, isWeighted, positiveOnly, isSampleSpace);
     }
 
     @RequestMapping(value = "/designSpace/list", method = RequestMethod.GET)

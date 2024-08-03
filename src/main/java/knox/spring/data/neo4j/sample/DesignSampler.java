@@ -34,7 +34,7 @@ public class DesignSampler {
 	 */
 	
 
-	public Set<List<String>> sample(int numberOfDesigns, int length, boolean isWeighted, boolean positiveOnly, boolean isSampleSpace) {
+	public Set<List<String>> sample(int numberOfDesigns, int minLength, int maxLength, boolean isWeighted, boolean positiveOnly, boolean isSampleSpace) {
 
 		Set<List<String>> designs = new HashSet<List<String>>();
 		
@@ -50,6 +50,12 @@ public class DesignSampler {
 		}
 
 		System.out.println("Begin Sampling");
+		System.out.println("Number of Designs: " + String.valueOf(numberOfDesigns));
+		System.out.println("Min Length: " + String.valueOf(minLength));
+		System.out.println("Max Length: " + String.valueOf(maxLength));
+		System.out.println("Is Weighted: " + isWeighted);
+		System.out.println("Positive Only: " + positiveOnly);
+		System.out.println("Is Sample Space: " + isSampleSpace + "\n");
 
 		while ((designs.size() < numberOfDesigns) && (tries < numberOfDesigns*2)) {
 			tries++;
@@ -61,10 +67,10 @@ public class DesignSampler {
 			
             Edge edge = new Edge();
 
-            while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1)) {
+            while (node.hasEdges() && (!node.isAcceptNode() || rand.nextInt(2) == 1) && (design.size() < maxLength || maxLength == 0)) {
 
 				if (isWeighted && !isSampleSpace) {
-
+					// weighted sampling
 					ArrayList<String> parts = new ArrayList<>();
 					ArrayList<Edge> edges = new ArrayList<>();
 					ArrayList<Double> weights = new ArrayList<>();
@@ -155,6 +161,7 @@ public class DesignSampler {
 					}
 
 				} else if (isSampleSpace) {
+					// sample space sampling
 					ArrayList<Edge> edges = new ArrayList<>();
 					ArrayList<String> parts = new ArrayList<>();
 					ArrayList<Double> weights = new ArrayList<>();
@@ -190,8 +197,6 @@ public class DesignSampler {
 
 					// Update Probability
 					probability = probability * weights.get(partIndex);
-					System.out.println(probability);
-					System.out.println(weights);
 
 					// Selected Edge
 					edge = edges.get(partIndex);
@@ -202,7 +207,7 @@ public class DesignSampler {
 					}
 
 				} else {
-					
+					// unweighted Sampling
 					int item = new Random().nextInt(node.getEdges().size());
 					int i = 0;
 					for (Edge e : node.getEdges()) {
@@ -224,6 +229,11 @@ public class DesignSampler {
 				node = edge.getHead();
 			}
 
+			boolean includeDesign = false;
+			if (design.size() >= minLength) {
+				includeDesign = true;
+			}
+
 			// Add probability to the end of the design
 			if (isWeighted && !isSampleSpace) {
 				design.add(String.valueOf(probability));
@@ -232,13 +242,14 @@ public class DesignSampler {
 			} else if (isSampleSpace) {
 				design.add(String.valueOf(probability));
 			}
-
-			// print design
-			System.out.println(design);
 			
 			// add design to designs
-			designs.add(design);
+			if (includeDesign) {
+				designs.add(design);
+			}
 		}
+
+		System.out.println(designs);
 
 		System.out.println("Done Sampling");
 		

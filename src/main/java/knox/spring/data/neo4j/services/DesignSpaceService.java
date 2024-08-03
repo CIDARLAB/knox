@@ -981,7 +981,7 @@ public class DesignSpaceService {
         return designAnalysis.getBestPathScore();
     }
     
-    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int length, boolean isWeighted, boolean positiveOnly, boolean isSampleSpace) {
+    public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int minLength, int maxLength, boolean isWeighted, boolean positiveOnly, boolean isSampleSpace) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
 
 		if (isWeighted && !isSampleSpace) {
@@ -990,7 +990,7 @@ public class DesignSpaceService {
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        return designSampler.sample(numDesigns, length, isWeighted, positiveOnly, isSampleSpace);
+        return designSampler.sample(numDesigns, minLength, maxLength, isWeighted, positiveOnly, isSampleSpace);
     }
 
 	public Boolean createSampleSpace(String targetSpaceID) {

@@ -76,10 +76,11 @@ export function enumerateDesigns(id, numDesigns, minLength, maxLength, isWeighte
   d3.json(endpoints.ENUMERATE + query, callback);
 }
 
-export function sampleDesigns(id, numDesigns, length, isWeighted, isSampleSpace, callback){
+export function sampleDesigns(id, numDesigns, minLength, maxLength, isWeighted, isSampleSpace, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
   query += "&numDesigns=" + encodeURIComponent(numDesigns);
-  query += "&length=" + encodeURIComponent(length);
+  query += "&minLength=" + encodeURIComponent(minLength);
+  query += "&maxLength=" + encodeURIComponent(maxLength);
   query += "&isWeighted=" + encodeURIComponent(isWeighted);
   query += "&isSampleSpace=" + encodeURIComponent(isSampleSpace);
   d3.json(endpoints.SAMPLE + query, callback);

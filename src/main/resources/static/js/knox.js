@@ -483,7 +483,7 @@ $('#enumerate-designs-tooltip').click(() => {
   minLengthInput.setAttribute("type", "number");
   minLengthInput.setAttribute("value", "0");
   minLengthInput.setAttribute("min", "0");
-  makeDiv(minLengthDiv, minLengthInput, 'Minimum Length of Designs (0 means no Min): ');
+  makeDiv(minLengthDiv, minLengthInput, 'Minimum Length of Designs: ');
 
   // max length div
   let maxLengthDiv = document.createElement('div');
@@ -497,14 +497,14 @@ $('#enumerate-designs-tooltip').click(() => {
   let isWeightedDiv = document.createElement('div');
   let isWeightedInput = document.createElement('input');
   isWeightedInput.setAttribute("type", "checkbox");
-  isWeightedInput.checked = true;
+  isWeightedInput.checked = "true";
   makeDiv(isWeightedDiv, isWeightedInput, 'Is Space Weighted?: ');
 
   // is sample space div
   let isSampleSpaceDiv = document.createElement('div');
   let isSampleSpaceInput = document.createElement('input');
   isSampleSpaceInput.setAttribute("type", "checkbox");
-  isSampleSpaceInput.checked = true;
+  isSampleSpaceInput.checked = "true";
   makeDiv(isSampleSpaceDiv, isSampleSpaceInput, 'Is Sample Space?: ');
 
   // append all
@@ -539,7 +539,7 @@ $('#enumerate-designs-tooltip').click(() => {
       numDesignsDiv.style.visibility = 'visible';
       isWeightedDiv.style.visibility = 'visible';
       maxLengthDiv.style.visibility = 'visible';
-      minLengthDiv.style.visibility = 'hidden';
+      minLengthDiv.style.visibility = 'visible';
       isSampleSpaceDiv.style.visibility='visible';
     }
     if(this.value === endpoint.enumerate.CREATESAMPLESPACE){
@@ -566,6 +566,18 @@ $('#enumerate-designs-tooltip').click(() => {
       let minLength = minLengthInput.value;
       let isWeighted = isWeightedInput.value;
       let isSampleSpace = isSampleSpaceInput.value;
+
+      if (isSampleSpaceInput.checked) {
+        isSampleSpace = "true";
+      } else {
+        isSampleSpace = "false";
+      }
+
+      if (isWeightedInput.checked) {
+        isWeighted = "true";
+      } else {
+        isWeighted = "false";
+      }
 
       switch (enumerateDropdown.value) {
         case endpoint.enumerate.ENUMERATE:
@@ -631,13 +643,19 @@ $('#enumerate-designs-tooltip').click(() => {
             content: div,
             className: "enumeration-swal"
           });
-          endpoint.sampleDesigns(currentSpace, numDesigns, maxLength, isWeighted, isSampleSpace, (err, data) => {
+          endpoint.sampleDesigns(currentSpace, numDesigns, minLength, maxLength, isWeighted, isSampleSpace, (err, data) => {
             if (err) {
               swalError("Sampling error: " + JSON.stringify(err));
             } else {
               div.removeChild(loadingDiv);
               let para = document.createElement("p");
-              para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
+
+              if (isSampleSpace === "true" || isWeighted === "true") {
+                para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
+              } else {
+                para.appendChild(document.createTextNode("[part1, part2, ..., partn]"))
+              }
+
               para.appendChild(document.createElement('br'));
               para.appendChild(document.createElement('br'));
               data.map((list) => {
