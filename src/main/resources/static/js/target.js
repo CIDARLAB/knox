@@ -141,6 +141,17 @@ export default class Target{
             }
           }
 
+          if (d.hasOwnProperty("weight")) {
+            titleStr += ",";
+            const lengthWeights = d["weight"].length;
+            for(let i=0; i<d["weight"].length; i++){
+              titleStr += d["weight"][i];
+              if (lengthWeights !== i+1){
+                titleStr += ",";
+              }
+            }
+          } 
+
           return titleStr;
         }
       })

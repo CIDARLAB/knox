@@ -1262,6 +1262,10 @@ public class DesignSpaceService {
 	        	link.put("componentIDs", row.get("componentIDs"));
 	        }
 
+			if (row.containsKey("weight") && row.get("weight") != null) {
+	        	link.put("weight", row.get("weight"));
+	        }
+
 			link.put("orientation", row.get("orientation"));
 	        
 	        links.add(link);
