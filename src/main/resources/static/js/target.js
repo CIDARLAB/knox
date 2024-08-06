@@ -125,13 +125,13 @@ export default class Target{
       .attr("height", sbolImgSize)
       .attr("width", sbolImgSize)
       .attr("class", (d) => {
-        if (d.hasOwnProperty("componentRoles") && d["componentRoles"].length > 0) {
+        if ((d.hasOwnProperty("componentRoles") && d["componentRoles"].length > 0) || (d.hasOwnProperty("weight") && d["weight"].length > 0)) {
           return "sboltip";
         }
         return null;
       })
       .attr("title", (d) => {
-        if (d.hasOwnProperty("componentIDs")) {
+        if (d.hasOwnProperty("componentIDs") && d["componentIDs"].length > 0) {
           let titleStr = "";
           const length = d["componentIDs"].length;
           for(let i=0; i<d["componentIDs"].length; i++){
@@ -153,6 +153,17 @@ export default class Target{
           } 
 
           return titleStr;
+        } else if (d.hasOwnProperty("weight")) {
+          let titleStr = "";
+          const lengthWeights = d["weight"].length;
+          for(let i=0; i<d["weight"].length; i++){
+            titleStr += d["weight"][i];
+            if (lengthWeights !== i+1){
+              titleStr += ",";
+            }
+          }
+
+          return titleStr
         }
       })
       .attr("href", (d) => {
