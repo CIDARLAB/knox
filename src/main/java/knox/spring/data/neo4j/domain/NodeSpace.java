@@ -3,10 +3,12 @@ package knox.spring.data.neo4j.domain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -909,6 +911,60 @@ public class NodeSpace {
     	
     	return spaceMap;
     }
+
+	public Boolean isCyclic() {
+		Boolean isCyclic = false;
+
+		ArrayList<Node> nodes = new ArrayList<>();
+		HashMap<Node, String> color = new HashMap<>();
+		HashMap<Node, Node> parent = new HashMap<>();
+
+		for (Node u : getNodes()) {
+			nodes.add(u);
+			color.put(u, "W");
+			parent.put(u, null);
+		}
+
+		for (Node u : nodes) {
+			if (color.get(u) == "W") {
+				isCyclic = isCyclicUtil(u, color, parent);
+
+				if (isCyclic) {
+					break;
+				}
+			}
+		}
+
+		return isCyclic;
+	}
+
+	private Boolean isCyclicUtil(Node u, HashMap<Node, String> color, HashMap<Node, Node> parent) {
+		color.replace(u, "G");
+		Boolean cycle = false;
+
+		ArrayList<Node> adjList = new ArrayList<>();
+		for (Edge edge : u.getEdges()) {
+			if (!adjList.contains(edge.getHead())) {
+				adjList.add(edge.getHead());
+			}
+		}
+
+		for (Node v : adjList) {
+			if (color.get(v) == "W") {
+				parent.replace(v, u);
+				cycle = isCyclicUtil(v, color, parent);
+
+				if (cycle == true) {
+					return true;
+				}
+			} else if (color.get(v) == "G" && parent.get(u) != v) {
+				return true;
+			}
+		}
+
+		color.replace(u, "B");
+		return false;
+	}
 
 	public void weightBlankEdges() {
 		
