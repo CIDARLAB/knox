@@ -730,32 +730,37 @@ $('#best-path-tooltip').click(() => {
     if (err) {
       swalError("Graph error: " + JSON.stringify(err));
     } else {
-      div.removeChild(loadingDiv);
-      let para = document.createElement("p");
 
-      data1.map((list) => {
-        para.appendChild(document.createElement('br'));
-        para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
-        para.appendChild(document.createElement('br'));
+      if (data1.length === 0) {
+        swalError("Graph error: design space contains cycle")
+      } else {
+        div.removeChild(loadingDiv);
+        let para = document.createElement("p");
 
-        para.appendChild(document.createTextNode(list[0].pathScore));
-        para.appendChild(document.createElement('br'));
-        para.appendChild(document.createElement('br'));
+        data1.map((list) => {
+          para.appendChild(document.createElement('br'));
+          para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
+          para.appendChild(document.createElement('br'));
 
-        para.appendChild(document.createTextNode("["));
-        const length = list.length;
-        list.map((element, i) => {
-          para.appendChild(document.createTextNode(element.id));
-          //append comma if there are more elements
-          if (length !== i+1){
-            para.appendChild(document.createTextNode(","));
-          }
+          para.appendChild(document.createTextNode(list[0].pathScore));
+          para.appendChild(document.createElement('br'));
+          para.appendChild(document.createElement('br'));
+
+          para.appendChild(document.createTextNode("["));
+          const length = list.length;
+          list.map((element, i) => {
+            para.appendChild(document.createTextNode(element.id));
+            //append comma if there are more elements
+            if (length !== i+1){
+              para.appendChild(document.createTextNode(","));
+            }
+          });
+          para.appendChild(document.createTextNode("]"));
+          para.appendChild(document.createElement('br'));
         });
-        para.appendChild(document.createTextNode("]"));
-        para.appendChild(document.createElement('br'));
-      });
 
-      div.appendChild(para);
+        div.appendChild(para);
+      }
     }
   });
 

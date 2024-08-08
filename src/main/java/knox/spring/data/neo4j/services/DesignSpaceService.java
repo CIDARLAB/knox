@@ -954,18 +954,27 @@ public class DesignSpaceService {
     }
 
 	public List<List<Map<String, Object>>> getBestPath(String targetSpaceID) {
+
+		List<List<Map<String, Object>>> bestPath = new ArrayList<List<Map<String,Object>>>();
     	
 		long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
-		
-		designSpace.weightBlankEdges();
 
-		DesignAnalysis designAnalysis = new DesignAnalysis(designSpace);
+		if (designSpace.isCyclic()) {
+			System.out.println("isCyclic: True");
+		
+		} else {
+			System.out.println("isCyclic: False");
+
+			designSpace.weightBlankEdges();
+			
+			DesignAnalysis designAnalysis = new DesignAnalysis(designSpace);
     	
-        List<List<Map<String, Object>>> bestPath = designAnalysis.getBestPath();
-        
-        long endTime = System.nanoTime();
-    	long duration = (endTime - startTime);
+			bestPath = designAnalysis.getBestPath();
+			
+			long endTime = System.nanoTime();
+			long duration = (endTime - startTime);
+		}
         
         return bestPath;
     }
