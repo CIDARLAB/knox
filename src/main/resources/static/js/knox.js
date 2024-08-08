@@ -732,20 +732,16 @@ $('#best-path-tooltip').click(() => {
     } else {
       div.removeChild(loadingDiv);
       let para = document.createElement("p");
-      endpoint.getBestPathScore(currentSpace, (err, data2) => {
-        if (err) {
-          swalError("Graph error: " + JSON.stringify(err));
-        } else {
-          para.appendChild(document.createElement('br'));
-          para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
-          para.appendChild(document.createElement('br'));
-
-          para.appendChild(document.createTextNode(data2));
-          para.appendChild(document.createElement('br'));
-        }
-      });
 
       data1.map((list) => {
+        para.appendChild(document.createElement('br'));
+        para.appendChild(document.createTextNode('Total Weight of All Non-Blank Edges:'));
+        para.appendChild(document.createElement('br'));
+
+        para.appendChild(document.createTextNode(list[0].pathScore));
+        para.appendChild(document.createElement('br'));
+        para.appendChild(document.createElement('br'));
+
         para.appendChild(document.createTextNode("["));
         const length = list.length;
         list.map((element, i) => {

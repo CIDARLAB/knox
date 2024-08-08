@@ -838,12 +838,6 @@ public class KnoxController {
         return designSpaceService.getBestPath(targetSpaceID);
     }
 
-	@RequestMapping(value = "/designSpace/bestPathScore", method = RequestMethod.GET)
-    public String getBestPathScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
-        
-        return String.valueOf(designSpaceService.getBestPathScore(targetSpaceID));
-    }
-
 	@RequestMapping(value = "/designSpace/createSampleSpace", method = RequestMethod.GET)
 	public Boolean createSampleSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
 		return designSpaceService.createSampleSpace(targetSpaceID);

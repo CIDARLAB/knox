@@ -969,17 +969,6 @@ public class DesignSpaceService {
         
         return bestPath;
     }
-
-	public double getBestPathScore(String targetSpaceID) {
-    	
-    	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
-
-		DesignAnalysis designAnalysis = new DesignAnalysis(designSpace);
-    	
-        List<List<Map<String, Object>>> bestPath = designAnalysis.getBestPath();
-    	
-        return designAnalysis.getBestPathScore();
-    }
     
     public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int minLength, int maxLength, boolean isWeighted, boolean positiveOnly, boolean isSampleSpace) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);

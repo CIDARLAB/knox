@@ -66,6 +66,7 @@ public class DesignAnalysis {
 				Map<String, Object> comp = new HashMap<String, Object>();
 
 				comp.put("id", compID);
+				comp.put("pathScore", bestPathScore);
 
 				bestPath.add(comp);
 			}

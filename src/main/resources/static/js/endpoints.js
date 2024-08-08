@@ -18,7 +18,6 @@ const endpoints = {
   SAMPLE: "/designSpace/sample",
   SCORE: "/designSpace/score",
   BESTPATH: "/designSpace/bestPath",
-  BESTPATHSCORE: "/designSpace/bestPathScore",
   CREATESAMPLESPACE: "/designSpace/createSampleSpace",
 
   D3HISTORY: "/branch/graph/d3",
@@ -94,11 +93,6 @@ export function getGraphScore(id, callback){
 export function getBestPath(id, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
   d3.json(endpoints.BESTPATH + query, callback);
-}
-
-export function getBestPathScore(id, callback){
-  let query = "?targetSpaceID=" + encodeURIComponent(id);
-  d3.json(endpoints.BESTPATHSCORE + query, callback);
 }
 
 export function createSampleSpace(id, callback){
