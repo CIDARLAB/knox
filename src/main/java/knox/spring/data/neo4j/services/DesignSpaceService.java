@@ -978,6 +978,15 @@ public class DesignSpaceService {
         
         return bestPath;
     }
+
+	public Map<String, Map<String, Double>> partAnalytics(String targetSpaceID) {
+
+		DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+
+		DesignAnalysis designAnalysis = new DesignAnalysis(designSpace);
+
+		return designAnalysis.partAnalytics();
+	}
     
     public Set<List<String>> sampleDesignSpace(String targetSpaceID, int numDesigns, int minLength, int maxLength, boolean isWeighted, boolean positiveOnly, boolean isSampleSpace) {
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
