@@ -225,36 +225,38 @@ public class DesignAnalysis {
 
 			int i = 0;
 			for (String compID : e.getComponentIDs()) {
+				Map<String, Double> data = new HashMap<String,Double>();
 				
-				// Not present in analytics yet
 				if (!partAnalytics.containsKey(compID)) {
-					partAnalytics.put(compID, null);
-					partAnalytics.get(compID).put("frequency", 1.0);
-					partAnalytics.get(compID).put("totalScore", e.getWeight().get(i));
-					partAnalytics.get(compID).put("averageScore", e.getWeight().get(i));
-					partAnalytics.get(compID).put("lowScore", e.getWeight().get(i));
-					partAnalytics.get(compID).put("highScore", e.getWeight().get(i));
+					data.put("frequency", 1.0);
+					data.put("totalScore", e.getWeight().get(i));
+					data.put("averageScore", e.getWeight().get(i));
+					data.put("lowScore", e.getWeight().get(i));
+					data.put("highScore", e.getWeight().get(i));
+					partAnalytics.put(compID, data);
 				
 				} else {
 
 					// update frequency
-					partAnalytics.get(compID).replace("frequency", partAnalytics.get(compID).get("frequency") + 1.0);
+					data.put("frequency", partAnalytics.get(compID).get("frequency") + 1.0);
 
 					// update totalScore
-					partAnalytics.get(compID).replace("totalScore", partAnalytics.get(compID).get("totalScore") + e.getWeight().get(i));
+					data.put("totalScore", partAnalytics.get(compID).get("totalScore") + e.getWeight().get(i));
 
 					// update averageScore
-					partAnalytics.get(compID).replace("averageScore", partAnalytics.get(compID).get("totalScore") / partAnalytics.get(compID).get("frequency"));
+					data.put("totalScore", partAnalytics.get(compID).get("totalScore") / partAnalytics.get(compID).get("frequency"));
 
 					// update lowScore
 					if (e.getWeight().get(i) < partAnalytics.get(compID).get("lowScore")) {
-						partAnalytics.get(compID).replace("lowScore", e.getWeight().get(i));
+						data.put("lowScore", e.getWeight().get(i));
 					}
 
 					// update highScore
 					if (e.getWeight().get(i) > partAnalytics.get(compID).get("highScore")) {
-						partAnalytics.get(compID).replace("highScore", e.getWeight().get(i));
+						data.put("highScore", e.getWeight().get(i));
 					}
+
+					partAnalytics.replace(compID, data);
 				}
 
 				i++;
