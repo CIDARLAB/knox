@@ -887,10 +887,12 @@ $('#apply-operators-tooltip').click(() => {
     if(this.value === endpoint.operators.AND){
       tolDiv.style.visibility = 'visible';
       optDiv.style.visibility = 'hidden';
+      toleranceDropdown.value = 1;
     }
     if(this.value === endpoint.operators.MERGE){
       tolDiv.style.visibility = 'visible';
       optDiv.style.visibility = 'hidden';
+      toleranceDropdown.value = 0;
     }
   });
 

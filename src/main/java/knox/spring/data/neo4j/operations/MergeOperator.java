@@ -10,6 +10,9 @@ public class MergeOperator {
 	
 	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, 
 			int tolerance, Set<String> roles) {
+		System.out.println("\nStarting Merge!");
+		System.out.println("tolerance: " + String.valueOf(tolerance));
+
 		Product product = new Product(inputSpaces.get(0));
 
 		for (int i = 1; i < inputSpaces.size(); i++) {

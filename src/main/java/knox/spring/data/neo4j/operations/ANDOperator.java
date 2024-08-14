@@ -14,10 +14,12 @@ public class ANDOperator {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(NodeSpace.class);
 	
-	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, 
-			int tolerance, boolean isComplete, Set<String> roles) {
+	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, int tolerance, boolean isComplete, Set<String> roles) {
+		
+		System.out.println("AND Operator:");
+		System.out.println("tolerance: " + String.valueOf(tolerance));
 		Product product = new Product(inputSpaces.get(0));
-
+				
 		for (int i = 1; i < inputSpaces.size(); i++) {
 			if (isComplete) {
 				product.applyTensor(inputSpaces.get(i), tolerance, 2, roles);
