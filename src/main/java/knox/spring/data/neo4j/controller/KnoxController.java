@@ -799,7 +799,7 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/sample", method = RequestMethod.GET)
     public Set<List<String>> sample(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "1") int numDesigns,
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
 			@RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
 			@RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "false") boolean isWeighted,
@@ -815,7 +815,7 @@ public class KnoxController {
 
     @RequestMapping(value = "/designSpace/enumerateSet", method = RequestMethod.GET)
     public HashSet<List<Map<String, Object>>> enumerateSet(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "20") int numDesigns,
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
             @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
             @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
@@ -828,7 +828,7 @@ public class KnoxController {
 
 	@RequestMapping(value = "/designSpace/enumerateList", method = RequestMethod.GET)
     public List<List<Map<String, Object>>> enumerateList(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "20") int numDesigns,
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
             @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
             @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,

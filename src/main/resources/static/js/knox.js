@@ -473,9 +473,9 @@ $('#enumerate-designs-tooltip').click(() => {
   let numDesignsDiv = document.createElement('div');
   let numDesignsInput = document.createElement('input');
   numDesignsInput.setAttribute("type", "number");
-  numDesignsInput.setAttribute("value", "5");
+  numDesignsInput.setAttribute("value", "0");
   numDesignsInput.setAttribute("min", "0");
-  makeDiv(numDesignsDiv, numDesignsInput, 'Number of Designs: ');
+  makeDiv(numDesignsDiv, numDesignsInput, 'Number of Designs (0 means all possible): ');
 
   // min length div
   let minLengthDiv = document.createElement('div');
