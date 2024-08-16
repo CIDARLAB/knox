@@ -597,6 +597,16 @@ public class Edge {
 
         return componentIDstoWeight;
     }
+
+    public HashMap<String, String> componentIDtoRole() {
+        HashMap<String, String> componentIDstoRoles = new HashMap<String, String>();
+
+        for (int i = 0; i < componentIDs.size(); i++) {
+            componentIDstoRoles.put(componentIDs.get(i), componentIDs.get(i));
+        }
+
+        return componentIDstoRoles;
+    }
     
     public boolean isBlank() {
         return !hasComponentIDs() && !hasComponentRoles() && !hasOrientation();

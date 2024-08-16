@@ -410,13 +410,14 @@ public class DesignSampler {
 		} else {
 
 			HashMap<String, Double> componentIDstoWeights = edge.componentIDtoWeight();
+			HashMap<String, String> componentIDstoRoles = edge.componentIDtoRole();
 
 			for (String compID : edge.getComponentIDs()) {
 				Map<String, Object> comp = new HashMap<String, Object>();
 
 				comp.put("id", compID);
 
-				//comp.put("roles", edge.getComponentRoles());
+				comp.put("roles", componentIDstoRoles.get(compID));
 
 				comp.put("weight", componentIDstoWeights.get(compID));
 
