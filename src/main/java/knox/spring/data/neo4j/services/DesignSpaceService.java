@@ -879,14 +879,56 @@ public class DesignSpaceService {
         return mapDesignSpaceToD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
     }
     
-    public List<List<Map<String, Object>>> enumerateDesignSpace(String targetSpaceID, 
+    public HashSet<List<Map<String, Object>>> enumerateDesignSpaceSet(String targetSpaceID, 
     		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted) {
     	long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-        List<List<Map<String, Object>>> samplerOutput = designSampler.enumerate(numDesigns, minLength, maxLength, enumerateType);
+        HashSet<List<Map<String, Object>>> samplerOutput = designSampler.enumerateSet(numDesigns, minLength, maxLength, enumerateType);
+
+		//System.out.println(samplerOutput);
+		if (isWeighted) {
+			int i = 0;
+			for (List<Map<String,Object>> design : samplerOutput) {
+				double total = 0.0;
+				double length = design.size();
+				//System.out.println("\n");
+				for (Map<String,Object> element : design) {
+					total = total + (double) element.get("weight");
+					//System.out.println(element.get("id") + " : " + element.get("weight"));
+				}
+				double averageWeight = total / length;
+
+				//System.out.println(averageWeight);
+
+				for (Map<String,Object> element : design) {
+					element.put("average_weight", averageWeight);
+				}
+
+				i++;
+				System.out.println(i);
+			}
+		}
+
+		System.out.println("\nEnumerated!");
+
+        long endTime = System.nanoTime();
+    	long duration = (endTime - startTime);
+//    	LOG.info("ENUMERATE TIME: " + duration);
+        
+        return samplerOutput;
+    }
+
+	public List<List<Map<String, Object>>> enumerateDesignSpaceList(String targetSpaceID, 
+    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted) {
+    	long startTime = System.nanoTime();
+    	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+    	
+        DesignSampler designSampler = new DesignSampler(designSpace);
+        
+        List<List<Map<String, Object>>> samplerOutput = designSampler.enumerateList(numDesigns, minLength, maxLength, enumerateType);
 
 		//System.out.println(samplerOutput);
 		if (isWeighted) {

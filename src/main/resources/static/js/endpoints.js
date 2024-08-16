@@ -14,7 +14,8 @@ import {currentSpace,
 const endpoints = {
   D3: "/graph/d3",
   LIST: "/designSpace/list",
-  ENUMERATE: "/designSpace/enumerate",
+  ENUMERATESET: "/designSpace/enumerateSet",
+  ENUMERATELIST: "/designSpace/enumerateList",
   SAMPLE: "/designSpace/sample",
   SCORE: "/designSpace/score",
   BESTPATH: "/designSpace/bestPath",
@@ -66,13 +67,22 @@ export function getHistory (id, callback){
   d3.json(endpoints.BRANCH+endpoints.D3 + query, callback);
 }
 
-export function enumerateDesigns(id, numDesigns, minLength, maxLength, isWeighted, callback){
+export function enumerateDesignsSet(id, numDesigns, minLength, maxLength, isWeighted, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id) + "&bfs=true";
   query += "&numDesigns=" + encodeURIComponent(numDesigns);
   query += "&minLength=" + encodeURIComponent(minLength);
   query += "&maxLength=" + encodeURIComponent(maxLength);
   query += "&isWeighted=" + encodeURIComponent(isWeighted);
-  d3.json(endpoints.ENUMERATE + query, callback);
+  d3.json(endpoints.ENUMERATESET + query, callback);
+}
+
+export function enumerateDesignsList(id, numDesigns, minLength, maxLength, isWeighted, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id) + "&bfs=true";
+  query += "&numDesigns=" + encodeURIComponent(numDesigns);
+  query += "&minLength=" + encodeURIComponent(minLength);
+  query += "&maxLength=" + encodeURIComponent(maxLength);
+  query += "&isWeighted=" + encodeURIComponent(isWeighted);
+  d3.json(endpoints.ENUMERATELIST + query, callback);
 }
 
 export function sampleDesigns(id, numDesigns, minLength, maxLength, isWeighted, isSampleSpace, callback){

@@ -270,12 +270,21 @@ public class DesignSampler {
 			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
 								 the specific component ids.
 	 */
-	public List<List<Map<String, Object>>> enumerate(int numDesigns, int minLength, 
+	public HashSet<List<Map<String, Object>>> enumerateSet(int numDesigns, int minLength, 
 			int maxLength, EnumerateType type) {
 		if (type == EnumerateType.BFS) {
-			return bfsEnumerate(numDesigns, minLength, maxLength);
+			return bfsEnumerateSet(numDesigns, minLength, maxLength);
 		} else {
-			return dfsEnumerate(numDesigns, minLength, maxLength);
+			return dfsEnumerateSet(numDesigns, minLength, maxLength);
+		}
+	}
+
+	public List<List<Map<String, Object>>> enumerateList(int numDesigns, int minLength, 
+			int maxLength, EnumerateType type) {
+		if (type == EnumerateType.BFS) {
+			return bfsEnumerateList(numDesigns, minLength, maxLength);
+		} else {
+			return dfsEnumerateList(numDesigns, minLength, maxLength);
 		}
 	}
 
@@ -401,14 +410,13 @@ public class DesignSampler {
 		} else {
 
 			HashMap<String, Double> componentIDstoWeights = edge.componentIDtoWeight();
-			System.out.println(componentIDstoWeights);
 
 			for (String compID : edge.getComponentIDs()) {
 				Map<String, Object> comp = new HashMap<String, Object>();
 
 				comp.put("id", compID);
 
-				comp.put("roles", edge.getComponentRoles());
+				//comp.put("roles", edge.getComponentRoles());
 
 				comp.put("weight", componentIDstoWeights.get(compID));
 
@@ -436,8 +444,8 @@ public class DesignSampler {
 		return comboDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> bfsEnumerate(int numDesigns, int minLength, int maxLength) {
-		List<List<Map<String, Object>>> allDesigns = new LinkedList<List<Map<String, Object>>>();
+	private HashSet<List<Map<String, Object>>> bfsEnumerateSet(int numDesigns, int minLength, int maxLength) {
+		HashSet<List<Map<String, Object>>> allDesigns = new HashSet<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
 			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
@@ -472,7 +480,8 @@ public class DesignSampler {
 				designs = multiplyDesigns(designs, edge);
 
 				System.out.println("\nCurrent Number of Designs: ");
-				System.out.println(allDesigns.size());
+				System.out.println(edge);
+				System.out.println(designs.size());
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
@@ -528,8 +537,8 @@ public class DesignSampler {
 		return allDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> dfsEnumerate(int numDesigns, int minLength, int maxLength) {
-		List<List<Map<String, Object>>> allDesigns = new LinkedList<List<Map<String, Object>>>();
+	private HashSet<List<Map<String, Object>>> dfsEnumerateSet(int numDesigns, int minLength, int maxLength) {
+		HashSet<List<Map<String, Object>>> allDesigns = new HashSet<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
 			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
@@ -616,7 +625,189 @@ public class DesignSampler {
 		
 		return allDesigns;
 	}
+
+	private List<List<Map<String, Object>>> bfsEnumerateList(int numDesigns, int minLength, int maxLength) {
+		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
 	
+		for (Node startNode : startNodes) {
+			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
+			
+			Set<Node> localNodes = new HashSet<Node>();
+			
+			localNodes.add(startNode);
+			
+			Stack<Set<Node>> localNodeStack = new Stack<Set<Node>>();
+			
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
+				localNodeStack.push(new HashSet<Node>(localNodes));
+			}
+			
+			Stack<Edge> edgeStack = new Stack<Edge>();
+			
+			if (startNode.hasEdges()) {
+				for (Edge edge : startNode.getEdges()) {
+					edgeStack.push(edge);
+				}
+			}
+			
+			Stack<List<List<Map<String, Object>>>> designStack = new Stack<List<List<Map<String, Object>>>>();
+			
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
+				designStack.push(designs);
+			}
+			
+			while (!edgeStack.isEmpty()) {
+				Edge edge = edgeStack.pop();
+				
+				designs = multiplyDesigns(designs, edge);
+
+				System.out.println("\nCurrent Number of Designs: ");
+				System.out.println(edge);
+				System.out.println(designs.size());
+				
+				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
+					if (!designStack.isEmpty()) {
+						localNodes = localNodeStack.pop();
+						
+						designs = designStack.pop();
+					}
+				} else { 
+					if (edge.getHead().isAcceptNode()) {
+						List<List<Map<String, Object>>> atLeastMinDesigns = filterUnderMinDesigns(designs,
+								minLength);
+						
+						if (numDesigns < 1 || allDesigns.size() + atLeastMinDesigns.size() < numDesigns) {
+							allDesigns.addAll(atLeastMinDesigns);
+						} else {
+							int diffDesignCount = numDesigns - allDesigns.size();
+
+							Iterator<List<Map<String, Object>>> designerator = atLeastMinDesigns.iterator();
+
+							for (int i = 0; i < diffDesignCount; i++) {
+								allDesigns.add(designerator.next());
+							}
+
+							return allDesigns;
+						}
+					} 
+
+					if (edge.getHead().hasEdges() 
+							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
+									|| maxLength > 0)) {
+						localNodes.add(edge.getHead());
+						
+						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
+							localNodeStack.push(new HashSet<Node>(localNodes));
+						}
+						
+						for (Edge headEdge : edge.getHead().getEdges()) {
+							edgeStack.push(headEdge);
+						}
+
+						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
+							designStack.push(designs);
+						}
+					} else if (!designStack.isEmpty()) {
+						localNodes = localNodeStack.pop();
+						
+						designs = designStack.pop();
+					}
+				}
+			}
+		}
+		
+		return allDesigns;
+	}
+	
+	private List<List<Map<String, Object>>> dfsEnumerateList(int numDesigns, int minLength, int maxLength) {
+		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
+	
+		for (Node startNode : startNodes) {
+			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
+			
+			Set<Node> localNodes = new HashSet<Node>();
+			
+			localNodes.add(startNode);
+			
+			Stack<Set<Node>> localNodeStack = new Stack<Set<Node>>();
+			
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
+				localNodeStack.push(new HashSet<Node>(localNodes));
+			}
+			
+			Stack<Edge> edgeStack = new Stack<Edge>();
+			
+			if (startNode.hasEdges()) {
+				for (Edge edge : startNode.getEdges()) {
+					edgeStack.push(edge);
+				}
+			}
+			
+			Stack<List<List<Map<String, Object>>>> designStack = new Stack<List<List<Map<String, Object>>>>();
+			
+			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
+				designStack.push(designs);
+			}
+			
+			while (!edgeStack.isEmpty()) {
+				Edge edge = edgeStack.pop();
+				
+				designs = multiplyDesigns(designs, edge);
+				
+				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
+					if (!designStack.isEmpty()) {
+						localNodes = localNodeStack.pop();
+						
+						designs = designStack.pop();
+					}
+				} else { 
+					if (edge.getHead().isAcceptNode()) {
+						List<List<Map<String, Object>>> atLeastMinDesigns = filterUnderMinDesigns(designs,
+								minLength);
+						
+						if (numDesigns < 1 || allDesigns.size() + atLeastMinDesigns.size() < numDesigns) {
+							allDesigns.addAll(atLeastMinDesigns);
+						} else {
+							int diffDesignCount = numDesigns - allDesigns.size();
+
+							Iterator<List<Map<String, Object>>> designerator = atLeastMinDesigns.iterator();
+
+							for (int i = 0; i < diffDesignCount; i++) {
+								allDesigns.add(designerator.next());
+							}
+
+							return allDesigns;
+						}
+					} 
+
+					if (edge.getHead().hasEdges() 
+							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
+									|| maxLength > 0)) {
+						localNodes.add(edge.getHead());
+						
+						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
+							localNodeStack.push(new HashSet<Node>(localNodes));
+						}
+						
+						for (Edge headEdge : edge.getHead().getEdges()) {
+							edgeStack.push(headEdge);
+						}
+
+						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
+							designStack.push(designs);
+						}
+					} else if (!designStack.isEmpty()) {
+						localNodes = localNodeStack.pop();
+						
+						designs = designStack.pop();
+					}
+				}
+			}
+		}
+		
+		return allDesigns;
+	}
+
 	private List<List<Map<String, Object>>> filterUnderMinDesigns(List<List<Map<String, Object>>> designs,
 			int minLength) {
 		List<List<Map<String, Object>>> atLeastMinDesigns = new LinkedList<List<Map<String, Object>>>();

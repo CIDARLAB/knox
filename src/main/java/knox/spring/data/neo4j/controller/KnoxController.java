@@ -813,8 +813,8 @@ public class KnoxController {
         return designSpaceService.listDesignSpaces();
     }
 
-    @RequestMapping(value = "/designSpace/enumerate", method = RequestMethod.GET)
-    public List<List<Map<String, Object>>> enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    @RequestMapping(value = "/designSpace/enumerateSet", method = RequestMethod.GET)
+    public HashSet<List<Map<String, Object>>> enumerateSet(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "20") int numDesigns,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
             @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
@@ -822,7 +822,20 @@ public class KnoxController {
             @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
-        return designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, 
+        return designSpaceService.enumerateDesignSpaceSet(targetSpaceID, numDesigns, minLength, maxLength, 
+        		EnumerateType.BFS, isWeighted);
+    }
+
+	@RequestMapping(value = "/designSpace/enumerateList", method = RequestMethod.GET)
+    public List<List<Map<String, Object>>> enumerateList(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+            @RequestParam(value = "numDesigns", required = false, defaultValue = "20") int numDesigns,
+			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
+            @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
+            @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
+            @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
+        EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
+        
+        return designSpaceService.enumerateDesignSpaceList(targetSpaceID, numDesigns, minLength, maxLength, 
         		EnumerateType.BFS, isWeighted);
     }
 

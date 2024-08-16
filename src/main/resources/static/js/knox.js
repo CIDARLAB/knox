@@ -507,6 +507,12 @@ $('#enumerate-designs-tooltip').click(() => {
   isSampleSpaceInput.checked = "true";
   makeDiv(isSampleSpaceDiv, isSampleSpaceInput, 'Is Sample Space?: ');
 
+  // allow duplicates div
+  let allowDuplicatesDiv = document.createElement('div');
+  let allowDuplicatesInput = document.createElement('input');
+  allowDuplicatesInput.setAttribute("type", "checkbox");
+  makeDiv(allowDuplicatesDiv, allowDuplicatesInput, 'Allow Duplicates?: ');
+
   // append all
   div.appendChild(enumerateDiv);
   div.appendChild(document.createElement('br'));
@@ -520,12 +526,15 @@ $('#enumerate-designs-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(isSampleSpaceDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(allowDuplicatesDiv);
+  div.appendChild(document.createElement('br'));
 
   numDesignsDiv.style.visibility = 'hidden';
   isWeightedDiv.style.visibility = 'hidden';
   maxLengthDiv.style.visibility = 'hidden';
   minLengthDiv.style.visibility = 'hidden';
   isSampleSpaceDiv.style.visibility='hidden';
+  allowDuplicatesDiv.style.visibility='hidden';
 
   $(enumerateDropdown).change(function() {
     if(this.value === endpoint.enumerate.ENUMERATE){
@@ -534,6 +543,7 @@ $('#enumerate-designs-tooltip').click(() => {
       maxLengthDiv.style.visibility = 'visible';
       minLengthDiv.style.visibility = 'visible';
       isSampleSpaceDiv.style.visibility='hidden';
+      allowDuplicatesDiv.style.visibility='visible';
     }
     if(this.value === endpoint.enumerate.SAMPLE){
       numDesignsDiv.style.visibility = 'visible';
@@ -541,6 +551,7 @@ $('#enumerate-designs-tooltip').click(() => {
       maxLengthDiv.style.visibility = 'visible';
       minLengthDiv.style.visibility = 'visible';
       isSampleSpaceDiv.style.visibility='visible';
+      allowDuplicatesDiv.style.visibility='hidden';
     }
     if(this.value === endpoint.enumerate.CREATESAMPLESPACE){
       numDesignsDiv.style.visibility = 'hidden';
@@ -548,6 +559,7 @@ $('#enumerate-designs-tooltip').click(() => {
       maxLengthDiv.style.visibility = 'hidden';
       minLengthDiv.style.visibility = 'hidden';
       isSampleSpaceDiv.style.visibility='hidden';
+      allowDuplicatesDiv.style.visibility='hidden';
     }
   });
 
@@ -566,6 +578,7 @@ $('#enumerate-designs-tooltip').click(() => {
       let minLength = minLengthInput.value;
       let isWeighted = isWeightedInput.value;
       let isSampleSpace = isSampleSpaceInput.value;
+      let allowDuplicates = allowDuplicatesInput.value;
 
       if (isSampleSpaceInput.checked) {
         isSampleSpace = "true";
@@ -577,6 +590,12 @@ $('#enumerate-designs-tooltip').click(() => {
         isWeighted = "true";
       } else {
         isWeighted = "false";
+      }
+
+      if (allowDuplicatesInput.checked) {
+        allowDuplicates = "true"
+      } else {
+        allowDuplicates = "false"
       }
 
       switch (enumerateDropdown.value) {
@@ -596,35 +615,78 @@ $('#enumerate-designs-tooltip').click(() => {
             content: div,
             className: "enumeration-swal"
           });
-          endpoint.enumerateDesigns(currentSpace, numDesigns, minLength, maxLength, isWeighted, (err, data) => {
-            if (err) {
-              swalError("Enumeration error: " + JSON.stringify(err));
-            } else {
-              div.removeChild(loadingDiv);
-              let para = document.createElement("p");
-              para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
-              para.appendChild(document.createElement('br'));
-              para.appendChild(document.createElement('br'));
-              data.map((list) => {
-                para.appendChild(document.createTextNode("["));
-                const length = list.length;
-                list.map((element, i) => {
-                  para.appendChild(document.createTextNode(splitElementID(element.id)));
-                  //append comma if there are more elements
-                  if (length !== i+1){
-                    para.appendChild(document.createTextNode(","));
-                  } else {
-                    para.appendChild(document.createTextNode(","));
-                    para.appendChild(document.createTextNode(element.average_weight));
-                  }
-                });
-                para.appendChild(document.createTextNode("]"));
+          if (allowDuplicates === "true") {
+            endpoint.enumerateDesignsList(currentSpace, numDesigns, minLength, maxLength, isWeighted, (err, data) => {
+              if (err) {
+                swalError("Enumeration error: " + JSON.stringify(err));
+              } else {
+                div.removeChild(loadingDiv);
+                let para = document.createElement("p");
+                para.appendChild(document.createTextNode("Allow Duplicates: True"))
                 para.appendChild(document.createElement('br'));
-              });
-        
-              div.appendChild(para);
-            }
-          });
+                para.appendChild(document.createTextNode("Number of Designs: " + data.length.toString()))
+                para.appendChild(document.createElement('br'));
+                para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
+                para.appendChild(document.createElement('br'));
+                para.appendChild(document.createElement('br'));
+                data.map((list) => {
+                  para.appendChild(document.createTextNode("["));
+                  const length = list.length;
+                  list.map((element, i) => {
+                    para.appendChild(document.createTextNode(splitElementID(element.id)));
+                    //append comma if there are more elements
+                    if (length !== i+1){
+                      para.appendChild(document.createTextNode(","));
+                    } else {
+                      para.appendChild(document.createTextNode(","));
+                      para.appendChild(document.createTextNode(element.average_weight));
+                    }
+                  });
+                  para.appendChild(document.createTextNode("]"));
+                  para.appendChild(document.createElement('br'));
+                });
+          
+                div.appendChild(para);
+              }
+            });
+
+          } else {
+            endpoint.enumerateDesignsSet(currentSpace, numDesigns, minLength, maxLength, isWeighted, (err, data) => {
+              if (err) {
+                swalError("Enumeration error: " + JSON.stringify(err));
+              } else {
+                div.removeChild(loadingDiv);
+                let para = document.createElement("p");
+                para.appendChild(document.createTextNode("Allow Duplicates: False"))
+                para.appendChild(document.createElement('br'));
+                para.appendChild(document.createTextNode("Number of Designs: " + data.length.toString()))
+                para.appendChild(document.createElement('br'));
+                para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
+                para.appendChild(document.createElement('br'));
+                para.appendChild(document.createElement('br'));
+                data.map((list) => {
+                  para.appendChild(document.createTextNode("["));
+                  const length = list.length;
+                  list.map((element, i) => {
+                    para.appendChild(document.createTextNode(splitElementID(element.id)));
+                    //append comma if there are more elements
+                    if (length !== i+1){
+                      para.appendChild(document.createTextNode(","));
+                    } else {
+                      para.appendChild(document.createTextNode(","));
+                      para.appendChild(document.createTextNode(element.average_weight));
+                    }
+                  });
+                  para.appendChild(document.createTextNode("]"));
+                  para.appendChild(document.createElement('br'));
+                });
+          
+                div.appendChild(para);
+              }
+            });
+            
+          }
+          
           break;
 
         case endpoint.enumerate.SAMPLE:
