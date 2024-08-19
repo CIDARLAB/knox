@@ -71,8 +71,8 @@ public class SBOLConversion {
 			JoinOperator.apply(inputSpace, outputSpace);
 
 			// Create version history for output design space - single branch and single commit that captures result of conversion
-			outputSpace.createHeadBranch(rootCV.getDisplayId());
-			outputSpace.commitToHead();
+			// outputSpace.createHeadBranch(rootCV.getDisplayId());
+			// outputSpace.commitToHead();
 			outputSpaces.add(outputSpace);
 		}
 
@@ -628,8 +628,8 @@ public class SBOLConversion {
 			outputSpace.shallowCopyNodeSpace(unionSpace);
 
 			// create version history
-			outputSpace.createHeadBranch(rootDef.getDisplayId());
-			outputSpace.commitToHead();
+			// outputSpace.createHeadBranch(rootDef.getDisplayId());
+			// outputSpace.commitToHead();
 
 			outputSpaces.add(outputSpace);
 		}
