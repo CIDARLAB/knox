@@ -402,8 +402,21 @@ public class DesignSampler {
 		List<List<Map<String, Object>>> comboDesigns = new LinkedList<List<Map<String, Object>>>();
 		
 		if (!edge.hasComponentIDs()) {
-			for (List<Map<String, Object>> design : designs) {
-				List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+			Map<String, Object> comp = new HashMap<String, Object>();
+			comp.put("id", "isBlank");
+			comp.put("weight", edge.getWeight().get(0));
+			if (!designs.isEmpty()) {
+				for (List<Map<String, Object>> design : designs) {
+					List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+
+					comboDesign.add(comp);
+
+					comboDesigns.add(comboDesign);
+				}
+			} else {
+				List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>();
+
+				comboDesign.add(comp);
 
 				comboDesigns.add(comboDesign);
 			}

@@ -542,7 +542,7 @@ $('#enumerate-designs-tooltip').click(() => {
       isWeightedDiv.style.visibility = 'visible';
       maxLengthDiv.style.visibility = 'visible';
       minLengthDiv.style.visibility = 'visible';
-      isSampleSpaceDiv.style.visibility='hidden';
+      isSampleSpaceDiv.style.visibility='visible';
       allowDuplicatesDiv.style.visibility='visible';
     }
     if(this.value === endpoint.enumerate.SAMPLE){
@@ -616,7 +616,7 @@ $('#enumerate-designs-tooltip').click(() => {
             className: "enumeration-swal"
           });
           if (allowDuplicates === "true") {
-            endpoint.enumerateDesignsList(currentSpace, numDesigns, minLength, maxLength, isWeighted, (err, data) => {
+            endpoint.enumerateDesignsList(currentSpace, numDesigns, minLength, maxLength, isWeighted, isSampleSpace, (err, data) => {
               if (err) {
                 swalError("Enumeration error: " + JSON.stringify(err));
               } else {
@@ -626,18 +626,35 @@ $('#enumerate-designs-tooltip').click(() => {
                 para.appendChild(document.createElement('br'));
                 para.appendChild(document.createTextNode("Number of Designs: " + data.length.toString()))
                 para.appendChild(document.createElement('br'));
-                para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
+                if (isSampleSpace === "true") {
+                  para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
+                } else if (isWeighted) {
+                  para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
+                } else {
+                  para.appendChild(document.createTextNode("[part1, part2, ..., partn]"))
+                }
                 para.appendChild(document.createElement('br'));
                 para.appendChild(document.createElement('br'));
                 data.map((list) => {
                   para.appendChild(document.createTextNode("["));
                   const length = list.length;
+                  let placedFirstPart = false;
                   list.map((element, i) => {
-                    para.appendChild(document.createTextNode(splitElementID(element.id)));
-                    //append comma if there are more elements
-                    if (length !== i+1){
+                    if (splitElementID(element.id) !== "isBlank") {
+
+                      if (placedFirstPart === true) {
+                        para.appendChild(document.createTextNode(","));
+                      } else {
+                        placedFirstPart = true;
+                      }
+                      para.appendChild(document.createTextNode(splitElementID(element.id)));
+                    }
+
+                    // append stats
+                    if (length === i+1 && isSampleSpace === "true"){
                       para.appendChild(document.createTextNode(","));
-                    } else {
+                      para.appendChild(document.createTextNode(element.probability));
+                    } else if (length === i+1 && isWeighted === "true") {
                       para.appendChild(document.createTextNode(","));
                       para.appendChild(document.createTextNode(element.average_weight));
                     }
@@ -651,7 +668,7 @@ $('#enumerate-designs-tooltip').click(() => {
             });
 
           } else {
-            endpoint.enumerateDesignsSet(currentSpace, numDesigns, minLength, maxLength, isWeighted, (err, data) => {
+            endpoint.enumerateDesignsSet(currentSpace, numDesigns, minLength, maxLength, isWeighted, isSampleSpace, (err, data) => {
               if (err) {
                 swalError("Enumeration error: " + JSON.stringify(err));
               } else {
@@ -661,18 +678,35 @@ $('#enumerate-designs-tooltip').click(() => {
                 para.appendChild(document.createElement('br'));
                 para.appendChild(document.createTextNode("Number of Designs: " + data.length.toString()))
                 para.appendChild(document.createElement('br'));
-                para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
+                if (isSampleSpace === "true") {
+                  para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
+                } else if (isWeighted === "true") {
+                  para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
+                } else {
+                  para.appendChild(document.createTextNode("[part1, part2, ..., partn]"))
+                }
                 para.appendChild(document.createElement('br'));
                 para.appendChild(document.createElement('br'));
                 data.map((list) => {
                   para.appendChild(document.createTextNode("["));
                   const length = list.length;
+                  let placedFirstPart = false;
                   list.map((element, i) => {
-                    para.appendChild(document.createTextNode(splitElementID(element.id)));
-                    //append comma if there are more elements
-                    if (length !== i+1){
+                    if (splitElementID(element.id) !== "isBlank") {
+
+                      if (placedFirstPart === true) {
+                        para.appendChild(document.createTextNode(","));
+                      } else {
+                        placedFirstPart = true;
+                      }
+                      para.appendChild(document.createTextNode(splitElementID(element.id)));
+                    }
+
+                    // append stats
+                    if (length === i+1 && isSampleSpace === "true"){
                       para.appendChild(document.createTextNode(","));
-                    } else {
+                      para.appendChild(document.createTextNode(element.probability));
+                    } else if (length === i+1 && isWeighted === "true") {
                       para.appendChild(document.createTextNode(","));
                       para.appendChild(document.createTextNode(element.average_weight));
                     }
