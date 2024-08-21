@@ -403,8 +403,11 @@ public class DesignSampler {
 		
 		if (!edge.hasComponentIDs()) {
 			Map<String, Object> comp = new HashMap<String, Object>();
-			comp.put("id", "isBlank");
-			comp.put("weight", edge.getWeight().get(0));
+			//comp.put("id", null);
+			if (!edge.getWeight().isEmpty()){
+				comp.put("weight", edge.getWeight().get(0));
+			}
+			comp.put("isBlank", "true");
 			if (!designs.isEmpty()) {
 				for (List<Map<String, Object>> design : designs) {
 					List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
@@ -433,6 +436,8 @@ public class DesignSampler {
 				comp.put("roles", componentIDstoRoles.get(compID));
 
 				comp.put("weight", componentIDstoWeights.get(compID));
+
+				comp.put("isBlank", "false");
 
 //				comp.put("orientation", edge.getOrientation());
 				comp.put("orientation", edge.getOrientation().getValue()); //does this need to be string?

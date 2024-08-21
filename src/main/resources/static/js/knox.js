@@ -640,7 +640,7 @@ $('#enumerate-designs-tooltip').click(() => {
                   const length = list.length;
                   let placedFirstPart = false;
                   list.map((element, i) => {
-                    if (splitElementID(element.id) !== "isBlank") {
+                    if (splitElementID(element.isBlank) !== "true") {
 
                       if (placedFirstPart === true) {
                         para.appendChild(document.createTextNode(","));
@@ -692,7 +692,7 @@ $('#enumerate-designs-tooltip').click(() => {
                   const length = list.length;
                   let placedFirstPart = false;
                   list.map((element, i) => {
-                    if (splitElementID(element.id) !== "isBlank") {
+                    if (splitElementID(element.isBlank) !== "true") {
 
                       if (placedFirstPart === true) {
                         para.appendChild(document.createTextNode(","));
