@@ -628,7 +628,7 @@ $('#enumerate-designs-tooltip').click(() => {
                 para.appendChild(document.createElement('br'));
                 if (isSampleSpace === "true") {
                   para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
-                } else if (isWeighted) {
+                } else if (isWeighted === "true") {
                   para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
                 } else {
                   para.appendChild(document.createTextNode("[part1, part2, ..., partn]"))
