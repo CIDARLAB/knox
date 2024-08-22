@@ -953,7 +953,7 @@ public class DesignSpaceService {
 				double total = 0.0;
 				double length = design.size();
 				for (Map<String,Object> element : design) {
-					if (element.get("id") == "isBlank") {
+					if (element.get("isBlank") == "true") {
 						length = length - 1.0;
 					} else {
 						total = total + (double) element.get("weight");
