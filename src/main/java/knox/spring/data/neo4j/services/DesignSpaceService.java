@@ -855,6 +855,7 @@ public class DesignSpaceService {
     }
 
     public void deleteDesignSpace(String targetSpaceID) {
+		System.out.println("\nDeleting Design Space: " + targetSpaceID + "\n");
         validateDesignSpaceOperator(targetSpaceID);
 
         designSpaceRepository.deleteDesignSpace(targetSpaceID);
