@@ -497,10 +497,6 @@ public class DesignSampler {
 				Edge edge = edgeStack.pop();
 				
 				designs = multiplyDesigns(designs, edge);
-
-				System.out.println("\nCurrent Number of Designs: ");
-				System.out.println(edge);
-				System.out.println(designs.size());
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
@@ -680,9 +676,6 @@ public class DesignSampler {
 				
 				designs = multiplyDesigns(designs, edge);
 
-				System.out.println("\nCurrent Number of Designs: ");
-				System.out.println(edge);
-				System.out.println(designs.size());
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
