@@ -887,6 +887,7 @@ public class DesignSpaceService {
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
+		System.out.println("\nBegin Enumeration\n");
         HashSet<List<Map<String, Object>>> samplerOutput = designSampler.enumerateSet(numDesigns, minLength, maxLength, enumerateType);
 
 		//System.out.println(samplerOutput);
@@ -945,6 +946,7 @@ public class DesignSpaceService {
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
+		System.out.println("\nBegin Enumeration\n");
         List<List<Map<String, Object>>> samplerOutput = designSampler.enumerateList(numDesigns, minLength, maxLength, enumerateType);
 
 		//System.out.println(samplerOutput);
