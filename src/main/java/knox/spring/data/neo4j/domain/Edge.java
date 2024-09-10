@@ -602,7 +602,7 @@ public class Edge {
         HashMap<String, String> componentIDstoRoles = new HashMap<String, String>();
 
         for (int i = 0; i < componentIDs.size(); i++) {
-            componentIDstoRoles.put(componentIDs.get(i), componentIDs.get(i));
+            componentIDstoRoles.put(componentIDs.get(i), componentRoles.get(i));
         }
 
         return componentIDstoRoles;
