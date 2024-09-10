@@ -271,20 +271,20 @@ public class DesignSampler {
 								 the specific component ids.
 	 */
 	public HashSet<List<Map<String, Object>>> enumerateSet(int numDesigns, int minLength, 
-			int maxLength, EnumerateType type) {
+			int maxLength, Boolean isSampleSpace, EnumerateType type) {
 		if (type == EnumerateType.BFS) {
-			return bfsEnumerateSet(numDesigns, minLength, maxLength);
+			return bfsEnumerateSet(numDesigns, minLength, maxLength, isSampleSpace);
 		} else {
-			return dfsEnumerateSet(numDesigns, minLength, maxLength);
+			return dfsEnumerateSet(numDesigns, minLength, maxLength, isSampleSpace);
 		}
 	}
 
 	public List<List<Map<String, Object>>> enumerateList(int numDesigns, int minLength, 
-			int maxLength, EnumerateType type) {
+			int maxLength, Boolean isSampleSpace, EnumerateType type) {
 		if (type == EnumerateType.BFS) {
-			return bfsEnumerateList(numDesigns, minLength, maxLength);
+			return bfsEnumerateList(numDesigns, minLength, maxLength, isSampleSpace);
 		} else {
-			return dfsEnumerateList(numDesigns, minLength, maxLength);
+			return dfsEnumerateList(numDesigns, minLength, maxLength, isSampleSpace);
 		}
 	}
 
@@ -397,7 +397,7 @@ public class DesignSampler {
 //		return allVisitedDesigns;
 //	}
 	
-	private List<List<Map<String, Object>>> multiplyDesigns(List<List<Map<String, Object>>> designs,
+	private List<List<Map<String, Object>>> multiplyDesignsSampleSpace(List<List<Map<String, Object>>> designs,
 			Edge edge) {
 		List<List<Map<String, Object>>> comboDesigns = new LinkedList<List<Map<String, Object>>>();
 		
@@ -462,8 +462,58 @@ public class DesignSampler {
 		
 		return comboDesigns;
 	}
+
+	private List<List<Map<String, Object>>> multiplyDesigns(List<List<Map<String, Object>>> designs,
+			Edge edge) {
+		List<List<Map<String, Object>>> comboDesigns = new LinkedList<List<Map<String, Object>>>();
+		
+		if (!edge.hasComponentIDs()) {
+			for (List<Map<String, Object>> design : designs) {
+				List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+
+				comboDesigns.add(comboDesign);
+			}
+		} else {
+
+			HashMap<String, Double> componentIDstoWeights = edge.componentIDtoWeight();
+			HashMap<String, String> componentIDstoRoles = edge.componentIDtoRole();
+
+			for (String compID : edge.getComponentIDs()) {
+				Map<String, Object> comp = new HashMap<String, Object>();
+
+				comp.put("id", compID);
+
+				comp.put("roles", componentIDstoRoles.get(compID));
+
+				comp.put("weight", componentIDstoWeights.get(compID));
+
+				comp.put("isBlank", "false");
+
+//				comp.put("orientation", edge.getOrientation());
+				comp.put("orientation", edge.getOrientation().getValue()); //does this need to be string?
+
+				if (!designs.isEmpty()) {
+					for (List<Map<String, Object>> design : designs) {
+						List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+
+						comboDesign.add(comp);
+
+						comboDesigns.add(comboDesign);
+					}
+				} else {
+					List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>();
+
+					comboDesign.add(comp);
+
+					comboDesigns.add(comboDesign);
+				}
+			}
+		}
+		
+		return comboDesigns;
+	}
 	
-	private HashSet<List<Map<String, Object>>> bfsEnumerateSet(int numDesigns, int minLength, int maxLength) {
+	private HashSet<List<Map<String, Object>>> bfsEnumerateSet(int numDesigns, int minLength, int maxLength, boolean isSampleSpace) {
 		HashSet<List<Map<String, Object>>> allDesigns = new HashSet<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -496,7 +546,11 @@ public class DesignSampler {
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
 				
-				designs = multiplyDesigns(designs, edge);
+				if (isSampleSpace) {
+					designs = multiplyDesignsSampleSpace(designs, edge);
+				} else {
+					designs = multiplyDesigns(designs, edge);
+				}
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
@@ -552,7 +606,7 @@ public class DesignSampler {
 		return allDesigns;
 	}
 	
-	private HashSet<List<Map<String, Object>>> dfsEnumerateSet(int numDesigns, int minLength, int maxLength) {
+	private HashSet<List<Map<String, Object>>> dfsEnumerateSet(int numDesigns, int minLength, int maxLength, Boolean isSampleSpace) {
 		HashSet<List<Map<String, Object>>> allDesigns = new HashSet<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -585,7 +639,11 @@ public class DesignSampler {
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
 				
-				designs = multiplyDesigns(designs, edge);
+				if (isSampleSpace) {
+					designs = multiplyDesignsSampleSpace(designs, edge);
+				} else {
+					designs = multiplyDesigns(designs, edge);
+				}
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
@@ -641,7 +699,7 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
-	private List<List<Map<String, Object>>> bfsEnumerateList(int numDesigns, int minLength, int maxLength) {
+	private List<List<Map<String, Object>>> bfsEnumerateList(int numDesigns, int minLength, int maxLength, Boolean isSampleSpace) {
 		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -674,7 +732,11 @@ public class DesignSampler {
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
 				
-				designs = multiplyDesigns(designs, edge);
+				if (isSampleSpace) {
+					designs = multiplyDesignsSampleSpace(designs, edge);
+				} else {
+					designs = multiplyDesigns(designs, edge);
+				}
 
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
@@ -731,7 +793,7 @@ public class DesignSampler {
 		return allDesigns;
 	}
 	
-	private List<List<Map<String, Object>>> dfsEnumerateList(int numDesigns, int minLength, int maxLength) {
+	private List<List<Map<String, Object>>> dfsEnumerateList(int numDesigns, int minLength, int maxLength, Boolean isSampleSpace) {
 		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -764,7 +826,11 @@ public class DesignSampler {
 			while (!edgeStack.isEmpty()) {
 				Edge edge = edgeStack.pop();
 				
-				designs = multiplyDesigns(designs, edge);
+				if (isSampleSpace) {
+					designs = multiplyDesignsSampleSpace(designs, edge);
+				} else {
+					designs = multiplyDesigns(designs, edge);
+				}
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
 					if (!designStack.isEmpty()) {
