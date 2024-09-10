@@ -456,6 +456,8 @@ public class DesignSpaceService {
 		List<BufferedReader> weightReaders = new LinkedList<BufferedReader>();
 
 		Boolean weightCSV = false;
+
+		Boolean multipleWeightsCSV = false;
     	
     	for (InputStream inputCSVStream : inputCSVStreams) {
     		try {
@@ -475,6 +477,9 @@ public class DesignSpaceService {
     					} else if (csvArray.get(0).equals("weight")) {
 							weightReaders.add(csvReader);
 							weightCSV = true;
+						} else if (csvArray.get(0).equals("multipleWeights")) {
+							weightReaders.add(csvReader);
+							multipleWeightsCSV = true;
 						}
     				}
     			}
@@ -520,12 +525,31 @@ public class DesignSpaceService {
     			}
     		}
     	}
+
+		// CSV to List (Multiple Weights)
+		List<List<String>> multipleWeights = new ArrayList<>();
+		if (multipleWeightsCSV) {
+			try {
+				multipleWeights = processCSVMultipleWeights(weightReaders.get(0));
+				
+			} catch (IOException e) {
+    			e.printStackTrace();
+    		} finally {
+    			try {
+    				if (weightReaders.get(0) != null) {
+    					weightReaders.get(0).close();
+    				}
+    			} catch (IOException ex) {
+    				ex.printStackTrace();
+    			}
+    		}
+    	}
 		
     	List<NodeSpace> csvSpaces = new LinkedList<NodeSpace>();
     	
     	for (BufferedReader designReader : designReaders) {
     		try {
-    			csvSpaces.addAll(processCSVDesigns(designReader, outputSpacePrefix, compIDToRole, weights, weightCSV));
+    			csvSpaces.addAll(processCSVDesigns(designReader, outputSpacePrefix, compIDToRole, weights, multipleWeights, weightCSV, multipleWeightsCSV));
     		} catch (IOException e) {
     			e.printStackTrace();
     		} finally {
@@ -555,7 +579,7 @@ public class DesignSpaceService {
     }
     
     public List<DesignSpace> processCSVDesigns(BufferedReader csvReader, String outputSpacePrefix, 
-    		HashMap<String, String> compIDToRole, List<String> defaultWeight, Boolean weightCSV) throws IOException {
+    		HashMap<String, String> compIDToRole, List<String> defaultWeight, List<List<String>> multipleWeights, Boolean weightCSV, Boolean multipleWeightsCSV) throws IOException {
     	List<DesignSpace> csvSpaces = new LinkedList<DesignSpace>();
     	
     	SequenceOntology so = new SequenceOntology();
@@ -579,46 +603,94 @@ public class DesignSpaceService {
 
 			ArrayList<Double> weight = new ArrayList<Double>(Arrays.asList(default_Weight));
 
-			if (csvArray.size() > 0 && csvArray.get(0).length() > 0) {
-				j++;
-				designNumber++;
+			if (multipleWeightsCSV) {
+				if (csvArray.size() > 0 && csvArray.get(0).length() > 0) {
+					j++;
+					designNumber++;
+	
+					DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + j);
+	
+					Node outputStart = outputSpace.createStartNode();
+	
+					Node outputPredecessor = outputStart;
+	
+					for (int i = 0; i < csvArray.size(); i++) {
+						if (csvArray.get(i).length() > 0) {
+							ArrayList<String> compIDs = new ArrayList<String>(1);
+	
+							compIDs.add(csvArray.get(i));
+	
+							ArrayList<String> compRoles = new ArrayList<String>(1);
+	
+							if (compIDToRole.containsKey(csvArray.get(i))) {
+								compRoles.add(compIDToRole.get(csvArray.get(i)));
+							} else {
+								compRoles.add(so.getName(SequenceOntology.SEQUENCE_FEATURE));
+							}
+							
+							Node outputNode;
+	
+							if (i < csvArray.size() - 1) {
+								outputNode = outputSpace.createNode();
+							} else {
+								outputNode = outputSpace.createAcceptNode();
+							}
 
-				DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + j);
-
-				Node outputStart = outputSpace.createStartNode();
-
-				Node outputPredecessor = outputStart;
-
-				for (int i = 0; i < csvArray.size(); i++) {
-					if (csvArray.get(i).length() > 0) {
-						ArrayList<String> compIDs = new ArrayList<String>(1);
-
-						compIDs.add(csvArray.get(i));
-
-						ArrayList<String> compRoles = new ArrayList<String>(1);
-
-						if (compIDToRole.containsKey(csvArray.get(i))) {
-							compRoles.add(compIDToRole.get(csvArray.get(i)));
-						} else {
-							compRoles.add(so.getName(SequenceOntology.SEQUENCE_FEATURE));
+							ArrayList<Double> edge_weight = new ArrayList<Double>(Arrays.asList(Double.parseDouble(multipleWeights.get(j).get(i))));
+	
+							outputPredecessor.createEdge(outputNode, compIDs, compRoles, Edge.Orientation.INLINE, edge_weight);
+	
+							outputPredecessor = outputNode;
 						}
-						
-						Node outputNode;
-
-						if (i < csvArray.size() - 1) {
-							outputNode = outputSpace.createNode();
-						} else {
-							outputNode = outputSpace.createAcceptNode();
-						}
-
-						outputPredecessor.createEdge(outputNode, compIDs, compRoles, Edge.Orientation.INLINE, weight);
-
-						outputPredecessor = outputNode;
 					}
+	
+					csvSpaces.add(outputSpace);
 				}
 
-				csvSpaces.add(outputSpace);
+			} else {
+				if (csvArray.size() > 0 && csvArray.get(0).length() > 0) {
+					j++;
+					designNumber++;
+	
+					DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + j);
+	
+					Node outputStart = outputSpace.createStartNode();
+	
+					Node outputPredecessor = outputStart;
+	
+					for (int i = 0; i < csvArray.size(); i++) {
+						if (csvArray.get(i).length() > 0) {
+							ArrayList<String> compIDs = new ArrayList<String>(1);
+	
+							compIDs.add(csvArray.get(i));
+	
+							ArrayList<String> compRoles = new ArrayList<String>(1);
+	
+							if (compIDToRole.containsKey(csvArray.get(i))) {
+								compRoles.add(compIDToRole.get(csvArray.get(i)));
+							} else {
+								compRoles.add(so.getName(SequenceOntology.SEQUENCE_FEATURE));
+							}
+							
+							Node outputNode;
+	
+							if (i < csvArray.size() - 1) {
+								outputNode = outputSpace.createNode();
+							} else {
+								outputNode = outputSpace.createAcceptNode();
+							}
+	
+							outputPredecessor.createEdge(outputNode, compIDs, compRoles, Edge.Orientation.INLINE, weight);
+	
+							outputPredecessor = outputNode;
+						}
+					}
+	
+					csvSpaces.add(outputSpace);
+				}
+
 			}
+			
 		}
 		
 		return csvSpaces;
@@ -653,6 +725,25 @@ public class DesignSpaceService {
 		}
 
 		return weights;
+	}
+
+	public List<List<String>> processCSVMultipleWeights(BufferedReader csvReader) throws IOException {
+		List<List<String>> MultipleWeights = new ArrayList<>();
+
+		String csvLine;
+		
+		while ((csvLine = csvReader.readLine()) != null) {
+			List<String> csvArray = csvToArrayList(csvLine);
+
+			List<String> weights = new ArrayList<String>();
+			for (String weight : csvArray) {
+				weights.add(weight);
+			}
+
+			MultipleWeights.add(weights);
+		}
+
+		return MultipleWeights;
 	}
 
 	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID)
