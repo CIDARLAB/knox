@@ -972,7 +972,7 @@ public class DesignSpaceService {
     }
     
     public HashSet<List<Map<String, Object>>> enumerateDesignSpaceSet(String targetSpaceID, 
-    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace) {
+    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
     	long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
@@ -1021,6 +1021,23 @@ public class DesignSpaceService {
 			}
 		}
 
+		// Print Designs
+		if (printDesigns){
+			int i = 0;
+			for (List<Map<String,Object>> design : samplerOutput) {
+				i++;
+				List<Object> design_parts = new ArrayList<>();
+				for (Map<String,Object> element : design) {
+					design_parts.add(element.get("id"));
+				}
+				System.out.println();
+				System.out.println(i);
+				System.out.println(design_parts);
+				
+			}
+		}
+	
+
 		System.out.println("\nEnumerated!");
 
         long endTime = System.nanoTime();
@@ -1031,7 +1048,7 @@ public class DesignSpaceService {
     }
 
 	public List<List<Map<String, Object>>> enumerateDesignSpaceList(String targetSpaceID, 
-    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace) {
+    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
     	long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
@@ -1077,6 +1094,22 @@ public class DesignSpaceService {
 
 				i++;
 				System.out.println(i);
+			}
+		}
+
+		// Print Designs
+		if (printDesigns){
+			int i = 0;
+			for (List<Map<String,Object>> design : samplerOutput) {
+				i++;
+				List<Object> design_parts = new ArrayList<>();
+				for (Map<String,Object> element : design) {
+					design_parts.add(element.get("id"));
+				}
+				System.out.println();
+				System.out.println(i);
+				System.out.println(design_parts);
+				
 			}
 		}
 
