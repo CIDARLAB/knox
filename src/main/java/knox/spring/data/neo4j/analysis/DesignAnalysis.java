@@ -244,16 +244,20 @@ public class DesignAnalysis {
 					data.put("totalScore", partAnalytics.get(compID).get("totalScore") + e.getWeight().get(i));
 
 					// update averageScore
-					data.put("totalScore", partAnalytics.get(compID).get("totalScore") / partAnalytics.get(compID).get("frequency"));
+					data.put("averageScore", partAnalytics.get(compID).get("totalScore") / partAnalytics.get(compID).get("frequency"));
 
 					// update lowScore
 					if (e.getWeight().get(i) < partAnalytics.get(compID).get("lowScore")) {
 						data.put("lowScore", e.getWeight().get(i));
+					} else {
+						data.put("lowScore", partAnalytics.get(compID).get("lowScore"));
 					}
 
 					// update highScore
 					if (e.getWeight().get(i) > partAnalytics.get(compID).get("highScore")) {
 						data.put("highScore", e.getWeight().get(i));
+					} else {
+						data.put("highScore", partAnalytics.get(compID).get("highScore"));
 					}
 
 					partAnalytics.replace(compID, data);
