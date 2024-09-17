@@ -856,7 +856,7 @@ public class KnoxController {
     }
 
 	@RequestMapping(value = "/designSpace/partAnalytics", method = RequestMethod.GET)
-    public Map<String, Map<String, Double>> partAnalytics(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+    public Map<String, Map<String, Object>> partAnalytics(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
         
         return designSpaceService.partAnalytics(targetSpaceID);
     }

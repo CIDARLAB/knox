@@ -1180,7 +1180,7 @@ public class DesignSpaceService {
         return bestPath;
     }
 
-	public Map<String, Map<String, Double>> partAnalytics(String targetSpaceID) {
+	public Map<String, Map<String, Object>> partAnalytics(String targetSpaceID) {
 
 		DesignSpace designSpace = loadDesignSpace(targetSpaceID);
 

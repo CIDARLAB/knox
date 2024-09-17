@@ -218,14 +218,14 @@ public class DesignAnalysis {
 		return this.bestPathScore;
 	}
 
-	public Map<String, Map<String, Double>> partAnalytics() {
-		Map<String, Map<String, Double>> partAnalytics = new HashMap<String, Map<String, Double>>();
+	public Map<String, Map<String, Object>> partAnalytics() {
+		Map<String, Map<String, Object>> partAnalytics = new HashMap<String, Map<String, Object>>();
 
 		for (Edge e : this.space.getEdges()) {
 
 			int i = 0;
 			for (String compID : e.getComponentIDs()) {
-				Map<String, Double> data = new HashMap<String,Double>();
+				Map<String, Object> data = new HashMap<String,Object>();
 				
 				if (!partAnalytics.containsKey(compID)) {
 					data.put("frequency", 1.0);
@@ -233,33 +233,44 @@ public class DesignAnalysis {
 					data.put("averageScore", e.getWeight().get(i));
 					data.put("lowScore", e.getWeight().get(i));
 					data.put("highScore", e.getWeight().get(i));
+
+					List<Double> weights = new ArrayList<Double>();
+					weights.add(e.getWeight().get(i));
+					data.put("weights", weights);
+
 					partAnalytics.put(compID, data);
 				
 				} else {
 
 					// update frequency
-					data.put("frequency", partAnalytics.get(compID).get("frequency") + 1.0);
+					data.put("frequency", Double.valueOf((Double) partAnalytics.get(compID).get("frequency")) + 1.0);
 
 					// update totalScore
-					data.put("totalScore", partAnalytics.get(compID).get("totalScore") + e.getWeight().get(i));
+					data.put("totalScore", Double.valueOf((Double) partAnalytics.get(compID).get("totalScore")) + e.getWeight().get(i));
 
 					// update averageScore
-					data.put("averageScore", partAnalytics.get(compID).get("totalScore") / partAnalytics.get(compID).get("frequency"));
+					data.put("averageScore", Double.valueOf((Double) partAnalytics.get(compID).get("totalScore")) / Double.valueOf((Double) partAnalytics.get(compID).get("frequency")));
 
 					// update lowScore
-					if (e.getWeight().get(i) < partAnalytics.get(compID).get("lowScore")) {
+					if (e.getWeight().get(i) < Double.valueOf((Double) partAnalytics.get(compID).get("lowScore"))) {
 						data.put("lowScore", e.getWeight().get(i));
 					} else {
 						data.put("lowScore", partAnalytics.get(compID).get("lowScore"));
 					}
 
 					// update highScore
-					if (e.getWeight().get(i) > partAnalytics.get(compID).get("highScore")) {
+					if (e.getWeight().get(i) > Double.valueOf((Double) partAnalytics.get(compID).get("highScore"))) {
 						data.put("highScore", e.getWeight().get(i));
 					} else {
 						data.put("highScore", partAnalytics.get(compID).get("highScore"));
 					}
 
+					// update weights
+					List<Double> weights = (List<Double>) partAnalytics.get(compID).get("weights");
+					weights.add(e.getWeight().get(i));
+					data.put("weights", weights);
+
+					// update partAnalytics
 					partAnalytics.replace(compID, data);
 				}
 
