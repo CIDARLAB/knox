@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   knox-db:
-    image: neo4j:3.4.1-enterprise
+    image: neo4j:3.5.5
     ports:
       - '7474:7474'
       - '7687:7687' # for bolt
