@@ -9,7 +9,7 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 public class MergeOperator {
 	
 	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, 
-			int tolerance, Set<String> roles) {
+			int tolerance, int weightTolerance, Set<String> roles) {
 		System.out.println("\nStarting Merge!");
 		System.out.println("tolerance: " + String.valueOf(tolerance));
 

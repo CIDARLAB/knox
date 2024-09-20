@@ -14,6 +14,8 @@ import java.util.Collections;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
+import javafx.geometry.Orientation;
+
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.RelationshipEntity;
@@ -361,7 +363,9 @@ public class Edge {
         return componentRoles != null && !componentRoles.isEmpty();
     }
     
-    public void intersectWithEdge(Edge edge, int tolerance) {
+    public void intersectWithEdge(Edge edge, Edge thisEdge,
+            HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace,
+            int tolerance, int weightTolerance, Boolean isStrongProduct) {
         
         // Map componentIDs to Weight
 
@@ -452,13 +456,33 @@ public class Edge {
         	}
         }
 
-        // Update Edge Weights (Sum Weights)
+        // Update Edge Weights
 
         ArrayList<Double> newWeights = new ArrayList<Double>();
 
         for (String ID : componentIDs) {
             if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
-                newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID));
+
+                if (isStrongProduct && (weightTolerance == 1 || weightTolerance == 2)){
+
+                    if (weightTolerance == 1) {
+                        if (thisEdge.distanceToAcceptNode() == edge.distanceToAcceptNode()) {
+                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights if at same position
+                        } else {
+                            newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights if at different position
+                        }
+
+                    } else if (weightTolerance == 2) {
+                        if (thisEdge.sameNextParts(edge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace)) {
+                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights if Edges upstream to same part
+                        } else {
+                            newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights if not
+                        }
+                    } 
+
+                } else {
+                    newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights (AND Operator)
+                }
 
             } else if (componentIDstoWeight.containsKey(ID)) {
                 newWeights.add(componentIDstoWeight.get(ID));
@@ -514,7 +538,7 @@ public class Edge {
 
         for (String ID : componentIDs) {
             if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
-                newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID));
+                newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2);  // average weights if they are different
 
             } else if (componentIDstoWeight.containsKey(ID)) {
                 newWeights.add(componentIDstoWeight.get(ID));
@@ -647,6 +671,68 @@ public class Edge {
             return tail.getNodeID() + " --> " + head.getNodeID();
         }
         
+    }
+
+    public Integer distanceToAcceptNode() {
+        Integer position = 0;
+
+        Node currentNode = head;
+
+        // dfs
+        if (!currentNode.isAcceptNode()) {
+            position = toAcceptNode(currentNode, position);
+        }
+
+        return position;
+    }
+
+    private Integer toAcceptNode(Node currentNode, Integer position) {
+        position++;
+
+        for (Edge e : currentNode.getEdges()) {
+            currentNode = e.getHead();
+
+            if (!currentNode.isAcceptNode()) {
+                position = toAcceptNode(currentNode, position);
+            } else {
+                return position;
+            }
+        }
+
+        return position;
+    }
+
+    private Boolean sameNextParts(Edge edge, 
+            HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace) {
+        Boolean same = false;
+        
+        // Check if edges have same down stream part
+        for (Edge nextEdge1 : head.getEdges()) {
+            for (Edge nextEdge2 : edge.getHead().getEdges()) {
+                
+                for (String compID : nextEdge2.getComponentIDs()) {
+                    if (nextEdge1.getComponentIDs().contains(compID)) {
+                        same = true;
+                        return same;
+                    }
+                }
+            }
+        }
+
+        // Check if edges have same up stream part
+        for (Edge prevEdge1 : tail.getIncomingEdges(nodeIDToIncomingEdgesColSpace)) {
+            for (Edge prevEdge2 : edge.getTail().getIncomingEdges(nodeIDToIncomingEdgesRowSpace)) {
+                
+                for (String compID : prevEdge2.getComponentIDs()) {
+                    if (prevEdge1.getComponentIDs().contains(compID)) {
+                        same = true;
+                        return same;
+                    }
+                }
+            }
+        }
+
+        return same;
     }
 
     public enum Orientation {

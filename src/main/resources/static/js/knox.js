@@ -952,6 +952,11 @@ $('#apply-operators-tooltip').click(() => {
   let toleranceDropdown = makeToleranceDropdown();
   makeDiv(tolDiv, toleranceDropdown, 'Tolerance: ');
 
+  //weight tolerance div
+  let weightTolDiv = document.createElement('div');
+  let weightToleranceDropdown = makeWeightToleranceDropdown();
+  makeDiv(weightTolDiv, weightToleranceDropdown, 'Weight Tolerance: ');
+
   //append all
   div.appendChild(inputDiv);
   div.appendChild(document.createElement('br'));
@@ -961,32 +966,40 @@ $('#apply-operators-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(tolDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(weightTolDiv);
+  div.appendChild(document.createElement('br'));
   div.appendChild(optDiv);
   div.appendChild(document.createElement('br'));
 
   tolDiv.style.visibility = 'hidden';
+  weightTolDiv.style.visibility = 'hidden';
   optDiv.style.visibility = 'hidden';
 
   $(operatorDropdown).change(function() {
     if(this.value === endpoint.operators.JOIN){
       tolDiv.style.visibility = 'hidden';
+      weightTolDiv.style.visibility = 'hidden';
       optDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.OR){
       tolDiv.style.visibility = 'hidden';
+      weightTolDiv.style.visibility = 'hidden';
       optDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.REPEAT){
       tolDiv.style.visibility = 'hidden';
+      weightTolDiv.style.visibility = 'hidden';
       optDiv.style.visibility = 'visible';
     }
     if(this.value === endpoint.operators.AND){
       tolDiv.style.visibility = 'visible';
+      weightTolDiv.style.visibility = 'hidden';
       optDiv.style.visibility = 'hidden';
       toleranceDropdown.value = 1;
     }
     if(this.value === endpoint.operators.MERGE){
       tolDiv.style.visibility = 'visible';
+      weightTolDiv.style.visibility = 'visible';
       optDiv.style.visibility = 'hidden';
       toleranceDropdown.value = 0;
     }
@@ -1009,6 +1022,7 @@ $('#apply-operators-tooltip').click(() => {
       let isOptional = optionalDropdown.value;
       let tolerance = toleranceDropdown.value;
       let isComplete = completeDropdown.value;
+      let weightTolerance = weightToleranceDropdown.value;
 
       switch (operatorDropdown.value) {
         case endpoint.operators.JOIN:
@@ -1028,7 +1042,7 @@ $('#apply-operators-tooltip').click(() => {
           break;
 
         case endpoint.operators.MERGE:
-          endpoint.designSpaceMerge(inputSpaces, outputSpace, tolerance);
+          endpoint.designSpaceMerge(inputSpaces, outputSpace, tolerance, weightTolerance);
           break;
       }
     }
@@ -1066,6 +1080,16 @@ function makeToleranceDropdown(){
   toleranceDropdown.appendChild(new Option("4"));
 
   return toleranceDropdown;
+}
+
+function makeWeightToleranceDropdown(){
+  let weightToleranceDropdown = document.createElement('select');
+  weightToleranceDropdown.setAttribute("id", "weight-tolerance-dropdown");
+  weightToleranceDropdown.appendChild(new Option("0", "0", true, true));
+  weightToleranceDropdown.appendChild(new Option("1"));
+  weightToleranceDropdown.appendChild(new Option("2"));
+
+  return weightToleranceDropdown;
 }
 
 function makeCompleteDropdown(){

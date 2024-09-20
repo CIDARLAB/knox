@@ -244,6 +244,10 @@ public class KnoxController {
 	 * roles. If tolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
 	 * labeled with the same orientation. If tolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
 	 * unioned.
+	 * @apiParam {Integer=0,1,2,3} weightTolerance=1 This parameter determines the criteria by which how to combine the weights of matched edges. 
+	 * If weightTolerance = 0, the weights are summed. 
+	 * If weightTolerance = 1, the weights are summed if their edges are the same distance to Start or Accept Node, otherwise they are averaged. 
+	 * If weightTolerance = 2, the weights are summed if their edges are next to the same part, otherwise they are averaged.
 	 * @apiParam {String[]} [roles] If specified, then only edges labeled with at least one of these roles will be merged.
 	 * 
 	 * @apiDescription Merges designs from input design spaces. Based on strong product of graphs.
@@ -254,6 +258,7 @@ public class KnoxController {
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
     		@RequestParam(value = "tolerance", required = false, defaultValue = "2") int tolerance,
+			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance,
     		@RequestParam(value = "isComplete", required = false, defaultValue = "false") boolean isComplete,
     		@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) { 	
 		Set<String> uniqueRoles = new HashSet<String>(roles);
@@ -261,9 +266,9 @@ public class KnoxController {
 		long startTime = System.nanoTime();
 		
 		if (outputBranchID == null) {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, uniqueRoles); 
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, tolerance, weightTolerance, uniqueRoles); 
     	} else {
-    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, tolerance, 
+    		designSpaceService.mergeBranches(targetSpaceID, inputBranchIDs, outputBranchID, weightTolerance, tolerance, 
     				uniqueRoles);
     	}
     	
@@ -516,6 +521,10 @@ public class KnoxController {
 	 * roles. If tolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
 	 * labeled with the same orientation. If tolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
 	 * unioned.
+	 * @apiParam {Integer=0,1,2,3} weightTolerance=1 This parameter determines the criteria by which how to combine the weights of matched edges. 
+	 * If weightTolerance = 0, the weights are summed. 
+	 * If weightTolerance = 1, the weights are summed if their edges are the same distance to Start or Accept Node, otherwise they are averaged. 
+	 * If weightTolerance = 2, the weights are summed if their edges are next to the same part, otherwise they are averaged.
 	 * @apiParam {String[]} [roles] If specified, then only edges labeled with at least one of these roles will be AND-ed.
 	 * 
 	 * @apiDescription Merges designs from input design spaces. Based on strong product of graphs.
@@ -525,6 +534,7 @@ public class KnoxController {
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
+			@RequestParam(value = "weightTolerance", required = false, defaultValue = "1") int weightTolerance,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
@@ -532,9 +542,9 @@ public class KnoxController {
 			long startTime = System.nanoTime();
 			
 			if (outputSpaceID == null) {
-				designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, uniqueRoles);
+				designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, weightTolerance, uniqueRoles);
 			} else {
-				designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, uniqueRoles);
+				designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, weightTolerance, uniqueRoles);
 			}
 			
 			return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged after " +
@@ -643,6 +653,8 @@ public class KnoxController {
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
     		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
     	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
+
+		int weightTolerance = 0;
     	
     	for (MultipartFile inputCSVFile : inputCSVFiles) {
     		if (!inputCSVFile.isEmpty()) {
@@ -655,14 +667,16 @@ public class KnoxController {
     		}
     	}
     	
-		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false, weight);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false, weight, weightTolerance);
 		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value = "/merge/csv", method = RequestMethod.POST)
     public ResponseEntity<String> mergeCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
+            @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix,
+			@RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight,
+			@RequestParam(value = "weightTolerance", defaultValue = "0", required = false) int weightTolerance) {
         List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
 
         for (MultipartFile inputCSVFile : inputCSVFiles) {
@@ -676,7 +690,7 @@ public class KnoxController {
             }
         }
 
-        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true, weight);
+        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true, weight, weightTolerance);
 
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }

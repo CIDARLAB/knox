@@ -342,11 +342,12 @@ export function designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete){
   }
 }
 
-export function designSpaceMerge(inputSpaces, outputSpace, tolerance){
+export function designSpaceMerge(inputSpaces, outputSpace, tolerance, weightTolerance){
   let query = "?";
   query += encodeQueryParameter("inputSpaceIDs", inputSpaces, query);
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
   query += encodeQueryParameter("tolerance", tolerance, query);
+  query += encodeQueryParameter("weightTolerance", weightTolerance, query);
 
   let request = new XMLHttpRequest();
   request.open("POST", endpoints.DESIGN + "/" + operators.MERGE + query, false);

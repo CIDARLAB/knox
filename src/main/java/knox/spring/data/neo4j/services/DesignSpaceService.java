@@ -286,13 +286,13 @@ public class DesignSpaceService {
         saveDesignSpace(targetSpace);
     }
 	
-	public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, Set<String> roles) 
+	public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, int weightTolerance, Set<String> roles) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
-		mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, roles);
+		mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, weightTolerance, roles);
     }
     
-    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance, 
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance, int weightTolerance,
     		Set<String> roles)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
@@ -303,7 +303,7 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-    	MergeOperator.apply(inputSpaces, outputSpace, tolerance, roles);
+    	MergeOperator.apply(inputSpaces, outputSpace, tolerance, weightTolerance, roles);
 //    	long endTime = System.nanoTime();
 //    	long duration = (endTime - startTime);
 //    	LOG.info("MERGE TIME: " + duration);
@@ -322,12 +322,12 @@ public class DesignSpaceService {
     }
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		int tolerance, Set<String> roles) {
-    	mergeBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, roles);
+    		int tolerance, int weightTolerance, Set<String> roles) {
+    	mergeBranches(targetSpaceID, inputBranchIDs, inputBranchIDs.get(0), tolerance, weightTolerance, roles);
     }
 
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
-    		String outputBranchID, int tolerance, Set<String> roles) {
+    		String outputBranchID, int tolerance, int weightTolerance, Set<String> roles) {
     	DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
     	
         List<Branch> inputBranches = new ArrayList<Branch>(inputBranchIDs.size());
@@ -340,7 +340,7 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, 
         		inputSnaps);
 
-        MergeOperator.apply(inputSnaps, outputSnap, tolerance, roles);
+        MergeOperator.apply(inputSnaps, outputSnap, tolerance, weightTolerance, roles);
         
         saveDesignSpace(targetSpace);
     }
@@ -448,7 +448,7 @@ public class DesignSpaceService {
     }
 
     public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix, 
-    		boolean isMerge, String weight) {
+    		boolean isMerge, String weight, int weightTolerance) {
     	List<BufferedReader> designReaders = new LinkedList<BufferedReader>();
     	
     	List<BufferedReader> compReaders = new LinkedList<BufferedReader>();
@@ -567,7 +567,7 @@ public class DesignSpaceService {
     		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix);
     		
     		if (isMerge) {
-    			MergeOperator.apply(csvSpaces, outputSpace, 1, new HashSet<String>());
+    			MergeOperator.apply(csvSpaces, outputSpace, 1, weightTolerance, new HashSet<String>());
 
     			saveDesignSpace(outputSpace);
     		} else {

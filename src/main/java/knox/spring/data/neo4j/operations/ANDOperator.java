@@ -22,9 +22,9 @@ public class ANDOperator {
 				
 		for (int i = 1; i < inputSpaces.size(); i++) {
 			if (isComplete) {
-				product.applyTensor(inputSpaces.get(i), tolerance, 2, roles);
+				product.applyTensor(inputSpaces.get(i), tolerance, 0, 2, roles);
 			} else {
-				product.applyTensor(inputSpaces.get(i), tolerance, 0, roles);
+				product.applyTensor(inputSpaces.get(i), tolerance, 0, 0, roles);
 			}
 			
 			product.getSpace().deleteBlankEdges(product.getSpace().getBlankEdges());
