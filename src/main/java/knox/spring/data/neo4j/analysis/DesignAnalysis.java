@@ -233,6 +233,7 @@ public class DesignAnalysis {
 					data.put("averageScore", e.getWeight().get(i));
 					data.put("lowScore", e.getWeight().get(i));
 					data.put("highScore", e.getWeight().get(i));
+					data.put("type", e.getComponentRoles().get(i));
 
 					List<Double> weights = new ArrayList<Double>();
 					weights.add(e.getWeight().get(i));
@@ -264,6 +265,9 @@ public class DesignAnalysis {
 					} else {
 						data.put("highScore", partAnalytics.get(compID).get("highScore"));
 					}
+
+					// update part type
+					data.put("type", e.getComponentRoles().get(i));
 
 					// update weights
 					List<Double> weights = (List<Double>) partAnalytics.get(compID).get("weights");
