@@ -12,11 +12,13 @@ public class MergeOperator {
 			int tolerance, int weightTolerance, Set<String> roles) {
 		System.out.println("\nStarting Merge!");
 		System.out.println("tolerance: " + String.valueOf(tolerance));
+		System.out.println("weight tolerance: " + String.valueOf(weightTolerance));
 
 		Product product = new Product(inputSpaces.get(0));
 
 		for (int i = 1; i < inputSpaces.size(); i++) {
-			List<Set<Edge>> blankEdges = product.applyModifiedStrong(inputSpaces.get(i), tolerance, roles);
+			System.out.println("Apply Modified Strong Running");
+			List<Set<Edge>> blankEdges = product.applyModifiedStrong(inputSpaces.get(i), tolerance, weightTolerance, roles);
 
 			for (int j = 0; j < blankEdges.size(); j++) {
 				product.getSpace().deleteBlankEdges(blankEdges.get(j));
