@@ -973,7 +973,7 @@ public class DesignSpaceService {
     
     public HashSet<List<Map<String, Object>>> enumerateDesignSpaceSet(String targetSpaceID, 
     		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
-    	long startTime = System.nanoTime();
+
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
@@ -981,7 +981,12 @@ public class DesignSpaceService {
 		System.out.println("\nBegin Enumeration\n");
         HashSet<List<Map<String, Object>>> samplerOutput = designSampler.enumerateSet(numDesigns, minLength, maxLength, isSampleSpace, enumerateType);
 
-		//System.out.println(samplerOutput);
+		return processEnumerateSet(samplerOutput, isWeighted, isSampleSpace, printDesigns);
+    }
+
+	private HashSet<List<Map<String, Object>>> processEnumerateSet(HashSet<List<Map<String, Object>>> samplerOutput, 
+			boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
+
 		if (isWeighted && !isSampleSpace) {
 			int i = 0;
 			for (List<Map<String,Object>> design : samplerOutput) {
@@ -1039,17 +1044,13 @@ public class DesignSpaceService {
 	
 
 		System.out.println("\nEnumerated!");
-
-        long endTime = System.nanoTime();
-    	long duration = (endTime - startTime);
-//    	LOG.info("ENUMERATE TIME: " + duration);
         
         return samplerOutput;
-    }
+	}
 
 	public List<List<Map<String, Object>>> enumerateDesignSpaceList(String targetSpaceID, 
     		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
-    	long startTime = System.nanoTime();
+
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
@@ -1057,7 +1058,12 @@ public class DesignSpaceService {
 		System.out.println("\nBegin Enumeration\n");
         List<List<Map<String, Object>>> samplerOutput = designSampler.enumerateList(numDesigns, minLength, maxLength, isSampleSpace, enumerateType);
 
-		//System.out.println(samplerOutput);
+		return processEnumerateList(samplerOutput, isWeighted, isSampleSpace, printDesigns);
+    }
+
+	private List<List<Map<String, Object>>> processEnumerateList(List<List<Map<String, Object>>> samplerOutput, 
+			boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
+
 		if (isWeighted && !isSampleSpace) {
 			int i = 0;
 			for (List<Map<String,Object>> design : samplerOutput) {
@@ -1112,15 +1118,12 @@ public class DesignSpaceService {
 				
 			}
 		}
+	
 
 		System.out.println("\nEnumerated!");
-
-        long endTime = System.nanoTime();
-    	long duration = (endTime - startTime);
-//    	LOG.info("ENUMERATE TIME: " + duration);
         
         return samplerOutput;
-    }
+	}
     
     public List<String> getGraphScore(String targetSpaceID) {
     	
