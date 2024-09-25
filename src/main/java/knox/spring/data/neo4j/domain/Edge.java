@@ -466,7 +466,7 @@ public class Edge {
                 if (isStrongProduct && (weightTolerance == 1 || weightTolerance == 2)){
 
                     if (weightTolerance == 1) {
-                        if (thisEdge.distanceToAcceptNode() == edge.distanceToAcceptNode()) {
+                        if ((thisEdge.distanceToAcceptNode() == edge.distanceToAcceptNode()) || (thisEdge.distanceToStartNode(nodeIDToIncomingEdgesColSpace) == edge.distanceToStartNode(nodeIDToIncomingEdgesRowSpace))) {
                             newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights if at same position
                         } else {
                             newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights if at different position
@@ -694,6 +694,35 @@ public class Edge {
 
             if (!currentNode.isAcceptNode()) {
                 position = toAcceptNode(currentNode, position);
+            } else {
+                return position;
+            }
+        }
+
+        return position;
+    }
+
+    public Integer distanceToStartNode(HashMap<String, Set<Edge>> nodeIDToIncomingEdges) {
+        Integer position = 0;
+
+        Node currentNode = tail;
+
+        // dfs
+        if (!currentNode.isStartNode()) {
+            position = toStartNode(nodeIDToIncomingEdges, currentNode, position);
+        }
+
+        return position;
+    }
+
+    private Integer toStartNode(HashMap<String, Set<Edge>> nodeIDToIncomingEdges, Node currentNode, Integer position) {
+        position++;
+
+        for (Edge e : currentNode.getIncomingEdges(nodeIDToIncomingEdges)) {
+            currentNode = e.getTail();
+
+            if (!currentNode.isStartNode()) {
+                position = toStartNode(nodeIDToIncomingEdges, currentNode, position);
             } else {
                 return position;
             }
