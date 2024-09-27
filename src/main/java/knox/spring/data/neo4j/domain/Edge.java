@@ -687,9 +687,12 @@ public class Edge {
     }
 
     private Integer toAcceptNode(Node currentNode, Integer position) {
-        position++;
 
         for (Edge e : currentNode.getEdges()) {
+            if (!e.isBlank()) {
+                position++;
+            }
+
             currentNode = e.getHead();
 
             if (!currentNode.isAcceptNode()) {
@@ -716,9 +719,12 @@ public class Edge {
     }
 
     private Integer toStartNode(HashMap<String, Set<Edge>> nodeIDToIncomingEdges, Node currentNode, Integer position) {
-        position++;
 
         for (Edge e : currentNode.getIncomingEdges(nodeIDToIncomingEdges)) {
+            if (!e.isBlank()) {
+                position++;
+            }
+
             currentNode = e.getTail();
 
             if (!currentNode.isStartNode()) {
@@ -731,37 +737,66 @@ public class Edge {
         return position;
     }
 
-    private Boolean sameNextParts(Edge edge, 
-            HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace) {
+    private Boolean sameNextParts(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace,
+            HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace) {
         Boolean same = false;
+        Set<String> compIDs = new HashSet<>();
         
         // Check if edges have same down stream part
-        for (Edge nextEdge1 : head.getEdges()) {
-            for (Edge nextEdge2 : edge.getHead().getEdges()) {
-                
-                for (String compID : nextEdge2.getComponentIDs()) {
-                    if (nextEdge1.getComponentIDs().contains(compID)) {
-                        same = true;
-                        return same;
-                    }
-                }
+        Set<String> compIDsHead1 = getNextPartsHead(compIDs);
+        Set<String> compIDsHead2 = edge.getNextPartsHead(compIDs);
+
+        for (String compID : compIDsHead2) {
+            if (compIDsHead1.contains(compID)) {
+                same = true;
+                return same;
             }
         }
 
         // Check if edges have same up stream part
-        for (Edge prevEdge1 : tail.getIncomingEdges(nodeIDToIncomingEdgesColSpace)) {
-            for (Edge prevEdge2 : edge.getTail().getIncomingEdges(nodeIDToIncomingEdgesRowSpace)) {
-                
-                for (String compID : prevEdge2.getComponentIDs()) {
-                    if (prevEdge1.getComponentIDs().contains(compID)) {
-                        same = true;
-                        return same;
-                    }
-                }
+        Set<String> compIDsTail1 = getNextPartsTail(compIDs, nodeIDToIncomingEdgesColSpace);
+        Set<String> compIDsTail2 = edge.getNextPartsTail(compIDs, nodeIDToIncomingEdgesRowSpace);
+
+        for (String compID : compIDsTail2) {
+            if (compIDsTail1.contains(compID)) {
+                same = true;
+                return same;
             }
         }
 
         return same;
+    }
+
+    private Set<String> getNextPartsHead(Set<String> compIDs){
+        for (Edge e : head.getEdges()) {
+            
+            if (e.isBlank()) {
+                compIDs = getNextPartsHead(compIDs);
+
+            } else {
+                compIDs.addAll(e.getComponentIDs());
+
+            }
+
+        }
+
+        return compIDs;
+    }
+
+    private Set<String> getNextPartsTail(Set<String> compIDs, HashMap<String, Set<Edge>> nodeIDToIncomingEdges){
+        for (Edge e : tail.getIncomingEdges(nodeIDToIncomingEdges)) {
+            
+            if (e.isBlank()) {
+                compIDs = getNextPartsTail(compIDs, nodeIDToIncomingEdges);
+
+            } else {
+                compIDs.addAll(e.getComponentIDs());
+
+            }
+
+        }
+
+        return compIDs;
     }
 
     public enum Orientation {
