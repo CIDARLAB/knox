@@ -457,28 +457,48 @@ public class Edge {
         }
 
         // Update Edge Weights
-
         ArrayList<Double> newWeights = new ArrayList<Double>();
+
+        Boolean weightToleranceResult = false;
+        if ((weightTolerance == 1) && isStrongProduct) {
+            // Check if edges in same position
+            if ((thisEdge.distanceToAcceptNode() == edge.distanceToAcceptNode()) || (thisEdge.distanceToStartNode(nodeIDToIncomingEdgesColSpace) == edge.distanceToStartNode(nodeIDToIncomingEdgesRowSpace))) {
+                weightToleranceResult = true;
+            } else {
+                weightToleranceResult = false;
+            }
+
+        } else if ((weightTolerance == 2) && isStrongProduct) {
+            // Check if edges next to same component
+            if (thisEdge.sameNextParts(edge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace)) {
+                weightToleranceResult = true;
+            } else {
+                weightToleranceResult = false;
+            }
+        }
 
         for (String ID : componentIDs) {
             if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
 
-                if (isStrongProduct && (weightTolerance == 1 || weightTolerance == 2)){
+                if (isStrongProduct){
 
                     if (weightTolerance == 1) {
-                        if ((thisEdge.distanceToAcceptNode() == edge.distanceToAcceptNode()) || (thisEdge.distanceToStartNode(nodeIDToIncomingEdgesColSpace) == edge.distanceToStartNode(nodeIDToIncomingEdgesRowSpace))) {
+                        if (weightToleranceResult) {
                             newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights if at same position
                         } else {
                             newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights if at different position
                         }
 
                     } else if (weightTolerance == 2) {
-                        if (thisEdge.sameNextParts(edge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace)) {
-                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights if Edges upstream to same part
+                        if (weightToleranceResult) {
+                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights if Edges directly upstream or downstream to same part
                         } else {
                             newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights if not
                         }
-                    } 
+                        
+                    } else {
+                        newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights
+                    }
 
                 } else {
                     newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights (AND Operator)
@@ -740,11 +760,14 @@ public class Edge {
     private Boolean sameNextParts(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace,
             HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace) {
         Boolean same = false;
-        Set<String> compIDs = new HashSet<>();
+        Set<String> compIDsHead1 = new HashSet<>();
+        Set<String> compIDsHead2 = new HashSet<>();
+        Set<String> compIDsTail1 = new HashSet<>();
+        Set<String> compIDsTail2 = new HashSet<>();
         
         // Check if edges have same down stream part
-        Set<String> compIDsHead1 = getNextPartsHead(compIDs);
-        Set<String> compIDsHead2 = edge.getNextPartsHead(compIDs);
+        compIDsHead1 = getNextPartsHead(compIDsHead1);
+        compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
 
         for (String compID : compIDsHead2) {
             if (compIDsHead1.contains(compID)) {
@@ -754,8 +777,8 @@ public class Edge {
         }
 
         // Check if edges have same up stream part
-        Set<String> compIDsTail1 = getNextPartsTail(compIDs, nodeIDToIncomingEdgesColSpace);
-        Set<String> compIDsTail2 = edge.getNextPartsTail(compIDs, nodeIDToIncomingEdgesRowSpace);
+        compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
+        compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
 
         for (String compID : compIDsTail2) {
             if (compIDsTail1.contains(compID)) {
