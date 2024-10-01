@@ -244,7 +244,7 @@ public class KnoxController {
 	 * roles. If tolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
 	 * labeled with the same orientation. If tolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
 	 * unioned.
-	 * @apiParam {Integer=0,1,2,3} weightTolerance=1 This parameter determines the criteria by which how to combine the weights of matched edges. 
+	 * @apiParam {Integer=0,1,2} weightTolerance=0 This parameter determines the criteria by which how to combine the weights of matched edges. 
 	 * If weightTolerance = 0, the weights are summed. 
 	 * If weightTolerance = 1, the weights are summed if their edges are the same distance to Start or Accept Node, otherwise they are averaged. 
 	 * If weightTolerance = 2, the weights are summed if their edges are next to the same part, otherwise they are averaged.
@@ -521,7 +521,7 @@ public class KnoxController {
 	 * roles. If tolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
 	 * labeled with the same orientation. If tolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
 	 * unioned.
-	 * @apiParam {Integer=0,1,2,3} weightTolerance=1 This parameter determines the criteria by which how to combine the weights of matched edges. 
+	 * @apiParam {Integer=0,1,2} weightTolerance=0 This parameter determines the criteria by which how to combine the weights of matched edges. 
 	 * If weightTolerance = 0, the weights are summed. 
 	 * If weightTolerance = 1, the weights are summed if their edges are the same distance to Start or Accept Node, otherwise they are averaged. 
 	 * If weightTolerance = 2, the weights are summed if their edges are next to the same part, otherwise they are averaged.
@@ -534,7 +534,7 @@ public class KnoxController {
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
-			@RequestParam(value = "weightTolerance", required = false, defaultValue = "1") int weightTolerance,
+			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
