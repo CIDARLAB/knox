@@ -748,6 +748,32 @@ public class KnoxController {
 		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
 	}
 
+	@RequestMapping(value = "/goldbarGen/generator", method = RequestMethod.POST)
+	public ResponseEntity<String> goldbarGenerator(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles, 
+			@RequestParam("rules") String rules, 
+			@RequestParam("lengths") String lengths,
+			@RequestParam("outputSpacePrefix") String OutputSpacePrefix) {
+		
+		System.out.println("Starting GOLDBAR Generator");
+		try {
+			InputStream inputCSVStream = inputCSVFiles.get(0).getInputStream();
+
+			String[] rulesArray = rules.split(",");
+			ArrayList<String> rulesList = new ArrayList<>(Arrays.asList(rulesArray));
+			System.out.println("Rules" + rulesList);
+
+			String[] lengthsArray = lengths.split(",");
+			ArrayList<String> lengthsList = new ArrayList<>(Arrays.asList(lengthsArray));
+			System.out.println("Lengths" + lengthsList);
+			
+			designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+	}
+
 	// LIST VER
 	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.GET)
 	public ResponseEntity<List<String>> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,

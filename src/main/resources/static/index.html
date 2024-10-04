@@ -131,6 +131,47 @@
           </datalist>
         <input type="submit" value="Import (MERGE)">
       </form>
+      <form id="goldbarForm" method="POST" enctype="multipart/form-data"
+            action="goldbarGen/generator" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <input type="file" name="inputCSVFiles[]" multiple>
+        <input type="text" name="rules" placeholder="rules, comma seperated"
+               class="form-control" aria-label="..." size="10">
+        <input type="text" name="lengths" placeholder="lengths, comma seperated"
+               class="form-control" aria-label="..." size="10">
+        <input type="text" name="outputSpacePrefix" placeholder="Space ID"
+               class="form-control" aria-label="..." size="10">
+        <input type="submit" value="GOLDBAR Generator">
+      </form>
+      <script>
+        document.getElementById('goldbarForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+          
+            // Gather form data
+            const formData = new FormData(this);
+            const rules = formData.get('rules');
+            const lengths = formData.get('lengths');
+            const outputSpacePrefix = formData.get('outputSpacePrefix');
+            const files = formData.getAll('inputCSVFiles[]').map(file => file.name).join(', ');
+
+            // Show SweetAlert confirmation
+            swal({
+                title: "Confirm GOLDBAR Generator Submission",
+                text: `Rules: ${rules}\nLengths: ${lengths}\nSpace ID: ${outputSpacePrefix}\nFiles: ${files}`,
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+            .then((willSubmit) => {
+                if (willSubmit) {
+                    // If the user confirms, submit the form
+                    this.submit();
+                    swal(`Search the explore page for submission with Prefix: ${outputSpacePrefix}`);
+                } else {
+                    swal("Your form submission was cancelled!");
+                }
+            });
+        });
+      </script>
     </div>
     <div id="Eugene" class="tab-pane fade">
       <form method="POST" enctype="multipart/form-data"

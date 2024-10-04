@@ -27,12 +27,23 @@ import knox.spring.data.neo4j.repositories.SnapshotRepository;
 import knox.spring.data.neo4j.sample.DesignSampler;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
+import knox.spring.data.neo4j.goldbar.GoldbarGeneration;
 
 import knox.spring.data.neo4j.sbol.SBOLGeneration;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.util.EntityUtils;
+import org.neo4j.ogm.json.JSONObject;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLValidationException;
 import org.sbolstandard.core2.SequenceOntology;
 import org.sbolstandard.core2.SBOLDocument;
+import org.sbolstandard.core2.SBOLReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -761,6 +772,44 @@ public class DesignSpaceService {
 		}
 
 	}
+
+	public DesignSpace importSBOL(String sbolString, Boolean save)
+			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
+		
+		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
+		SBOLDocument sbolDocument = new SBOLDocument();
+
+		InputStream sbolStream = org.apache.commons.io.IOUtils.toInputStream(sbolString, "UTF-8");
+		
+		try {
+			sbolDocument = SBOLReader.read(sbolStream);
+			sbolDocs.add(sbolDocument);
+
+		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+			e.printStackTrace();
+		}
+
+		SBOLConversion sbolConv = new SBOLConversion();
+
+		sbolConv.setSbolDoc(sbolDocs);
+
+		List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
+
+		DesignSpace output = new DesignSpace();
+		for (DesignSpace outputSpace: outputSpaces){
+			correctComponentIds(outputSpace);
+			//outputSpace.splitEdges();
+
+			if (save) {
+				saveDesignSpace(outputSpace);
+			}
+
+			output = outputSpace;
+		}
+		
+		return output;
+
+	}
   
 	public List<String> exportCombinatorial(String targetSpaceID, String namespace)
 			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException, URISyntaxException {
@@ -790,6 +839,197 @@ public class DesignSpaceService {
 		}
 
 		//designSpace.printAllEdges();
+	}
+
+	public ArrayList<String> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, ArrayList<String> lengths, String outputSpacePrefix) {
+		ArrayList<String> goldbarAndCategories = new ArrayList<>();
+
+		GoldbarGeneration goldbarGeneration = new GoldbarGeneration(rules, inputCSVStream);
+
+		String spacePrefix;
+		Map<String, ArrayList<String>> d = new HashMap<>();
+		if (rules.contains("R")) {
+			d = goldbarGeneration.createRuleR();
+
+			for (String key : d.keySet()) {
+				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_R";
+
+				List<NodeSpace> spaces = new ArrayList<>();
+
+				for (String goldbar : d.get(key)) {
+					
+					try {
+						spaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false));
+					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+						e.printStackTrace();
+					}
+				}
+
+				DesignSpace outputSpace = new DesignSpace(spacePrefix);
+				OROperator.apply(spaces, outputSpace);
+
+				saveDesignSpace(outputSpace);
+			}
+		}
+
+		Map<String, String> g = new HashMap<>();
+		if (rules.contains("I")) {
+			g = goldbarGeneration.createRuleI();
+
+			for (String key : g.keySet()) {
+				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_I";
+				try {
+					importSBOL(constellationGoldbarRequest(spacePrefix, g.get(key), goldbarGeneration.getCategoriesString()), true);
+				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		if (rules.contains("M")) {
+			g = goldbarGeneration.createRuleM();
+
+			for (String key : g.keySet()) {
+				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_M";
+				try {
+					importSBOL(constellationGoldbarRequest(spacePrefix, g.get(key), goldbarGeneration.getCategoriesString()), true);
+				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		if (rules.contains("O")) {
+			g = goldbarGeneration.createRuleO();
+
+			for (String key : g.keySet()) {
+				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_O";
+				try {
+					importSBOL(constellationGoldbarRequest(spacePrefix, g.get(key), goldbarGeneration.getCategoriesString()), true);
+				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		if (rules.contains("N")) {
+			g = goldbarGeneration.createRuleN(lengths);
+
+			for (String key : g.keySet()) {
+				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_N";
+				try {
+					importSBOL(constellationGoldbarRequest(spacePrefix, g.get(key), goldbarGeneration.getCategoriesString()), true);
+				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		String s = "";
+		if (rules.contains("L")) {
+			s = goldbarGeneration.createRuleL();
+
+			spacePrefix = outputSpacePrefix + "_Rule_L";
+			try {
+				importSBOL(constellationGoldbarRequest(spacePrefix, s, goldbarGeneration.getCategoriesString()), true);
+			} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (rules.contains("P")) {
+			s = goldbarGeneration.createRuleP();
+
+			spacePrefix = outputSpacePrefix + "_Rule_P";
+			try {
+				importSBOL(constellationGoldbarRequest(spacePrefix, s, goldbarGeneration.getCategoriesString()), true);
+			} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (rules.contains("T")) {
+			d = goldbarGeneration.createRuleT();
+
+			for (String key : d.keySet()) {
+				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_T";
+
+				List<NodeSpace> spaces = new ArrayList<>();
+
+				for (String goldbar : d.get(key)) {
+					
+					try {
+						spaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false));
+					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+						e.printStackTrace();
+					}
+				}
+
+				DesignSpace outputSpace = new DesignSpace(spacePrefix);
+				OROperator.apply(spaces, outputSpace);
+
+				saveDesignSpace(outputSpace);
+			}
+
+		}
+
+		
+		goldbarAndCategories = goldbarGeneration.getGoldbar();
+		goldbarAndCategories.add(goldbarGeneration.getCategoriesString());
+
+		for (String str : goldbarGeneration.getGoldbar()) {
+			System.out.println(str + "\n");
+		}
+
+		return goldbarAndCategories;
+	}
+
+	private String constellationGoldbarRequest(String OutputSpacePrefix, String goldbar, String categories) {
+		
+		String responseBody = "Error";
+
+		try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+			// Create the POST request
+            HttpPost postRequest = new HttpPost("http://localhost:8082/postSpecs");
+            postRequest.setHeader("Content-Type", "application/json");
+
+			String parameters = String.format(
+				"{" +
+				"\"designName\":" + "\"%1$s\"," +
+				"\"specification\":" + "\"%2$s\"," +
+				"\"categories\":" + "%3$s," +
+				"\"numDesigns\":" + "\"1\"," +
+				"\"maxCycles\":" + "\"1\"," +
+				"\"number\":" + "\"2.0\"," +
+				"\"name\":" + "\"specificationname\"," +
+				"\"clientid\":" + "\"userid\"," +
+				"\"representation\":" + "\"EDGE\"" +
+			    "}",
+				 OutputSpacePrefix, goldbar, categories);
+
+			System.out.println(parameters);
+
+			postRequest.setEntity(new StringEntity(parameters));
+
+			try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
+                // Handle the response
+                responseBody = EntityUtils.toString(response.getEntity());
+                System.out.println("Status code: " + response.getStatusLine().getStatusCode());
+                System.out.println("Response body: " + responseBody);
+
+				// Parse the JSON response and extract the "sbol" portion
+                JSONObject jsonResponse = new JSONObject(responseBody);
+                if (jsonResponse.has("sbol")) {
+                    return jsonResponse.getString("sbol");
+                } else {
+                    return "SBOL not found in response";
+                }
+            }
+		}  catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return responseBody;
 	}
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
