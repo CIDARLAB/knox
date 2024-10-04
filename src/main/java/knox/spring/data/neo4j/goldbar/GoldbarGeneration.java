@@ -265,9 +265,10 @@ public class GoldbarGeneration {
         // if part is present, then part is present once
 
         Map<String, ArrayList<String>> rGoldbar = new HashMap<>();
-        ArrayList<String> rgol = new ArrayList<>();
 
         for (String part : this.columnValues.get("R")) {
+
+            ArrayList<String> rgol = new ArrayList<>();
 
             String g = String.format(
                 "(zero-or-more(any_except_%1$s) then %1$s then zero-or-more(any_except_%1$s))", 
@@ -383,7 +384,7 @@ public class GoldbarGeneration {
 
         for (String part : this.columnValues.get("M")) {
             String g = String.format(
-                "(zero-or-more(any_except_%1$s) then %1$s then zero-or-more(any_except_%1$s))", 
+                "zero-or-more(any_except_%1$s or %1$s) then %1$s then zero-or-more(any_except_%1$s)", 
                 part
             );
 
@@ -394,7 +395,7 @@ public class GoldbarGeneration {
         return mGoldbar;
     }
 
-    public Map<String, String> createRuleO() {
+    public Map<String, ArrayList<String>> createRuleO() {
         /* Not Orthogonal Rule
         if part1 is present, then part2 is not
         (Converse is true)
@@ -404,9 +405,11 @@ public class GoldbarGeneration {
         multiplePartsCategory("O");
 
         // goldbar
-        Map<String, String> oGoldbar = new HashMap<>();
+        Map<String, ArrayList<String>> oGoldbar = new HashMap<>();
         for (String data : this.columnValues.get("O")) {
             // data example = "PP1andPP2:P1andP2"
+
+            ArrayList<String> ogol = new ArrayList<>();
 
             String[] dataSplit = data.split(":");
 
@@ -415,12 +418,25 @@ public class GoldbarGeneration {
             String key = String.join("_", dataSplit);
 
             String g = String.format(
-                "zero-or-more(any_except_%3$s) or " +
-                "zero-or-more(any_except_%2$s) or " +
-                "zero-or-more(any_except_%1$s)", 
+                "zero-or-more(any_except_%3$s)", 
                 dataSplit[0], dataSplit[1], name
             );
-            oGoldbar.put(key, g);
+            ogol.add(g);
+
+            g = String.format(
+                "zero-or-more(any_except_%3$s or %1$s) then %1$s then zero-or-more(any_except_%3$s)", 
+                dataSplit[0], dataSplit[1], name
+            );
+            ogol.add(g);
+
+            g = String.format(
+                "zero-or-more(any_except_%3$s or %2$s) then %2$s then zero-or-more(any_except_%3$s)", 
+                dataSplit[0], dataSplit[1], name
+            );
+            ogol.add(g);
+
+
+            oGoldbar.put(key, ogol);
             this.goldbar.add(g);
 
         }

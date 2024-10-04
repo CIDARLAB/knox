@@ -900,15 +900,26 @@ public class DesignSpaceService {
 		}
 
 		if (rules.contains("O")) {
-			g = goldbarGeneration.createRuleO();
+			d = goldbarGeneration.createRuleO();
 
-			for (String key : g.keySet()) {
+			for (String key : d.keySet()) {
 				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_O";
-				try {
-					importSBOL(constellationGoldbarRequest(spacePrefix, g.get(key), goldbarGeneration.getCategoriesString()), true);
-				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-					e.printStackTrace();
+
+				List<NodeSpace> spaces = new ArrayList<>();
+
+				for (String goldbar : d.get(key)) {
+					
+					try {
+						spaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false));
+					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+						e.printStackTrace();
+					}
 				}
+
+				DesignSpace outputSpace = new DesignSpace(spacePrefix);
+				OROperator.apply(spaces, outputSpace);
+
+				saveDesignSpace(outputSpace);
 			}
 		}
 
