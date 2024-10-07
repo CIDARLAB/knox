@@ -104,6 +104,7 @@
 <section id="import">
   <ul class="nav nav-pills nav-justified">
     <li class="active"><a data-toggle="pill" href="#CSV">CSV</a></li>
+    <li><a data-toggle="pill" href="#GENERATOR">GOLDBAR</a></li>
     <li><a data-toggle="pill" href="#Eugene">Eugene</a></li>
     <li><a data-toggle="pill" href="#SBOL">SBOL</a></li>
   </ul>
@@ -131,6 +132,8 @@
           </datalist>
         <input type="submit" value="Import (MERGE)">
       </form>
+    </div>
+    <div id="GENERATOR" class="tab-pane fade">
       <form id="goldbarForm" method="POST" enctype="multipart/form-data"
             action="goldbarGen/generator" class="navbar-form navbar-left" ng-show="isCSVMode">
         <input type="file" name="inputCSVFiles[]" multiple>
