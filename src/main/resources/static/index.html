@@ -167,8 +167,27 @@
             .then((willSubmit) => {
                 if (willSubmit) {
                     // If the user confirms, submit the form
-                    this.submit();
-                    swal(`Search the explore page for submission with Prefix: ${outputSpacePrefix}`);
+                    fetch('goldbarGen/generator', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Display the data from the POST request
+
+                        swal({
+                            title: "GOLDBAR and Categories",
+                            text: `GOLDBAR:\n${data.goldbar}\n\nCategories:\n${data.categories}`,
+                            icon: "success",
+                        });
+                    })
+                    .catch(error => {
+                        swal({
+                            title: "Error",
+                            text: `Submission failed: ${error}`,
+                            icon: "error",
+                        });
+                    });
                 } else {
                     swal("Your form submission was cancelled!");
                 }

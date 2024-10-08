@@ -749,10 +749,10 @@ public class KnoxController {
 	}
 
 	@RequestMapping(value = "/goldbarGen/generator", method = RequestMethod.POST)
-	public ResponseEntity<String> goldbarGenerator(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles, 
-			@RequestParam("rules") String rules, 
-			@RequestParam("lengths") String lengths,
-			@RequestParam("outputSpacePrefix") String OutputSpacePrefix) {
+	public Map<String, String> goldbarGenerator(@RequestParam(value = "inputCSVFiles[]", required = true) List<MultipartFile> inputCSVFiles, 
+			@RequestParam(value = "rules", required = false) String rules, 
+			@RequestParam(value = "lengths", required = false) String lengths,
+			@RequestParam(value = "outputSpacePrefix", required = false) String OutputSpacePrefix) {
 		
 		System.out.println("Starting GOLDBAR Generator");
 		try {
@@ -766,12 +766,12 @@ public class KnoxController {
 			ArrayList<String> lengthsList = new ArrayList<>(Arrays.asList(lengthsArray));
 			System.out.println("Lengths" + lengthsList);
 			
-			designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix);
+			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+		return new HashMap<>();
 	}
 
 	// LIST VER

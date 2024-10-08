@@ -33,6 +33,7 @@ import knox.spring.data.neo4j.sbol.SBOLGeneration;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.util.EntityUtils;
+import org.neo4j.ogm.json.JSONException;
 import org.neo4j.ogm.json.JSONObject;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -841,8 +842,8 @@ public class DesignSpaceService {
 		//designSpace.printAllEdges();
 	}
 
-	public ArrayList<String> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, ArrayList<String> lengths, String outputSpacePrefix) {
-		ArrayList<String> goldbarAndCategories = new ArrayList<>();
+	public Map<String, String> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, ArrayList<String> lengths, String outputSpacePrefix) {
+		Map<String, String> goldbarAndCategories = new HashMap<>();
 
 		GoldbarGeneration goldbarGeneration = new GoldbarGeneration(rules, inputCSVStream);
 
@@ -985,12 +986,18 @@ public class DesignSpaceService {
 		}
 
 		
-		goldbarAndCategories = goldbarGeneration.getGoldbar();
-		goldbarAndCategories.add(goldbarGeneration.getCategoriesString());
+		goldbarAndCategories.put("goldbar", goldbarGeneration.getGoldbarString());
+		goldbarAndCategories.put("categories", goldbarGeneration.getCategoriesString());
 
-		for (String str : goldbarGeneration.getGoldbar()) {
-			System.out.println(str + "\n");
+		for (int i = 0; i < goldbarGeneration.getGoldbar().length(); i++) {
+			try {
+				System.out.println(goldbarGeneration.getGoldbar().getString(i) + "\n");
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
 		}
+
+		System.out.println(goldbarGeneration.getCategoriesString());
 
 		return goldbarAndCategories;
 	}

@@ -20,7 +20,7 @@ import org.neo4j.ogm.json.JSONException;
 
 public class GoldbarGeneration {
     
-    ArrayList<String> goldbar;
+    JSONArray goldbar;
 
     JSONObject categories;
 
@@ -41,7 +41,7 @@ public class GoldbarGeneration {
     Map<String, ArrayList<String>> columnValues;
 
     public GoldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream) {
-        this.goldbar = new ArrayList<String>();
+        this.goldbar = new JSONArray();
         
         this.categories = new JSONObject();
 
@@ -270,19 +270,19 @@ public class GoldbarGeneration {
 
             ArrayList<String> rgol = new ArrayList<>();
 
-            String g = String.format(
+            String g1 = String.format(
                 "(zero-or-more(any_except_%1$s) then %1$s then zero-or-more(any_except_%1$s))", 
                 part
             );
-            rgol.add(g);
+            rgol.add(g1);
 
-            g = String.format(
+            String g2 = String.format(
                 "(zero-or-more(any_except_%1$s))", 
                 part
             );
-            rgol.add(g);
+            rgol.add(g2);
 
-            this.goldbar.add(g);
+            this.goldbar.put(g1 + " or " + g2);
             rGoldbar.put(part, rgol);
         }
 
@@ -338,7 +338,7 @@ public class GoldbarGeneration {
 
             tGoldbar.put(key, tbar);
 
-            goldbar.add(g1 + " or " + g2 + " or " + g3);
+            goldbar.put(g1 + " or " + g2 + " or " + g3);
 
         }
     
@@ -372,7 +372,7 @@ public class GoldbarGeneration {
                 dataSplit[0], name
             );
             pjiGoldbar.put(key, g);
-            this.goldbar.add(g);
+            this.goldbar.put(g);
 
         }
     
@@ -389,7 +389,7 @@ public class GoldbarGeneration {
             );
 
             mGoldbar.put(part, g);
-            this.goldbar.add(g);
+            this.goldbar.put(g);
         }
 
         return mGoldbar;
@@ -417,27 +417,27 @@ public class GoldbarGeneration {
 
             String key = String.join("_", dataSplit);
 
-            String g = String.format(
+            String g1 = String.format(
                 "zero-or-more(any_except_%3$s)", 
                 dataSplit[0], dataSplit[1], name
             );
-            ogol.add(g);
+            ogol.add(g1);
 
-            g = String.format(
+            String g2 = String.format(
                 "zero-or-more(any_except_%3$s or %1$s) then %1$s then zero-or-more(any_except_%3$s)", 
                 dataSplit[0], dataSplit[1], name
             );
-            ogol.add(g);
+            ogol.add(g2);
 
-            g = String.format(
+            String g3 = String.format(
                 "zero-or-more(any_except_%3$s or %2$s) then %2$s then zero-or-more(any_except_%3$s)", 
                 dataSplit[0], dataSplit[1], name
             );
-            ogol.add(g);
+            ogol.add(g3);
 
 
             oGoldbar.put(key, ogol);
-            this.goldbar.add(g);
+            this.goldbar.put(g1 + " or " + g2 + " or " + g3);
 
         }
     
@@ -458,6 +458,8 @@ public class GoldbarGeneration {
             g = g + "any_part_concrete";
 
             nGoldbar.put(length, g);
+
+            this.goldbar.put(g);
         }
 
         return nGoldbar;
@@ -499,7 +501,7 @@ public class GoldbarGeneration {
         // goldbar
         String g = "(zero-or-more(any_except_terminator_leaky) then zero-or-one(terminator_any))";
 
-        goldbar.add(g);
+        this.goldbar.put(g);
 
         return g;
     }
@@ -577,7 +579,7 @@ public class GoldbarGeneration {
         String g = "zero-or-more((any_except_roadBlockingPromoter then any_except_roadBlockingPromoter) " +
                    "or (promoter_any then any_except_roadBlockingPromoter))";
 
-        goldbar.add(g);
+        this.goldbar.put(g);
 
         return g;
     }
@@ -674,8 +676,12 @@ public class GoldbarGeneration {
         }
     }
 
-    public ArrayList<String> getGoldbar() {
+    public JSONArray getGoldbar() {
         return this.goldbar;
+    }
+
+    public String getGoldbarString() {
+        return this.goldbar.toString();
     }
 
     public JSONObject getCategories() {
