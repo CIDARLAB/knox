@@ -134,6 +134,23 @@
       </form>
     </div>
     <div id="GENERATOR" class="tab-pane fade">
+      <div class="goldbar-generator-description">
+        <p>The GOLDBAR Generator allows you to quickly create design spaces from a set of known biological principles</p>
+        <p>Available Part Types: "promoter", "ribosomeBindingSite", "cds", "terminator"
+          <br>Use Part Type as column header and fill in rows below with part IDs, One part ID per row.
+        </p>
+        <p>Lengths: (Comma Seperated Integers greater or equal to 1)</p>
+        <p>Available Rules (Seperate Rules with comma):
+          <br>"R" : Do not repeat part. 
+          <br>"T" : Part1 and Part2 must be in same design. 
+          <br>"I" : Part1 can not be directly upstream of Part2
+          <br>"O" : Part1 and Part2 can not be in same design. 
+          <br>"M" : Part must be included. 
+          <br>"P" : No Promoter Road Blocking.
+          <br>"L" : Leaky Terminators can only appear at end of design.
+        </p>
+      </div>
+
       <form id="goldbarForm" method="POST" enctype="multipart/form-data"
             action="goldbarGen/generator" class="navbar-form navbar-left" ng-show="isCSVMode">
         <input type="file" name="inputCSVFiles[]" multiple>
