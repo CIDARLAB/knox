@@ -359,9 +359,10 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance, weightTole
   }
 }
 
-export function importGoldbarSBOL(sbolDoc){
+export function importGoldbarSBOL(sbolDoc, weight){
   let query = "?"
   query += encodeQueryParameter("sbolDoc", sbolDoc, query)
+  query += encodeQueryParameter("weight", weight, query)
 
   let request = new XMLHttpRequest();
   request.open("POST", endpoints.GOLDBAR + query, false);

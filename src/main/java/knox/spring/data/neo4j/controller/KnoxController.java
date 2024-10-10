@@ -697,7 +697,8 @@ public class KnoxController {
 
     @RequestMapping(value = "/sbol/import", method = RequestMethod.POST)
     public ResponseEntity<String> importSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
-    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+    		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "weight", required = false, defaultValue = "0.0") Double weight) {
     	List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
     	
     	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
@@ -712,7 +713,7 @@ public class KnoxController {
     	}
     	
     	try {
-			designSpaceService.importSBOL(sbolDocs, outputSpaceID);
+			designSpaceService.importSBOL(sbolDocs, outputSpaceID, weight);
 		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -723,7 +724,8 @@ public class KnoxController {
 
 	@RequestMapping(value = "/goldbarSBOL/import", method = RequestMethod.POST)
 	public ResponseEntity<String> importGoldbarSBOL(@RequestParam(value = "sbolDoc", required = true) String sbolDoc,
-			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) throws IOException {
+			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "weight", required = false) Double weight) throws IOException {
 		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
 		SBOLDocument sbolDocument = new SBOLDocument();
 
@@ -739,7 +741,7 @@ public class KnoxController {
 
 
 		try {
-			designSpaceService.importSBOL(sbolDocs, outputSpaceID);
+			designSpaceService.importSBOL(sbolDocs, outputSpaceID, weight);
 		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

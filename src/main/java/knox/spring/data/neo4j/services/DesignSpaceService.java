@@ -758,11 +758,11 @@ public class DesignSpaceService {
 		return MultipleWeights;
 	}
 
-	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID)
+	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID, Double weight)
 			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
 		SBOLConversion sbolConv = new SBOLConversion();
 
-		sbolConv.setSbolDoc(sbolDocs);
+		sbolConv.setSbolDoc(sbolDocs, weight);
 
 		List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
 
@@ -779,6 +779,7 @@ public class DesignSpaceService {
 		
 		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
 		SBOLDocument sbolDocument = new SBOLDocument();
+		Double weight = 0.0;
 
 		InputStream sbolStream = org.apache.commons.io.IOUtils.toInputStream(sbolString, "UTF-8");
 		
@@ -792,7 +793,7 @@ public class DesignSpaceService {
 
 		SBOLConversion sbolConv = new SBOLConversion();
 
-		sbolConv.setSbolDoc(sbolDocs);
+		sbolConv.setSbolDoc(sbolDocs, weight);
 
 		List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
 

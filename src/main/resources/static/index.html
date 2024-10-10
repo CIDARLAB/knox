@@ -223,6 +223,10 @@
       <form method="POST" enctype="multipart/form-data"
             action="sbol/import" class="navbar-form navbar-left" ng-show="isSBOLMode">
         <input type="file" name="inputSBOLFiles[]" multiple>
+        <br>
+        <label id="weightLabelSBOL" for="weightInputSBOL"><h5>Weight:</h5></label>
+        <input id="weightInputSBOL" type="number" name="weight" placeholder=0.0>
+        <br>
         <!--<input type="text" name="outputSpaceID" placeholder="Space ID"-->
                <!--class="form-control" aria-label="..." size="10">-->
         <input type="submit" value="Import">
@@ -251,6 +255,8 @@
               <div class="col-sm">
                 <label id="designName" for="designNameInput"><h5>Design name:</h5></label>
                 <input id="designNameInput" type="text" placeholder="constellation-design">
+                <label id="weight" for="weightInput"><h5>   Edge Weight:</h5></label>
+                <input id="weightInput" type="number" placeholder="0.0">
               </div>
             </div>
           </div>

@@ -79,6 +79,25 @@ public class Edge {
             weight.add(0.0);
         }
     }
+
+    public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
+                ArrayList<String> componentRoles, ArrayList<Double> weight) {
+        this.tail = tail;
+        
+        this.head = head;
+        
+        this.componentIDs = componentIDs;
+        
+        this.componentRoles = componentRoles;
+        
+        if (!this.componentIDs.isEmpty() || !this.componentRoles.isEmpty()) {
+            orientation = Orientation.INLINE;
+        } else {
+            orientation = Orientation.NONE;
+        }
+        
+        this.weight = weight;
+    }
     
     public Edge(Node tail, Node head, ArrayList<String> componentIDs, 
                 ArrayList<String> componentRoles, Orientation orientation) {
@@ -147,6 +166,11 @@ public class Edge {
     }
 
     public Edge copy(Node tail, Node head) {
+        return new Edge(tail, head, new ArrayList<String>(componentIDs),
+                new ArrayList<>(componentRoles), orientation, weight);
+    }
+
+    public Edge copy(Node tail, Node head, ArrayList<Double> weight) {
         return new Edge(tail, head, new ArrayList<String>(componentIDs),
                 new ArrayList<>(componentRoles), orientation, weight);
     }

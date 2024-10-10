@@ -1312,6 +1312,7 @@ $("#goldbarSubmitBtn").click(function() {
   let specification = editors.specEditor.getValue();
   let categories = editors.catEditor.getValue();
   let designName = document.getElementById('designNameInput').value;
+  let weight = document.getElementById('weightInput').value;
 
   //replace all spaces and special characters for SBOL
   designName = designName.replace(/[^A-Z0-9]/ig, "_");
@@ -1336,7 +1337,7 @@ $("#goldbarSubmitBtn").click(function() {
     sbolDoc = data.sbol;
 
     try {
-      endpoint.importGoldbarSBOL(sbolDoc);
+      endpoint.importGoldbarSBOL(sbolDoc, weight);
       $("#spinner").addClass('hidden');
       swalSuccess("GOLDBAR Sucessfully Imported");
     } catch (error) {
@@ -1359,6 +1360,7 @@ $("#goldbarSubmitAndDownloadBtn").click(function() {
   let specification = editors.specEditor.getValue();
   let categories = editors.catEditor.getValue();
   let designName = document.getElementById('designNameInput').value;
+  let weight = document.getElementById('weightInput').value;
 
   //replace all spaces and special characters for SBOL
   designName = designName.replace(/[^A-Z0-9]/ig, "_");
@@ -1384,7 +1386,7 @@ $("#goldbarSubmitAndDownloadBtn").click(function() {
 
     try {
       endpoint.downloadSBOL(sbolDoc, "knox_" + designName + "_sbol.xml");
-      endpoint.importGoldbarSBOL(sbolDoc);
+      endpoint.importGoldbarSBOL(sbolDoc, weight);
       $("#spinner").addClass('hidden');
       swalSuccess("GOLDBAR Sucessfully Imported and SBOL Downloaded");
     } catch (error) {

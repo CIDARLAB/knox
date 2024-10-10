@@ -106,6 +106,14 @@ public class Node {
         
         return edge;
     }
+
+	public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles, ArrayList<Double> weight) {
+        Edge edge = new Edge(this, head, compIDs, compRoles, weight);
+        
+        addEdge(edge);
+        
+        return edge;
+    }
     
     public Edge createEdge(Node head, ArrayList<String> compIDs, ArrayList<String> compRoles,
     						Edge.Orientation orientation) {

@@ -22,14 +22,18 @@ public class SBOLConversion {
 
 	private List<SBOLDocument> sbolDocs;
 
+	private Double weight;
+
 	private static final Logger LOG = LoggerFactory.getLogger(SBOLConversion.class);
 
 	public List<SBOLDocument> getSbolDoc() {
 		return sbolDocs;
 	}
 
-	public void setSbolDoc(List<SBOLDocument> sbolDocs) {
+	public void setSbolDoc(List<SBOLDocument> sbolDocs, Double weight) {
 		this.sbolDocs = sbolDocs;
+		this.weight = weight;
+		System.out.println("Weight: " + weight);
 	}
 
 	/**
@@ -44,7 +48,7 @@ public class SBOLConversion {
 		for(SBOLDocument sbolDoc: sbolDocs){
 			Set<CombinatorialDerivation> derivations = sbolDoc.getCombinatorialDerivations();
 			if (derivations.isEmpty()){
-				allOutputSpaces.addAll(convertSBOL(sbolDoc));
+				allOutputSpaces.addAll(convertSBOL(sbolDoc, this.weight));
 			}
 
 			allOutputSpaces.addAll(convertCombinatorialSBOL(sbolDoc));
@@ -65,7 +69,7 @@ public class SBOLConversion {
 
 		for(CombinatorialDerivation rootCV: rootCVs){
 			//iterate through variable components
-			List<NodeSpace> inputSpace = recurseVariableComponents(rootCV);
+			List<NodeSpace> inputSpace = recurseVariableComponents(rootCV, this.weight);
 
 			DesignSpace outputSpace = new DesignSpace(rootCV.getDisplayId());
 			JoinOperator.apply(inputSpace, outputSpace);
@@ -79,7 +83,7 @@ public class SBOLConversion {
 		return outputSpaces;
 	}
 
-	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation) throws SBOLException{
+	private List<NodeSpace> recurseVariableComponents(CombinatorialDerivation combinatorialDerivation, Double weight) throws SBOLException{
 		ComponentDefinition template = combinatorialDerivation.getTemplate();
 		List<NodeSpace> inputSpace = new LinkedList<>();
 
@@ -95,7 +99,7 @@ public class SBOLConversion {
 				//handle structure for just repeats
 				if (variantDerivs.size() == 1 && !hasVariants){
 					for (CombinatorialDerivation cv : variantDerivs) {
-						inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv)));
+						inputSpace.add(applyOperator(variableComponent.getOperator(), recurseVariableComponents(cv, weight)));
 					}
 				}
 
@@ -105,11 +109,11 @@ public class SBOLConversion {
 					NodeSpace outputSpace = new NodeSpace();
 
 					if (hasVariants){
-						orSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template)); //add variants
+						orSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template, weight)); //add variants
 					}
 
 					for (CombinatorialDerivation cv : variantDerivs) {
-						orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv)));
+						orSpace.add(applyOperator(OperatorType.ONE, recurseVariableComponents(cv, weight)));
 					}
 
 					OROperator.apply(orSpace, outputSpace); //"or" all the elements in the list
@@ -119,7 +123,7 @@ public class SBOLConversion {
 				}
 
 				else if (hasVariants){
-					inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template));
+					inputSpace.add(createNodeSpaceFromVariableComponent(variableComponent, template, weight));
 				}
 			}
 		}
@@ -450,9 +454,10 @@ public class SBOLConversion {
 		return soTerms;
 	}
 
-	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent, ComponentDefinition template) throws SBOLException{
+	private NodeSpace createNodeSpaceFromVariableComponent(VariableComponent variableComponent, ComponentDefinition template, Double weight) throws SBOLException{
 		ArrayList<String> atomIDs = new ArrayList<>();
 		ArrayList<String> atomRoles = new ArrayList<>();
+		ArrayList<Double> atomWeights = new ArrayList<>();
 
 		// Add IDs and roles for concrete parts from variants
 		for (ComponentDefinition variant : variableComponent.getVariants()) {
@@ -462,6 +467,7 @@ public class SBOLConversion {
 				for (URI role : roles) {
 					atomIDs.add(variant.getIdentity().toString());
 					atomRoles.add(role.toString());
+					atomWeights.add(weight);
 				}
 			}
 		}
@@ -478,6 +484,7 @@ public class SBOLConversion {
 						for (URI role : roles) {
 							atomIDs.add(def.getIdentity().toString());
 							atomRoles.add(role.toString());
+							atomWeights.add(weight);
 						}
 					}
 				}
@@ -523,12 +530,12 @@ public class SBOLConversion {
 		if(orientation == Edge.Orientation.UNDECLARED){
 			newSpace = new NodeSpace(atomIDs, atomRoles, Edge.Orientation.INLINE);
 			for(Edge edge : newSpace.getStartNode().getEdges()){
-				Edge duplicateEdge = edge.copy(edge.getTail(), edge.getHead());
+				Edge duplicateEdge = edge.copy(edge.getTail(), edge.getHead(), edge.getWeight());
 				duplicateEdge.reverseOrientation();
 				newSpace.getStartNode().addEdge(duplicateEdge);
 			}
 		} else {
-			newSpace = new NodeSpace(atomIDs, atomRoles, orientation);
+			newSpace = new NodeSpace(atomIDs, atomRoles, orientation, atomWeights);
 		}
 
 		inputSpace.add(newSpace);
@@ -592,7 +599,7 @@ public class SBOLConversion {
 		return derivations;
 	}
 
-	private List<DesignSpace> convertSBOL(SBOLDocument sbolDoc) {
+	private List<DesignSpace> convertSBOL(SBOLDocument sbolDoc, Double weight) {
 		List<DesignSpace> outputSpaces = new ArrayList<>();
 		Set<ComponentDefinition> rootDefs = getRootDNAComponentDefinitions(sbolDoc);
 
@@ -618,7 +625,12 @@ public class SBOLConversion {
 					nextNode = unionSpace.createAcceptNode();
 				}
 
-				currentNode.createEdge(nextNode, compIDs, compRoles);
+				ArrayList<Double> weightList = new ArrayList<>();
+				for (String ID : compIDs) {
+					weightList.add(weight);
+				}
+
+				currentNode.createEdge(nextNode, compIDs, compRoles, weightList);
 
 				currentNode = nextNode;
 			}
