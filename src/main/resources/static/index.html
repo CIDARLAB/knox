@@ -110,26 +110,43 @@
   </ul>
   <div class="tab-content">
     <div id="CSV" class="tab-pane fade in active">
+      
       <form method="POST" enctype="multipart/form-data"
             action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <div class="import-csv-description-OR">
+          <p>Apply OR operator on Input Designs</p>
+        </div>
         <input type="file" name="inputCSVFiles[]" multiple>
-        <input type="number" name="weight" placeholder=0.0>
+        <br>
+        <label id="weightLabelCSVOR" for="weightInputCSVOR"><h5>Weight:</h5></label>
+        <input id="weightInputCSVOR" type="number" name="weight" placeholder=0.0>
+        <br>
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
+        <br>
         <input type="submit" value="Import (OR)">
       </form>
+      
       <form method="POST" enctype="multipart/form-data"
             action="merge/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <div class="import-csv-description-MERGE">
+          <p>Apply MERGE operator on Input Designs</p>
+        </div>
         <input type="file" name="inputCSVFiles[]" multiple>
-        <input type="number" name="weight" placeholder=0.0>
+        <br>
+        <label id="weightLabelCSVMERGE" for="weightInputCSVMERGE"><h5>Weight:</h5></label>
+        <input id="weightInputCSVMERGE" type="number" name="weight" placeholder=0.0>
+        <br>
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
+        <br>
         <input type="text" name="weightTolerance" list="weightToleranceList" placeholder="weight tolerance">
           <datalist id="weightToleranceList">
             <option value="0">
             <option value="1">
             <option value="2">
           </datalist>
+        <br>
         <input type="submit" value="Import (MERGE)">
       </form>
     </div>
