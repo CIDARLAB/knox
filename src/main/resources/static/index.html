@@ -171,12 +171,24 @@
       <form id="goldbarForm" method="POST" enctype="multipart/form-data"
             action="goldbarGen/generator" class="navbar-form navbar-left" ng-show="isCSVMode">
         <input type="file" name="inputCSVFiles[]" multiple>
+        <br>
         <input type="text" name="rules" placeholder="rules, comma seperated"
                class="form-control" aria-label="..." size="10">
+        <br>
         <input type="text" name="lengths" placeholder="lengths, comma seperated"
                class="form-control" aria-label="..." size="10">
+        <br>
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
+        <br>
+        <label for="verify">Verify?:</label>
+        <input type="text" id="verify" name="verify" list="bools">
+          <datalist id="bools">
+            <option value="false">
+            <option value="true">
+          </datalist>
+        <br>
+               
         <input type="submit" value="GOLDBAR Generator">
       </form>
       <script>
@@ -187,13 +199,14 @@
             const formData = new FormData(this);
             const rules = formData.get('rules');
             const lengths = formData.get('lengths');
+            const verify = formData.get('verify');
             const outputSpacePrefix = formData.get('outputSpacePrefix');
             const files = formData.getAll('inputCSVFiles[]').map(file => file.name).join(', ');
 
             // Show SweetAlert confirmation
             swal({
                 title: "Confirm GOLDBAR Generator Submission",
-                text: `Rules: ${rules}\nLengths: ${lengths}\nSpace ID: ${outputSpacePrefix}\nFiles: ${files}`,
+                text: `Rules: ${rules}\nLengths: ${lengths}\nVerify: ${verify}\nSpace ID: ${outputSpacePrefix}\nFiles: ${files}`,
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,

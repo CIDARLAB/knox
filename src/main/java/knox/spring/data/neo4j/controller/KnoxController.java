@@ -754,7 +754,8 @@ public class KnoxController {
 	public Map<String, String> goldbarGenerator(@RequestParam(value = "inputCSVFiles[]", required = true) List<MultipartFile> inputCSVFiles, 
 			@RequestParam(value = "rules", required = false) String rules, 
 			@RequestParam(value = "lengths", required = false) String lengths,
-			@RequestParam(value = "outputSpacePrefix", required = false) String OutputSpacePrefix) {
+			@RequestParam(value = "outputSpacePrefix", required = false) String OutputSpacePrefix,
+			@RequestParam(value = "verify", required = false, defaultValue="true") Boolean verify) {
 		
 		System.out.println("Starting GOLDBAR Generator");
 		try {
@@ -768,7 +769,7 @@ public class KnoxController {
 			ArrayList<String> lengthsList = new ArrayList<>(Arrays.asList(lengthsArray));
 			System.out.println("Lengths" + lengthsList);
 			
-			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix);
+			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix, verify);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
