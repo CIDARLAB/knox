@@ -119,6 +119,7 @@ export default class Target{
         return marker(isBlank);
       });
 
+    const ENGINEERED_REGION = "http://identifiers.org/so/SO:0000804";
     //place SBOL svg on links
     const sbolImgSize = 30;
     let images = linksEnter.append("svg:image")
@@ -168,6 +169,9 @@ export default class Target{
       })
       .attr("href", (d) => {
         if (d.hasOwnProperty("componentRoles") && d["componentRoles"].length > 0) {
+          if(d["componentRoles"].length > 1) {
+            return getSBOLImage(ENGINEERED_REGION);
+          }
           return getSBOLImage(d["componentRoles"][0]);
         }
         return null;
@@ -179,6 +183,9 @@ export default class Target{
       .attr("href", (d) => {
         if (d.hasOwnProperty("componentRoles")) {
           if (d["componentRoles"].length > 0 && d.hasReverseOrient) {
+            if(d["componentRoles"].length > 1) {
+              return getSBOLImage(ENGINEERED_REGION);
+            }
             return getSBOLImage(d["componentRoles"][0]);
           }
         }
