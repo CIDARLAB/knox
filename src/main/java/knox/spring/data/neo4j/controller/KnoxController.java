@@ -535,16 +535,17 @@ public class KnoxController {
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
 			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance,
-			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
+			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles,
+			@RequestParam(value = "irrelevantParts", required = false, defaultValue = "") ArrayList<String> irrelevantParts) {
 		Set<String> uniqueRoles = new HashSet<String>(roles);
 		
 		try {
 			long startTime = System.nanoTime();
 			
 			if (outputSpaceID == null) {
-				designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, weightTolerance, uniqueRoles);
+				designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, weightTolerance, uniqueRoles, irrelevantParts);
 			} else {
-				designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, weightTolerance, uniqueRoles);
+				designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, weightTolerance, uniqueRoles, irrelevantParts);
 			}
 			
 			return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged after " +

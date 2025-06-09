@@ -255,7 +255,7 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-    	ANDOperator.apply(inputSpaces, outputSpace, tolerance, isComplete, roles);
+    	ANDOperator.apply(inputSpaces, outputSpace, tolerance, isComplete, roles, new ArrayList<String>());
 //    	long endTime = System.nanoTime();
 //    	long duration = (endTime - startTime);
 //    	LOG.info("AND TIME: " + duration);
@@ -293,19 +293,19 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, 
         		inputSnaps);
 
-        ANDOperator.apply(inputSnaps, outputSnap, tolerance, isComplete, roles);
+        ANDOperator.apply(inputSnaps, outputSnap, tolerance, isComplete, roles, new ArrayList<String>());
         
         saveDesignSpace(targetSpace);
     }
 	
-	public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, int weightTolerance, Set<String> roles) 
+	public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, int weightTolerance, Set<String> roles, ArrayList<String> irrelevantParts) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
-		mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, weightTolerance, roles);
+		mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, weightTolerance, roles, irrelevantParts);
     }
     
     public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance, int weightTolerance,
-    		Set<String> roles)
+    		Set<String> roles, ArrayList<String> irrelevantParts)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
 //    	long startTime = System.nanoTime();
@@ -315,7 +315,7 @@ public class DesignSpaceService {
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
-    	MergeOperator.apply(inputSpaces, outputSpace, tolerance, weightTolerance, roles);
+    	MergeOperator.apply(inputSpaces, outputSpace, tolerance, weightTolerance, roles, irrelevantParts);
 //    	long endTime = System.nanoTime();
 //    	long duration = (endTime - startTime);
 //    	LOG.info("MERGE TIME: " + duration);
@@ -352,7 +352,7 @@ public class DesignSpaceService {
         NodeSpace outputSnap = mergeVersions(targetSpace, inputBranches, outputBranch, 
         		inputSnaps);
 
-        MergeOperator.apply(inputSnaps, outputSnap, tolerance, weightTolerance, roles);
+        MergeOperator.apply(inputSnaps, outputSnap, tolerance, weightTolerance, roles, new ArrayList<String>());
         
         saveDesignSpace(targetSpace);
     }
@@ -579,7 +579,7 @@ public class DesignSpaceService {
     		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix);
     		
     		if (isMerge) {
-    			MergeOperator.apply(csvSpaces, outputSpace, 1, weightTolerance, new HashSet<String>());
+    			MergeOperator.apply(csvSpaces, outputSpace, 1, weightTolerance, new HashSet<String>(), new ArrayList<String>());
 
     			saveDesignSpace(outputSpace);
     		} else {
@@ -1008,7 +1008,7 @@ public class DesignSpaceService {
 
 		if (verify) {
 			DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + "_Verification");
-			ANDOperator.apply(allSpaces, outputSpace, 1, true, new HashSet<String>());
+			ANDOperator.apply(allSpaces, outputSpace, 1, true, new HashSet<String>(), new ArrayList<String>());
 			saveDesignSpace(outputSpace);
 		}
 

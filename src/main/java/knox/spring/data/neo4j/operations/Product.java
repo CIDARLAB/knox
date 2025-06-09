@@ -35,12 +35,12 @@ public class Product {
     	return productSpace;
     }
     
-    public List<Set<Edge>> applyTensor(NodeSpace colSpace, int tolerance, int weightTolerance, int degree, Set<String> roles) {
-    	return applyTensor(colSpace, tolerance, weightTolerance, degree, roles, false);
+    public List<Set<Edge>> applyTensor(NodeSpace colSpace, int tolerance, int weightTolerance, int degree, Set<String> roles, ArrayList<String> irrelevantParts) {
+    	return applyTensor(colSpace, tolerance, weightTolerance, degree, roles, false, irrelevantParts);
     }
     
     public List<Set<Edge>> applyTensor(NodeSpace colSpace, int tolerance, int weightTolerance, int degree, Set<String> roles, 
-    		boolean isStrongProduct) {
+    		boolean isStrongProduct, ArrayList<String> irrelevantParts) {
     	List<Set<Edge>> blankProductEdges = new LinkedList<Set<Edge>>();
     	blankProductEdges.add(new HashSet<Edge>());
     	blankProductEdges.add(new HashSet<Edge>());
@@ -54,7 +54,7 @@ public class Product {
     		crossNodes(rowSpace.getStartNodes(), colSpace.getStartNodes(), degree);
     		crossNodes(rowSpace.getAcceptNodes(), colSpace.getAcceptNodes(), degree);
 			
-			crossEdges(rowSpace.getEdges(), colSpace.getEdges(), nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace, tolerance, weightTolerance, degree, roles, isStrongProduct);
+			crossEdges(rowSpace.getEdges(), colSpace.getEdges(), nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace, tolerance, weightTolerance, degree, roles, isStrongProduct, irrelevantParts);
 			
 			Set<Edge> blankRowEdges = rowSpace.getBlankEdges();
 			Set<Edge> blankColEdges = colSpace.getBlankEdges();
@@ -137,21 +137,31 @@ public class Product {
     
     private void crossEdges(Set<Edge> rowEdges, Set<Edge> colEdges,
 			HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace, 
-			int tolerance, int weightTolerance, int degree, Set<String> roles, Boolean isStrongProduct) {
+			int tolerance, int weightTolerance, int degree, Set<String> roles, Boolean isStrongProduct, ArrayList<String> irrelevantParts) {
     	for (Edge rowEdge : rowEdges) {
 			String rowIDs = rowEdge.getTailID() + rowEdge.getHeadID();
 			
 			for (Edge colEdge : colEdges) {
 				String colIDs = colEdge.getTailID() + colEdge.getHeadID();
-				
-				if (rowEdge.isMatching(colEdge, tolerance, roles)) {
+				if (isStrongProduct && rowEdge.isMatching(colEdge, tolerance, roles)) {
+					System.out.println(rowEdge);
+					System.out.println(colEdge);
+				}
+				if (rowEdge.isMatching(colEdge, tolerance, roles) && 
+						(weightTolerance < 3 || 
+						(weightTolerance == 3 && colEdge.sameNextPartsHead(rowEdge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace)) ||
+						(weightTolerance == 4 && colEdge.sameNextPartsTail(rowEdge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace)) ||
+						(weightTolerance == 5 && (colEdge.sameNextPartsHead(rowEdge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace) && colEdge.sameNextPartsTail(rowEdge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace))) ||
+						(weightTolerance == 6 && colEdge.sameNextPartsOR(rowEdge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace)) ||
+						(weightTolerance == 7 && (colEdge.distanceToAcceptNode() == rowEdge.distanceToAcceptNode()) && (colEdge.distanceToStartNode(nodeIDToIncomingEdgesColSpace) == rowEdge.distanceToStartNode(nodeIDToIncomingEdgesRowSpace))))) {
+
 					Node productTail = crossNodes(rowEdge.getTail(), colEdge.getTail(), degree);
 
 					Node productHead = crossNodes(rowEdge.getHead(), colEdge.getHead(), degree);
 
 					Edge productEdge = productTail.copyEdge(colEdge, productHead);
 
-					productEdge.intersectWithEdge(rowEdge, colEdge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace, tolerance, weightTolerance, isStrongProduct);
+					productEdge.intersectWithEdge(rowEdge, colEdge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace, tolerance, weightTolerance, isStrongProduct, irrelevantParts);
 					
 					rowIDsToProductEdges.get(rowIDs).add(productEdge);
 					colIDsToProductEdges.get(colIDs).add(productEdge);
@@ -379,10 +389,10 @@ public class Product {
     	return productEdge;
     }
     
-    public List<Set<Edge>> applyModifiedStrong(NodeSpace colSpace, int tolerance, int weightTolerance, Set<String> roles) {
+    public List<Set<Edge>> applyModifiedStrong(NodeSpace colSpace, int tolerance, int weightTolerance, Set<String> roles, ArrayList<String> irrelevantParts) {
     	NodeSpace rowSpace = productSpace;
     	
-    	List<Set<Edge>> blankEdges = applyTensor(colSpace, tolerance, weightTolerance, 1, roles, true);
+    	List<Set<Edge>> blankEdges = applyTensor(colSpace, tolerance, weightTolerance, 1, roles, true, irrelevantParts);
     	
     	rowIDToDiffNode = new HashMap<String, Node>();
     	colIDToDiffNode = new HashMap<String, Node>();

@@ -14,7 +14,7 @@ public class ANDOperator {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(NodeSpace.class);
 	
-	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, int tolerance, boolean isComplete, Set<String> roles) {
+	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, int tolerance, boolean isComplete, Set<String> roles, ArrayList<String> irrelevantParts) {
 		
 		System.out.println("AND Operator:");
 		System.out.println("tolerance: " + String.valueOf(tolerance));
@@ -22,9 +22,9 @@ public class ANDOperator {
 				
 		for (int i = 1; i < inputSpaces.size(); i++) {
 			if (isComplete) {
-				product.applyTensor(inputSpaces.get(i), tolerance, 0, 2, roles);
+				product.applyTensor(inputSpaces.get(i), tolerance, 0, 2, roles, irrelevantParts);
 			} else {
-				product.applyTensor(inputSpaces.get(i), tolerance, 0, 0, roles);
+				product.applyTensor(inputSpaces.get(i), tolerance, 0, 0, roles, irrelevantParts);
 			}
 			
 			product.getSpace().deleteBlankEdges(product.getSpace().getBlankEdges());

@@ -389,7 +389,7 @@ public class Edge {
     
     public void intersectWithEdge(Edge edge, Edge thisEdge,
             HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace,
-            int tolerance, int weightTolerance, Boolean isStrongProduct) {
+            int tolerance, int weightTolerance, Boolean isStrongProduct, ArrayList<String> irrelevantParts) {
         
         // Map componentIDs to Weight
 
@@ -494,7 +494,7 @@ public class Edge {
 
         } else if ((weightTolerance == 2) && isStrongProduct) {
             // Check if edges next to same component
-            if (thisEdge.sameNextParts(edge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace)) {
+            if (thisEdge.sameNextParts(edge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace, false)) {
                 weightToleranceResult = true;
             } else {
                 weightToleranceResult = false;
@@ -506,18 +506,11 @@ public class Edge {
 
                 if (isStrongProduct){
 
-                    if (weightTolerance == 1) {
-                        if (weightToleranceResult) {
-                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights if at same position
+                    if (weightTolerance > 0) {
+                        if ((weightToleranceResult || weightTolerance > 2) && !irrelevantParts.contains(ID)) {
+                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights
                         } else {
-                            newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights if at different position
-                        }
-
-                    } else if (weightTolerance == 2) {
-                        if (weightToleranceResult) {
-                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights if Edges directly upstream or downstream to same part
-                        } else {
-                            newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights if not
+                            newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights
                         }
                         
                     } else {
@@ -548,6 +541,8 @@ public class Edge {
 
         Set<String> unionedIDs = new HashSet<String>(componentIDs);
         Set<String> unionedRoles = new HashSet<String>(componentRoles);
+
+        // Update IDs and Roles
 
         for (int i = 0; i < otherComponentRoles.size(); i++) {
             if (i < otherComponentIDs.size()) {
@@ -661,6 +656,20 @@ public class Edge {
 
         for (int i = 0; i < componentIDs.size(); i++) {
             componentIDstoWeight.put(componentIDs.get(i), weight.get(i));
+        }
+
+        return componentIDstoWeight;
+    }
+
+    public HashMap<String, Double> componentIDtoWeight(ArrayList<String> irrelevantParts) {
+        HashMap<String, Double> componentIDstoWeight = new HashMap<String, Double>();
+
+        for (int i = 0; i < componentIDs.size(); i++) {
+            if (irrelevantParts.contains(componentIDs.get(i))) {
+                componentIDstoWeight.put(componentIDs.get(i), 0.0);
+            } else {
+                componentIDstoWeight.put(componentIDs.get(i), weight.get(i));
+            }
         }
 
         return componentIDstoWeight;
@@ -781,7 +790,263 @@ public class Edge {
         return position;
     }
 
-    private Boolean sameNextParts(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace,
+    public Boolean sameNextParts(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace,
+            HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace, boolean needBoth) {
+        
+        Boolean same1 = false;
+        Boolean same2 = false;
+        Boolean goodResult = true;
+        Boolean badResult = false;
+        Set<String> compIDsHead1 = new HashSet<>();
+        Set<String> compIDsHead2 = new HashSet<>();
+        Set<String> compIDsTail1 = new HashSet<>();
+        Set<String> compIDsTail2 = new HashSet<>();
+
+        // Check if edges have same up stream part
+        compIDsHead1 = getNextPartsHead(compIDsHead1);
+        compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+
+        for (String compID : compIDsHead2) {
+            if (compIDsHead1.contains(compID)) {
+                same1 = true;
+
+                if (!needBoth) {
+                    return same1;
+                }
+            }
+        }
+        
+        // Check if edges have same down stream part
+        compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
+        compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
+
+        for (String compID : compIDsTail2) {
+            if (compIDsTail1.contains(compID)) {
+                same2 = true;
+
+                if (!needBoth) {
+                    return same2;
+                }
+            }
+        }
+
+        if (needBoth) {
+            // return true if they have same up AND down stream part
+            if (same1 && same2) {
+                return goodResult;
+            } else {
+                return badResult;
+            }
+        } else {
+            // return true if they have same up OR down stream part
+            if (same1 || same2) {
+                return goodResult;
+            } else {
+                return badResult;
+            }
+        }
+
+    }
+
+    public Boolean sameNextPartsOR(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace,
+            HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace) {
+        
+        Boolean same = false;
+        Set<String> compIDsHead1 = new HashSet<>();
+        Set<String> compIDsHead2 = new HashSet<>();
+        Set<String> compIDsTail1 = new HashSet<>();
+        Set<String> compIDsTail2 = new HashSet<>();
+        
+        // Check if first edges have same up stream part
+        if (this.tail.isStartNode() && edge.getTail().isStartNode()) {
+
+            compIDsHead1 = getNextPartsHead(compIDsHead1);
+            compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+            //System.out.println(compIDsHead1);
+            //System.out.println(compIDsHead2);
+
+            for (String compID : compIDsHead2) {
+                if (compIDsHead1.contains(compID)) {
+                    same = true;
+                }
+            }
+            //System.out.println(same);
+            //System.out.println("\n");
+            return same;
+
+        }
+
+        // Check if last edges have same down stream part
+        if (this.head.isAcceptNode() && edge.getHead().isAcceptNode()) {
+
+            compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
+            compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
+            //System.out.println(compIDsTail1);
+            //System.out.println(compIDsTail2);
+
+            for (String compID : compIDsTail2) {
+                if (compIDsTail1.contains(compID)) {
+                    same = true;
+                }
+            }
+            //System.out.println(same);
+            //System.out.println("\n");
+            return same;
+
+        }
+
+        // Check if edges have same up stream part
+        compIDsHead1 = getNextPartsHead(compIDsHead1);
+        compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+        //System.out.println(compIDsHead1);
+        //System.out.println(compIDsHead2);
+
+        for (String compID : compIDsHead2) {
+            if (compIDsHead1.contains(compID)) {
+                same = true;
+                //System.out.println(same);
+                //System.out.println("\n");
+                return same;
+            }
+        }
+        
+        // Check if edges have same down stream part
+        compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
+        compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
+        //System.out.println(compIDsTail1);
+        //System.out.println(compIDsTail2);
+
+        for (String compID : compIDsTail2) {
+            if (compIDsTail1.contains(compID)) {
+                same = true;
+                //System.out.println(same);
+                //System.out.println("\n");
+                return same;
+            }
+        }
+
+        //System.out.println(same);
+        //System.out.println("\n");
+        return same;
+
+    }
+
+    /*public Boolean sameNextParts(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace,
+            HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace, boolean needBoth) {
+        Boolean same = false;
+        Boolean same1 = false;
+        Boolean same2 = false;
+        Set<String> compIDsHead1 = new HashSet<>();
+        Set<String> compIDsHead2 = new HashSet<>();
+        Set<String> compIDsTail1 = new HashSet<>();
+        Set<String> compIDsTail2 = new HashSet<>();
+
+        // Check if first edges have same up stream part
+        if (this.tail.isStartNode() && edge.getTail().isStartNode()) {
+
+            compIDsHead1 = getNextPartsHead(compIDsHead1);
+            compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+
+            for (String compID : compIDsHead2) {
+                if (compIDsHead1.contains(compID)) {
+                    same = true;
+                    return same;
+                }
+            }
+
+        } else if (this.head.isAcceptNode() && edge.getHead().isAcceptNode()) {
+            // Check if last edges have same down stream part
+
+            compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
+            compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
+
+            for (String compID : compIDsTail2) {
+                if (compIDsTail1.contains(compID)) {
+                    same = true;
+                    return same;
+                }
+            }
+
+        } else {
+            // Check if edges have same down stream part
+            compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
+            compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
+
+            for (String compID : compIDsTail2) {
+                if (compIDsTail1.contains(compID)) {
+                    same1 = true;
+                }
+            }
+
+            // Check if edges have same up stream part
+            compIDsHead1 = getNextPartsHead(compIDsHead1);
+            compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+
+            for (String compID : compIDsHead2) {
+                if (compIDsHead1.contains(compID)) {
+                    same2 = true;
+                }
+            }
+
+            if (needBoth) {
+                // return true if they have same up AND down stream part
+                if (same1 && same2) {
+                    return same1;
+                } else {
+                    return false;
+                }
+            } else {
+                // return true if they have same up OR down stream part
+                if (same1 || same2) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+        }
+        
+        return same;
+    } */
+
+    public Boolean sameNextPartsTail(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace,
+            HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace) {
+        Boolean same = false;
+        Set<String> compIDsHead1 = new HashSet<>();
+        Set<String> compIDsHead2 = new HashSet<>();
+        Set<String> compIDsTail1 = new HashSet<>();
+        Set<String> compIDsTail2 = new HashSet<>();
+        
+        // Check if edges have same down stream part
+        compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
+        compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
+
+        for (String compID : compIDsTail2) {
+            if (compIDsTail1.contains(compID)) {
+                same = true;
+                return same;
+            }
+        }
+
+        // Check if first edges have same up stream part
+        if (this.tail.isStartNode() && edge.getTail().isStartNode()) {
+
+            compIDsHead1 = getNextPartsHead(compIDsHead1);
+            compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+
+            for (String compID : compIDsHead2) {
+                if (compIDsHead1.contains(compID)) {
+                    same = true;
+                    return same;
+                }
+            }
+
+        }
+        
+        return same;
+    }
+
+    public Boolean sameNextPartsHead(Edge edge, HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace,
             HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace) {
         Boolean same = false;
         Set<String> compIDsHead1 = new HashSet<>();
@@ -800,17 +1065,21 @@ public class Edge {
             }
         }
 
-        // Check if edges have same up stream part
-        compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
-        compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
+        // Check if last edges have same down stream part
+        if (this.head.isAcceptNode() && edge.getHead().isAcceptNode()) {
 
-        for (String compID : compIDsTail2) {
-            if (compIDsTail1.contains(compID)) {
-                same = true;
-                return same;
+            compIDsTail1 = getNextPartsTail(compIDsTail1, nodeIDToIncomingEdgesColSpace);
+            compIDsTail2 = edge.getNextPartsTail(compIDsTail2, nodeIDToIncomingEdgesRowSpace);
+
+            for (String compID : compIDsTail2) {
+                if (compIDsTail1.contains(compID)) {
+                    same = true;
+                    return same;
+                }
             }
-        }
 
+        }
+        
         return same;
     }
 
