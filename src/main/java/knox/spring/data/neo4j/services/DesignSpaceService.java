@@ -888,7 +888,8 @@ public class DesignSpaceService {
 				for (String goldbar : d.get(key)) {
 					
 					try {
-						spaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false));
+						NodeSpace space = importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false);
+						spaces.add(space);
 					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
 						e.printStackTrace();
 					}
@@ -989,8 +990,7 @@ public class DesignSpaceService {
 				for (String goldbar : d.get(key)) {
 					
 					try {
-						NodeSpace space = importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false);
-						spaces.add(space);
+						spaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false));
 					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
 						e.printStackTrace();
 					}
