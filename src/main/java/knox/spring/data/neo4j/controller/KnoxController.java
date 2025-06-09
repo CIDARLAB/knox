@@ -611,6 +611,28 @@ public class KnoxController {
 	 * @apiDescription Merges designs from merge design spaces then ands output of merge with and design spaces then Enumerates Set.
 	 */
 	
+	 @RequestMapping(value = "/designSpace/mergeThenAndThenEnumerate", method = RequestMethod.GET)
+	 public HashSet<List<Map<String, Object>>> mergeThenAndThenEnumerateDesignSpaces(@RequestParam(value = "mergeSpaceIDs", required = true) List<String> mergeSpaceIDs,
+	 		@RequestParam(value = "andSpaceIDs", required = true) List<String> andSpaceIDs,
+			@RequestParam(value = "mergeOutputSpaceID", required = true) String mergeOutputSpaceID,
+			@RequestParam(value = "andOutputSpaceID", required = true) String andOutputSpaceID,
+			@RequestParam(value = "mergeTolerance", required = false, defaultValue = "0") int mergeTolerance,
+			@RequestParam(value = "andTolerance", required = false, defaultValue = "1") int andTolerance,
+			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance,
+			@RequestParam(value = "isComplete", required = false, defaultValue = "true") boolean isComplete,
+			@RequestParam(value = "roles", required = false, defaultValue = "") Set<String> roles) {
+		
+		Set<String> uniqueRoles = new HashSet<String>(roles);
+		
+		try {
+			return designSpaceService.mergeThenAndThenEnumerateDesignSpaces(mergeSpaceIDs, andSpaceIDs, 
+					mergeOutputSpaceID, andOutputSpaceID, mergeTolerance, andTolerance, weightTolerance, isComplete, roles);
+		} catch (ParameterEmptyException | DesignSpaceNotFoundException | 
+				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+			return null;
+		}
+	 }
+
 	/**
 	 * @api {post} /designSpace/or OR
 	 * @apiName orDesignSpaces
