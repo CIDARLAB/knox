@@ -557,6 +557,60 @@ public class KnoxController {
 		}
 	}
 
+	@RequestMapping(value = "/designSpace/weight", method = RequestMethod.POST)
+	public ResponseEntity<String> weightDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
+			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
+			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance) {
+		
+		try {
+			long startTime = System.nanoTime();
+			
+			
+			designSpaceService.weightDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, weightTolerance);
+			
+			
+			return new ResponseEntity<String>("{\"message\": \"Design space was successfully weighted after " +
+					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+		} catch (ParameterEmptyException | DesignSpaceNotFoundException | 
+				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+					HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	/**
+	 * @api {post} /designSpace/merge Merge
+	 * @apiName mergeDesignSpaces
+	 * @apiGroup DesignSpace
+	 * 
+	 * @apiParam {String[]} mergeSpaceIDs IDs for the input design spaces to be merged.
+	 * @apiParam {String[]} andSpaceIDs IDs for the input design spaces to be anded with output of merge.
+	 * @apiParam {String} [mergeOutputSpaceID] ID for the output design space resulting from Merge. 
+	 * @apiParam {String} [andOutputSpaceID] ID for the output design space resulting from And.
+	 * @apiParam {Integer=0,1,2,3,4} mergeTolerance=1 This parameter determines the criteria by which edges are matched. If mergeTolerance
+	 * = 0, then matching edges must be labeled with the same component IDs and roles. If mergeTolerance = 1 or 2, then matching edges 
+	 * must share at least one component ID and role. If mergeTolerance = 3, then matching edges must be labeled with the same component 
+	 * roles. If mergeTolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
+	 * labeled with the same orientation. If mergeTolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
+	 * unioned.
+	 * @apiParam {Integer=0,1,2,3,4} andTolerance=1 This parameter determines the criteria by which edges are matched. If AndTolerance
+	 * = 0, then matching edges must be labeled with the same component IDs and roles. If andTolerance = 1 or 2, then matching edges 
+	 * must share at least one component ID and role. If tolerance = 3, then matching edges must be labeled with the same component 
+	 * roles. If andTolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
+	 * labeled with the same orientation. If andTolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
+	 * unioned.
+	 * @apiParam {Integer=0,1,2} weightTolerance=0 This parameter determines the criteria by which how to combine the weights of matched edges. 
+	 * If weightTolerance = 0, the weights are summed. 
+	 * If weightTolerance = 1, the weights are summed if their edges are the same distance to Start or Accept Node, otherwise they are averaged. 
+	 * If weightTolerance = 2, the weights are summed if their edges are next to the same part, otherwise they are averaged.
+	 * @apiParam {Boolean} isComplete=true If true, then only the matching edges that belong to paths for designs common to all 
+	 * input design spaces are retained.
+	 * @apiParam {String[]} [roles] If specified, then only edges labeled with at least one of these roles will be AND-ed.
+	 * 
+	 * @apiDescription Merges designs from merge design spaces then ands output of merge with and design spaces then Enumerates Set.
+	 */
+	
 	/**
 	 * @api {post} /designSpace/or OR
 	 * @apiName orDesignSpaces
