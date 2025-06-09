@@ -221,23 +221,42 @@ public class DesignAnalysis {
 	public Map<String, Map<String, Object>> partAnalytics() {
 		Map<String, Map<String, Object>> partAnalytics = new HashMap<String, Map<String, Object>>();
 
-		for (Edge e : this.space.getEdges()) {
+		Set<String> nextCompIDsSeen = new HashSet<>();
+
+		for (Edge thisEdge : this.space.getEdges()) {
 
 			int i = 0;
-			for (String compID : e.getComponentIDs()) {
+			for (String compID : thisEdge.getComponentIDs()) {
 				Map<String, Object> data = new HashMap<String,Object>();
 				
 				if (!partAnalytics.containsKey(compID)) {
 					data.put("frequency", 1.0);
-					data.put("totalScore", e.getWeight().get(i));
-					data.put("averageScore", e.getWeight().get(i));
-					data.put("lowScore", e.getWeight().get(i));
-					data.put("highScore", e.getWeight().get(i));
-					data.put("type", e.getComponentRoles().get(i));
+					data.put("totalScore", thisEdge.getWeight().get(i));
+					data.put("averageScore", thisEdge.getWeight().get(i));
+					data.put("lowScore", thisEdge.getWeight().get(i));
+					data.put("highScore", thisEdge.getWeight().get(i));
+					data.put("type", thisEdge.getComponentRoles().get(i));
 
 					List<Double> weights = new ArrayList<Double>();
-					weights.add(e.getWeight().get(i));
+					weights.add(thisEdge.getWeight().get(i));
 					data.put("weights", weights);
+					
+					// Unique Weights Count
+					data.put("UniqueWeightCount", 1);
+
+					// Next Part Data
+					Set<String> nextPartIDs = new HashSet<String>();
+					for (Edge nextEdge : thisEdge.getHead().getEdges()) {
+						nextPartIDs.addAll(nextEdge.getComponentIDs());
+					}
+
+					for (String nextPartID : nextPartIDs) {
+						List<Double> nextWeights = new ArrayList<Double>();
+						nextWeights.add(thisEdge.getWeight().get(i));
+						data.put(nextPartID, nextWeights);
+					}
+
+					nextCompIDsSeen.addAll(nextPartIDs);
 
 					partAnalytics.put(compID, data);
 				
@@ -247,32 +266,74 @@ public class DesignAnalysis {
 					data.put("frequency", Double.valueOf((Double) partAnalytics.get(compID).get("frequency")) + 1.0);
 
 					// update totalScore
-					data.put("totalScore", Double.valueOf((Double) partAnalytics.get(compID).get("totalScore")) + e.getWeight().get(i));
+					data.put("totalScore", Double.valueOf((Double) partAnalytics.get(compID).get("totalScore")) + thisEdge.getWeight().get(i));
 
 					// update averageScore
 					data.put("averageScore", Double.valueOf((Double) partAnalytics.get(compID).get("totalScore")) / Double.valueOf((Double) partAnalytics.get(compID).get("frequency")));
 
 					// update lowScore
-					if (e.getWeight().get(i) < Double.valueOf((Double) partAnalytics.get(compID).get("lowScore"))) {
-						data.put("lowScore", e.getWeight().get(i));
+					if (thisEdge.getWeight().get(i) < Double.valueOf((Double) partAnalytics.get(compID).get("lowScore"))) {
+						data.put("lowScore", thisEdge.getWeight().get(i));
 					} else {
 						data.put("lowScore", partAnalytics.get(compID).get("lowScore"));
 					}
 
 					// update highScore
-					if (e.getWeight().get(i) > Double.valueOf((Double) partAnalytics.get(compID).get("highScore"))) {
-						data.put("highScore", e.getWeight().get(i));
+					if (thisEdge.getWeight().get(i) > Double.valueOf((Double) partAnalytics.get(compID).get("highScore"))) {
+						data.put("highScore", thisEdge.getWeight().get(i));
 					} else {
 						data.put("highScore", partAnalytics.get(compID).get("highScore"));
 					}
 
 					// update part type
-					data.put("type", e.getComponentRoles().get(i));
+					data.put("type", thisEdge.getComponentRoles().get(i));
 
 					// update weights
 					List<Double> weights = (List<Double>) partAnalytics.get(compID).get("weights");
-					weights.add(e.getWeight().get(i));
+					weights.add(thisEdge.getWeight().get(i));
 					data.put("weights", weights);
+
+					// update unique weights count
+					List<Double> uniqueWeights = new ArrayList<>();
+					for (Double weight : weights) {
+						if (!uniqueWeights.contains(weight)) {
+							uniqueWeights.add(weight);
+						}
+					}
+					data.put("uniqueWeightCount", uniqueWeights.size());
+
+					// update Next Part Data
+					Set<String> nextPartIDs = new HashSet<String>();
+					for (Edge nextEdge : thisEdge.getHead().getEdges()) {
+						nextPartIDs.addAll(nextEdge.getComponentIDs());
+					}
+
+					for (String nextPartID : nextPartIDs) {
+
+						if (!(partAnalytics.get(compID).containsKey(nextPartID))){
+							List<Double> nextPartWeights = new ArrayList<>();
+							nextPartWeights.add(thisEdge.getWeight().get(i));
+							data.put(nextPartID, nextPartWeights);
+						} else {
+							List<Double> nextPartWeights = (List<Double>) partAnalytics.get(compID).get(nextPartID);
+							if (!(nextPartWeights.contains(thisEdge.getWeight().get(i)))){
+								nextPartWeights.add(thisEdge.getWeight().get(i));
+							}
+							data.put(nextPartID, nextPartWeights);
+						}
+					}
+
+					// Include Next Part Data of already seen parts
+					for (String compIDSeen : nextCompIDsSeen) {
+						if ((partAnalytics.get(compID).containsKey(compIDSeen)) && (!(nextPartIDs.contains(compIDSeen)))){
+							
+							List<Double> compPartWeights = (List<Double>) partAnalytics.get(compID).get(compIDSeen);
+							data.put(compIDSeen, compPartWeights);
+
+						} 
+					}
+
+					nextCompIDsSeen.addAll(nextPartIDs);
 
 					// update partAnalytics
 					partAnalytics.replace(compID, data);
