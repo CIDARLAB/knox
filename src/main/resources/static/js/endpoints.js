@@ -40,7 +40,8 @@ export const operators = {
   OR: 'or',
   AND: 'and',
   MERGE: 'merge',
-  REPEAT: 'repeat'
+  REPEAT: 'repeat',
+  WEIGHT: 'weight'
 };
 
 export const enumerate = {
@@ -358,6 +359,23 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance, weightTole
 
   let request = new XMLHttpRequest();
   request.open("POST", endpoints.DESIGN + "/" + operators.MERGE + query, false);
+  request.send(null);
+  if (request.status >= 200 && request.status < 300) {
+    swalSuccess();
+  } else {
+    swalError(request.response);
+  }
+}
+
+export function designSpaceWeight(inputSpaces, outputSpace, tolerance, weightTolerance){
+  let query = "?";
+  query += encodeQueryParameter("inputSpaceIDs", inputSpaces, query);
+  query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("tolerance", tolerance, query);
+  query += encodeQueryParameter("weightTolerance", weightTolerance, query);
+
+  let request = new XMLHttpRequest();
+  request.open("POST", endpoints.DESIGN + "/" + operators.WEIGHT + query, false);
   request.send(null);
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();

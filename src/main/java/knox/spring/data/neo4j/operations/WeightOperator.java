@@ -22,6 +22,9 @@ public class WeightOperator {
         DesignAnalysis designAnalysis = new DesignAnalysis(weightedSpace);
         Map<String, Map<String, Object>> partAnalytics = designAnalysis.partAnalytics();
 
+        System.out.println("/nPart Analytics:");
+        System.out.println(partAnalytics);
+        System.out.println();
 
         for (Edge thisEdge : spaceToWeight.getEdges()) {
 
@@ -67,6 +70,8 @@ public class WeightOperator {
             }
         }
 
-        outputSpace.shallowCopyNodeSpace(spaceToWeight);
+        outputSpace.copyNodeSpace(spaceToWeight);
+
+        //outputSpace.shallowCopyNodeSpace(spaceToWeight);
     }
 }

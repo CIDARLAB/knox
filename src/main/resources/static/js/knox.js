@@ -1056,6 +1056,12 @@ $('#apply-operators-tooltip').click(() => {
       optDiv.style.visibility = 'hidden';
       toleranceDropdown.value = 0;
     }
+    if(this.value === endpoint.operators.WEIGHT){
+      tolDiv.style.visibility = 'visible';
+      weightTolDiv.style.visibility = 'visible';
+      optDiv.style.visibility = 'hidden';
+      toleranceDropdown.value = 0;
+    }
   });
 
   swal({
@@ -1096,6 +1102,10 @@ $('#apply-operators-tooltip').click(() => {
 
         case endpoint.operators.MERGE:
           endpoint.designSpaceMerge(inputSpaces, outputSpace, tolerance, weightTolerance);
+          break;
+
+        case endpoint.operators.WEIGHT:
+          endpoint.designSpaceWeight(inputSpaces, outputSpace, tolerance, weightTolerance);
           break;
       }
     }
@@ -1141,6 +1151,11 @@ function makeWeightToleranceDropdown(){
   weightToleranceDropdown.appendChild(new Option("0", "0", true, true));
   weightToleranceDropdown.appendChild(new Option("1"));
   weightToleranceDropdown.appendChild(new Option("2"));
+  weightToleranceDropdown.appendChild(new Option("3"));
+  weightToleranceDropdown.appendChild(new Option("4"));
+  weightToleranceDropdown.appendChild(new Option("5"));
+  weightToleranceDropdown.appendChild(new Option("6"));
+  weightToleranceDropdown.appendChild(new Option("7"));
 
   return weightToleranceDropdown;
 }

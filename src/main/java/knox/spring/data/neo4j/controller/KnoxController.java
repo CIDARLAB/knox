@@ -560,7 +560,7 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/weight", method = RequestMethod.POST)
 	public ResponseEntity<String> weightDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
+			@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance,
 			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance) {
 		
 		try {
