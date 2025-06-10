@@ -38,6 +38,8 @@ public class GoldbarGeneration {
 
     ArrayList<String> rules;
 
+    ArrayList<String> ruleOptions;
+
     Map<String, ArrayList<String>> columnValues;
 
     public GoldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream) {
@@ -46,14 +48,20 @@ public class GoldbarGeneration {
         this.categories = new JSONObject();
 
         this.partTypes = new ArrayList<>();
-        this.partTypes.add("promoter");
-        this.partTypes.add("ribosomeBindingSite");
-        this.partTypes.add("cds");
-        this.partTypes.add("terminator");
 
         this.partTypesMap = new HashMap<String, ArrayList<String>>();
 
         this.rules = rules;
+
+        this.ruleOptions = new ArrayList<>();
+        this.ruleOptions.add("R");
+        this.ruleOptions.add("T");
+        this.ruleOptions.add("I");
+        this.ruleOptions.add("M");
+        this.ruleOptions.add("O");
+        this.ruleOptions.add("N");
+        this.ruleOptions.add("L");
+        this.ruleOptions.add("P");
 
         this.columnValues = new HashMap<>();
         BufferedReader csvReader = new BufferedReader(new InputStreamReader(inputCSVStream));
@@ -81,16 +89,22 @@ public class GoldbarGeneration {
 
             // Get Column Indices
             for (int i = 0; i < headers.length; i++) {
-                for (String column : partTypes) {
-                    if (headers[i].equals(column)) {
-                        columnIndices.put(column, i);
-                    }
-                }
 
+                boolean isRule = false;
                 for (String column : this.rules) {
                     if (headers[i].equals(column)) {
                         columnIndices.put(column, i);
+                        isRule = true;
                     }
+                }
+
+                if (ruleOptions.contains(headers[i])) {
+                    isRule = true;
+                }
+
+                if (!isRule) {
+                    columnIndices.put(headers[i], i);
+                    partTypes.add(headers[i]);
                 }
             }
 
