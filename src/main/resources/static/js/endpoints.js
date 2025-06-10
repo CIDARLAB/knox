@@ -20,6 +20,7 @@ const endpoints = {
   SCORE: "/designSpace/score",
   BESTPATH: "/designSpace/bestPath",
   CREATESAMPLESPACE: "/designSpace/createSampleSpace",
+  PARTANALYTICS: "/designSpace/partAnalytics",
 
   D3HISTORY: "/branch/graph/d3",
   CHECKOUT: "/branch/checkout",
@@ -45,7 +46,8 @@ export const operators = {
 export const enumerate = {
   ENUMERATE: 'enumerate',
   SAMPLE: 'sample',
-  CREATESAMPLESPACE: 'create sample space'
+  CREATESAMPLESPACE: 'create sample space',
+  PARTANALYTICS: "part analytics"
 }
 
 
@@ -110,6 +112,11 @@ export function getBestPath(id, callback){
 export function createSampleSpace(id, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
   d3.json(endpoints.CREATESAMPLESPACE + query, callback);
+}
+
+export function getPartAnalytics(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.PARTANALYTICS + query, callback);
 }
 
 /***************************

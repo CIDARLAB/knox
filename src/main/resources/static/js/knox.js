@@ -504,7 +504,6 @@ $('#enumerate-designs-tooltip').click(() => {
   let isSampleSpaceDiv = document.createElement('div');
   let isSampleSpaceInput = document.createElement('input');
   isSampleSpaceInput.setAttribute("type", "checkbox");
-  isSampleSpaceInput.checked = "true";
   makeDiv(isSampleSpaceDiv, isSampleSpaceInput, 'Is Sample Space?: ');
 
   // allow duplicates div
@@ -554,6 +553,14 @@ $('#enumerate-designs-tooltip').click(() => {
       allowDuplicatesDiv.style.visibility='hidden';
     }
     if(this.value === endpoint.enumerate.CREATESAMPLESPACE){
+      numDesignsDiv.style.visibility = 'hidden';
+      isWeightedDiv.style.visibility = 'hidden';
+      maxLengthDiv.style.visibility = 'hidden';
+      minLengthDiv.style.visibility = 'hidden';
+      isSampleSpaceDiv.style.visibility='hidden';
+      allowDuplicatesDiv.style.visibility='hidden';
+    }
+    if(this.value === endpoint.enumerate.PARTANALYTICS){
       numDesignsDiv.style.visibility = 'hidden';
       isWeightedDiv.style.visibility = 'hidden';
       maxLengthDiv.style.visibility = 'hidden';
@@ -786,6 +793,52 @@ $('#enumerate-designs-tooltip').click(() => {
             }
           });
           break; 
+
+        case endpoint.enumerate.PARTANALYTICS:
+
+          div.style.height = "inherit";
+          div.style.overflow = "scroll";
+
+          // loading div
+          loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+          //append all
+          div.appendChild(loadingDiv);
+
+          swal({
+            title: "Part Analytics",
+            content: div,
+            className: "enumeration-swal"
+          });
+          endpoint.getPartAnalytics(currentSpace, (err, data) => {
+            if (err) {
+              swalError("Part Analytics ERROR: " + JSON.stringify(err));
+            } else {
+              div.removeChild(loadingDiv);
+              let para = document.createElement("p");
+
+              para.appendChild(document.createTextNode("MAP<String, MAP<String, Object>>"))
+
+              para.appendChild(document.createElement('br'));
+              para.appendChild(document.createElement('br'));
+              
+              Object.entries(data).forEach(([key, innerMap]) => {
+              para.appendChild(document.createTextNode(`${key}: {`));
+
+              Object.entries(innerMap).forEach(([innerKey, value]) => {
+                  para.appendChild(document.createTextNode(`${innerKey}: ${JSON.stringify(value)}, `));
+                  para.appendChild(document.createElement('br'));
+              });
+
+              para.appendChild(document.createTextNode("}"));
+              para.appendChild(document.createElement('br'));
+              para.appendChild(document.createElement('br'));
+              });
+        
+              div.appendChild(para);
+            }
+          });
+          break;
       }
     }
   }); 

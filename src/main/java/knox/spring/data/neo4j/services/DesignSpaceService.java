@@ -1516,7 +1516,11 @@ public class DesignSpaceService {
 
 		DesignAnalysis designAnalysis = new DesignAnalysis(designSpace);
 
-		return designAnalysis.partAnalytics();
+		Map<String, Map<String, Object>> thisPartAnalytics = designAnalysis.partAnalytics();
+
+		System.out.println(thisPartAnalytics);
+
+		return thisPartAnalytics;
 	}
 
 	public void weightDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance, int weightTolerance)
