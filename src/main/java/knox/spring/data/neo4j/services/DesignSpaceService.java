@@ -920,6 +920,33 @@ public class DesignSpaceService {
 			saveDesignSpace(outputSpace);
 		}
 
+		if (rules.contains("B")) {
+			d = goldbarGeneration.createRuleB();
+
+			for (String key : d.keySet()) {
+				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_B";
+
+				List<NodeSpace> spaces = new ArrayList<>();
+
+				for (String goldbar : d.get(key)) {
+					
+					try {
+						NodeSpace space = importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false);
+						spaces.add(space);
+					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
+						e.printStackTrace();
+					}
+				}
+
+				DesignSpace outputSpace = new DesignSpace(spacePrefix);
+				OROperator.apply(spaces, outputSpace);
+
+				allSpaces.add(outputSpace);
+
+				saveDesignSpace(outputSpace);
+			}
+		}
+
 		if (rules.contains("R")) {
 			d = goldbarGeneration.createRuleR();
 

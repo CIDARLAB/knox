@@ -55,6 +55,7 @@ public class GoldbarGeneration {
 
         this.ruleOptions = new ArrayList<>();
         this.ruleOptions.add("R");
+        this.ruleOptions.add("B");
         this.ruleOptions.add("T");
         this.ruleOptions.add("I");
         this.ruleOptions.add("M");
@@ -301,6 +302,44 @@ public class GoldbarGeneration {
         }
 
         return rGoldbar;
+    }
+
+    public Map<String, ArrayList<String>> createRuleB() {
+        // Before Rule
+        // if partA and partB are present, partA must be anywhere before partB
+
+        Map<String, ArrayList<String>> bGoldbar = new HashMap<>();
+
+        // add to categories
+        multiplePartsCategory("B");
+
+        for (String data : this.columnValues.get("B")) {
+
+            ArrayList<String> bgol = new ArrayList<>();
+
+            String[] dataSplit = data.split(":");
+
+            String name = String.join("and", dataSplit);
+
+            String key = String.join("_", dataSplit);
+
+            String g1 = String.format(
+                "(zero-or-more(any_except_%3$s or %1$s) then %1$s then zero-or-more(any_except_%1$s))", 
+                dataSplit[0], dataSplit[1], name
+            );
+            bgol.add(g1);
+
+            String g2 = String.format(
+                "(zero-or-more(any_except_%1$s))", 
+                dataSplit[0], dataSplit[1], name
+            );
+            bgol.add(g2);
+
+            this.goldbar.put(g1 + " or " + g2);
+            bGoldbar.put(key, bgol);
+        }
+
+        return bGoldbar;
     }
 
     public Map<String, ArrayList<String>> createRuleT() {
