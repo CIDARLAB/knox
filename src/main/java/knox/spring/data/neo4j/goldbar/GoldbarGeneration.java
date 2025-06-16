@@ -55,6 +55,7 @@ public class GoldbarGeneration {
         this.ruleOptions.add("L");
         this.ruleOptions.add("P");
         this.ruleOptions.add("E");
+        this.ruleOptions.add("goldbar");
 
         this.columnValues = new HashMap<>();
         BufferedReader csvReader = new BufferedReader(new InputStreamReader(inputCSVStream));
@@ -269,6 +270,24 @@ public class GoldbarGeneration {
 
     }
 
+    public Map<String, String> createRuleGoldbar() {
+        // Do Not Repeat Rule
+        // if part is present, then part is present once
+
+        Map<String, String> gGoldbar = new HashMap<>();
+
+        Integer i = 0;
+        for (String g : this.columnValues.get("goldbar")) {
+
+            this.goldbar.put("_" + i + "_Rule_misc", g);
+            gGoldbar.put(i.toString(), g);
+
+            i = i + 1;
+        }
+
+        return gGoldbar;
+    }
+    
     public Map<String, String> createRuleR() {
         // Do Not Repeat Rule
         // if part is present, then part is present once
@@ -468,13 +487,13 @@ public class GoldbarGeneration {
             String g = new String();
             if (!reverse) {
                 g = String.format(
-                    "zero-or-more(any_except_%1$s) then one-or-more(%1$s then zero-or-more(any_except_%1$s))", 
+                    "zero-or-more(zero-or-more(any_except_%1$s) then one-or-more(%1$s then zero-or-more(any_except_%1$s)))", 
                     part
                 );
 
             } else {
                 g = String.format(
-                    "zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s)) then one-or-more((%1$s or reverse-comp(%1$s)) then zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s)))", 
+                    "zero-or-more(zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s)) then one-or-more((%1$s or reverse-comp(%1$s)) then zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s))))", 
                     part
                 );
             }
@@ -487,7 +506,7 @@ public class GoldbarGeneration {
     }
 
     public Map<String, String> createRuleE() {
-        Map<String, String> mGoldbar = new HashMap<>();
+        Map<String, String> eGoldbar = new HashMap<>();
 
         for (String part : this.columnValues.get("E")) {
             
@@ -505,11 +524,11 @@ public class GoldbarGeneration {
                 );
             }
 
-            mGoldbar.put(part, g);
+            eGoldbar.put(part, g);
             this.goldbar.put("_" + part + "_Rule_E", g);
         }
 
-        return mGoldbar;
+        return eGoldbar;
     }
 
     public Map<String, String> createRuleO() {

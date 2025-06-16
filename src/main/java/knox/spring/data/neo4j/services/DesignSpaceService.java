@@ -952,6 +952,10 @@ public class DesignSpaceService {
 			g = goldbarGeneration.createRuleE();
 		}
 
+		if (rules.contains("goldbar")) {
+			g = goldbarGeneration.createRuleGoldbar();
+		}
+
 		Map<String, String> goldbar = goldbarGeneration.getGoldbar();
 		for (String key : goldbar.keySet()) {
 			System.out.println("\nGOLDBAR: ");
