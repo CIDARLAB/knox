@@ -56,6 +56,16 @@ public class GoldbarConversion {
         for (String operation : operationToVariableList.keySet()) {
             outputSpace = handleOp(operation, operationToVariableList.get(operation));
         }
+
+        Set<Node> acceptNodes = outputSpace.getAcceptNodes();
+        for (Node acceptNode : acceptNodes) {
+            if (acceptNode.hasEdges()) {
+                Node newAcceptNode = outputSpace.createAcceptNode();
+                Edge blankEdge = new Edge(acceptNode, newAcceptNode);
+                acceptNode.addEdge(blankEdge);
+                acceptNode.deleteAcceptNodeType();
+            }
+        }
     }
 
     private NodeSpace handleOp(String operation, JSONArray variableList) {
@@ -167,20 +177,12 @@ public class GoldbarConversion {
     }
 
     private NodeSpace handleZeroOrMore(JSONArray variableList) {
-        NodeSpace outSpace = new NodeSpace();
+        NodeSpace tempOutSpace = new NodeSpace();
         ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
-        OROperator.apply(spaces, outSpace);
+        OROperator.apply(spaces, tempOutSpace);
 
-        Set<Node> startNodes = outSpace.getStartNodes();
-        Set<Node> stopNodes = outSpace.getAcceptNodes();
-
-        // Add Blank Edge from Start Node to Stop Node (Zero option)
-        for (Node startNode : startNodes) {
-            for (Node stopNode : stopNodes) {
-                Edge skipEdge = new Edge(startNode, stopNode);
-                startNode.addEdge(skipEdge);
-            }
-        }
+        Set<Node> startNodes = tempOutSpace.getStartNodes();
+        Set<Node> stopNodes = tempOutSpace.getAcceptNodes();
 
         // Add Blank Edge from Stop Node to Start Node (or More option)
         for (Node startNode : startNodes) {
@@ -189,6 +191,19 @@ public class GoldbarConversion {
                 stopNode.addEdge(repeatEdge);
             }
         }
+
+        // Add Blank Edge from Start Node to Stop Node (Zero option)
+        NodeSpace tempSpace = new NodeSpace();
+        Node startNode = tempSpace.createStartNode();
+        Node acceptNode = tempSpace.createAcceptNode();
+        Edge blankEdge = new Edge(startNode, acceptNode);
+        startNode.addEdge(blankEdge);
+
+        NodeSpace outSpace = new NodeSpace();
+        ArrayList<NodeSpace> tempSpaces = new ArrayList<>();
+        tempSpaces.add(tempSpace);
+        tempSpaces.add(tempOutSpace);
+        OROperator.apply(tempSpaces, outSpace);
 
         return outSpace;
     }
@@ -213,20 +228,22 @@ public class GoldbarConversion {
     }
 
     private NodeSpace handleZeroOrOne(JSONArray variableList) {
-        NodeSpace outSpace = new NodeSpace();
+        NodeSpace tempOutSpace = new NodeSpace();
         ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
-        OROperator.apply(spaces, outSpace);
-
-        Set<Node> startNodes = outSpace.getStartNodes();
-        Set<Node> stopNodes = outSpace.getAcceptNodes();
+        OROperator.apply(spaces, tempOutSpace);
 
         // Add Blank Edge from Start Node to Stop Node (Zero option)
-        for (Node startNode : startNodes) {
-            for (Node stopNode : stopNodes) {
-                Edge skipEdge = new Edge(startNode, stopNode);
-                startNode.addEdge(skipEdge);
-            }
-        }
+        NodeSpace tempSpace = new NodeSpace();
+        Node startNode = tempSpace.createStartNode();
+        Node acceptNode = tempSpace.createAcceptNode();
+        Edge blankEdge = new Edge(startNode, acceptNode);
+        startNode.addEdge(blankEdge);
+
+        NodeSpace outSpace = new NodeSpace();
+        ArrayList<NodeSpace> tempSpaces = new ArrayList<>();
+        tempSpaces.add(tempSpace);
+        tempSpaces.add(tempOutSpace);
+        OROperator.apply(tempSpaces, outSpace);
 
         return outSpace;
     }
