@@ -32,7 +32,8 @@ const endpoints = {
   DESIGN: "/designSpace", //post vs delete
 
   SBOL: "/sbol/exportCombinatorial",
-  GOLDBAR: "/goldbarSBOL/import"
+  GOLDBARSBOL: "/goldbarSBOL/import",
+  GOLDBAR: "/goldbar/import"
 };
 
 export const operators = {
@@ -387,6 +388,20 @@ export function designSpaceWeight(inputSpaces, outputSpace, tolerance, weightTol
 export function importGoldbarSBOL(sbolDoc, weight){
   let query = "?"
   query += encodeQueryParameter("sbolDoc", sbolDoc, query)
+  query += encodeQueryParameter("weight", weight, query)
+
+  let request = new XMLHttpRequest();
+  request.open("POST", endpoints.GOLDBARSBOL + query, false);
+  request.send(null);
+
+}
+
+
+export function importGoldbar(goldbar, categories, outputSpace, weight){
+  let query = "?"
+  query += encodeQueryParameter("goldbar", goldbar, query)
+  query += encodeQueryParameter("categories", categories, query)
+  query += encodeQueryParameter("outputSpaceID", outputSpace, query)
   query += encodeQueryParameter("weight", weight, query)
 
   let request = new XMLHttpRequest();

@@ -1,5 +1,6 @@
 import Target from './target.js';
 import * as endpoint from "./endpoints.js";
+import * as simplify from './simplifyOperators.js';
 
 /******************
  * GLOBAL VARIABLES
@@ -28,6 +29,7 @@ const editors = {
 
 editors.specEditor.setOption("theme", THEME);
 editors.catEditor.setOption("theme", THEME);
+const GRAMMAR_DEF = [{'Seq':[{'Then':[['Exp'],'.',['Seq']]},{'Then':[['Exp'],'then',['Seq']]},{'':[['Exp']]}]},{'Exp':[{'Or':[['Term'],'or',['Exp']]},{'And0':[['Term'],'and0',['Exp']]}, {'And1':[['Term'],'and1',['Exp']]}, {'And2':[['Term'],'and2',['Exp']]},{'Merge':[['Term'],'merge',['Exp']]},{'':[['Term']]}]},{'Term':[{'OneOrMore':['one-or-more',['Term']]},{'ZeroOrMore':['zero-or-more',['Term']]},{'ZeroOrOne':['zero-or-one',['Term']]}, {'ReverseComp':['reverse-comp',['Term']]},{'ZeroOrOneSBOL':['zero-or-one-sbol',['Term']]},{'ZeroOrMoreSBOL':['zero-or-more-sbol',['Term']]},{'':['{',['Seq'],'}']},{'':['(',['Seq'],')']},{'Atom':[{'RegExp':'([A-Za-z0-9]|-|_)+'}]}]}];
 
 const exploreBtnIDs = {
   delete: "#delete-btn",
@@ -1325,6 +1327,7 @@ $("#brand").click(
  ************************/
 
 // Download Only
+/*
 $("#goldbarDownloadSbolBtn").click(function() {
 
   $('#spinner').removeClass('hidden'); // show spinner
@@ -1370,6 +1373,189 @@ $("#goldbarDownloadSbolBtn").click(function() {
     $("#spinner").addClass('hidden');
   });
 });
+*/
+
+// Do GOLDBAR in Knox
+$("#goldbarImportBtn").click(function() {
+
+  $('#spinner').removeClass('hidden'); // show spinner
+
+  // Inputs
+  let specification = editors.specEditor.getValue();
+  let categories = editors.catEditor.getValue();
+  let designName = document.getElementById('designNameInput').value;
+  let weight = document.getElementById('weightInput').value;
+
+  //replace all spaces and special characters for SBOL
+  designName = designName.replace(/[^A-Z0-9]/ig, "_");
+
+  let parsed, sparsed, error
+  error = ""
+  try {
+    parsed = parseGoldbar(specification);
+    $("#spinner").addClass('hidden');
+  } catch {
+    error = error + "Error parsing GOLDBAR"
+    swalError(error)
+    $("#spinner").addClass('hidden');
+  }
+
+  parsed = propagateReverseComplements(parsed);
+
+  try {
+    categories = parseCategories(categories);
+  } catch {
+    error = error + "Error parsing categories"
+    swalError(error)
+    $("#spinner").addClass('hidden');
+  }
+
+  if (Object.entries(categories).length === 0 && categories.constructor === Object) {
+    swalError("No Categories")
+  }
+
+  sparsed = simplify.simplify(parsed);
+
+  let div = document.createElement('div');
+  div.style.height = "inherit";
+  div.style.overflow = "scroll";
+
+  // loading div
+  let loadingDiv = document.createElement('div');
+  loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+  //append all
+  div.appendChild(loadingDiv);
+
+  swal({
+    title: "Best Paths",
+    content: div,
+    className: "score-swal"
+  });
+
+  div.removeChild(loadingDiv);
+  let para = document.createElement("p");
+
+  para.appendChild(document.createElement('br'));
+  para.appendChild(document.createTextNode(JSON.stringify(sparsed)));
+  para.appendChild(document.createElement('br'));
+  para.appendChild(document.createElement('br'));
+  para.appendChild(document.createTextNode(JSON.stringify(categories)));
+  para.appendChild(document.createElement('br'));
+  para.appendChild(document.createElement('br'));
+  para.appendChild(document.createTextNode(error));
+  para.appendChild(document.createElement('br'));
+
+  div.appendChild(para);
+
+  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(categories), designName, weight)
+
+});
+
+export function submitGoldbar(specification, categories, designName, weight) {
+  let parsed, sparsed, error
+  error = ""
+  try {
+    parsed = parseGoldbar(specification);
+    $("#spinner").addClass('hidden');
+  } catch {
+    error = error + "Error parsing GOLDBAR"
+    swalError(error)
+    $("#spinner").addClass('hidden');
+  }
+
+  parsed = propagateReverseComplements(parsed);
+
+  try {
+    categories = parseCategories(categories);
+  } catch {
+    error = error + "Error parsing categories"
+    swalError(error)
+    $("#spinner").addClass('hidden');
+  }
+
+  if (Object.entries(categories).length === 0 && categories.constructor === Object) {
+    swalError("No Categories")
+  }
+
+  sparsed = simplify.simplify(parsed);
+
+  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(categories), designName, weight)
+}
+
+export function parseCategories(categories) {
+  categories = categories.trim();
+  categories = categories.replace('\t', ' ');
+  return JSON.parse(categories);
+}
+
+export function parseGoldbar(langText) {
+  langText = String(langText).replace('\t', ' ');
+  langText = langText.trim();
+  return imparse.parse(GRAMMAR_DEF, langText);
+}
+
+export function propagateReverseComplements(ast_node, reverse) {
+  var reverse = (reverse == null) ? false : reverse;
+  var a = ast_node;
+  var rec = propagateReverseComplements;
+
+  if ("ReverseComp" in a) {
+    //a["ReverseComp"][0] = rec(a["ReverseComp"][0], reverse);
+    //return a;
+
+    return rec(a["ReverseComp"][0], !reverse);
+  } else if ("Then" in a) {
+    a["Then"][0] = rec(a["Then"][0], reverse);
+    a["Then"][1] = rec(a["Then"][1], reverse);
+    a["Then"] = reverse ? a["Then"].reverse() : a["Then"];
+    return a;
+  } else if ("Or" in a) {
+    a["Or"][0] = rec(a["Or"][0], reverse);
+    a["Or"][1] = rec(a["Or"][1], reverse);
+    return a;
+  } else if ("And0" in a) {
+    a["And0"][0] = rec(a["And0"][0], reverse);
+    a["And0"][1] = rec(a["And0"][1], reverse);
+    return a;
+  } else if ("And1" in a) {
+    a["And1"][0] = rec(a["And1"][0], reverse);
+    a["And1"][1] = rec(a["And1"][1], reverse);
+    return a;
+  } else if ("And2" in a) {
+    a["And2"][0] = rec(a["And2"][0], reverse);
+    a["And2"][1] = rec(a["And2"][1], reverse);
+    return a;
+  } else if ("Merge" in a) {
+    a["Merge"][0] = rec(a["Merge"][0], reverse);
+    a["Merge"][1] = rec(a["Merge"][1], reverse);
+    return a;
+  } else if ("OneOrMore" in a) {
+    a["OneOrMore"][0] = rec(a["OneOrMore"][0], reverse);
+    return a;
+  } else if ("ZeroOrOne" in a) {
+    a["ZeroOrOne"][0] = rec(a["ZeroOrOne"][0], reverse);
+    return a;
+  } else if ("ZeroOrMore" in a) {
+    a["ZeroOrMore"][0] = rec(a["ZeroOrMore"][0], reverse);
+    return a;
+  } else if ("ZeroOrOneSBOL" in a) {
+    a["ZeroOrOneSBOL"][0] = rec(a["ZeroOrOneSBOL"][0], reverse);
+    return a;
+  } else if ("ZeroOrMoreSBOL" in a) {
+    a["ZeroOrMoreSBOL"][0] = rec(a["ZeroOrMoreSBOL"][0], reverse);
+    return a;
+  } else if ("Atom" in a) {
+    return reverse ? {"ReverseComp": [a]} : a;
+  }
+}
+
+export function verifyRules(inputSpaces, outputSpace) {
+  let tolerance = 1;
+  let isComplete = true;
+
+  endpoint.designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete)
+}
 
 // Import Only
 $("#goldbarSubmitBtn").click(function() {

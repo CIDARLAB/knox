@@ -28,6 +28,7 @@ import knox.spring.data.neo4j.repositories.SnapshotRepository;
 import knox.spring.data.neo4j.sample.DesignSampler;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
+import knox.spring.data.neo4j.goldbar.GoldbarConversion;
 import knox.spring.data.neo4j.goldbar.GoldbarGeneration;
 
 import knox.spring.data.neo4j.sbol.SBOLGeneration;
@@ -886,214 +887,83 @@ public class DesignSpaceService {
 		//designSpace.printAllEdges();
 	}
 
-	public Map<String, String> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, 
-			ArrayList<String> lengths, String outputSpacePrefix, Boolean verify) {
+	public void importGoldbar(JSONObject goldbar, JSONObject categories, String outputSpacePrefix, Double weight) throws JSONException {
+
+		GoldbarConversion goldbarConversion = new GoldbarConversion(goldbar, categories, weight);
+
+		goldbarConversion.convert();
+
+		NodeSpace outSpace = goldbarConversion.getSpace();
+
+		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix);
+
+		outputSpace.shallowCopyNodeSpace(outSpace);
+
+		saveDesignSpace(outputSpace);
+	}
+
+	public Map<String, Object> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, 
+			ArrayList<String> lengths, String outputSpacePrefix, Boolean verify, Boolean reverse) {
 		
-		Map<String, String> goldbarAndCategories = new HashMap<>();
-		List<NodeSpace> allSpaces = new ArrayList<>();
+		Map<String, Object> goldbarAndCategories = new HashMap<>();
 		String spacePrefix;
-		Map<String, ArrayList<String>> d = new HashMap<>();
 		Map<String, String> g = new HashMap<>();
 		String s = "";
 
-		GoldbarGeneration goldbarGeneration = new GoldbarGeneration(rules, inputCSVStream);
+		GoldbarGeneration goldbarGeneration = new GoldbarGeneration(rules, inputCSVStream, reverse);
 
 		if (rules.contains("N")) {
 			g = goldbarGeneration.createRuleN(lengths);
-
-			List<NodeSpace> spaces = new ArrayList<>();
-			spacePrefix = outputSpacePrefix + "_Rule_N";
-
-			for (String key : g.keySet()) {
-				try {
-					spaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, g.get(key), goldbarGeneration.getCategoriesString()), false));
-				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-					e.printStackTrace();
-				}
-			}
-
-			DesignSpace outputSpace = new DesignSpace(spacePrefix);
-			OROperator.apply(spaces, outputSpace);
-
-			allSpaces.add(outputSpace);
-
-			saveDesignSpace(outputSpace);
 		}
 
 		if (rules.contains("B")) {
-			d = goldbarGeneration.createRuleB();
-
-			for (String key : d.keySet()) {
-				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_B";
-
-				List<NodeSpace> spaces = new ArrayList<>();
-
-				for (String goldbar : d.get(key)) {
-					
-					try {
-						NodeSpace space = importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false);
-						spaces.add(space);
-					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-						e.printStackTrace();
-					}
-				}
-
-				DesignSpace outputSpace = new DesignSpace(spacePrefix);
-				OROperator.apply(spaces, outputSpace);
-
-				allSpaces.add(outputSpace);
-
-				saveDesignSpace(outputSpace);
-			}
+			g = goldbarGeneration.createRuleB();
 		}
 
 		if (rules.contains("R")) {
-			d = goldbarGeneration.createRuleR();
-
-			for (String key : d.keySet()) {
-				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_R";
-
-				List<NodeSpace> spaces = new ArrayList<>();
-
-				for (String goldbar : d.get(key)) {
-					
-					try {
-						NodeSpace space = importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false);
-						spaces.add(space);
-					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-						e.printStackTrace();
-					}
-				}
-
-				DesignSpace outputSpace = new DesignSpace(spacePrefix);
-				OROperator.apply(spaces, outputSpace);
-
-				allSpaces.add(outputSpace);
-
-				saveDesignSpace(outputSpace);
-			}
+			g = goldbarGeneration.createRuleR();
 		}
 
 		if (rules.contains("I")) {
 			g = goldbarGeneration.createRuleI();
-
-			for (String key : g.keySet()) {
-				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_I";
-				try {
-					allSpaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, g.get(key), goldbarGeneration.getCategoriesString()), true));
-				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 		
 		if (rules.contains("M")) {
 			g = goldbarGeneration.createRuleM();
-
-			for (String key : g.keySet()) {
-				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_M";
-				try {
-					allSpaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, g.get(key), goldbarGeneration.getCategoriesString()), true));
-				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 
 		if (rules.contains("O")) {
-			d = goldbarGeneration.createRuleO();
-
-			for (String key : d.keySet()) {
-				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_O";
-
-				List<NodeSpace> spaces = new ArrayList<>();
-
-				for (String goldbar : d.get(key)) {
-					
-					try {
-						NodeSpace space = importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false);
-						spaces.add(space);
-					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-						e.printStackTrace();
-					}
-				}
-
-				DesignSpace outputSpace = new DesignSpace(spacePrefix);
-				OROperator.apply(spaces, outputSpace);
-
-				allSpaces.add(outputSpace);
-
-				saveDesignSpace(outputSpace);
-			}
+			g = goldbarGeneration.createRuleO();
 		}
 
 		if (rules.contains("L")) {
 			s = goldbarGeneration.createRuleL();
-
-			spacePrefix = outputSpacePrefix + "_Rule_L";
-			try {
-				allSpaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, s, goldbarGeneration.getCategoriesString()), true));
-			} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-				e.printStackTrace();
-			}
 		}
 
 		if (rules.contains("P")) {
 			s = goldbarGeneration.createRuleP();
-
-			spacePrefix = outputSpacePrefix + "_Rule_P";
-			try {
-				allSpaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, s, goldbarGeneration.getCategoriesString()), true));
-			} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-				e.printStackTrace();
-			}
 		}
 
 		if (rules.contains("T")) {
-			d = goldbarGeneration.createRuleT();
-
-			for (String key : d.keySet()) {
-				spacePrefix = outputSpacePrefix + "_" + key + "_Rule_T";
-
-				List<NodeSpace> spaces = new ArrayList<>();
-
-				for (String goldbar : d.get(key)) {
-					
-					try {
-						spaces.add(importSBOL(constellationGoldbarRequest(spacePrefix, goldbar, goldbarGeneration.getCategoriesString()), false));
-					} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-						e.printStackTrace();
-					}
-				}
-
-				DesignSpace outputSpace = new DesignSpace(spacePrefix);
-				OROperator.apply(spaces, outputSpace);
-
-				allSpaces.add(outputSpace);
-
-				saveDesignSpace(outputSpace);
-			}
-
+			g = goldbarGeneration.createRuleT();
 		}
 
-		if (verify) {
-			DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + "_Verification");
-			ANDOperator.apply(allSpaces, outputSpace, 1, true, new HashSet<String>(), new ArrayList<String>());
-			saveDesignSpace(outputSpace);
+		if (rules.contains("E")) {
+			g = goldbarGeneration.createRuleE();
 		}
 
-		goldbarAndCategories.put("goldbar", goldbarGeneration.getGoldbarString());
-		goldbarAndCategories.put("categories", goldbarGeneration.getCategoriesString());
-
-		for (int i = 0; i < goldbarGeneration.getGoldbar().length(); i++) {
-			try {
-				System.out.println(goldbarGeneration.getGoldbar().getString(i) + "\n");
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+		Map<String, String> goldbar = goldbarGeneration.getGoldbar();
+		for (String key : goldbar.keySet()) {
+			System.out.println("\nGOLDBAR: ");
+			System.out.println("\n" + key + ": ");
+			System.out.println(goldbar.get(key));
 		}
 
+		System.out.println("\nCategories: ");
 		System.out.println(goldbarGeneration.getCategoriesString());
+
+		goldbarAndCategories.put("goldbar", goldbar);
+		goldbarAndCategories.put("categories", goldbarGeneration.getCategoriesString());
 
 		return goldbarAndCategories;
 	}

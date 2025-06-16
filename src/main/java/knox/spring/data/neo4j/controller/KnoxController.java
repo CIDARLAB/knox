@@ -44,6 +44,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.neo4j.ogm.json.JSONException;
+import org.neo4j.ogm.json.JSONObject;
 
 import javassist.bytecode.ByteArray;
 
@@ -827,12 +829,38 @@ public class KnoxController {
 		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
 	}
 
+	@RequestMapping(value = "/goldbar/import", method = RequestMethod.POST)
+	public ResponseEntity<String> importGoldbar(@RequestParam(value = "goldbar", required = true) String goldbarString,
+			@RequestParam(value = "categories", required = true) String categoriesString,
+			@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
+			@RequestParam(value = "weight", required = false) Double weight) throws IOException {
+		
+		System.out.println();		
+		System.out.println("GOLDBAR:");
+		System.out.println(goldbarString);
+		System.out.println();
+		System.out.println("Categories:");
+		System.out.println(categoriesString);
+		
+		try{
+			JSONObject goldbar = new JSONObject(goldbarString);
+			JSONObject categories = new JSONObject(categoriesString);
+			designSpaceService.importGoldbar(goldbar, categories, outputSpaceID, weight);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+	}
+
 	@RequestMapping(value = "/goldbarGen/generator", method = RequestMethod.POST)
-	public Map<String, String> goldbarGenerator(@RequestParam(value = "inputCSVFiles[]", required = true) List<MultipartFile> inputCSVFiles, 
+	public Map<String, Object> goldbarGenerator(@RequestParam(value = "inputCSVFiles[]", required = true) List<MultipartFile> inputCSVFiles, 
 			@RequestParam(value = "rules", required = false) String rules, 
 			@RequestParam(value = "lengths", required = false) String lengths,
 			@RequestParam(value = "outputSpacePrefix", required = false) String OutputSpacePrefix,
-			@RequestParam(value = "verify", required = false, defaultValue="true") Boolean verify) {
+			@RequestParam(value = "verify", required = false, defaultValue="true") Boolean verify,
+			@RequestParam(value = "reverse", required = false, defaultValue="true") Boolean reverse) {
 		
 		System.out.println("Starting GOLDBAR Generator");
 		try {
@@ -846,7 +874,7 @@ public class KnoxController {
 			ArrayList<String> lengthsList = new ArrayList<>(Arrays.asList(lengthsArray));
 			System.out.println("Lengths" + lengthsList);
 			
-			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix, verify);
+			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix, verify, reverse);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

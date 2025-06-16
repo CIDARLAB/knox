@@ -157,8 +157,10 @@
           <br>Use Part Type as column header and fill in rows below with part IDs, One part ID per row.
         </p>
         <p>Lengths: (Comma Seperated Integers greater or equal to 1)</p>
+        <p>Reverse: (If true, rules will include both the forward and reverse orientation)</p>
         <p>Available Rules (Seperate Rules with comma):
           <br>"R" : Do not repeat part. 
+          <br>"B" : All instrances of Part1 must be before all instances of Part2. 
           <br>"T" : Part1 and Part2 must be in same design. 
           <br>"I" : Part1 can not be directly upstream of Part2
           <br>"O" : Part1 and Part2 can not be in same design. 
@@ -187,11 +189,18 @@
             <option value="false">
             <option value="true">
           </datalist>
+        <label for="reverse">Reverse?:</label>
+        <input type="text" id="reverse" name="reverse" list="bools">
+          <datalist id="bools">
+            <option value="false">
+            <option value="true">
+          </datalist>
         <br>
                
         <input type="submit" value="GOLDBAR Generator">
       </form>
-      <script>
+      <script type="module">
+        import * as knox from "./js/knox.js";
         document.getElementById('goldbarForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent the default form submission
           
@@ -200,13 +209,14 @@
             const rules = formData.get('rules');
             const lengths = formData.get('lengths');
             const verify = formData.get('verify');
+            const reverse = formData.get('reverse');
             const outputSpacePrefix = formData.get('outputSpacePrefix');
             const files = formData.getAll('inputCSVFiles[]').map(file => file.name).join(', ');
 
             // Show SweetAlert confirmation
             swal({
                 title: "Confirm GOLDBAR Generator Submission",
-                text: `Rules: ${rules}\nLengths: ${lengths}\nVerify: ${verify}\nSpace ID: ${outputSpacePrefix}\nFiles: ${files}`,
+                text: `Rules: ${rules}\nLengths: ${lengths}\nVerify: ${verify}\nReverse: ${reverse}\nSpace ID: ${outputSpacePrefix}\nFiles: ${files}`,
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
@@ -222,9 +232,33 @@
                     .then(data => {
                         // Display the data from the POST request
 
+                        // Inputs
+                        let categories = data.categories;
+                        let weight = 0.0;
+                        let error = "";
+                        let rules = [];
+                        Object.entries(data.goldbar).forEach(([key, goldbar]) => {
+                        let specification = goldbar;
+                        //replace all spaces and special characters for SBOL
+                        let designName = outputSpacePrefix + key;
+                        designName = designName.replace(/[^A-Z0-9]/ig, "_");
+                        rules.push(designName);
+                        
+                        try {
+                          knox.submitGoldbar(specification, categories, designName, weight);
+                        } catch {
+                          error = error + "Error Submitting";
+                        }
+
+                        });
+
+                        if (verify === "true") {
+                          knox.verifyRules(rules, outputSpacePrefix + "_Verification");
+                        }
+
                         swal({
                             title: "GOLDBAR and Categories",
-                            text: `GOLDBAR:\n${data.goldbar}\n\nCategories:\n${data.categories}`,
+                            text: `GOLDBAR:\n${JSON.stringify(data.goldbar)}\n\nCategories:\n${data.categories}\n\n${error}`,
                             icon: "success",
                         });
                     })
@@ -310,8 +344,7 @@
             <div id="spinner" class="spinner hidden">
                   <p><i class="fa fa-spinner fa-spin"></i>  Loading...</p>
             </div>
-            <button id="goldbarDownloadSbolBtn" class="btn btn-outline-warning mt-2">Download SBOL</button>
-            <button id="goldbarSubmitBtn" class="btn btn-outline-warning mt-2">Import Design Space</button>
+            <button id="goldbarImportBtn" class="btn btn-outline-warning mt-2">Import Design Space</button>
             <button id="goldbarSubmitAndDownloadBtn" class="btn btn-outline-warning mt-2">Import Design Space And Download SBOL</button>
           </div>
         </div>
@@ -353,6 +386,8 @@
   <script type="module" src="js/knox.js"></script>
   <script type="module" src="js/target.js"></script>
   <script type="module" src="js/endpoints.js"></script>
+  <script type="module" src="js/simplifyOperators.js"></script>
+  <script src="https://imparse.org/lib/imparse.js"></script>
 
   <!--script type="module" src="js/constellation.js"></script-->
   
