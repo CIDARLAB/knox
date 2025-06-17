@@ -57,6 +57,7 @@ public class GoldbarConversion {
             outputSpace = handleOp(operation, operationToVariableList.get(operation));
         }
 
+        // Add new accept nodes if current accept nodes have outgoing edges
         Set<Node> acceptNodes = outputSpace.getAcceptNodes();
         for (Node acceptNode : acceptNodes) {
             if (acceptNode.hasEdges()) {
@@ -64,6 +65,18 @@ public class GoldbarConversion {
                 Edge blankEdge = new Edge(acceptNode, newAcceptNode);
                 acceptNode.addEdge(blankEdge);
                 acceptNode.deleteAcceptNodeType();
+            }
+        }
+
+        // add new start nodes if current start nodes have incoming edges
+        Set<Node> startNodes = outputSpace.getStartNodes();
+        HashMap<String, Set<Edge>> nodeIDToIncomingEdges = outputSpace.mapNodeIDsToIncomingEdges();
+        for (Node startNode : startNodes) {
+            if (startNode.hasIncomingEdges(nodeIDToIncomingEdges)) {
+                Node newStartNode = outputSpace.createStartNode();
+                Edge blankEdge = new Edge(newStartNode, startNode);
+                newStartNode.addEdge(blankEdge);
+                startNode.deleteStartNodeType();
             }
         }
     }
