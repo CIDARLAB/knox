@@ -228,22 +228,44 @@ public class GoldbarConversion {
     }
 
     private NodeSpace handleZeroOrOne(JSONArray variableList) {
-        NodeSpace tempOutSpace = new NodeSpace();
+        NodeSpace outSpace = new NodeSpace();
         ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
-        OROperator.apply(spaces, tempOutSpace);
+        OROperator.apply(spaces, outSpace);
+
+        Set<Node> startNodes = outSpace.getStartNodes();
+        Set<Node> acceptNodes = outSpace.getAcceptNodes();
 
         // Add Blank Edge from Start Node to Stop Node (Zero option)
-        NodeSpace tempSpace = new NodeSpace();
-        Node startNode = tempSpace.createStartNode();
-        Node acceptNode = tempSpace.createAcceptNode();
-        Edge blankEdge = new Edge(startNode, acceptNode);
-        startNode.addEdge(blankEdge);
 
-        NodeSpace outSpace = new NodeSpace();
-        ArrayList<NodeSpace> tempSpaces = new ArrayList<>();
-        tempSpaces.add(tempSpace);
-        tempSpaces.add(tempOutSpace);
-        OROperator.apply(tempSpaces, outSpace);
+        if (outSpace.getNodes().size() > 2) {
+            NodeSpace tempSpace = new NodeSpace();
+            Node startNode = tempSpace.createStartNode();
+            Node acceptNode = tempSpace.createAcceptNode();
+            Edge blankEdge = new Edge(startNode, acceptNode);
+            startNode.addEdge(blankEdge);
+
+            NodeSpace newOutSpace = new NodeSpace();
+            ArrayList<NodeSpace> tempSpaces = new ArrayList<>();
+            tempSpaces.add(tempSpace);
+            tempSpaces.add(outSpace);
+            OROperator.apply(tempSpaces, newOutSpace);
+
+            return newOutSpace;
+
+        } else {
+            for (Node startNode : startNodes) {
+                for (Node acceptNode : acceptNodes) {
+                    Node node1 = outSpace.createNode();
+                    Node node2 = outSpace.createNode();
+                    Edge edge1 = new Edge(startNode, node1);
+                    Edge edge2 = new Edge(node1, node2);
+                    Edge edge3 = new Edge(node2, acceptNode);
+                    startNode.addEdge(edge1);
+                    node1.addEdge(edge2);
+                    node2.addEdge(edge3);
+                }
+            }
+        }
 
         return outSpace;
     }
