@@ -460,7 +460,7 @@ public class GoldbarGeneration {
             if (!reverse) {
                 // ... part1 ... part2 then except_part1
                 g = String.format(
-                    "zero-or-more((one-or-more(%1$s) then any_except_%3$s) or any_except_%1$s) then zero-or-one(%1$s)", 
+                    "(zero-or-more((any_except_%1$s) or (%1$s then any_except_%3$s))) then zero-or-more(%1$s)", 
                     dataSplit[0], dataSplit[1], name
                 );
 
