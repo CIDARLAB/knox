@@ -1389,7 +1389,7 @@ $("#goldbarImportBtn").click(function() {
   //replace all spaces and special characters for SBOL
   designName = designName.replace(/[^A-Z0-9]/ig, "_");
 
-  let parsed, sparsed, error
+  let parsed, sparsed, error, pcategories
   error = ""
   try {
     parsed = parseGoldbar(specification);
@@ -1403,20 +1403,20 @@ $("#goldbarImportBtn").click(function() {
   parsed = propagateReverseComplements(parsed);
 
   try {
-    categories = parseCategories(categories);
+    pcategories = parseCategories(categories);
   } catch {
     error = error + "Error parsing categories"
     swalError(error)
     $("#spinner").addClass('hidden');
   }
 
-  if (Object.entries(categories).length === 0 && categories.constructor === Object) {
+  if (Object.entries(pcategories).length === 0 && pcategories.constructor === Object) {
     swalError("No Categories")
   }
 
   sparsed = simplify.simplify(parsed);
 
-  let div = document.createElement('div');
+  /*let div = document.createElement('div');
   div.style.height = "inherit";
   div.style.overflow = "scroll";
 
@@ -1428,7 +1428,7 @@ $("#goldbarImportBtn").click(function() {
   div.appendChild(loadingDiv);
 
   swal({
-    title: "Best Paths",
+    title: "Success",
     content: div,
     className: "score-swal"
   });
@@ -1447,13 +1447,15 @@ $("#goldbarImportBtn").click(function() {
   para.appendChild(document.createElement('br'));
 
   div.appendChild(para);
+  */
 
-  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(categories), designName, weight)
+  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(pcategories), designName, weight)
+  swalSuccess();
 
 });
 
 export function submitGoldbar(specification, categories, designName, weight) {
-  let parsed, sparsed, error
+  let parsed, sparsed, error, pcategories
   error = ""
   try {
     parsed = parseGoldbar(specification);
@@ -1467,20 +1469,20 @@ export function submitGoldbar(specification, categories, designName, weight) {
   parsed = propagateReverseComplements(parsed);
 
   try {
-    categories = parseCategories(categories);
+    pcategories = parseCategories(categories);
   } catch {
     error = error + "Error parsing categories"
     swalError(error)
     $("#spinner").addClass('hidden');
   }
 
-  if (Object.entries(categories).length === 0 && categories.constructor === Object) {
+  if (Object.entries(pcategories).length === 0 && pcategories.constructor === Object) {
     swalError("No Categories")
   }
 
   sparsed = simplify.simplify(parsed);
 
-  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(categories), designName, weight)
+  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(pcategories), designName, weight)
 }
 
 export function parseCategories(categories) {
