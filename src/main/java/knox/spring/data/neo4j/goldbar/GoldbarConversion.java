@@ -6,11 +6,14 @@ import knox.spring.data.neo4j.domain.NodeSpace;
 
 import knox.spring.data.neo4j.operations.JoinOperator;
 import knox.spring.data.neo4j.operations.OROperator;
+import knox.spring.data.neo4j.operations.ANDOperator;
+import knox.spring.data.neo4j.operations.MergeOperator;
 
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.neo4j.ogm.json.JSONObject;
@@ -121,6 +124,22 @@ public class GoldbarConversion {
 
         } else if (operation.equals("ZeroOrOne")) {
             space = handleZeroOrOne(variableList);
+            System.out.println("\nZeroOrOne Space Created");
+
+        } else if (operation.equals("And0")) {
+            space = handleAnd(variableList, 0);
+            System.out.println("\nAnd0 Space Created");
+
+        } else if (operation.equals("And1")) {
+            space = handleAnd(variableList, 1);
+            System.out.println("\nAnd1 Space Created");
+
+        } else if (operation.equals("And2")) {
+            space = handleAnd(variableList, 2);
+            System.out.println("\nAnd2 Space Created");
+
+        } else if (operation.equals("Merge")) {
+            space = handleMerge(variableList);
             System.out.println("\nZeroOrOne Space Created");
 
         } else {
@@ -279,6 +298,24 @@ public class GoldbarConversion {
                 }
             }
         }
+
+        return outSpace;
+    }
+
+    private NodeSpace handleAnd(JSONArray variableList, int tolerance) {
+        NodeSpace outSpace = new NodeSpace();
+        ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
+        Set<String> roles = new HashSet<String>();
+        ANDOperator.apply(spaces, outSpace, tolerance, true, roles, new ArrayList<String>());
+
+        return outSpace;
+    }
+
+    private NodeSpace handleMerge(JSONArray variableList) {
+        NodeSpace outSpace = new NodeSpace();
+        ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
+        Set<String> roles = new HashSet<String>();
+        MergeOperator.apply(spaces, outSpace, 0, 0, roles, new ArrayList<String>());
 
         return outSpace;
     }
