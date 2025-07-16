@@ -78,6 +78,7 @@ public class GoldbarGeneration {
 
     private void processCSV(BufferedReader csvReader) {
         Map<String, Integer> columnIndices = new HashMap<>();
+        boolean containsCategories = false;
 
         try {
             String line;
@@ -199,7 +200,7 @@ public class GoldbarGeneration {
             }
             
             try {
-                this.categories.put(partType + "_any", categoryValue);
+                this.categories.put(partType, categoryValue);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -662,10 +663,10 @@ public class GoldbarGeneration {
         // goldbar
         String g = new String();
         if (!reverse) {
-            g = "(zero-or-more(any_except_terminator_leaky) then zero-or-one(terminator_any))";
+            g = "(zero-or-more(any_except_terminator_leaky) then zero-or-one(terminator))";
         } else {
             g = "(zero-or-more(any_except_terminator_leaky or reverse-comp(any_except_terminator_leaky)) " +
-                "then zero-or-one(terminator_any or reverse-comp(terminator_any)))";
+                "then zero-or-one(terminator or reverse-comp(terminator)))";
         }
 
         this.goldbar.put("_LeakyTerminators_Rule_L", g);
@@ -746,12 +747,12 @@ public class GoldbarGeneration {
         String g = new String();
         if (!reverse) {
             g = "zero-or-more((any_except_roadBlockingPromoter then any_except_roadBlockingPromoter) " +
-                "or (promoter_any then any_except_roadBlockingPromoter))";
+                "or (promoter then any_except_roadBlockingPromoter))";
         } else {
             g = "zero-or-more((any_except_roadBlockingPromoter then any_except_roadBlockingPromoter) " +
                 "or reverse-comp((any_except_roadBlockingPromoter then any_except_roadBlockingPromoter)) " +
-                "or (promoter_any then any_except_roadBlockingPromoter)) " +
-                "or reverse-comp(promoter_any then any_except_roadBlockingPromoter))";
+                "or (promoter then any_except_roadBlockingPromoter)) " +
+                "or reverse-comp(promoter then any_except_roadBlockingPromoter))";
         }
 
         this.goldbar.put("_PromoterRoadBlocking_Rule_P", g);
