@@ -88,6 +88,7 @@ public class GoldbarGeneration {
             for (int i = 0; i < headers.length; i++) {
 
                 boolean isRule = false;
+                boolean isCategory = false;
                 for (String column : this.rules) {
                     if (headers[i].equals(column)) {
                         columnIndices.put(column, i);
@@ -99,7 +100,13 @@ public class GoldbarGeneration {
                     isRule = true;
                 }
 
-                if (!isRule) {
+                if (headers[i].equals("categories")) {
+                    columnIndices.put("categories", i);
+                    isCategory = true;
+                    containsCategories = true;
+                }
+
+                if (!isRule && !isCategory) {
                     columnIndices.put(headers[i], i);
                     partTypes.add(headers[i]);
                 }
@@ -110,6 +117,7 @@ public class GoldbarGeneration {
             while ((line = csvReader.readLine()) != null) {
                 String[] values = line.split(",");
                 
+                // Parts
                 for (String column : partTypes) {
                     
                     Integer columnIndex = columnIndices.get(column);
@@ -128,6 +136,7 @@ public class GoldbarGeneration {
                     }
                 }
 
+                // Rules
                 for (String column : this.rules) {
                     
                     Integer columnIndex = columnIndices.get(column);
@@ -142,6 +151,23 @@ public class GoldbarGeneration {
                         value.add(values[columnIndex]);
                         
                         this.columnValues.put(column, value);
+                    }
+                }
+
+                // Categories
+                if (containsCategories) {
+                    Integer columnIndex = columnIndices.get("categories");
+                    if (columnIndex != null && values.length > columnIndex && values[columnIndex].length()>=1) {
+                        
+                        ArrayList<String> value = new ArrayList<>();
+                        
+                        if (i > 0) {
+                            value = this.columnValues.get("categories");
+                        }
+
+                        value.add(values[columnIndex]);
+                        
+                        this.columnValues.put("categories", value);
                     }
                 }
 
@@ -266,6 +292,28 @@ public class GoldbarGeneration {
                     e.printStackTrace();
                 }
             }
+        }
+
+        // User provided Categories
+        for (String category : this.columnValues.get("categories")) {
+            JSONObject categoryToAdd = new JSONObject();
+            
+            // Example Format: "variableName:part1+part2+...+partn"
+            String[] splitCategory = category.split(":", 2); 
+            String variableName = splitCategory[0];
+            String[] splitValues = splitCategory[1].split("\\+");
+            
+            for (String partKey : splitValues) {
+                for (String partTypeKey : this.partTypesMap.keySet()) {
+                    
+                    if (this.partTypesMap.get(partTypeKey).contains(partKey)) {
+                        categoryToAdd.append(partTypeKey, partKey);
+                    }
+
+                }
+            }
+
+            this.categories.put(variableName, categoryToAdd);
         }
 
 
