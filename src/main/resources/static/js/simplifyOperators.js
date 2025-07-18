@@ -187,6 +187,10 @@ export function ZeroOrOne(exp) {
   return {ZeroOrOne: [exp]};
 }
 
+export function ForwardOrReverse(exp) {
+  return {ForwardOrReverse: [exp]};
+}
+
 /**
  * Pushes all the ReverseComp operators down to the Atom level
  * and replaces RevComp(Atom(atom)) with RevComp(atom)

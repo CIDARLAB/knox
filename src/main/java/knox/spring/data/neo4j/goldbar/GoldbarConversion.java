@@ -8,6 +8,7 @@ import knox.spring.data.neo4j.operations.JoinOperator;
 import knox.spring.data.neo4j.operations.OROperator;
 import knox.spring.data.neo4j.operations.ANDOperator;
 import knox.spring.data.neo4j.operations.MergeOperator;
+import knox.spring.data.neo4j.operations.ReverseOperator;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -56,7 +57,7 @@ public class GoldbarConversion {
         operationToVariableList = goldbar.toMap();
 
         // Add space to spaces
-        for (String operation : operationToVariableList.keySet()) {
+        for (String operation : operationToVariableList.keySet()) {   // Should only be one operation
             outputSpace = handleOp(operation, operationToVariableList.get(operation));
         }
 
@@ -140,7 +141,11 @@ public class GoldbarConversion {
 
         } else if (operation.equals("Merge")) {
             space = handleMerge(variableList);
-            System.out.println("\nZeroOrOne Space Created");
+            System.out.println("\nMerge Space Created");
+        
+        } else if (operation.equals("ForwardOrReverse")) {
+            space = handleForwardOrReverse(variableList);
+            System.out.println("\nForwardOrReverse Space Created");
 
         } else {
             System.out.println("\nError: (operation not valid)");
@@ -180,8 +185,6 @@ public class GoldbarConversion {
                 e.printStackTrace();
             }
         }
-
-        System.out.println(roleIsAbstract);
 
         for (String role : roleIsAbstract.keySet()) {
             if (roleIsAbstract.get(role)) {
@@ -316,6 +319,17 @@ public class GoldbarConversion {
         ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
         Set<String> roles = new HashSet<String>();
         MergeOperator.apply(spaces, outSpace, 0, 0, roles, new ArrayList<String>());
+
+        return outSpace;
+    }
+
+    private NodeSpace handleForwardOrReverse(JSONArray variableList) {
+        NodeSpace outSpace = new NodeSpace();
+        NodeSpace tempOutSpace = new NodeSpace();
+        ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
+        ReverseOperator.apply(spaces.get(0), tempOutSpace, true);
+        spaces.add(tempOutSpace);
+        OROperator.apply(spaces, outSpace);
 
         return outSpace;
     }
