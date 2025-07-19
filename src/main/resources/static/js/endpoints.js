@@ -42,7 +42,8 @@ export const operators = {
   AND: 'and',
   MERGE: 'merge',
   REPEAT: 'repeat',
-  WEIGHT: 'weight'
+  WEIGHT: 'weight',
+  REVERSE: 'reverse'
 };
 
 export const enumerate = {
@@ -377,6 +378,22 @@ export function designSpaceWeight(inputSpaces, outputSpace, tolerance, weightTol
 
   let request = new XMLHttpRequest();
   request.open("POST", endpoints.DESIGN + "/" + operators.WEIGHT + query, false);
+  request.send(null);
+  if (request.status >= 200 && request.status < 300) {
+    swalSuccess();
+  } else {
+    swalError(request.response);
+  }
+}
+
+export function designSpaceReverse(inputSpace, outputSpace, reverseOrientation){
+  let query = "?";
+  query += encodeQueryParameter("inputSpaceID", inputSpace, query);
+  query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("reverseOrientation", reverseOrientation, query);
+
+  let request = new XMLHttpRequest();
+  request.open("POST", endpoints.DESIGN + "/" + operators.REVERSE + query, false);
   request.send(null);
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();

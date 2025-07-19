@@ -1012,6 +1012,11 @@ $('#apply-operators-tooltip').click(() => {
   let weightToleranceDropdown = makeWeightToleranceDropdown();
   makeDiv(weightTolDiv, weightToleranceDropdown, 'Weight Tolerance: ');
 
+  //reverse orientation div
+  let reverseOrientationDiv = document.createElement('div');
+  let reverseOrientationDropdown = makeReverseOrientationDropdown();
+  makeDiv(reverseOrientationDiv, reverseOrientationDropdown, 'Reverse Part Orientations?: ');
+
   //append all
   div.appendChild(inputDiv);
   div.appendChild(document.createElement('br'));
@@ -1025,44 +1030,67 @@ $('#apply-operators-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(optDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(reverseOrientationDiv);
+  div.appendChild(document.createElement('br'));
 
   tolDiv.style.visibility = 'hidden';
   weightTolDiv.style.visibility = 'hidden';
   optDiv.style.visibility = 'hidden';
+  reverseOrientationDiv.style.visibility = 'hidden';
 
   $(operatorDropdown).change(function() {
     if(this.value === endpoint.operators.JOIN){
+      inputDiv.style.visibility = 'visible';
       tolDiv.style.visibility = 'hidden';
       weightTolDiv.style.visibility = 'hidden';
       optDiv.style.visibility = 'hidden';
+      reverseOrientationDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.OR){
+      inputDiv.style.visibility = 'visible';
       tolDiv.style.visibility = 'hidden';
       weightTolDiv.style.visibility = 'hidden';
       optDiv.style.visibility = 'hidden';
+      reverseOrientationDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.REPEAT){
+      inputDiv.style.visibility = 'visible';
       tolDiv.style.visibility = 'hidden';
       weightTolDiv.style.visibility = 'hidden';
       optDiv.style.visibility = 'visible';
+      reverseOrientationDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.AND){
+      inputDiv.style.visibility = 'visible';
       tolDiv.style.visibility = 'visible';
       weightTolDiv.style.visibility = 'hidden';
       optDiv.style.visibility = 'hidden';
       toleranceDropdown.value = 1;
+      reverseOrientationDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.MERGE){
+      inputDiv.style.visibility = 'visible';
       tolDiv.style.visibility = 'visible';
       weightTolDiv.style.visibility = 'visible';
       optDiv.style.visibility = 'hidden';
       toleranceDropdown.value = 0;
+      reverseOrientationDiv.style.visibility = 'hidden';
     }
     if(this.value === endpoint.operators.WEIGHT){
+      inputDiv.style.visibility = 'visible';
       tolDiv.style.visibility = 'visible';
       weightTolDiv.style.visibility = 'visible';
       optDiv.style.visibility = 'hidden';
       toleranceDropdown.value = 0;
+      reverseOrientationDiv.style.visibility = 'hidden';
+    }
+    if(this.value === endpoint.operators.REVERSE){
+      inputDiv.style.visibility = 'hidden';
+      tolDiv.style.visibility = 'hidden';
+      weightTolDiv.style.visibility = 'hidden';
+      optDiv.style.visibility = 'hidden';
+      toleranceDropdown.value = 0;
+      reverseOrientationDiv.style.visibility = 'visible';
     }
   });
 
@@ -1084,6 +1112,7 @@ $('#apply-operators-tooltip').click(() => {
       let tolerance = toleranceDropdown.value;
       let isComplete = completeDropdown.value;
       let weightTolerance = weightToleranceDropdown.value;
+      let reverseOrientation = reverseOrientationDropdown.value;
 
       switch (operatorDropdown.value) {
         case endpoint.operators.JOIN:
@@ -1108,6 +1137,10 @@ $('#apply-operators-tooltip').click(() => {
 
         case endpoint.operators.WEIGHT:
           endpoint.designSpaceWeight(inputSpaces, outputSpace, tolerance, weightTolerance);
+          break;
+
+        case endpoint.operators.REVERSE:
+          endpoint.designSpaceReverse(currentSpace, outputSpace, reverseOrientation);
           break;
       }
     }
@@ -1169,6 +1202,15 @@ function makeCompleteDropdown(){
   completeDropdown.appendChild(new Option("False", false));
 
   return completeDropdown;
+}
+
+function makeReverseOrientationDropdown(){
+  let reverseOrientation = document.createElement('select');
+  reverseOrientation.setAttribute("id", "reverse-orientation");
+  reverseOrientation.appendChild(new Option("True", true, true, true));
+  reverseOrientation.appendChild(new Option("False", false));
+
+  return reverseOrientation;
 }
 
 function makeDiv(div, input, title){

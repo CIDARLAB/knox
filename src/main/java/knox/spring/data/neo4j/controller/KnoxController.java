@@ -581,6 +581,27 @@ public class KnoxController {
 		}
 	}
 
+	@RequestMapping(value = "/designSpace/reverse", method = RequestMethod.POST)
+	public ResponseEntity<String> reverseDesignSpaces(@RequestParam(value = "inputSpaceID", required = true) String inputSpaceID,
+			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "reverseOrientation", required = false, defaultValue = "true") Boolean reverseOrientation) {
+		
+		try {
+			long startTime = System.nanoTime();
+			
+			
+			designSpaceService.reverseDesignSpace(inputSpaceID, outputSpaceID, reverseOrientation);
+			
+			
+			return new ResponseEntity<String>("{\"message\": \"Design space was successfully reversed after " +
+					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+		} catch (ParameterEmptyException | DesignSpaceNotFoundException | 
+				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
+			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}", 
+					HttpStatus.BAD_REQUEST);
+		}
+	}
+
 	/**
 	 * @api {post} /designSpace/merge Merge
 	 * @apiName mergeDesignSpaces

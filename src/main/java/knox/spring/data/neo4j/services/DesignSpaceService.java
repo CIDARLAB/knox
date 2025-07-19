@@ -19,6 +19,7 @@ import knox.spring.data.neo4j.operations.RepeatOperator;
 import knox.spring.data.neo4j.operations.Star;
 import knox.spring.data.neo4j.operations.Union;
 import knox.spring.data.neo4j.operations.WeightOperator;
+import knox.spring.data.neo4j.operations.ReverseOperator;
 import knox.spring.data.neo4j.repositories.BranchRepository;
 import knox.spring.data.neo4j.repositories.CommitRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
@@ -1433,6 +1434,23 @@ public class DesignSpaceService {
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
     	
     	WeightOperator.apply(inputSpaces.get(0), inputSpaces.get(1), outputSpace, tolerance, weightTolerance);
+
+    	saveDesignSpace(outputSpace);
+
+	}
+
+	public void reverseDesignSpace(String inputSpaceID, String outputSpaceID, Boolean reverseOrientation)
+    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
+    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
+
+		ArrayList<String> inputSpaceIDs = new ArrayList<>();
+		inputSpaceIDs.add(inputSpaceID);
+
+    	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
+    	
+    	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+    	
+    	ReverseOperator.apply(inputSpaces.get(0), outputSpace, reverseOrientation);
 
     	saveDesignSpace(outputSpace);
 
