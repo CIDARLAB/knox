@@ -104,7 +104,7 @@
 <section id="import">
   <ul class="nav nav-pills nav-justified">
     <li class="active"><a data-toggle="pill" href="#CSV">CSV</a></li>
-    <li><a data-toggle="pill" href="#GENERATOR">GOLDBAR</a></li>
+    <li><a data-toggle="pill" href="#GENERATOR">GOLDBAR Generator</a></li>
     <li><a data-toggle="pill" href="#Eugene">Eugene</a></li>
     <li><a data-toggle="pill" href="#SBOL">SBOL</a></li>
   </ul>
@@ -153,9 +153,7 @@
     <div id="GENERATOR" class="tab-pane fade">
       <div class="goldbar-generator-description">
         <p>The GOLDBAR Generator allows you to quickly create design spaces from a set of known biological principles</p>
-        <p>Available Part Types: "promoter", "ribosomeBindingSite", "cds", "terminator"
-          <br>Use Part Type as column header and fill in rows below with part IDs, One part ID per row.
-        </p>
+        <p>Use Part Type as column header and fill in rows below with part IDs, One part ID per row.</p> 
         <p>Lengths: (Comma Seperated Integers greater or equal to 1)</p>
         <p>Reverse: (If true, rules will include both the forward and reverse orientation)</p>
         <p>Available Rules (Seperate Rules with comma):
@@ -173,7 +171,7 @@
 
       <form id="goldbarForm" method="POST" enctype="multipart/form-data"
             action="goldbarGen/generator" class="navbar-form navbar-left" ng-show="isCSVMode">
-        <input type="file" name="inputCSVFiles[]" multiple>
+        <input type="file" name="inputCSVFiles[]">
         <br>
         <input type="text" name="rules" placeholder="rules, comma seperated"
                class="form-control" aria-label="..." size="10">
@@ -320,7 +318,7 @@
             <div class="row">
               <div class="col-sm">
                 <label id="designName" for="designNameInput"><h5>Design name:</h5></label>
-                <input id="designNameInput" type="text" placeholder="design-name" value="design_name">
+                <input id="designNameInput" type="text" placeholder="design-name" value="testing">
                 <label id="weight" for="weightInput"><h5>   Edge Weight:</h5></label>
                 <input id="weightInput" type="number" placeholder="0.0" value="0">
               </div>
