@@ -5,6 +5,7 @@ import {and0GOLDBAR, and1GOLDBAR_NORB, and1GOLDBAR_RB, and2GOLDBAR} from "./use-
 import {celloCategories} from "./use-cases/cello-categories.js";
 import {rebeccamycinGOLDBAR, biosynthesisCategories} from "./use-cases/rebeccamycin.js";
 import {reverseGOLDBAR} from "./use-cases/reverse.js";
+import {exampleCategories, concreteGOLDBAR, abstractGOLDBAR, concreteAndAbstractGOLDBAR} from "./use-cases/small-example.js";
 
 /******************
  * GLOBAL VARIABLES
@@ -370,38 +371,55 @@ export function getSBOLImage(role){
 /*****************************
  * GOLDBAR Use Cases FUNCTIONS
  *****************************/
+$('#concrete').on('click', function() {
+  document.getElementById('designNameInput').value = "concrete-example";
+  editors.specEditor.setValue(concreteGOLDBAR);
+  editors.catEditor.setValue(JSON.stringify(exampleCategories));
+});
+
+$('#abstract').on('click', function() {
+  document.getElementById('designNameInput').value = "abstract-example";
+  editors.specEditor.setValue(abstractGOLDBAR);
+  editors.catEditor.setValue(JSON.stringify(exampleCategories));
+});
+
+$('#concreteAndAbstract').on('click', function() {
+  document.getElementById('designNameInput').value = "concrete-and-abstract-example";
+  editors.specEditor.setValue(concreteAndAbstractGOLDBAR);
+  editors.catEditor.setValue(JSON.stringify(exampleCategories));
+});
 $('#and0-option').on('click', function() {
-  document.getElementById('designName').value = "cello-AND-example";
+  document.getElementById('designNameInput').value = "cello-AND-example";
   editors.specEditor.setValue(and0GOLDBAR);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
 
 $('#and1-option-norb').on('click', function() {
-  document.getElementById('designName').value = "cello-no-roadblocking-example";
+  document.getElementById('designNameInput').value = "cello-no-roadblocking-example";
   editors.specEditor.setValue(and1GOLDBAR_NORB);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
 
 $('#and1-option-rb').on('click', function() {
-  document.getElementById('designName').value = "cello-roadblocking-example";
+  document.getElementById('designNameInput').value = "cello-roadblocking-example";
   editors.specEditor.setValue(and1GOLDBAR_RB);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
 
 $('#and2-option').on('click', function() {
-  document.getElementById('designName').value = "cello-AND-example2";
+  document.getElementById('designNameInput').value = "cello-AND-example2";
   editors.specEditor.setValue(and2GOLDBAR);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
 
 $('#merge-option').on('click', function() {
-  document.getElementById('designName').value = "rebeccamycin-example";
+  document.getElementById('designNameInput').value = "rebeccamycin-example";
   editors.specEditor.setValue(rebeccamycinGOLDBAR);
   editors.catEditor.setValue(JSON.stringify(biosynthesisCategories));
 });
 
 $('#reverse-option').on('click', function() {
-  document.getElementById('designName').value = "reverse-complement-example";
+  document.getElementById('designNameInput').value = "reverse-complement-example";
   editors.specEditor.setValue(reverseGOLDBAR);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
@@ -412,13 +430,13 @@ let debugCats = '{"promoter": {"promoter": ["BBa_R0040", "BBa_J23100"]},\n ' +
   '"terminator": {"terminator": ["BBa_B0010"]}}'
 
 $('#oOM-option').on('click', function() {
-  document.getElementById('designName').value = "one-or-more-exampleI";
+  document.getElementById('designNameInput').value = "one-or-more-exampleI";
   editors.specEditor.setValue('one-or-more (promoter or ribosomeBindingSite) then (zero-or-more cds) then terminator');
   editors.catEditor.setValue(debugCats);
 });
 
 $('#oOM-option2').on('click', function() {
-  document.getElementById('designName').value = "one-or-more-exampleII";
+  document.getElementById('designNameInput').value = "one-or-more-exampleII";
   editors.specEditor.setValue('one-or-more (promoter then zero-or-one(ribosomeBindingSite) then cds then terminator)');
   editors.catEditor.setValue(debugCats);
 });
