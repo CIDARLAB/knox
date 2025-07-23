@@ -1,6 +1,10 @@
 import Target from './target.js';
 import * as endpoint from "./endpoints.js";
 import * as simplify from './simplifyOperators.js';
+import {and0GOLDBAR, and1GOLDBAR_NORB, and1GOLDBAR_RB, and2GOLDBAR} from "./use-cases/cello-AND-circuits.js";
+import {celloCategories} from "./use-cases/cello-categories.js";
+import {rebeccamycinGOLDBAR, biosynthesisCategories} from "./use-cases/rebeccamycin.js";
+import {reverseGOLDBAR} from "./use-cases/reverse.js";
 
 /******************
  * GLOBAL VARIABLES
@@ -362,6 +366,62 @@ export function getSBOLImage(role){
       return sbolpath + "no-glyph-assigned.svg";
   }
 }
+
+/*****************************
+ * GOLDBAR Use Cases FUNCTIONS
+ *****************************/
+$('#and0-option').on('click', function() {
+  document.getElementById('designName').value = "cello-AND-example";
+  editors.specEditor.setValue(and0GOLDBAR);
+  editors.catEditor.setValue(JSON.stringify(celloCategories));
+});
+
+$('#and1-option-norb').on('click', function() {
+  document.getElementById('designName').value = "cello-no-roadblocking-example";
+  editors.specEditor.setValue(and1GOLDBAR_NORB);
+  editors.catEditor.setValue(JSON.stringify(celloCategories));
+});
+
+$('#and1-option-rb').on('click', function() {
+  document.getElementById('designName').value = "cello-roadblocking-example";
+  editors.specEditor.setValue(and1GOLDBAR_RB);
+  editors.catEditor.setValue(JSON.stringify(celloCategories));
+});
+
+$('#and2-option').on('click', function() {
+  document.getElementById('designName').value = "cello-AND-example2";
+  editors.specEditor.setValue(and2GOLDBAR);
+  editors.catEditor.setValue(JSON.stringify(celloCategories));
+});
+
+$('#merge-option').on('click', function() {
+  document.getElementById('designName').value = "rebeccamycin-example";
+  editors.specEditor.setValue(rebeccamycinGOLDBAR);
+  editors.catEditor.setValue(JSON.stringify(biosynthesisCategories));
+});
+
+$('#reverse-option').on('click', function() {
+  document.getElementById('designName').value = "reverse-complement-example";
+  editors.specEditor.setValue(reverseGOLDBAR);
+  editors.catEditor.setValue(JSON.stringify(celloCategories));
+});
+
+let debugCats = '{"promoter": {"promoter": ["BBa_R0040", "BBa_J23100"]},\n ' +
+  '"ribosomeBindingSite": {"ribosomeBindingSite": ["BBa_B0032", "BBa_B0034"]}, \n' +
+  '"cds": {"cds": ["BBa_E0040", "BBa_E1010"]},\n"nonCodingRna": {"nonCodingRna": ["BBa_F0010"]},\n' +
+  '"terminator": {"terminator": ["BBa_B0010"]}}'
+
+$('#oOM-option').on('click', function() {
+  document.getElementById('designName').value = "one-or-more-exampleI";
+  editors.specEditor.setValue('one-or-more (promoter or ribosomeBindingSite) then (zero-or-more cds) then terminator');
+  editors.catEditor.setValue(debugCats);
+});
+
+$('#oOM-option2').on('click', function() {
+  document.getElementById('designName').value = "one-or-more-exampleII";
+  editors.specEditor.setValue('one-or-more (promoter then zero-or-one(ribosomeBindingSite) then cds then terminator)');
+  editors.catEditor.setValue(debugCats);
+});
 
 
 /*********************
