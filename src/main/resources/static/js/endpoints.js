@@ -273,6 +273,25 @@ export function deleteDesign(){
   }
 }
 
+/**
+ * Deletes the design space and clears design space svg
+ */
+export function deleteThisDesign(inputSpace, response){
+  let request = new XMLHttpRequest();
+  let query = "?targetSpaceID=" + inputSpace;
+  request.open("DELETE", endpoints.DESIGN + query, false);
+  request.send(null);
+  
+  if (response) {
+    if (request.status >= 200 && request.status < 300) {
+      swalSuccess();
+      clearAllPages();
+    } else {
+      swalError("Failed to delete design space " + currentSpace);
+    }
+  }
+}
+
 // export function getDate() {
 //   let d = new Date();
 //   let month = '' + (d.getMonth() + 1);

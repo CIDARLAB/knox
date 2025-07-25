@@ -7,6 +7,7 @@ import {rebeccamycinGOLDBAR, biosynthesisCategories} from "./use-cases/rebeccamy
 import {reverseGOLDBAR} from "./use-cases/reverse.js";
 import {exampleCategories, concreteGOLDBAR, abstractGOLDBAR, concreteAndAbstractGOLDBAR} from "./use-cases/small-example.js";
 import {exampleRules, ruleCategories} from "./use-cases/rules-examples.js";
+import {ruleTests} from './use-cases/rules-tests.js';
 
 /******************
  * GLOBAL VARIABLES
@@ -1557,6 +1558,153 @@ $("#goldbarDownloadSbolBtn").click(function() {
 */
 
 // Do GOLDBAR in Knox
+$("#testRulesBtn").click(async function () {
+
+  let ruleOutcomes = {};
+  let weight = 0;
+  let tolerance = 1;
+  let isComplete = true;
+  let designName = "test_Rule_";
+
+  for (let rule of Object.keys(exampleRules)) {
+    // Space names
+    let ruleSpaceName = designName + rule + "_ruleSpace";
+    let passSpaceName = designName + rule + "_passSpace";
+    let failSpaceName = designName + rule + "_failSpace";
+    let outputPass = designName + rule + "_and1_Pass";
+    let outputFail = designName + rule + "_and1_Fail";
+
+    // Clean up any previous designs
+    endpoint.deleteThisDesign(ruleSpaceName, false);
+    endpoint.deleteThisDesign(passSpaceName, false);
+    endpoint.deleteThisDesign(failSpaceName, false);
+    endpoint.deleteThisDesign(outputPass, false);
+    endpoint.deleteThisDesign(outputFail, false);
+
+    // Create new designs
+    submitGoldbar(exampleRules[rule], JSON.stringify(ruleCategories), ruleSpaceName, weight);
+    submitGoldbar(ruleTests[rule][0].join(" or "), JSON.stringify(ruleCategories), passSpaceName, weight);
+    submitGoldbar(ruleTests[rule][1].join(" or "), JSON.stringify(ruleCategories), failSpaceName, weight);
+
+    // AND operations
+    endpoint.designSpaceAnd([ruleSpaceName, passSpaceName], outputPass, tolerance, isComplete);
+    endpoint.designSpaceAnd([ruleSpaceName, failSpaceName], outputFail, tolerance, isComplete);
+
+    // Process results
+    const result = await processRuleAsync(rule, outputPass, outputFail, passSpaceName);
+    ruleOutcomes[rule] = result;
+  }
+
+  document.getElementById('designNameInput').value = "testing-results";
+  let results = Object.entries(ruleOutcomes)
+    .map(([rule, data]) => `${rule}: ${JSON.stringify(data)}\n\n`)
+    .join("");
+
+  editors.specEditor.setValue(results);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+async function processRuleAsync(rule, passOutput, failOutput, passSpace) {
+  try {
+    const [designsOutputPass, designsOutputFail, designsPass] = await Promise.all([
+      quickEnumerateAsync(passOutput),
+      quickEnumerateAsync(failOutput),
+      quickEnumerateAsync(passSpace)
+    ]);
+
+    let outcome = "pass";
+    let failedPassDesigns = [];
+    let failedFailedDesigns = [];
+
+    if (!deepEqualUnordered(designsOutputPass, designsPass)) {
+      outcome = "fail - Passes not equal";
+      failedPassDesigns = getUniqueElements(designsOutputPass, designsPass);
+    }
+
+    if (designsOutputFail.length > 0) {
+      outcome = "fail - Fails not eliminated";
+      failedFailedDesigns = designsOutputFail;
+    }
+
+    if (designsOutputPass.length > ruleTests[rule][0].length) {
+      outcome = "fail - Pass too many designs";
+      failedPassDesigns = designsOutputPass;
+    }
+
+    return {
+      outcome,
+      designsOutputPass,
+      designsPass,
+      failedPass: failedPassDesigns,
+      failedFailed: failedFailedDesigns
+    };
+  } catch (error) {
+    console.error(`Error in rule ${rule}:`, error);
+    return { outcome: "error", error: error.message };
+  }
+}
+
+function quickEnumerateAsync(inputSpace) {
+  return new Promise((resolve, reject) => {
+    quickEnumerate(inputSpace, (err, designs) => {
+      if (err) reject(err);
+      else resolve(designs);
+    });
+  });
+}
+
+function quickEnumerate(inputSpace, callback) {
+  let numDesigns = 0;
+  let minLength = 0;
+  let maxLength = 0;
+  let isWeighted = true;
+  let isSampleSpace = false;
+
+  endpoint.enumerateDesignsList(
+    inputSpace,
+    numDesigns,
+    minLength,
+    maxLength,
+    isWeighted,
+    isSampleSpace,
+    (err, data) => {
+      if (err) {
+        swalError("Enumeration error: " + JSON.stringify(err));
+        callback(err, null);
+      } else {
+        const designs = data.map(list =>
+          list
+            .filter(element => element.isBlank)
+            .map(element => element.id)
+        );
+        callback(null, designs);
+      }
+    }
+  )};
+
+
+function deepEqualUnordered(arr1, arr2) {
+  if (arr1.length !== arr2.length) return false;
+
+  const normalize = arr =>
+    arr.map(inner => [...inner].sort()).map(JSON.stringify).sort();
+
+  const norm1 = normalize(arr1);
+  const norm2 = normalize(arr2);
+
+  for (let i = 0; i < norm1.length; i++) {
+    if (norm1[i] !== norm2[i]) return false;
+  }
+
+  return true;
+}
+
+function getUniqueElements(arr1, arr2) {
+  const uniqueToArr1 = arr1.filter(item => !arr2.includes(item));
+  const uniqueToArr2 = arr2.filter(item => !arr1.includes(item));
+  return [...uniqueToArr1, ...uniqueToArr2];
+}
+
 $("#goldbarImportBtn").click(function() {
 
   $('#spinner').removeClass('hidden'); // show spinner
@@ -1570,80 +1718,26 @@ $("#goldbarImportBtn").click(function() {
   //replace all spaces and special characters for SBOL
   designName = designName.replace(/[^A-Z0-9]/ig, "_");
 
-  let parsed, sparsed, error, pcategories
-  error = ""
-  try {
-    parsed = parseGoldbar(specification);
-    $("#spinner").addClass('hidden');
-  } catch {
-    error = error + "Error parsing GOLDBAR"
-    swalError(error)
-    $("#spinner").addClass('hidden');
-  }
-
-  parsed = propagateReverseComplements(parsed);
-
-  try {
-    pcategories = parseCategories(categories);
-  } catch {
-    error = error + "Error parsing categories"
-    swalError(error)
-    $("#spinner").addClass('hidden');
-  }
-
-  if (Object.entries(pcategories).length === 0 && pcategories.constructor === Object) {
-    swalError("No Categories")
-  }
-
-  sparsed = simplify.simplify(parsed);
-
-  /*let div = document.createElement('div');
-  div.style.height = "inherit";
-  div.style.overflow = "scroll";
-
-  // loading div
-  let loadingDiv = document.createElement('div');
-  loadingDiv.appendChild(document.createTextNode("Loading..."));
-
-  //append all
-  div.appendChild(loadingDiv);
-
-  swal({
-    title: "Success",
-    content: div,
-    className: "score-swal"
-  });
-
-  div.removeChild(loadingDiv);
-  let para = document.createElement("p");
-
-  para.appendChild(document.createElement('br'));
-  para.appendChild(document.createTextNode(JSON.stringify(sparsed)));
-  para.appendChild(document.createElement('br'));
-  para.appendChild(document.createElement('br'));
-  para.appendChild(document.createTextNode(JSON.stringify(categories)));
-  para.appendChild(document.createElement('br'));
-  para.appendChild(document.createElement('br'));
-  para.appendChild(document.createTextNode(error));
-  para.appendChild(document.createElement('br'));
-
-  div.appendChild(para);
-  */
-
-  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(pcategories), designName, weight)
+  submitGoldbar(specification, categories, designName, weight);
+  $('#spinner').addClass('hidden'); // remove spinner
   swalSuccess();
-
 });
 
 export function submitGoldbar(specification, categories, designName, weight) {
-  let parsed, sparsed, error, pcategories
-  error = ""
+  let sparsed, pcategories
+  [sparsed, pcategories] = getParsedGOLDBARAndCategories(specification, categories);
+  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(pcategories), designName, weight)
+}
+
+export function getParsedGOLDBARAndCategories(specification, categories) {
+  let parsed, sparsed, error, pcategories;
+  error = "";
   try {
     parsed = parseGoldbar(specification);
     $("#spinner").addClass('hidden');
   } catch {
-    error = error + "Error parsing GOLDBAR"
-    swalError(error)
+    error = error + "Error parsing GOLDBAR";
+    swalError(error);
     $("#spinner").addClass('hidden');
   }
 
@@ -1652,18 +1746,18 @@ export function submitGoldbar(specification, categories, designName, weight) {
   try {
     pcategories = parseCategories(categories);
   } catch {
-    error = error + "Error parsing categories"
-    swalError(error)
+    error = error + "Error parsing categories";
+    swalError(error);
     $("#spinner").addClass('hidden');
   }
 
   if (Object.entries(pcategories).length === 0 && pcategories.constructor === Object) {
-    swalError("No Categories")
+    swalError("No Categories");
   }
 
   sparsed = simplify.simplify(parsed);
 
-  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(pcategories), designName, weight)
+  return [sparsed, pcategories];
 }
 
 export function parseCategories(categories) {
