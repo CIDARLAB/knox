@@ -335,9 +335,11 @@
                     Examples
                   </button>
                   <div id="examples-list" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <!-- Concrete and Abstract Examples-->
                     <button id='concrete' class="dropdown-item" href="#">Concrete Example</button>
                     <button id='abstract' class="dropdown-item" href="#">Abstract Example</button>
                     <button id='concreteAndAbstract' class="dropdown-item" href="#">Concrete and Abstract Example</button>
+                    <!-- Manuscript Examples -->
                     <button id='and0-option' class="dropdown-item" href="#">Cello AND Circuit (AND0)</button>
                     <button id='and1-option-norb' class="dropdown-item" href="#">Cello No Roadblocking (AND1)</button>
                     <button id='and1-option-rb' class="dropdown-item" href="#">Cello Roadblocking (AND1)</button>
@@ -346,6 +348,17 @@
                     <button id='reverse-option' class="dropdown-item" href="#">Reverse Complement</button>
                     <button id='oOM-option' class="dropdown-item" href="#">One Or More I</button>
                     <button id='oOM-option2' class="dropdown-item" href="#">One Or More II</button>
+                    <!-- GOLDBAR RULES EXAMPLES-->
+                    <button id='doNotRepeatRule' class="dropdown-item" href="#">(R) Do Not Repeat A</button>
+                    <button id='beforeRule' class="dropdown-item" href="#">(B) A before B</button>
+                    <button id='togetherRule' class="dropdown-item" href="#">(T) A and B Together</button>
+                    <button id='pjiRule' class="dropdown-item" href="#">(I) A not followed by B</button>
+                    <button id='mustIncludeRule' class="dropdown-item" href="#">(M) Must Include A</button>
+                    <button id='endRule' class="dropdown-item" href="#">(E) End with A</button>
+                    <button id='notOrthogonalRule' class="dropdown-item" href="#">(O) A and B not Together</button>
+                    <button id='lengthRule' class="dropdown-item" href="#">(N) Designs 4 parts long</button>
+                    <button id='leakyRule' class="dropdown-item" href="#">(L) Leaky Terminators</button>
+                    <button id='roadBlockingRule' class="dropdown-item" href="#">(P) No Promoter RoadBlocking</button>
                   </div>
                   <br><br>
                 <textarea class="codemirror" id="goldbar-input-0" name="paragraph_text" cols="50" rows="10"></textarea>
@@ -412,6 +425,7 @@
   <script type="module" src="js/use-cases/cello-categories.js"></script>
   <script type="module" src="js/use-cases/reverse.js"></script>
   <script type="module" src="js/use-cases/small-example.js"></script>
+  <script type="module" src="js/use-cases/rules-examples.js"></script>
 
   <!--script type="module" src="js/constellation.js"></script-->
   

@@ -6,6 +6,7 @@ import {celloCategories} from "./use-cases/cello-categories.js";
 import {rebeccamycinGOLDBAR, biosynthesisCategories} from "./use-cases/rebeccamycin.js";
 import {reverseGOLDBAR} from "./use-cases/reverse.js";
 import {exampleCategories, concreteGOLDBAR, abstractGOLDBAR, concreteAndAbstractGOLDBAR} from "./use-cases/small-example.js";
+import {exampleRules, ruleCategories} from "./use-cases/rules-examples.js";
 
 /******************
  * GLOBAL VARIABLES
@@ -439,6 +440,66 @@ $('#oOM-option2').on('click', function() {
   document.getElementById('designNameInput').value = "one-or-more-exampleII";
   editors.specEditor.setValue('one-or-more (promoter then zero-or-one(ribosomeBindingSite) then cds then terminator)');
   editors.catEditor.setValue(debugCats);
+});
+
+$('#doNotRepeatRule').on('click', function() {
+  document.getElementById('designNameInput').value = "do-not-repeat-A";
+  editors.specEditor.setValue(exampleRules.R);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#beforeRule').on('click', function() {
+  document.getElementById('designNameInput').value = "A-before-B";
+  editors.specEditor.setValue(exampleRules.B);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#togetherRule').on('click', function() {
+  document.getElementById('designNameInput').value = "A-and-B-together";
+  editors.specEditor.setValue(exampleRules.T);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#pjiRule').on('click', function() {
+  document.getElementById('designNameInput').value = "A-notFollowedBy-B";
+  editors.specEditor.setValue(exampleRules.I);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#mustIncludeRule').on('click', function() {
+  document.getElementById('designNameInput').value = "mustInclude-A";
+  editors.specEditor.setValue(exampleRules.M);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#endRule').on('click', function() {
+  document.getElementById('designNameInput').value = "mustEndWith-A";
+  editors.specEditor.setValue(exampleRules.E);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#notOrthogonalRule').on('click', function() {
+  document.getElementById('designNameInput').value = "A-and-B-notTogether";
+  editors.specEditor.setValue(exampleRules.O);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#lengthRule').on('click', function() {
+  document.getElementById('designNameInput').value = "length-4-parts";
+  editors.specEditor.setValue(exampleRules.N);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#leakyRule').on('click', function() {
+  document.getElementById('designNameInput').value = "leakyTerminators";
+  editors.specEditor.setValue(exampleRules.L);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#roadBlockingRule').on('click', function() {
+  document.getElementById('designNameInput').value = "no-promoter-roadBlocking";
+  editors.specEditor.setValue(exampleRules.P);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 
