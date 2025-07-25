@@ -155,7 +155,6 @@
         <p>The GOLDBAR Generator allows you to quickly create design spaces from a set of known biological principles</p>
         <p>Use Part Type as column header and fill in rows below with part IDs, One part ID per row.</p> 
         <p>Lengths: (Comma Seperated Integers greater or equal to 1)</p>
-        <p>Reverse: (If true, rules will include both the forward and reverse orientation)</p>
         <p>Available Rules (Seperate Rules with comma):
           <br>"R" : Do not repeat part. 
           <br>"B" : All instrances of Part1 must be before all instances of Part2. 
@@ -182,18 +181,18 @@
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
         <br>
-        <label for="verify">Verify?:</label>
-        <input type="text" id="verify" name="verify" list="bools">
-          <datalist id="bools">
-            <option value="false">
-            <option value="true">
-          </datalist>
-        <label for="reverse">Reverse?:</label>
-        <input type="text" id="reverse" name="reverse" list="bools">
-          <datalist id="bools">
-            <option value="false">
-            <option value="true">
-          </datalist>
+        <label for="verify">Verify?</label>
+        <select id="verify" name="verify">
+          <option value="false">No</option>
+          <option value="true">Yes</option>
+        </select>
+        <br>
+        <label for="direction">Direction?:</label>
+        <select id="direction" name="direction">
+            <option value="Forward Only">Forward Only</option>
+            <option value="Reverse Only">Reverse Only</option>
+            <option value="Forward or Reverse">Forward or Reverse</option>
+        </select>
         <br>
                
         <input type="submit" value="GOLDBAR Generator">
@@ -209,14 +208,14 @@
             const rules = formData.get('rules');
             const lengths = formData.get('lengths');
             const verify = formData.get('verify');
-            const reverse = formData.get('reverse');
+            const direction = formData.get('direction');
             const outputSpacePrefix = formData.get('outputSpacePrefix');
             const files = formData.getAll('inputCSVFiles[]').map(file => file.name).join(', ');
 
             // Show SweetAlert confirmation
             swal({
                 title: "Confirm GOLDBAR Generator Submission",
-                text: `Rules: ${rules}\nLengths: ${lengths}\nVerify: ${verify}\nReverse: ${reverse}\nSpace ID: ${outputSpacePrefix}\nFiles: ${files}`,
+                text: `Rules: ${rules}\nLengths: ${lengths}\nVerify: ${verify}\nDirection: ${direction}\nSpace ID: ${outputSpacePrefix}\nFiles: ${files}`,
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,

@@ -904,14 +904,14 @@ public class DesignSpaceService {
 	}
 
 	public Map<String, Object> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, 
-			ArrayList<String> lengths, String outputSpacePrefix, Boolean verify, Boolean reverse) {
+			ArrayList<String> lengths, String outputSpacePrefix, Boolean verify, String direction) {
 		
 		Map<String, Object> goldbarAndCategories = new HashMap<>();
 		String spacePrefix;
 		Map<String, String> g = new HashMap<>();
 		String s = "";
 
-		GoldbarGeneration goldbarGeneration = new GoldbarGeneration(rules, inputCSVStream, reverse);
+		GoldbarGeneration goldbarGeneration = new GoldbarGeneration(rules, inputCSVStream, direction);
 
 		if (rules.contains("N")) {
 			g = goldbarGeneration.createRuleN(lengths);

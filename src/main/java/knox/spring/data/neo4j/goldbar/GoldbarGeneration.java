@@ -31,9 +31,11 @@ public class GoldbarGeneration {
 
     Map<String, ArrayList<String>> columnValues;
 
-    Boolean reverse;
+    String direction;
 
-    public GoldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, Boolean reverse) {
+    boolean containsCategories;
+
+    public GoldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, String direction) {
         this.goldbar = new HashMap<>();
         
         this.categories = new JSONObject();
@@ -58,10 +60,13 @@ public class GoldbarGeneration {
         this.ruleOptions.add("goldbar");
 
         this.columnValues = new HashMap<>();
+
+        this.containsCategories = false;
+        
         BufferedReader csvReader = new BufferedReader(new InputStreamReader(inputCSVStream));
         processCSV(csvReader);
 
-        this.reverse = reverse;
+        this.direction = direction;
 
         System.out.println("\nData:");
         System.out.println(columnValues + "\n\n");
@@ -78,7 +83,6 @@ public class GoldbarGeneration {
 
     private void processCSV(BufferedReader csvReader) {
         Map<String, Integer> columnIndices = new HashMap<>();
-        boolean containsCategories = false;
 
         try {
             String line;
@@ -103,7 +107,7 @@ public class GoldbarGeneration {
                 if (headers[i].equals("categories")) {
                     columnIndices.put("categories", i);
                     isCategory = true;
-                    containsCategories = true;
+                    this.containsCategories = true;
                 }
 
                 if (!isRule && !isCategory) {
@@ -155,7 +159,7 @@ public class GoldbarGeneration {
                 }
 
                 // Categories
-                if (containsCategories) {
+                if (this.containsCategories) {
                     Integer columnIndex = columnIndices.get("categories");
                     if (columnIndex != null && values.length > columnIndex && values[columnIndex].length()>=1) {
                         
@@ -295,33 +299,34 @@ public class GoldbarGeneration {
         }
 
         // User provided Categories
-        for (String category : this.columnValues.get("categories")) {
-            JSONObject categoryToAdd = new JSONObject();
-            
-            // Example Format: "variableName:part1+part2+...+partn"
-            String[] splitCategory = category.split(":", 2); 
-            String variableName = splitCategory[0];
-            String[] splitValues = splitCategory[1].split("\\+");
-            
-            for (String partKey : splitValues) {
-                for (String partTypeKey : this.partTypesMap.keySet()) {
-                    
-                    if (this.partTypesMap.get(partTypeKey).contains(partKey)) {
-                        categoryToAdd.append(partTypeKey, partKey);
+        if (this.containsCategories) {
+            for (String category : this.columnValues.get("categories")) {
+                JSONObject categoryToAdd = new JSONObject();
+                
+                // Example Format: "variableName:part1+part2+...+partn"
+                String[] splitCategory = category.split(":", 2); 
+                String variableName = splitCategory[0];
+                String[] splitValues = splitCategory[1].split("\\+");
+                
+                for (String partKey : splitValues) {
+                    for (String partTypeKey : this.partTypesMap.keySet()) {
+                        
+                        if (this.partTypesMap.get(partTypeKey).contains(partKey)) {
+                            categoryToAdd.append(partTypeKey, partKey);
+                        }
+
                     }
-
                 }
-            }
 
-            this.categories.put(variableName, categoryToAdd);
+                this.categories.put(variableName, categoryToAdd);
+            }
         }
 
 
     }
 
     public Map<String, String> createRuleGoldbar() {
-        // Do Not Repeat Rule
-        // if part is present, then part is present once
+        // User Provided Goldbar
 
         Map<String, String> gGoldbar = new HashMap<>();
 
@@ -346,18 +351,11 @@ public class GoldbarGeneration {
         for (String part : this.columnValues.get("R")) {
 
             String g = new String();
-            if (!reverse) {
-                g = String.format(
-                "(zero-or-more(any_except_%1$s) then %1$s then zero-or-more(any_except_%1$s)) or (zero-or-more(any_except_%1$s))", 
-                part);
-            
-            } else {
-                g = String.format(
-                "(zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s)) then (%1$s or reverse-comp(%1$s)) then zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s))) " +
-                "or (zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s)))", 
-                part
-                );
-            }
+            g = String.format(
+            "(zero-or-more(%2$s) then %1$s then zero-or-more(%2$s)) or (zero-or-more(%2$s))", 
+            handleDirection(part),                  // %1$s = part
+            handleDirection("any_except_" + part)   // %2$s = any_except_part
+            );
 
             this.goldbar.put("_" + part + "_Rule_R", g);
             rGoldbar.put(part, g);
@@ -384,20 +382,12 @@ public class GoldbarGeneration {
             String key = String.join("_", dataSplit);
 
             String g = new String();
-            if (!reverse) {
-                g = String.format(
-                    "(zero-or-more(any_except_%2$s) then %1$s then zero-or-more(any_except_%1$s)) or (zero-or-more(any_except_%1$s))", 
-                    dataSplit[0], dataSplit[1], name
-                );
-            
-            } else {
-                g = String.format(
-                    "(zero-or-more(any_except_%2$s or reverse-comp(any_except_%2$s)) " +
-                    "then (%1$s or reverse-comp(%1$s)) then zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s))) " +
-                    "or (zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s)))", 
-                    dataSplit[0], dataSplit[1], name
-                );
-            }
+            g = String.format(
+                "(zero-or-more(%2$s) then %1$s then zero-or-more(%3$s)) or (zero-or-more(%3$s))", 
+                handleDirection(dataSplit[0]),                 // %1$s = parts Before
+                handleDirection("any_except_" + dataSplit[1]), // %2$s = any_except_parts After
+                handleDirection("any_except_" + dataSplit[0])  // %3$s = any_except_parts Before
+            );
 
             this.goldbar.put("_" + key + "_Rule_B", g);
             bGoldbar.put(key, g);
@@ -426,59 +416,24 @@ public class GoldbarGeneration {
 
             String key = String.join("_", dataSplit);
 
-            String g1 = new String();
-            String g2 = new String();
-            String g3 = new String();
-            if (!reverse) {
-                // ... part1 ... part2 then except_part1
-                g1 = String.format(
-                    "(zero-or-more(any_part_concrete) then %1$s then " +
-                    "zero-or-more(any_except_%3$s) then %2$s " +
-                    "then zero-or-more(any_except_%1$s))", 
-                    dataSplit[0], dataSplit[1], name
-                );
+            String g = new String();
 
-                // ... part2 ... part1 then except_part2
-                g2 = String.format(
-                    "(zero-or-more(any_part_concrete) then %2$s then " +
-                    "zero-or-more(any_except_%3$s) then %1$s " +
-                    "then zero-or-more(any_except_%2$s))", 
-                    dataSplit[0], dataSplit[1], name
-                );
+            // ... part1 ... part2 then except_part1
+            g = String.format(
+                "((zero-or-more(%6$s) then %1$s then zero-or-more(%3$s) then %2$s then zero-or-more(%4$s)) or " + 
+                "(zero-or-more(%6$s) then %2$s then zero-or-more(%3$s) then %1$s then zero-or-more(%5$s)) or " +
+                "(zero-or-more(%3$s)))", 
+                handleDirection(dataSplit[0]),                         // %1$s = parts1 
+                handleDirection(dataSplit[1]),                         // %2$s = parts2  
+                handleDirection("any_except_" + name),                 // %3$s = any_except_parts1andparts2
+                handleDirection("any_except_" + dataSplit[0]),         // %4$s = any_except_parts1 
+                handleDirection("any_except_" + dataSplit[1]),         // %5$s = any_except_parts2
+                handleDirection("any_part_concrete")                 // %6$s = any_part_concrete
+            );
 
-                // any_except_part1andpart2
-                g3 = String.format(
-                    "(zero-or-more(any_except_%1$s)))", 
-                    name
-                );
+            tGoldbar.put(key, g);
 
-            } else {
-                // ... part1 ... part2 then except_part1
-                g1 = String.format(
-                    "(zero-or-more(any_part_concrete or reverse-comp(any_part_concrete)) then (%1$s or reverse-comp(%1$s)) then " +
-                    "zero-or-more(any_except_%3$s or reverse-comp(any_except_%3$s)) then (%2$s or reverse-comp(%2$s)) " +
-                    "then zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s)))", 
-                    dataSplit[0], dataSplit[1], name
-                );
-
-                // ... part2 ... part1 then except_part2
-                g2 = String.format(
-                    "(zero-or-more(any_part_concrete or reverse-comp(any_part_concrete)) then (%2$s or reverse-comp(%2$s)) then " +
-                    "zero-or-more(any_except_%3$s or reverse-comp(any_except_%3$s)) then (%1$s or reverse-comp(%1$s)) " +
-                    "then zero-or-more(any_except_%2$s or reverse-comp(any_except_%2$s)))", 
-                    dataSplit[0], dataSplit[1], name
-                );
-
-                // any_except_part1andpart2
-                g3 = String.format(
-                    "(zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s))))", 
-                    name
-                );
-            }
-
-            tGoldbar.put(key, g1 + " or " + g2 + " or " + g3);
-
-            goldbar.put("_" + key + "_Rule_T", g1 + " or " + g2 + " or " + g3);
+            goldbar.put("_" + key + "_Rule_T", g);
 
         }
     
@@ -506,20 +461,15 @@ public class GoldbarGeneration {
             String key = String.join("_", dataSplit);
 
             String g = new String();
-            if (!reverse) {
-                // ... part1 ... part2 then except_part1
-                g = String.format(
-                    "(zero-or-more((any_except_%1$s) or (%1$s then any_except_%3$s))) then zero-or-more(%1$s)", 
-                    dataSplit[0], dataSplit[1], name
-                );
-
-            } else {
-                // ... part1 ... part2 then except_part1
-                g = String.format(
-                    "zero-or-more((one-or-more(%1$s) then any_except_%3$s) or any_except_%1$s or reverse-comp((one-or-more(%1$s) then any_except_%3$s)) or reverse-comp(any_except_%1$s)) then zero-or-one(%1$s or reverse-comp(%1$s))", 
-                    dataSplit[0], dataSplit[1], name
-                );
-            }
+            g = String.format(
+                "(zero-or-more((%4$s) or (%6$s))) then zero-or-more(%1$s)", 
+                handleDirection(dataSplit[0]),                             // %1$s = parts1 
+                handleDirection(dataSplit[1]),                             // %2$s = parts2  
+                handleDirection("any_except_" + name),                     // %3$s = any_except_parts1andparts2
+                handleDirection("any_except_" + dataSplit[0]),             // %4$s = any_except_parts1 
+                handleDirection("any_except_" + dataSplit[1]),             // %5$s = any_except_parts2
+                handleDirection(dataSplit[0] + "then any_except_" + name)  // %6$s = parts1 then any_except_parts1andparts2
+            );
 
             pjiGoldbar.put(key, g);
             this.goldbar.put("_" + key + "_Rule_I", g);
@@ -534,18 +484,11 @@ public class GoldbarGeneration {
         for (String part : this.columnValues.get("M")) {
             
             String g = new String();
-            if (!reverse) {
-                g = String.format(
-                    "zero-or-more(zero-or-more(any_except_%1$s) then one-or-more(%1$s then zero-or-more(any_except_%1$s)))", 
-                    part
-                );
-
-            } else {
-                g = String.format(
-                    "zero-or-more(zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s)) then one-or-more((%1$s or reverse-comp(%1$s)) then zero-or-more(any_except_%1$s or reverse-comp(any_except_%1$s))))", 
-                    part
-                );
-            }
+            g = String.format(
+                "(one-or-more(zero-or-more(%2$s) then %1$s) then zero-or-more(%2$s))", 
+                handleDirection(part),                         // %1$s = parts1 
+                handleDirection("any_except_" + part)          // %2$s = any_except_parts1 
+            );
 
             mGoldbar.put(part, g);
             this.goldbar.put("_" + part + "_Rule_M", g);
@@ -560,18 +503,11 @@ public class GoldbarGeneration {
         for (String part : this.columnValues.get("E")) {
             
             String g = new String();
-            if (!reverse) {
-                g = String.format(
-                    "zero-or-more(any_part_concrete) then %1$s", 
-                    part
-                );
-
-            } else {
-                g = String.format(
-                    "zero-or-more(any_part_concrete or reverse-comp(any_part_concrete)) then (part or reverse-comp(%1$s))", 
-                    part
-                );
-            }
+            g = String.format(
+                "zero-or-more(%2$s) then %1$s", 
+                handleDirection(part),                         // %1$s = parts1 
+                handleDirection("any_part_concrete")         // %2$s = any_part_concrete
+            );
 
             eGoldbar.put(part, g);
             this.goldbar.put("_" + part + "_Rule_E", g);
@@ -600,46 +536,18 @@ public class GoldbarGeneration {
 
             String key = String.join("_", dataSplit);
 
-            String g1 = new String();
-            String g2 = new String();
-            String g3 = new String();
-            if (!reverse) {
-                g1 = String.format(
-                    "zero-or-more(any_except_%3$s)", 
-                    dataSplit[0], dataSplit[1], name
-                );
-
-                g2 = String.format(
-                    "zero-or-more(any_except_%3$s or %1$s) then %1$s then zero-or-more(any_except_%3$s)", 
-                    dataSplit[0], dataSplit[1], name
-                );
-
-                g3 = String.format(
-                    "zero-or-more(any_except_%3$s or %2$s) then %2$s then zero-or-more(any_except_%3$s)", 
-                    dataSplit[0], dataSplit[1], name
-                );
-
-            } else {
-                g1 = String.format(
-                    "zero-or-more(any_except_%3$s or reverse-comp(any_except_%3$s))", 
-                    dataSplit[0], dataSplit[1], name
-                );
-
-                g2 = String.format(
-                    "zero-or-more(any_except_%3$s or %1$s or reverse-comp(any_except_%3$s) or reverse-comp(%1$s)) " +
-                    "then (%1$s or reverse-comp(%1$s)) then zero-or-more(any_except_%3$s or reverse-comp(any_except_%3$s))", 
-                    dataSplit[0], dataSplit[1], name
-                );
-
-                g3 = String.format(
-                    "zero-or-more(any_except_%3$s or %2$s or reverse-comp(any_except_%3$s) or reverse-comp(%2$s)) " +
-                    "then (%2$s or reverse-comp(%2$s)) then zero-or-more(any_except_%3$s or reverse-comp(any_except_%3$s))", 
-                    dataSplit[0], dataSplit[1], name
-                );
-            }
+            String g = new String();
+            g = String.format(
+                "(zero-or-more(%3$s)) or " +
+                "(zero-or-more(%3$s or %1$s) then %1$s then zero-or-more(%3$s)) or " +
+                "(zero-or-more(%3$s or %2$s) then %2$s then zero-or-more(%3$s))", 
+                handleDirection(dataSplit[0]),                         // %1$s = parts1 
+                handleDirection(dataSplit[1]),                         // %2$s = parts2  
+                handleDirection("any_except_" + name)                 // %3$s = any_except_parts1andparts2
+            );
             
-            oGoldbar.put(key, g1 + " or " + g2 + " or " + g3);
-            this.goldbar.put("_" + key + "_Rule_O", g1 + " or " + g2 + " or " + g3);
+            oGoldbar.put(key, g);
+            this.goldbar.put("_" + key + "_Rule_O", g);
         }
     
         return oGoldbar;
@@ -654,18 +562,10 @@ public class GoldbarGeneration {
             Integer len = Integer.parseInt(length);
             String g = "";
             for (int i = 0; i < (len-1); i++) {
-                if (!reverse) {
-                    g = g + "any_part_concrete then ";
-                } else {
-                    g = g + "(any_part_concrete or reverse-comp(any_part_concrete)) then ";
-                }
+                g = g + handleDirection("any_part_concrete") + " then ";
             }
 
-            if (!reverse) {
-                g = g + "any_part_concrete";
-            } else {
-                g = g + "(any_part_concrete or reverse-comp(any_part_concrete))";
-            }
+            g = g + handleDirection("any_part_concrete");
 
             nGoldbar.put(length, g);
 
@@ -710,12 +610,8 @@ public class GoldbarGeneration {
 
         // goldbar
         String g = new String();
-        if (!reverse) {
-            g = "(zero-or-more(any_except_terminator_leaky) then zero-or-one(terminator))";
-        } else {
-            g = "(zero-or-more(any_except_terminator_leaky or reverse-comp(any_except_terminator_leaky)) " +
-                "then zero-or-one(terminator or reverse-comp(terminator)))";
-        }
+        g = "(zero-or-one(" + handleDirection("terminator") + 
+            ") then zero-or-more(" + handleDirection("any_except_terminator_leaky") + ") then zero-or-one(" + handleDirection("terminator") + "))";
 
         this.goldbar.put("_LeakyTerminators_Rule_L", g);
 
@@ -793,15 +689,8 @@ public class GoldbarGeneration {
 
         // goldbar
         String g = new String();
-        if (!reverse) {
-            g = "zero-or-more((any_except_roadBlockingPromoter then any_except_roadBlockingPromoter) " +
-                "or (promoter then any_except_roadBlockingPromoter))";
-        } else {
-            g = "zero-or-more((any_except_roadBlockingPromoter then any_except_roadBlockingPromoter) " +
-                "or reverse-comp((any_except_roadBlockingPromoter then any_except_roadBlockingPromoter)) " +
-                "or (promoter then any_except_roadBlockingPromoter)) " +
-                "or reverse-comp(promoter then any_except_roadBlockingPromoter))";
-        }
+        g = "zero-or-more((" + handleDirection("any_except_roadBlockingPromoter") + " then " + handleDirection("any_except_roadBlockingPromoter") + ") " +
+            "or (" + handleDirection("promoter then any_except_roadBlockingPromoter") + "))";
 
         this.goldbar.put("_PromoterRoadBlocking_Rule_P", g);
 
@@ -898,6 +787,16 @@ public class GoldbarGeneration {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    private String handleDirection(String g) {
+        if (this.direction.equals("Reverse Only")) {
+            g = "reverse-comp(" + g + ")";
+        } else if (this.direction.equals("Forward or Reverse")) {
+            g = "forward-or-reverse(" + g + ")";
+        }
+
+        return g;
     }
 
     public Map<String, String> getGoldbar() {
