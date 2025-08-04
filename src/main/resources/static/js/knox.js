@@ -1991,7 +1991,7 @@ function refreshCompletions(textInputId, textCompletionsId, onSubmit) {
   autoCmpl.empty();
   var val = $(textInputId).val();
   if (val !== "") {
-    var completions = suggestCompletions(val);
+    var completions = suggestCompletions(val).slice(0, 50); // Displays at most
     completions.map((elem) => {
       var div = makeAutocompleteRow(elem, val);
       div.onclick = () => {

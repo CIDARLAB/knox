@@ -589,6 +589,9 @@ textarea:focus, input:focus{
 
 #search-autocomplete {
     margin-left: -5px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 200px;
 }
 
 .autocomplete-entry {
