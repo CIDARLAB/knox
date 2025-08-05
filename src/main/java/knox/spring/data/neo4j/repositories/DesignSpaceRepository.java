@@ -120,4 +120,7 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 
     @Query("MATCH (n:DesignSpace) RETURN n.spaceID;")
     List<String> listDesignSpaces();
+
+    @Query("MATCH (n:DesignSpace) WHERE n.groupID = {group} RETURN n.spaceID;")
+    List<String> listDesignSpaces(@Param("group") String group);
 }

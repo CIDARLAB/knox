@@ -1181,6 +1181,20 @@ public class DesignSpaceService {
         designSpaceRepository.deleteDesignSpace(targetSpaceID);
     }
 
+	public void deleteDesignSpaceGroup(String groupID) {
+		System.out.println("\nDeleting Group: " + groupID + "\n");
+
+		List<String> spaceIDs = designSpaceRepository.listDesignSpaces(groupID);
+
+		for (String spaceID : spaceIDs) {
+			System.out.println("\nDeleting Design Space: " + spaceID + "\n");
+
+			validateDesignSpaceOperator(spaceID);
+
+        	designSpaceRepository.deleteDesignSpace(spaceID);
+		}
+    }
+
     public void createDesignSpace(String outputSpaceID) {
         validateGenerativeDesignSpaceOperator(outputSpaceID);
 

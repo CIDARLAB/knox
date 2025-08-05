@@ -540,6 +540,14 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
+
+  let deleteGroupBtn = $('#deleteGroup-btn');
+  deleteGroupBtn.tooltipster({
+    content: $('#delete-group-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
   // deleteBtn.tooltipster({
   //   content: $('#delete-branch-tooltip'),
   //   multiple: true,
@@ -1410,6 +1418,34 @@ $('#delete-design-tooltip').click(() => {
     if (confirm) {
       endpoint.deleteDesign();
     }
+  });
+});
+
+$('#delete-group-tooltip').click(() => {
+  swal({
+    title: "Enter Group ID",
+    text: "Type the Group ID to confirm deletion:",
+    content: "input", // This enables a text field
+    icon: "warning",
+    buttons: true,
+  })
+  .then((groupID) => {
+    if (!groupID) {
+      swal("Oops!", "You need to enter a valid Group ID to proceed.", "error");
+      return;
+    }
+
+    swal({
+      title: "Really delete?",
+      text: `Group ${groupID} will be permanently deleted!`,
+      icon: "warning",
+      buttons: true,
+      dangerMode: true
+    }).then((confirm) => {
+      if (confirm) {
+        endpoint.deleteDesignGroup(groupID);
+      }
+    });
   });
 });
 

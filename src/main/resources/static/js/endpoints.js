@@ -30,6 +30,7 @@ const endpoints = {
 
   BRANCH: "/branch", //post vs delete
   DESIGN: "/designSpace", //post vs delete
+  DELETEGROUP: "/designSpace/deleteGroup",
 
   SBOL: "/sbol/exportCombinatorial",
   GOLDBARSBOL: "/goldbarSBOL/import",
@@ -288,8 +289,25 @@ export function deleteThisDesign(inputSpace, response){
       swalSuccess();
       clearAllPages();
     } else {
-      swalError("Failed to delete design space " + currentSpace);
+      swalError("Failed to delete design space " + inputSpace);
     }
+  }
+}
+
+/**
+ * Deletes all designs space from groupID and clears design space svg
+ */
+export function deleteDesignGroup(groupID){
+  let request = new XMLHttpRequest();
+  let query = "?groupID=" + groupID;
+  request.open("DELETE", endpoints.DELETEGROUP + query, false);
+  request.send(null);
+  
+  if (request.status >= 200 && request.status < 300) {
+    swalSuccess();
+    clearAllPages();
+  } else {
+    swalError("Failed to delete design space group" + groupID);
   }
 }
 

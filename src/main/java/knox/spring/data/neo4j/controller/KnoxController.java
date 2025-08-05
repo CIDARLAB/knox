@@ -479,6 +479,32 @@ public class KnoxController {
 	}
 
 	/**
+	 * @api {post} /designSpace/deleteGroup Delete
+	 * @apiName deletDesignSpaceGroup
+	 * @apiGroup DesignSpace
+	 * 
+	 * @apiParam {String} groupID ID for the target design spaces to be deleted.
+	 * 
+	 * @apiDescription Deletes all design spaces from target groupID.
+	 */
+
+	@RequestMapping(value = "/designSpace/deleteGroup", method = RequestMethod.DELETE)
+	public ResponseEntity<String> deleteDesignSpaceGroup(@RequestParam(value = "groupID", required = true) String groupID) {
+	    try {
+	    	long startTime = System.nanoTime();
+	    	
+	        designSpaceService.deleteDesignSpaceGroup(groupID);
+	        
+	        return new ResponseEntity<String>("{\"message\": \"Design spaces from group was deleted successfully after " +
+					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+	    } catch (DesignSpaceNotFoundException ex) {
+	        return new ResponseEntity<String>(
+	                "{\"message\": \"" + ex.getMessage() + "\"}",
+	                HttpStatus.BAD_REQUEST);
+	    }
+	}
+
+	/**
 	 * @api {post} /designSpace/join Join
 	 * @apiName joinDesignSpaces
 	 * @apiGroup DesignSpace
