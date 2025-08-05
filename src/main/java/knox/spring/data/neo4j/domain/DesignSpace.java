@@ -16,6 +16,8 @@ import org.neo4j.ogm.annotation.Relationship;
 public class DesignSpace extends NodeSpace {
     String spaceID;
 
+	String groupID;
+
     @Relationship(type = "ARCHIVES") Set<Branch> branches;
 
     @Relationship(type = "SELECTS") Branch headBranch;
@@ -223,4 +225,12 @@ public class DesignSpace extends NodeSpace {
     	
     	return commits;
     }
+
+	public void setGroupID(String groupID) {
+		this.groupID = groupID;
+	}
+
+	public String getGroupID() {
+		return this.groupID;
+	}
 }

@@ -410,6 +410,7 @@ public class KnoxController {
 	 * @apiParam {String[]} inputSpaceIDs IDs for the input design spaces to be AND-ed.
 	 * @apiParam {String} [outputSpaceID] ID for the output design space resulting from AND. If omitted, then the result is stored 
 	 * in the first input design space.
+	 * @apiParam {String} [groupID] ID for the output design space's group. If omitted, groupID is "none".
 	 * @apiParam {Integer=0,1,2,3,4} tolerance=1 This parameter determines the criteria by which edges are matched. If tolerance
 	 * = 0, then matching edges must be labeled with the same component IDs and roles. If tolerance = 1 or 2, then matching edges 
 	 * must share at least one component ID and role. If tolerance = 3, then matching edges must be labeled with the same component 
@@ -426,6 +427,7 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
 	public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
 			@RequestParam(value = "isComplete", required = false, defaultValue = "true") boolean isComplete,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles) {
@@ -435,9 +437,9 @@ public class KnoxController {
 			long startTime = System.nanoTime();
 			
 			if (outputSpaceID == null) {
-				designSpaceService.andDesignSpaces(inputSpaceIDs, tolerance, isComplete, uniqueRoles);
+				designSpaceService.andDesignSpaces(inputSpaceIDs, groupID, tolerance, isComplete, uniqueRoles);
 			} else {
-				designSpaceService.andDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, 
+				designSpaceService.andDesignSpaces(inputSpaceIDs, outputSpaceID, groupID, tolerance, 
 						isComplete, uniqueRoles);
 			}
 	
@@ -483,6 +485,7 @@ public class KnoxController {
 	 * 
 	 * @apiParam {String[]} inputSpaceIDs IDs for the input design spaces to be joined.
 	 * @apiParam {String} [outputSpaceID] ID for the output design space resulting from Join. If omitted, then the result is stored 
+	 * @apiParam {String} [groupID] ID for the output design space's group. If omitted, groupID is "none".
 	 * in the first input design space.
 	 * 
 	 * @apiDescription Concatenates designs from input design spaces.
@@ -490,14 +493,15 @@ public class KnoxController {
 	
 	@RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
 	public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-	        @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+	        @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID) {
 	    try {
 	    	long startTime = System.nanoTime();
 	    	
 	        if (outputSpaceID == null) {
-	            designSpaceService.joinDesignSpaces(inputSpaceIDs);
+	            designSpaceService.joinDesignSpaces(inputSpaceIDs, groupID);
 	        } else {
-	            designSpaceService.joinDesignSpaces(inputSpaceIDs, outputSpaceID);
+	            designSpaceService.joinDesignSpaces(inputSpaceIDs, outputSpaceID, groupID);
 	        }
 	
 	        return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully joined after " + 
@@ -517,6 +521,7 @@ public class KnoxController {
 	 * @apiParam {String[]} inputSpaceIDs IDs for the input design spaces to be merged.
 	 * @apiParam {String} [outputSpaceID] ID for the output design space resulting from Merge.  If omitted, then the result is
 	 *  stored in the first input design space.
+	 * @apiParam {String} [groupID] ID for the output design space's group. If omitted, groupID is "none".
 	 * @apiParam {Integer=0,1,2,3,4} tolerance=1 This parameter determines the criteria by which edges are matched. If tolerance
 	 * = 0, then matching edges must be labeled with the same component IDs and roles. If tolerance = 1 or 2, then matching edges 
 	 * must share at least one component ID and role. If tolerance = 3, then matching edges must be labeled with the same component 
@@ -535,6 +540,7 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "tolerance", required = false, defaultValue = "1") int tolerance,
 			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance,
 			@RequestParam(value = "roles", required = false, defaultValue = "") List<String> roles,
@@ -545,9 +551,9 @@ public class KnoxController {
 			long startTime = System.nanoTime();
 			
 			if (outputSpaceID == null) {
-				designSpaceService.mergeDesignSpaces(inputSpaceIDs, tolerance, weightTolerance, uniqueRoles, irrelevantParts);
+				designSpaceService.mergeDesignSpaces(inputSpaceIDs, groupID, tolerance, weightTolerance, uniqueRoles, irrelevantParts);
 			} else {
-				designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, weightTolerance, uniqueRoles, irrelevantParts);
+				designSpaceService.mergeDesignSpaces(inputSpaceIDs, outputSpaceID, groupID, tolerance, weightTolerance, uniqueRoles, irrelevantParts);
 			}
 			
 			return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully merged after " +
@@ -562,6 +568,7 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/weight", method = RequestMethod.POST)
 	public ResponseEntity<String> weightDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "tolerance", required = false, defaultValue = "0") int tolerance,
 			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance) {
 		
@@ -569,7 +576,7 @@ public class KnoxController {
 			long startTime = System.nanoTime();
 			
 			
-			designSpaceService.weightDesignSpaces(inputSpaceIDs, outputSpaceID, tolerance, weightTolerance);
+			designSpaceService.weightDesignSpaces(inputSpaceIDs, outputSpaceID, groupID, tolerance, weightTolerance);
 			
 			
 			return new ResponseEntity<String>("{\"message\": \"Design space was successfully weighted after " +
@@ -584,13 +591,14 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/reverse", method = RequestMethod.POST)
 	public ResponseEntity<String> reverseDesignSpaces(@RequestParam(value = "inputSpaceID", required = true) String inputSpaceID,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "reverseOrientation", required = false, defaultValue = "true") Boolean reverseOrientation) {
 		
 		try {
 			long startTime = System.nanoTime();
 			
 			
-			designSpaceService.reverseDesignSpace(inputSpaceID, outputSpaceID, reverseOrientation);
+			designSpaceService.reverseDesignSpace(inputSpaceID, outputSpaceID, groupID, reverseOrientation);
 			
 			
 			return new ResponseEntity<String>("{\"message\": \"Design space was successfully reversed after " +
@@ -663,6 +671,7 @@ public class KnoxController {
 	 * 
 	 * @apiParam {String[]} inputSpaceIDs IDs for the input design spaces to be OR-ed.
 	 * @apiParam {String} [outputSpaceID] ID for the output design space resulting from OR.  If omitted, then the result is stored 
+	 * @apiParam {String} [groupID] ID for the output design space's group. If omitted, groupID is "none".
 	 * in the first input design space.
 	 * 
 	 * @apiDescription Unions designs from input design spaces.
@@ -670,14 +679,15 @@ public class KnoxController {
 	
 	@RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
 	public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
-	        @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID) {
+	        @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID) {
 	    try {
 	    	long startTime = System.nanoTime();
 	    	
 	        if (outputSpaceID == null) {
-	            designSpaceService.orDesignSpaces(inputSpaceIDs);
+	            designSpaceService.orDesignSpaces(inputSpaceIDs, groupID);
 	        } else {
-	            designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID);
+	            designSpaceService.orDesignSpaces(inputSpaceIDs, outputSpaceID, groupID);
 	        }
 	
 	        return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully OR-ed after " + 
@@ -697,6 +707,7 @@ public class KnoxController {
 	 * @apiParam {String[]} inputSpaceIDs IDs for the input design spaces to be repeated.
 	 * @apiParam {String} [outputSpaceID] ID for the output design space resulting from Repeat. If omitted, then the result is 
 	 * stored in the first input design space.
+	 * @apiParam {String} [groupID] ID for the output design space's group. If omitted, groupID is "none".
 	 * @apiParam {Boolean} isOptional=false If true, then designs from the input spaces are repeated zero-or-more times; otherwise, 
 	 * they are repeated one-or-more times.
 	 * 
@@ -706,14 +717,15 @@ public class KnoxController {
 	@RequestMapping(value = "/designSpace/repeat", method = RequestMethod.POST)
 	public ResponseEntity<String> repeatDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 	        @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID,
 	        @RequestParam(value = "isOptional", required = false, defaultValue = "false") boolean isOptional) {
 	    try {
 	    	long startTime = System.nanoTime();
 	    	
 	        if (outputSpaceID == null) {
-	            designSpaceService.repeatDesignSpaces(inputSpaceIDs, isOptional);
+	            designSpaceService.repeatDesignSpaces(inputSpaceIDs, groupID, isOptional);
 	        } else {
-	            designSpaceService.repeatDesignSpaces(inputSpaceIDs, outputSpaceID, isOptional);
+	            designSpaceService.repeatDesignSpaces(inputSpaceIDs, outputSpaceID, groupID, isOptional);
 	        }
 	
 	        return new ResponseEntity<String>("{\"message\": \"Design spaces were successfully repeated after " + 
@@ -751,7 +763,9 @@ public class KnoxController {
 
 	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
-    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, @RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
+    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, 
+			@RequestParam(value = "groupID", required = false) String groupID,
+			@RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
     	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
 
 		int weightTolerance = 0;
@@ -767,7 +781,7 @@ public class KnoxController {
     		}
     	}
     	
-		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, false, weight, weightTolerance);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, groupID, false, weight, weightTolerance);
 		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
@@ -775,6 +789,7 @@ public class KnoxController {
     @RequestMapping(value = "/merge/csv", method = RequestMethod.POST)
     public ResponseEntity<String> mergeCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
             @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight,
 			@RequestParam(value = "weightTolerance", defaultValue = "0", required = false) int weightTolerance) {
         List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
@@ -790,7 +805,7 @@ public class KnoxController {
             }
         }
 
-        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, true, weight, weightTolerance);
+        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, groupID, true, weight, weightTolerance);
 
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
@@ -798,6 +813,7 @@ public class KnoxController {
     @RequestMapping(value = "/sbol/import", method = RequestMethod.POST)
     public ResponseEntity<String> importSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "weight", required = false, defaultValue = "0.0") Double weight) {
     	List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
     	
@@ -813,7 +829,7 @@ public class KnoxController {
     	}
     	
     	try {
-			designSpaceService.importSBOL(sbolDocs, outputSpaceID, weight);
+			designSpaceService.importSBOL(sbolDocs, outputSpaceID, groupID, weight);
 		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -825,6 +841,7 @@ public class KnoxController {
 	@RequestMapping(value = "/goldbarSBOL/import", method = RequestMethod.POST)
 	public ResponseEntity<String> importGoldbarSBOL(@RequestParam(value = "sbolDoc", required = true) String sbolDoc,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "weight", required = false) Double weight) throws IOException {
 		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
 		SBOLDocument sbolDocument = new SBOLDocument();
@@ -841,7 +858,7 @@ public class KnoxController {
 
 
 		try {
-			designSpaceService.importSBOL(sbolDocs, outputSpaceID, weight);
+			designSpaceService.importSBOL(sbolDocs, outputSpaceID, groupID, weight);
 		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -854,6 +871,7 @@ public class KnoxController {
 	public ResponseEntity<String> importGoldbar(@RequestParam(value = "goldbar", required = true) String goldbarString,
 			@RequestParam(value = "categories", required = true) String categoriesString,
 			@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "weight", required = false) Double weight) throws IOException {
 		
 		System.out.println();		
@@ -866,7 +884,7 @@ public class KnoxController {
 		try{
 			JSONObject goldbar = new JSONObject(goldbarString);
 			JSONObject categories = new JSONObject(categoriesString);
-			designSpaceService.importGoldbar(goldbar, categories, outputSpaceID, weight);
+			designSpaceService.importGoldbar(goldbar, categories, outputSpaceID, groupID, weight);
 
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -1031,7 +1049,8 @@ public class KnoxController {
     }
 
 	@RequestMapping(value = "/designSpace/createSampleSpace", method = RequestMethod.GET)
-	public Boolean createSampleSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
-		return designSpaceService.createSampleSpace(targetSpaceID);
+	public Boolean createSampleSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+			@RequestParam(value = "groupID", required = false) String groupID){
+		return designSpaceService.createSampleSpace(targetSpaceID, groupID);
 	}
 }

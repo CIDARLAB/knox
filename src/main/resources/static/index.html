@@ -124,6 +124,9 @@
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
         <br>
+        <input type="text" name="groupID" placeholder="Group ID"
+               class="form-control" aria-label="..." size="10">
+        <br>
         <input type="submit" value="Import (OR)">
       </form>
       
@@ -138,6 +141,9 @@
         <input id="weightInputCSVMERGE" type="number" name="weight" placeholder=0.0>
         <br>
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
+               class="form-control" aria-label="..." size="10">
+        <br>
+        <input type="text" name="groupID" placeholder="Group ID"
                class="form-control" aria-label="..." size="10">
         <br>
         <input type="text" name="weightTolerance" list="weightToleranceList" placeholder="weight tolerance">
@@ -181,6 +187,9 @@
         <input type="text" name="outputSpacePrefix" placeholder="Space ID"
                class="form-control" aria-label="..." size="10">
         <br>
+        <input type="text" name="groupID" placeholder="Group ID"
+               class="form-control" aria-label="..." size="10">
+        <br>
         <label for="verify">Verify?</label>
         <select id="verify" name="verify">
           <option value="false">No</option>
@@ -210,12 +219,13 @@
             const verify = formData.get('verify');
             const direction = formData.get('direction');
             const outputSpacePrefix = formData.get('outputSpacePrefix');
+            const groupID = formData.get('groupID');
             const files = formData.getAll('inputCSVFiles[]').map(file => file.name).join(', ');
 
             // Show SweetAlert confirmation
             swal({
                 title: "Confirm GOLDBAR Generator Submission",
-                text: `Rules: ${rules}\nLengths: ${lengths}\nVerify: ${verify}\nDirection: ${direction}\nSpace ID: ${outputSpacePrefix}\nFiles: ${files}`,
+                text: `Rules: ${rules}\nLengths: ${lengths}\nVerify: ${verify}\nDirection: ${direction}\nSpace ID: ${outputSpacePrefix}\nGroup ID: ${groupID}\nFiles: ${files}`,
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
@@ -244,7 +254,7 @@
                         rules.push(designName);
                         
                         try {
-                          knox.submitGoldbar(specification, categories, designName, weight);
+                          knox.submitGoldbar(specification, categories, designName, groupID, weight);
                         } catch {
                           error = error + "Error Submitting";
                         }
@@ -252,7 +262,7 @@
                         });
 
                         if (verify === "true") {
-                          knox.verifyRules(rules, outputSpacePrefix + "_Verification");
+                          knox.verifyRules(rules, outputSpacePrefix + "_Verification", groupID);
                         }
 
                         swal({
@@ -290,8 +300,9 @@
         <label id="weightLabelSBOL" for="weightInputSBOL"><h5>Weight:</h5></label>
         <input id="weightInputSBOL" type="number" name="weight" placeholder=0.0>
         <br>
-        <!--<input type="text" name="outputSpaceID" placeholder="Space ID"-->
-               <!--class="form-control" aria-label="..." size="10">-->
+        <input type="text" name="groupID" placeholder="Group ID"
+               class="form-control" aria-label="..." size="10">
+        <br>
         <input type="submit" value="Import">
       </form>
     </div>
@@ -318,6 +329,8 @@
               <div class="col-sm">
                 <label id="designName" for="designNameInput"><h5>Design name:</h5></label>
                 <input id="designNameInput" type="text" placeholder="design-name" value="testing">
+                <label id="groupID" for="groupIDInput"><h5>Group ID:</h5></label>
+                <input id="groupIDInput" type="text" placeholder="group-ID" value="testing">
                 <label id="weight" for="weightInput"><h5>   Edge Weight:</h5></label>
                 <input id="weightInput" type="number" placeholder="0.0" value="0">
               </div>

@@ -112,8 +112,9 @@ export function getBestPath(id, callback){
   d3.json(endpoints.BESTPATH + query, callback);
 }
 
-export function createSampleSpace(id, callback){
+export function createSampleSpace(id, groupID, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
+  query += "?groupID=" + encodeURIComponent(groupID);
   d3.json(endpoints.CREATESAMPLESPACE + query, callback);
 }
 
@@ -274,7 +275,7 @@ export function deleteDesign(){
 }
 
 /**
- * Deletes the design space and clears design space svg
+ * Deletes specific design space and clears design space svg
  */
 export function deleteThisDesign(inputSpace, response){
   let request = new XMLHttpRequest();
@@ -308,10 +309,11 @@ export function deleteThisDesign(inputSpace, response){
 /************************
  * DESIGN SPACE ENDPOINTS
  ************************/
-export function designSpaceJoin(inputSpaces, outputSpace){
+export function designSpaceJoin(inputSpaces, outputSpace, groupID){
   let query = "?";
   query += encodeQueryParameter("inputSpaceIDs", inputSpaces, query);
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("groupID", groupID, query);
 
   let request = new XMLHttpRequest();
   request.open("POST", endpoints.DESIGN + "/" + operators.JOIN + query, false);
@@ -323,10 +325,11 @@ export function designSpaceJoin(inputSpaces, outputSpace){
   }
 }
 
-export function designSpaceOr(inputSpaces, outputSpace){
+export function designSpaceOr(inputSpaces, outputSpace, groupID){
   let query = "?";
   query += encodeQueryParameter("inputSpaceIDs", inputSpaces, query);
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("groupID", groupID, query);
 
   let request = new XMLHttpRequest();
   request.open("POST", endpoints.DESIGN + "/" + operators.OR + query, false);
@@ -338,10 +341,11 @@ export function designSpaceOr(inputSpaces, outputSpace){
   }
 }
 
-export function designSpaceRepeat(inputSpaces, outputSpace, isOptional){
+export function designSpaceRepeat(inputSpaces, outputSpace, groupID, isOptional){
   let query = "?";
   query += encodeQueryParameter("inputSpaceIDs", inputSpaces, query);
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("groupID", groupID, query);
   query += encodeQueryParameter("isOptional", isOptional, query);
 
   let request = new XMLHttpRequest();
@@ -354,10 +358,11 @@ export function designSpaceRepeat(inputSpaces, outputSpace, isOptional){
   }
 }
 
-export function designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete){
+export function designSpaceAnd(inputSpaces, outputSpace, groupID, tolerance, isComplete){
   let query = "?";
   query += encodeQueryParameter("inputSpaceIDs", inputSpaces, query);
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("groupID", groupID, query);
   query += encodeQueryParameter("tolerance", tolerance, query);
   query += encodeQueryParameter("isComplete", isComplete, query);
 
@@ -371,10 +376,11 @@ export function designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete){
   }
 }
 
-export function designSpaceMerge(inputSpaces, outputSpace, tolerance, weightTolerance){
+export function designSpaceMerge(inputSpaces, outputSpace, groupID, tolerance, weightTolerance){
   let query = "?";
   query += encodeQueryParameter("inputSpaceIDs", inputSpaces, query);
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("groupID", groupID, query);
   query += encodeQueryParameter("tolerance", tolerance, query);
   query += encodeQueryParameter("weightTolerance", weightTolerance, query);
 
@@ -388,10 +394,11 @@ export function designSpaceMerge(inputSpaces, outputSpace, tolerance, weightTole
   }
 }
 
-export function designSpaceWeight(inputSpaces, outputSpace, tolerance, weightTolerance){
+export function designSpaceWeight(inputSpaces, outputSpace, groupID, tolerance, weightTolerance){
   let query = "?";
   query += encodeQueryParameter("inputSpaceIDs", inputSpaces, query);
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("groupID", groupID, query);
   query += encodeQueryParameter("tolerance", tolerance, query);
   query += encodeQueryParameter("weightTolerance", weightTolerance, query);
 
@@ -405,10 +412,11 @@ export function designSpaceWeight(inputSpaces, outputSpace, tolerance, weightTol
   }
 }
 
-export function designSpaceReverse(inputSpace, outputSpace, reverseOrientation){
+export function designSpaceReverse(inputSpace, outputSpace, groupID, reverseOrientation){
   let query = "?";
   query += encodeQueryParameter("inputSpaceID", inputSpace, query);
   query += encodeQueryParameter("outputSpaceID", outputSpace, query);
+  query += encodeQueryParameter("groupID", groupID, query);
   query += encodeQueryParameter("reverseOrientation", reverseOrientation, query);
 
   let request = new XMLHttpRequest();
@@ -421,9 +429,10 @@ export function designSpaceReverse(inputSpace, outputSpace, reverseOrientation){
   }
 }
 
-export function importGoldbarSBOL(sbolDoc, weight){
+export function importGoldbarSBOL(sbolDoc, groupID, weight){
   let query = "?"
   query += encodeQueryParameter("sbolDoc", sbolDoc, query)
+  query += encodeQueryParameter("groupID", groupID, query);
   query += encodeQueryParameter("weight", weight, query)
 
   let request = new XMLHttpRequest();
@@ -433,11 +442,12 @@ export function importGoldbarSBOL(sbolDoc, weight){
 }
 
 
-export function importGoldbar(goldbar, categories, outputSpace, weight){
+export function importGoldbar(goldbar, categories, outputSpace, groupID, weight){
   let query = "?"
   query += encodeQueryParameter("goldbar", goldbar, query)
   query += encodeQueryParameter("categories", categories, query)
   query += encodeQueryParameter("outputSpaceID", outputSpace, query)
+  query += encodeQueryParameter("groupID", groupID, query);
   query += encodeQueryParameter("weight", weight, query)
 
   let request = new XMLHttpRequest();

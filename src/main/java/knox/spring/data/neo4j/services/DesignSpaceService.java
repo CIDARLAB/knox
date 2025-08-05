@@ -87,15 +87,15 @@ public class DesignSpaceService {
 
     public static final String RESERVED_ID = "knox";
     
-    public void joinDesignSpaces(List<String> inputSpaceIDs) 
+    public void joinDesignSpaces(List<String> inputSpaceIDs, String groupID) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateListParameter("inputSpaceIDs", inputSpaceIDs);
     	
-    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
+    	joinDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), groupID);
     }
     
-    public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
+    public void joinDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String groupID) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -113,7 +113,7 @@ public class DesignSpaceService {
 //
 //    	JoinOperator.apply(inputSnaps, outputSnap);
 
-    	saveDesignSpace(outputSpace);
+    	saveDesignSpace(outputSpace, groupID);
     }
     
     public void joinBranches(String targetSpaceID, List<String> inputBranchIDs) {
@@ -138,15 +138,15 @@ public class DesignSpaceService {
         saveDesignSpace(targetSpace);
     }
     
-    public void orDesignSpaces(List<String> inputSpaceIDs) 
+    public void orDesignSpaces(List<String> inputSpaceIDs, String groupID) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateListParameter("inputSpaceIDs", inputSpaceIDs);
     	
-    	orDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0));
+    	orDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), groupID);
     }
     
-    public void orDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID) 
+    public void orDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String groupID) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -164,7 +164,7 @@ public class DesignSpaceService {
 //    	
 //    	OROperator.apply(inputSnaps, outputSnap);
 
-    	saveDesignSpace(outputSpace);
+    	saveDesignSpace(outputSpace, groupID);
     }
     
     public void orBranches(String targetSpaceID, List<String> inputBranchIDs) {
@@ -189,15 +189,15 @@ public class DesignSpaceService {
         saveDesignSpace(targetSpace);
     }
 	
-	public void repeatDesignSpaces(List<String> inputSpaceIDs, boolean isOptional) 
+	public void repeatDesignSpaces(List<String> inputSpaceIDs, String groupID, boolean isOptional) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateListParameter("inputSpaceIDs", inputSpaceIDs);
     	
-    	repeatDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), isOptional);
+    	repeatDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), groupID, isOptional);
     }
     
-    public void repeatDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, boolean isOptional) 
+    public void repeatDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String groupID, boolean isOptional) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
     	validateCombinationalDesignSpaceOperator(inputSpaceIDs, outputSpaceID);
@@ -215,7 +215,7 @@ public class DesignSpaceService {
 //    	
 //    	RepeatOperator.apply(inputSnaps, outputSnap, isOptional);
 
-    	saveDesignSpace(outputSpace);
+    	saveDesignSpace(outputSpace, groupID);
     }
     
     public void repeatBranches(String targetSpaceID, List<String> inputBranchIDs, boolean isOptional) {
@@ -240,14 +240,14 @@ public class DesignSpaceService {
         saveDesignSpace(targetSpace);
     }
     
-    public void andDesignSpaces(List<String> inputSpaceIDs, int tolerance, boolean isComplete,
+    public void andDesignSpaces(List<String> inputSpaceIDs, String groupID, int tolerance, boolean isComplete,
     		Set<String> roles) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
-    	andDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, isComplete, roles);
+    	andDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), groupID, tolerance, isComplete, roles);
     }
     
-    public void andDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance,
+    public void andDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String groupID, int tolerance,
     		boolean isComplete, Set<String> roles)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
@@ -273,7 +273,7 @@ public class DesignSpaceService {
 //    	
 //    	ANDOperator.apply(inputSnaps, outputSnap, tolerance, isComplete, roles);
     	
-    	saveDesignSpace(outputSpace);
+    	saveDesignSpace(outputSpace, groupID);
     }
     
     public void andBranches(String targetSpaceID, List<String> inputBranchIDs, 
@@ -301,13 +301,13 @@ public class DesignSpaceService {
         saveDesignSpace(targetSpace);
     }
 	
-	public void mergeDesignSpaces(List<String> inputSpaceIDs, int tolerance, int weightTolerance, Set<String> roles, ArrayList<String> irrelevantParts) 
+	public void mergeDesignSpaces(List<String> inputSpaceIDs, String groupID, int tolerance, int weightTolerance, Set<String> roles, ArrayList<String> irrelevantParts) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     	    DesignSpaceConflictException, DesignSpaceBranchesConflictException{
-		mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), tolerance, weightTolerance, roles, irrelevantParts);
+		mergeDesignSpaces(inputSpaceIDs, inputSpaceIDs.get(0), groupID, tolerance, weightTolerance, roles, irrelevantParts);
     }
     
-    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance, int weightTolerance,
+    public void mergeDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String groupID, int tolerance, int weightTolerance,
     		Set<String> roles, ArrayList<String> irrelevantParts)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
@@ -333,7 +333,7 @@ public class DesignSpaceService {
 //    	
 //    	MergeOperator.apply(inputSnaps, outputSnap, tolerance, roles);
 
-    	saveDesignSpace(outputSpace);
+    	saveDesignSpace(outputSpace, groupID);
     }
 
 	public HashSet<List<Map<String, Object>>> mergeThenAndThenEnumerateDesignSpaces(List<String> mergeSpaceIDs, List<String> andSpaceIDs, String mergeOutputSpaceID, String andOutputSpaceID,
@@ -504,7 +504,7 @@ public class DesignSpaceService {
     	return outputBranch.getLatestCommit().getSnapshot();
     }
 
-    public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix, 
+    public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix, String groupID,
     		boolean isMerge, String weight, int weightTolerance) {
     	List<BufferedReader> designReaders = new LinkedList<BufferedReader>();
     	
@@ -626,11 +626,11 @@ public class DesignSpaceService {
     		if (isMerge) {
     			MergeOperator.apply(csvSpaces, outputSpace, 1, weightTolerance, new HashSet<String>(), new ArrayList<String>());
 
-    			saveDesignSpace(outputSpace);
+    			saveDesignSpace(outputSpace, groupID);
     		} else {
     			OROperator.apply(csvSpaces, outputSpace);
     			
-    			saveDesignSpace(outputSpace);
+    			saveDesignSpace(outputSpace, groupID);
     		}
     	}
     }
@@ -803,7 +803,7 @@ public class DesignSpaceService {
 		return MultipleWeights;
 	}
 
-	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID, Double weight)
+	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID, String groupID, Double weight)
 			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
 		SBOLConversion sbolConv = new SBOLConversion();
 
@@ -814,12 +814,12 @@ public class DesignSpaceService {
 		for (DesignSpace outputSpace: outputSpaces){
 			correctComponentIds(outputSpace);
 			//outputSpace.splitEdges();
-			saveDesignSpace(outputSpace);
+			saveDesignSpace(outputSpace, groupID);
 		}
 
 	}
 
-	public DesignSpace importSBOL(String sbolString, Boolean save)
+	public DesignSpace importSBOL(String sbolString, String groupID, Boolean save)
 			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
 		
 		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
@@ -848,7 +848,7 @@ public class DesignSpaceService {
 			//outputSpace.splitEdges();
 
 			if (save) {
-				saveDesignSpace(outputSpace);
+				saveDesignSpace(outputSpace, groupID);
 			}
 
 			output = outputSpace;
@@ -888,7 +888,7 @@ public class DesignSpaceService {
 		//designSpace.printAllEdges();
 	}
 
-	public void importGoldbar(JSONObject goldbar, JSONObject categories, String outputSpacePrefix, Double weight) throws JSONException {
+	public void importGoldbar(JSONObject goldbar, JSONObject categories, String outputSpacePrefix, String groupID, Double weight) throws JSONException {
 
 		GoldbarConversion goldbarConversion = new GoldbarConversion(goldbar, categories, weight);
 
@@ -900,7 +900,7 @@ public class DesignSpaceService {
 
 		outputSpace.shallowCopyNodeSpace(outSpace);
 
-		saveDesignSpace(outputSpace);
+		saveDesignSpace(outputSpace, groupID);
 	}
 
 	public Map<String, Object> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, 
@@ -1425,7 +1425,7 @@ public class DesignSpaceService {
 		return thisPartAnalytics;
 	}
 
-	public void weightDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, int tolerance, int weightTolerance)
+	public void weightDesignSpaces(List<String> inputSpaceIDs, String outputSpaceID, String groupID, int tolerance, int weightTolerance)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
 
@@ -1435,11 +1435,11 @@ public class DesignSpaceService {
     	
     	WeightOperator.apply(inputSpaces.get(0), inputSpaces.get(1), outputSpace, tolerance, weightTolerance);
 
-    	saveDesignSpace(outputSpace);
+    	saveDesignSpace(outputSpace, groupID);
 
 	}
 
-	public void reverseDesignSpace(String inputSpaceID, String outputSpaceID, Boolean reverseOrientation)
+	public void reverseDesignSpace(String inputSpaceID, String outputSpaceID, String groupID, Boolean reverseOrientation)
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
     		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
 
@@ -1452,7 +1452,7 @@ public class DesignSpaceService {
     	
     	ReverseOperator.apply(inputSpaces.get(0), outputSpace, reverseOrientation);
 
-    	saveDesignSpace(outputSpace);
+    	saveDesignSpace(outputSpace, groupID);
 
 	}
     
@@ -1468,7 +1468,7 @@ public class DesignSpaceService {
         return designSampler.sample(numDesigns, minLength, maxLength, isWeighted, positiveOnly, isSampleSpace);
     }
 
-	public Boolean createSampleSpace(String targetSpaceID) {
+	public Boolean createSampleSpace(String targetSpaceID, String groupID) {
 		DesignSpace inputSpace = loadDesignSpace(targetSpaceID);
 		
 
@@ -1533,7 +1533,7 @@ public class DesignSpaceService {
 				}
 			}
 
-			saveDesignSpace(outputSpace);
+			saveDesignSpace(outputSpace, groupID);
 			return true;
 		}
 	}
@@ -1837,6 +1837,16 @@ public class DesignSpaceService {
 	}
 	
 	private void saveDesignSpace(DesignSpace space) {
+		saveDesignSpace(space, "none");
+	}
+
+	private void saveDesignSpace(DesignSpace space, String groupID) {
+		// Set GroupID before Saving
+		if (groupID.equals("")) {
+			groupID = "none";
+		}
+		space.setGroupID(groupID);
+
 		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
 
 		space.clearEdges();

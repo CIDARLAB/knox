@@ -375,53 +375,62 @@ export function getSBOLImage(role){
  *****************************/
 $('#concrete').on('click', function() {
   document.getElementById('designNameInput').value = "concrete-example";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(concreteGOLDBAR);
   editors.catEditor.setValue(JSON.stringify(exampleCategories));
 });
 
 $('#abstract').on('click', function() {
   document.getElementById('designNameInput').value = "abstract-example";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(abstractGOLDBAR);
   editors.catEditor.setValue(JSON.stringify(exampleCategories));
 });
 
 $('#concreteAndAbstract').on('click', function() {
   document.getElementById('designNameInput').value = "concrete-and-abstract-example";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(concreteAndAbstractGOLDBAR);
   editors.catEditor.setValue(JSON.stringify(exampleCategories));
 });
 $('#and0-option').on('click', function() {
   document.getElementById('designNameInput').value = "cello-AND-example";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(and0GOLDBAR);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
 
 $('#and1-option-norb').on('click', function() {
   document.getElementById('designNameInput').value = "cello-no-roadblocking-example";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(and1GOLDBAR_NORB);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
 
 $('#and1-option-rb').on('click', function() {
   document.getElementById('designNameInput').value = "cello-roadblocking-example";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(and1GOLDBAR_RB);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
 
 $('#and2-option').on('click', function() {
   document.getElementById('designNameInput').value = "cello-AND-example2";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(and2GOLDBAR);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
 
 $('#merge-option').on('click', function() {
   document.getElementById('designNameInput').value = "rebeccamycin-example";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(rebeccamycinGOLDBAR);
   editors.catEditor.setValue(JSON.stringify(biosynthesisCategories));
 });
 
 $('#reverse-option').on('click', function() {
   document.getElementById('designNameInput').value = "reverse-complement-example";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(reverseGOLDBAR);
   editors.catEditor.setValue(JSON.stringify(celloCategories));
 });
@@ -433,72 +442,84 @@ let debugCats = '{"promoter": {"promoter": ["BBa_R0040", "BBa_J23100"]},\n ' +
 
 $('#oOM-option').on('click', function() {
   document.getElementById('designNameInput').value = "one-or-more-exampleI";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue('one-or-more (promoter or ribosomeBindingSite) then (zero-or-more cds) then terminator');
   editors.catEditor.setValue(debugCats);
 });
 
 $('#oOM-option2').on('click', function() {
   document.getElementById('designNameInput').value = "one-or-more-exampleII";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue('one-or-more (promoter then zero-or-one(ribosomeBindingSite) then cds then terminator)');
   editors.catEditor.setValue(debugCats);
 });
 
 $('#doNotRepeatRule').on('click', function() {
   document.getElementById('designNameInput').value = "do-not-repeat-A";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.R);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#beforeRule').on('click', function() {
   document.getElementById('designNameInput').value = "A-before-B";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.B);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#togetherRule').on('click', function() {
   document.getElementById('designNameInput').value = "A-and-B-together";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.T);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#pjiRule').on('click', function() {
   document.getElementById('designNameInput').value = "A-notFollowedBy-B";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.I);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#mustIncludeRule').on('click', function() {
   document.getElementById('designNameInput').value = "mustInclude-A";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.M);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#endRule').on('click', function() {
   document.getElementById('designNameInput').value = "mustEndWith-A";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.E);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#notOrthogonalRule').on('click', function() {
   document.getElementById('designNameInput').value = "A-and-B-notTogether";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.O);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#lengthRule').on('click', function() {
   document.getElementById('designNameInput').value = "length-4-parts";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.N);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#leakyRule').on('click', function() {
   document.getElementById('designNameInput').value = "leakyTerminators";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.L);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
 $('#roadBlockingRule').on('click', function() {
   document.getElementById('designNameInput').value = "no-promoter-roadBlocking";
+  document.getElementById('groupIDInput').value = "example";
   editors.specEditor.setValue(exampleRules.P);
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
@@ -654,6 +675,11 @@ $('#enumerate-designs-tooltip').click(() => {
   allowDuplicatesInput.setAttribute("type", "checkbox");
   makeDiv(allowDuplicatesDiv, allowDuplicatesInput, 'Allow Duplicates?: ');
 
+  // group ID div
+  let groupDiv = document.createElement('div');
+  let groupIDInput = document.createElement('input');
+  makeDiv(groupDiv, groupIDInput, 'Group ID: ');
+
   // append all
   div.appendChild(enumerateDiv);
   div.appendChild(document.createElement('br'));
@@ -669,6 +695,8 @@ $('#enumerate-designs-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(allowDuplicatesDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(groupDiv);
+  div.appendChild(document.createElement('br'));
 
   numDesignsDiv.style.visibility = 'hidden';
   isWeightedDiv.style.visibility = 'hidden';
@@ -676,6 +704,7 @@ $('#enumerate-designs-tooltip').click(() => {
   minLengthDiv.style.visibility = 'hidden';
   isSampleSpaceDiv.style.visibility='hidden';
   allowDuplicatesDiv.style.visibility='hidden';
+  groupDiv.style.visibility='hidden'
 
   $(enumerateDropdown).change(function() {
     if(this.value === endpoint.enumerate.ENUMERATE){
@@ -685,6 +714,7 @@ $('#enumerate-designs-tooltip').click(() => {
       minLengthDiv.style.visibility = 'visible';
       isSampleSpaceDiv.style.visibility='visible';
       allowDuplicatesDiv.style.visibility='visible';
+      groupDiv.style.visibility='hidden'
     }
     if(this.value === endpoint.enumerate.SAMPLE){
       numDesignsDiv.style.visibility = 'visible';
@@ -693,6 +723,7 @@ $('#enumerate-designs-tooltip').click(() => {
       minLengthDiv.style.visibility = 'visible';
       isSampleSpaceDiv.style.visibility='visible';
       allowDuplicatesDiv.style.visibility='hidden';
+      groupDiv.style.visibility='hidden'
     }
     if(this.value === endpoint.enumerate.CREATESAMPLESPACE){
       numDesignsDiv.style.visibility = 'hidden';
@@ -701,6 +732,7 @@ $('#enumerate-designs-tooltip').click(() => {
       minLengthDiv.style.visibility = 'hidden';
       isSampleSpaceDiv.style.visibility='hidden';
       allowDuplicatesDiv.style.visibility='hidden';
+      groupDiv.style.visibility='visible'
     }
     if(this.value === endpoint.enumerate.PARTANALYTICS){
       numDesignsDiv.style.visibility = 'hidden';
@@ -709,6 +741,7 @@ $('#enumerate-designs-tooltip').click(() => {
       minLengthDiv.style.visibility = 'hidden';
       isSampleSpaceDiv.style.visibility='hidden';
       allowDuplicatesDiv.style.visibility='hidden';
+      groupDiv.style.visibility='hidden'
     }
   });
 
@@ -728,6 +761,7 @@ $('#enumerate-designs-tooltip').click(() => {
       let isWeighted = isWeightedInput.value;
       let isSampleSpace = isSampleSpaceInput.value;
       let allowDuplicates = allowDuplicatesInput.value;
+      let groupID = groupIDInput.value;
 
       if (isSampleSpaceInput.checked) {
         isSampleSpace = "true";
@@ -923,7 +957,7 @@ $('#enumerate-designs-tooltip').click(() => {
           break;
 
         case endpoint.enumerate.CREATESAMPLESPACE:
-          endpoint.createSampleSpace(currentSpace, (err, data) => {
+          endpoint.createSampleSpace(currentSpace, groupID, (err, data) => {
             if (err) {
               swalError("Error While Creating Sample Space: " + JSON.stringify(err));
             } else {
@@ -1127,6 +1161,11 @@ $('#apply-operators-tooltip').click(() => {
   let outputSpaceInput = document.createElement('input');
   makeDiv(outputDiv, outputSpaceInput, 'Output space ID: ');
 
+  // group ID div
+  let groupDiv = document.createElement('div');
+  let groupIDInput = document.createElement('input');
+  makeDiv(groupDiv, groupIDInput, 'Group ID: ');
+
   //operator dropdown
   let operatorDiv = document.createElement('div');
   let operatorDropdown = makeOperatorDropdown();
@@ -1161,6 +1200,8 @@ $('#apply-operators-tooltip').click(() => {
   div.appendChild(inputDiv);
   div.appendChild(document.createElement('br'));
   div.appendChild(outputDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(groupDiv);
   div.appendChild(document.createElement('br'));
   div.appendChild(operatorDiv);
   div.appendChild(document.createElement('br'));
@@ -1253,34 +1294,35 @@ $('#apply-operators-tooltip').click(() => {
       let isComplete = completeDropdown.value;
       let weightTolerance = weightToleranceDropdown.value;
       let reverseOrientation = reverseOrientationDropdown.value;
+      let groupID = groupIDInput.value;
 
       switch (operatorDropdown.value) {
         case endpoint.operators.JOIN:
-          endpoint.designSpaceJoin(inputSpaces, outputSpace);
+          endpoint.designSpaceJoin(inputSpaces, outputSpace, groupID);
           break;
 
         case endpoint.operators.OR:
-          endpoint.designSpaceOr(inputSpaces, outputSpace);
+          endpoint.designSpaceOr(inputSpaces, outputSpace, groupID);
           break;
 
         case endpoint.operators.REPEAT:
-          endpoint.designSpaceRepeat(inputSpaces, outputSpace, isOptional);
+          endpoint.designSpaceRepeat(inputSpaces, outputSpace, groupID, isOptional);
           break;
 
         case endpoint.operators.AND:
-          endpoint.designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete);
+          endpoint.designSpaceAnd(inputSpaces, outputSpace, groupID, tolerance, isComplete);
           break;
 
         case endpoint.operators.MERGE:
-          endpoint.designSpaceMerge(inputSpaces, outputSpace, tolerance, weightTolerance);
+          endpoint.designSpaceMerge(inputSpaces, outputSpace, groupID, tolerance, weightTolerance);
           break;
 
         case endpoint.operators.WEIGHT:
-          endpoint.designSpaceWeight(inputSpaces, outputSpace, tolerance, weightTolerance);
+          endpoint.designSpaceWeight(inputSpaces, outputSpace, groupID, tolerance, weightTolerance);
           break;
 
         case endpoint.operators.REVERSE:
-          endpoint.designSpaceReverse(currentSpace, outputSpace, reverseOrientation);
+          endpoint.designSpaceReverse(currentSpace, outputSpace, groupID, reverseOrientation);
           break;
       }
     }
@@ -1565,6 +1607,7 @@ $("#testRulesBtn").click(async function () {
   let tolerance = 1;
   let isComplete = true;
   let designName = "test_Rule_";
+  let groupID = "testing_rules"
 
   for (let rule of Object.keys(exampleRules)) {
     // Space names
@@ -1582,13 +1625,13 @@ $("#testRulesBtn").click(async function () {
     endpoint.deleteThisDesign(outputFail, false);
 
     // Create new designs
-    submitGoldbar(exampleRules[rule], JSON.stringify(ruleCategories), ruleSpaceName, weight);
-    submitGoldbar(ruleTests[rule][0].join(" or "), JSON.stringify(ruleCategories), passSpaceName, weight);
-    submitGoldbar(ruleTests[rule][1].join(" or "), JSON.stringify(ruleCategories), failSpaceName, weight);
+    submitGoldbar(exampleRules[rule], JSON.stringify(ruleCategories), ruleSpaceName, groupID, weight);
+    submitGoldbar(ruleTests[rule][0].join(" or "), JSON.stringify(ruleCategories), passSpaceName, groupID, weight);
+    submitGoldbar(ruleTests[rule][1].join(" or "), JSON.stringify(ruleCategories), failSpaceName, groupID, weight);
 
     // AND operations
-    endpoint.designSpaceAnd([ruleSpaceName, passSpaceName], outputPass, tolerance, isComplete);
-    endpoint.designSpaceAnd([ruleSpaceName, failSpaceName], outputFail, tolerance, isComplete);
+    endpoint.designSpaceAnd([ruleSpaceName, passSpaceName], outputPass, groupID, tolerance, isComplete);
+    endpoint.designSpaceAnd([ruleSpaceName, failSpaceName], outputFail, groupID, tolerance, isComplete);
 
     // Process results
     const result = await processRuleAsync(rule, outputPass, outputFail, passSpaceName);
@@ -1713,20 +1756,21 @@ $("#goldbarImportBtn").click(function() {
   let specification = editors.specEditor.getValue();
   let categories = editors.catEditor.getValue();
   let designName = document.getElementById('designNameInput').value;
+  let groupID = document.getElementById('groupIDInput').value;
   let weight = document.getElementById('weightInput').value;
 
   //replace all spaces and special characters for SBOL
   designName = designName.replace(/[^A-Z0-9]/ig, "_");
 
-  submitGoldbar(specification, categories, designName, weight);
+  submitGoldbar(specification, categories, designName, groupID, weight);
   $('#spinner').addClass('hidden'); // remove spinner
   swalSuccess();
 });
 
-export function submitGoldbar(specification, categories, designName, weight) {
+export function submitGoldbar(specification, categories, designName, groupID, weight) {
   let sparsed, pcategories
   [sparsed, pcategories] = getParsedGOLDBARAndCategories(specification, categories);
-  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(pcategories), designName, weight)
+  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(pcategories), designName, groupID, weight)
 }
 
 export function getParsedGOLDBARAndCategories(specification, categories) {
@@ -1830,11 +1874,11 @@ export function propagateReverseComplements(ast_node, reverse) {
   }
 }
 
-export function verifyRules(inputSpaces, outputSpace) {
+export function verifyRules(inputSpaces, outputSpace, groupID) {
   let tolerance = 1;
   let isComplete = true;
 
-  endpoint.designSpaceAnd(inputSpaces, outputSpace, tolerance, isComplete)
+  endpoint.designSpaceAnd(inputSpaces, outputSpace, groupID, tolerance, isComplete)
 }
 
 // Import Only
