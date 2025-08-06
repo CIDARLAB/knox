@@ -44,7 +44,8 @@ const exploreBtnIDs = {
   list: "#list-btn",
   sbol: "#sbol-btn",
   score: "#score-btn",
-  bestPath: "#bestpath-btn"
+  bestPath: "#bestpath-btn",
+  group: "#group-btn"
   // save: "#save-btn",
 };
 
@@ -56,6 +57,7 @@ export const knoxClass = {
 
 let historyNodes;
 export let currentSpace;
+export let currentGroupID;
 export let currentBranch;
 export function setcurrentBranch(branchName){
   currentBranch = branchName;
@@ -225,6 +227,7 @@ export function visualizeDesignAndHistory(spaceid) {
       $("#search-autocomplete").blur();
       showExplorePageBtns();
       currentSpace = spaceid;
+      getGroupID(currentSpace);
     }
   });
   visualizeHistory(spaceid);
@@ -233,6 +236,17 @@ export function visualizeDesignAndHistory(spaceid) {
   if(panelNum === 1){
     $('#vh-toggle-button').click();
   }
+}
+
+function getGroupID(inputSpace) {
+  endpoint.getGroupID(inputSpace, (err, data) => {
+    if (err) {
+      swalError("Get Group ID error: " + JSON.stringify(err));
+      
+    } else {
+      currentGroupID = data.groupID;
+    }
+  });
 }
 
 export function visualizeHistory(spaceid){
@@ -610,6 +624,14 @@ function addTooltips(){
     theme: 'tooltipster-noir'
   });
 
+  let groupBtn = $('#group-btn');
+  groupBtn.tooltipster({
+    content: $('#graph-group-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
   let operatorBtn = $('#combine-btn');
   operatorBtn.tooltipster({
     content: $('#apply-operators-tooltip'),
@@ -631,6 +653,98 @@ function addTooltips(){
 $('#export-sbol-tooltip').click(() => {
   endpoint.exportDesign();
 });
+
+// Individual Groups
+$('#graph-group-tooltip').click(() => {
+  let div = document.createElement('div');
+
+  // current groupID
+  let currentGroupDiv = document.createElement('div');
+  makeDiv(currentGroupDiv, document.createTextNode(currentGroupID), "Current Group ID: ");
+
+  // graph group info dropdown
+  let groupInfoDiv = document.createElement('div');
+  let groupInfoDivDropdown = makeGroupInfoDropdown();
+  makeDiv(groupInfoDiv, groupInfoDivDropdown, 'Options: ');
+
+  // group ID div
+  let groupDiv = document.createElement('div');
+  let groupIDInput = document.createElement('input');
+  makeDiv(groupDiv, groupIDInput, 'Group ID: ');
+
+  // append all
+  div.appendChild(currentGroupDiv)
+  div.appendChild(document.createElement('br'));
+  div.appendChild(document.createElement('br'));
+  div.appendChild(groupInfoDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(groupDiv);
+  div.appendChild(document.createElement('br'));
+
+  groupDiv.style.visibility = 'hidden';
+
+  $(groupInfoDivDropdown).change(function() {
+    if(this.value === endpoint.groupInfo.GETGROUPSIZE){
+      groupDiv.style.visibility = 'hidden';
+    }
+    if(this.value === endpoint.groupInfo.SETGROUPID){
+      groupDiv.style.visibility = 'visible';
+    }
+  });
+
+  swal({
+    title: "Graph Group Info",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (confirm) {
+      
+      let loadingDiv = document.createElement('div');
+      let div = document.createElement('div');
+
+      let groupID = groupIDInput.value;
+
+      switch (groupInfoDivDropdown.value) {
+        case endpoint.groupInfo.SETGROUPID:
+          endpoint.setGroupID(groupID);
+          break;
+      }
+
+      switch (groupInfoDivDropdown.value) {
+        case endpoint.groupInfo.GETGROUPSIZE:
+          let div = document.createElement('div');
+          swal({
+            title: "Group Size for " + currentGroupID,
+            content: div,
+            className: "enumeration-swal"
+          });
+          endpoint.getGroupSize(currentGroupID, (err, data) => {
+            if (err) {
+              swalError("Get Group Size error: " + JSON.stringify(err));
+            } else {
+              let para = document.createElement("p");
+              para.appendChild(document.createTextNode(data.groupSize));
+              div.appendChild(para);
+            }
+          });
+          break;
+      }
+    }
+  });
+
+});
+
+function makeGroupInfoDropdown(){
+  let groupInfoDropdown = document.createElement('select');
+  let groupInfoOption = new Option("please select", "", true, true);
+  groupInfoOption.disabled = true;
+  groupInfoDropdown.appendChild(groupInfoOption);
+  for(let key in endpoint.groupInfo){
+    groupInfoDropdown.appendChild(new Option(endpoint.groupInfo[key]));
+  }
+
+  return groupInfoDropdown;
+}
 
 $('#enumerate-designs-tooltip').click(() => {
   let div = document.createElement('div');

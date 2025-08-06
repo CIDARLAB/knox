@@ -123,4 +123,14 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
 
     @Query("MATCH (n:DesignSpace) WHERE n.groupID = {group} RETURN n.spaceID;")
     List<String> listDesignSpaces(@Param("group") String group);
+    // Set the groupID for a Design Space
+    @Query("MATCH (n:DesignSpace) WHERE n.spaceID = {targetSpaceID} SET n.groupID = {group}")
+    void setGroupID(@Param("targetSpaceID") String targetSpaceID, @Param("group") String group);
+    // Get the groupID for a Design Space
+    @Query("MATCH (n:DesignSpace) WHERE n.spaceID = {targetSpaceID} RETURN n.groupID")
+    String getGroupID(@Param("targetSpaceID") String targetSpaceID);
+
+    // Get the size of a group
+    @Query("MATCH (n:DesignSpace) WHERE n.groupID = {group} RETURN count(n)")
+    Integer getGroupIDSize(@Param("group") String group);
 }

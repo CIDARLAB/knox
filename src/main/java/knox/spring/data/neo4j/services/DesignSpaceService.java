@@ -1195,6 +1195,20 @@ public class DesignSpaceService {
 		}
     }
 
+	public void setGroupID(String targetSpaceID, String groupID) {
+		validateDesignSpaceOperator(targetSpaceID);
+		designSpaceRepository.setGroupID(targetSpaceID, groupID);
+	}
+
+	public String getGroupID(String targetSpaceID) {
+		validateDesignSpaceOperator(targetSpaceID);
+		return designSpaceRepository.getGroupID(targetSpaceID);
+	}
+
+	public Integer getGroupSize(String groupID) {
+		return designSpaceRepository.getGroupIDSize(groupID);
+	}
+
     public void createDesignSpace(String outputSpaceID) {
         validateGenerativeDesignSpaceOperator(outputSpaceID);
 

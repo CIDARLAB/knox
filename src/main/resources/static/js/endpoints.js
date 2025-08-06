@@ -21,6 +21,10 @@ const endpoints = {
   BESTPATH: "/designSpace/bestPath",
   CREATESAMPLESPACE: "/designSpace/createSampleSpace",
   PARTANALYTICS: "/designSpace/partAnalytics",
+  
+  SETGROUPID: "/designSpace/setGroupID",
+  GETGROUPID: "/designSpace/getGroupID",
+  GETGROUPSIZE: "/designSpace/getGroupSize",
 
   D3HISTORY: "/branch/graph/d3",
   CHECKOUT: "/branch/checkout",
@@ -52,6 +56,11 @@ export const enumerate = {
   SAMPLE: 'sample',
   CREATESAMPLESPACE: 'create sample space',
   PARTANALYTICS: "part analytics"
+}
+
+export const groupInfo = {
+  SETGROUPID: 'set group id',
+  GETGROUPSIZE: 'get group size'
 }
 
 
@@ -122,6 +131,22 @@ export function createSampleSpace(id, groupID, callback){
 export function getPartAnalytics(id, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
   d3.json(endpoints.PARTANALYTICS + query, callback);
+}
+
+/**
+ * Gets GroupID for a Design Space
+ */
+export function getGroupID(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.GETGROUPID + query, callback);
+}
+
+/**
+ * Gets Group Size for a groupID
+ */
+export function getGroupSize(groupID, callback){
+  let query = "?groupID=" + encodeURIComponent(groupID);
+  d3.json(endpoints.GETGROUPSIZE + query, callback);
 }
 
 /***************************
@@ -307,9 +332,30 @@ export function deleteDesignGroup(groupID){
     swalSuccess();
     clearAllPages();
   } else {
-    swalError("Failed to delete design space group" + groupID);
+    swalError("Failed to delete design space group " + groupID);
   }
 }
+
+/**
+ * Sets GroupID for a Design Space
+ */
+export function setGroupID(groupID){
+  let query = "?";
+  query += encodeQueryParameter("targetSpaceID", currentSpace, query);
+  query += encodeQueryParameter("groupID", groupID, query);
+
+  let request = new XMLHttpRequest();
+  request.open("POST", endpoints.SETGROUPID + query, false);
+  request.send(null);
+  
+  if (request.status >= 200 && request.status < 300) {
+    swalSuccess();
+    clearAllPages();
+  } else {
+    swalError("Failed to set design space group " + groupID);
+  }
+}
+
 
 // export function getDate() {
 //   let d = new Date();

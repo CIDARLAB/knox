@@ -1079,4 +1079,49 @@ public class KnoxController {
 			@RequestParam(value = "groupID", required = false) String groupID){
 		return designSpaceService.createSampleSpace(targetSpaceID, groupID);
 	}
+
+	@RequestMapping(value = "/designSpace/setGroupID", method = RequestMethod.POST)
+	public void setGroupID(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+			@RequestParam(value = "groupID", required = true) String groupID){
+
+		designSpaceService.setGroupID(targetSpaceID, groupID);
+	}
+
+	@RequestMapping(value = "/designSpace/getGroupID", method = RequestMethod.GET)
+	public Map<String, String> getGroupID(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
+
+		System.out.println(String.format("\nGet Group ID for (%1$s):\n", targetSpaceID));
+
+		String groupID = designSpaceService.getGroupID(targetSpaceID);
+		System.out.println("GroupID: " + groupID);
+		
+		Map<String, String> output = new HashMap<>();
+
+		if (groupID == null) {
+			output.put("groupID", "null");
+		} else {
+			output.put("groupID", groupID);
+		}
+
+		return output;
+	}
+
+	@RequestMapping(value = "/designSpace/getGroupSize", method = RequestMethod.GET)
+	public Map<String, String> getGroupSize(@RequestParam(value = "groupID", required = true) String groupID){
+
+		System.out.println(String.format("\nGet Group Size for (%1$s):\n", groupID));
+
+		Integer groupSize = designSpaceService.getGroupSize(groupID);
+		System.out.println("Group Size: " + groupSize);
+		
+		Map<String, String> output = new HashMap<>();
+
+		if (groupSize == null) {
+			output.put("groupSize", "0");
+		} else {
+			output.put("groupSize", String.valueOf(groupSize));
+		}
+
+		return output;
+	}
 }
