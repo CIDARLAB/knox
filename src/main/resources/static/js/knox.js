@@ -2184,18 +2184,18 @@ function refreshCompletions(textInputId, textCompletionsId, onSubmit) {
   var autoCmpl = $(textCompletionsId);
   autoCmpl.empty();
   var val = $(textInputId).val();
-  if (val !== "") {
-    var completions = suggestCompletions(val).slice(0, 50); // Displays at most
-    completions.map((elem) => {
-      var div = makeAutocompleteRow(elem, val);
-      div.onclick = () => {
-        $(textInputId).val(elem);
-        refreshCompletions(textInputId, textCompletionsId);
-        onSubmit(elem);
-      };
-      autoCmpl.append(div);
-    });
-  }
+  
+  var completions = suggestCompletions(val).slice(0, 50); // Displays at most
+  completions.map((elem) => {
+    var div = makeAutocompleteRow(elem, val);
+    div.onclick = () => {
+      $(textInputId).val(elem);
+      refreshCompletions(textInputId, textCompletionsId);
+      onSubmit(elem);
+    };
+    autoCmpl.append(div);
+  });
+  
   updateAutocompleteVisibility(textCompletionsId);
 }
 
@@ -2221,7 +2221,7 @@ function populateAutocompleteList(callback) {
 function suggestCompletions (phrase){
     var results = [];
     completionSet.forEach((element) => {
-        if (element.indexOf(phrase) !== -1) {
+        if (element.indexOf(phrase) !== -1 || phrase === "") {
             results.push(element);
         }
     });
