@@ -1026,6 +1026,20 @@ public class KnoxController {
         return designSpaceService.listDesignSpaces();
     }
 
+	@RequestMapping(value = "/designSpace/listGroupSpaces", method = RequestMethod.GET)
+    public List<String> listGroupSpaceIDs(@RequestParam(value = "groupID", required = true) String groupID) {
+		System.out.println("\nLIST SPACES FROM GROUP:\n");
+        return designSpaceService.getGroupSpaceIDs(groupID);
+    }
+
+	@RequestMapping(value = "/designSpace/listUniqueGroups", method = RequestMethod.GET)
+    public List<String> listUniqueGroupIDs() {
+		System.out.println("\nLIST GROUP IDS:\n");
+		List<String> groupIDs = designSpaceService.getUniqueGroupIDs();
+		System.out.println(groupIDs);
+        return groupIDs;
+    }
+
     @RequestMapping(value = "/designSpace/enumerateSet", method = RequestMethod.GET)
     public HashSet<List<Map<String, Object>>> enumerateSet(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,

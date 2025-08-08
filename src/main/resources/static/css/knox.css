@@ -512,6 +512,12 @@ section {
     stroke-width: 2.0px;
 }
 
+.node-label {
+  font-family: sans-serif;
+  font-size: 12px;
+  pointer-events: none;
+}
+
 .start-node {
     fill: #fff;
     stroke: #05A8AA;

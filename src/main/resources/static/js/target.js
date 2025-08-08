@@ -79,6 +79,12 @@ export default class Target{
       .attr("r", 7) //radius
       .call(force.drag);
 
+    let labels = nodesEnter.append("text")
+      .attr("class", "node-label")
+      .attr("dx", 10)
+      .attr("dy", ".35em")
+      .text(d => d.id);
+
     // Filter out links if the "show" flag is false
     let linksEnter = svg.selectAll(".link")
       .data(graph.links.filter(link => link.show))
@@ -223,6 +229,9 @@ export default class Target{
       .attr("cy", function (d) {
         return d.y;
       });
+
+      labels.attr("x", d => d.x + 10)
+        .attr("y", d => d.y);
 
       // Position SBOL images
       images.attr("x", function (d) {

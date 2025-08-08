@@ -238,6 +238,46 @@ export function visualizeDesignAndHistory(spaceid) {
   }
 }
 
+export function showGroupInfo(groupID) {
+  // Set currentGroupID
+  currentGroupID = groupID
+
+  hideExplorePageBtns();
+
+  endpoint.listGroupSpaceIDs(currentGroupID, (err, spaceids) => {
+    if (err) {
+      swalError(JSON.stringify(err));
+    } else {
+      // Construct Star Graph for Group
+      let graph = {"nodes":[], "links":[]};
+
+      // Add center node (groupID)
+      graph.nodes.push({id: currentGroupID, nodeTypes: ["start"]});
+
+      // Add spaceIDs from groupID
+      spaceids.forEach((spaceid, index) => {
+        let limit = 10;
+
+        if (index === 0) {
+          // Append Number of Designs
+          graph.nodes.push({id: `Total Designs: ${spaceids.length}`, nodeTypes: []})
+          graph.links.push({source: 0, target: index+1, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
+        }
+
+        if (index < limit) {
+          graph.nodes.push({id: spaceid, nodeTypes: []}) // Make spaceID Node
+          graph.links.push({source: 0, target: index+2, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
+        }
+      });
+      
+      targets.search.clear();
+      targets.search.setGraph(graph);
+      $("#search-tb").blur();
+      $("#search-autocomplete").blur();
+    }
+  });
+}
+
 function getGroupID(inputSpace) {
   endpoint.getGroupID(inputSpace, (err, data) => {
     if (err) {
@@ -2132,7 +2172,8 @@ $("#goldbarSubmitAndDownloadBtn").click(function() {
  * SEARCH BAR FUNCTIONS
  ************************/
 $("#search-tb").on("input", function() {
-  refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
+  let visualizeFunction = chooseVisualizeFunction();
+  refreshCompletions("#search-tb", "#search-autocomplete", visualizeFunction);
 });
 
 $("#search-tb").focus(function() {
@@ -2147,11 +2188,34 @@ $("#search-tb").click(() => {
   // startup, and then only when some event triggers the creation of a new
   // graph.
   if (!$(this).is(":focus")) {
+    let visualizeFunction = chooseVisualizeFunction();
     populateAutocompleteList(() => {
-      refreshCompletions("#search-tb", "#search-autocomplete", visualizeDesignAndHistory);
+      refreshCompletions("#search-tb", "#search-autocomplete", visualizeFunction);
     });
   }
 });
+
+$("#search-type").on("change", () => {
+  //$("search-tb").val() = "";
+  document.getElementById('search-tb').value = "";
+  let visualizeFunction = chooseVisualizeFunction();
+  populateAutocompleteList(() => {
+    refreshCompletions("#search-tb", "#search-autocomplete", visualizeFunction);
+  });
+});
+
+function chooseVisualizeFunction() {
+  const searchType = $("#search-type").val();
+
+  let visualizeFunction;
+  if (searchType === "space") {
+    visualizeFunction = visualizeDesignAndHistory;
+  } else if (searchType === "group") {
+    visualizeFunction = showGroupInfo;
+  }
+
+  return visualizeFunction
+}
 
 function updateAutocompleteVisibility(id) {
   var autoCmpl = $(id);
@@ -2206,7 +2270,16 @@ function refreshCompletions(textInputId, textCompletionsId, onSubmit) {
 // matching to return a list of design spaces with similar names.
 
 function populateAutocompleteList(callback) {
-    endpoint.listDesignSpaces((err, data) => {
+    const searchType = $("#search-type").val();
+
+    let fetchFunction;
+    if (searchType === "space") {
+      fetchFunction = endpoint.listDesignSpaces;
+    } else if (searchType === "group") {
+      fetchFunction = endpoint.listGroups;
+    }
+
+    fetchFunction((err, data) => {
         if (err) {
             swalError("Are you sure Knox and Neo4j are running?");
         } else {

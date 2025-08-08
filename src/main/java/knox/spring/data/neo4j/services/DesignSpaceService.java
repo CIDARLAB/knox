@@ -1209,6 +1209,14 @@ public class DesignSpaceService {
 		return designSpaceRepository.getGroupIDSize(groupID);
 	}
 
+	public List<String> getGroupSpaceIDs(String groupID) {
+		return designSpaceRepository.listDesignSpaces(groupID);
+	}
+
+	public List<String> getUniqueGroupIDs() {
+		return designSpaceRepository.getUniqueGroupIDs();
+	}
+
     public void createDesignSpace(String outputSpaceID) {
         validateGenerativeDesignSpaceOperator(outputSpaceID);
 

@@ -118,11 +118,14 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
         + "e.componentIDs as componentIDs, e.weight as weight, e.orientation as orientation, n.nodeID as headID, n.nodeTypes as headTypes")
     List<Map<String, Object>> mapDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 
+    // Get all Design Space IDs
     @Query("MATCH (n:DesignSpace) RETURN n.spaceID;")
     List<String> listDesignSpaces();
 
+    // Get all Design Space IDs from a Group
     @Query("MATCH (n:DesignSpace) WHERE n.groupID = {group} RETURN n.spaceID;")
     List<String> listDesignSpaces(@Param("group") String group);
+
     // Set the groupID for a Design Space
     @Query("MATCH (n:DesignSpace) WHERE n.spaceID = {targetSpaceID} SET n.groupID = {group}")
     void setGroupID(@Param("targetSpaceID") String targetSpaceID, @Param("group") String group);
@@ -133,4 +136,8 @@ public interface DesignSpaceRepository extends GraphRepository<DesignSpace> {
     // Get the size of a group
     @Query("MATCH (n:DesignSpace) WHERE n.groupID = {group} RETURN count(n)")
     Integer getGroupIDSize(@Param("group") String group);
+
+    // Get all unique group IDs
+    @Query("MATCH (n:DesignSpace) WHERE n.groupID IS NOT NULL RETURN DISTINCT n.groupID")
+    List<String> getUniqueGroupIDs();
 }

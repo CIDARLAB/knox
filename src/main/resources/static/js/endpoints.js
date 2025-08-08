@@ -14,6 +14,8 @@ import {currentSpace,
 const endpoints = {
   D3: "/graph/d3",
   LIST: "/designSpace/list",
+  LISTGROUPIDS: "/designSpace/listUniqueGroups",
+  LISTGROUPSPACEIDS: "/designSpace/listGroupSpaces",
   ENUMERATESET: "/designSpace/enumerateSet",
   ENUMERATELIST: "/designSpace/enumerateList",
   SAMPLE: "/designSpace/sample",
@@ -75,6 +77,15 @@ export function getGraph (id, callback){
 
 export function listDesignSpaces (callback){
   d3.json(endpoints.LIST, callback);
+}
+
+export function listGroups (callback){
+  d3.json(endpoints.LISTGROUPIDS, callback);
+}
+
+export function listGroupSpaceIDs (groupID, callback){
+  let query = "?groupID=" + encodeURIComponent(groupID);
+  d3.json(endpoints.LISTGROUPSPACEIDS + query, callback);
 }
 
 export function getHistory (id, callback){
