@@ -374,7 +374,7 @@ public class DesignSpaceService {
 		System.out.println("\nBegin Enumeration\n");
         HashSet<List<Map<String, Object>>> samplerOutput = designSampler.enumerateSet(0, 0, 0, false, EnumerateType.BFS);
 
-		return processEnumerateSet(samplerOutput, true, false, false);
+		return designSampler.processEnumerateSet(samplerOutput, true, false, false);
 		
     }
     
@@ -1246,72 +1246,8 @@ public class DesignSpaceService {
 		System.out.println("\nBegin Enumeration\n");
         HashSet<List<Map<String, Object>>> samplerOutput = designSampler.enumerateSet(numDesigns, minLength, maxLength, isSampleSpace, enumerateType);
 
-		return processEnumerateSet(samplerOutput, isWeighted, isSampleSpace, printDesigns);
+		return designSampler.processEnumerateSet(samplerOutput, isWeighted, isSampleSpace, printDesigns);
     }
-
-	private HashSet<List<Map<String, Object>>> processEnumerateSet(HashSet<List<Map<String, Object>>> samplerOutput, 
-			boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
-
-		if (isWeighted && !isSampleSpace) {
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				double total = 0.0;
-				double length = design.size();
-				for (Map<String,Object> element : design) {
-					if (element.get("isBlank") == "true") {
-						length = length - 1.0;
-					} else {
-						total = total + (double) element.get("weight");
-					}
-				}
-				double averageWeight = total / length;
-
-				for (Map<String,Object> element : design) {
-					element.put("average_weight", averageWeight);
-				}
-
-				i++;
-				System.out.println(i);
-			}
-		} else if (isSampleSpace) {
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				double probability = 1.0;
-				
-				for (Map<String,Object> element : design) {
-					probability = probability * (double) element.get("weight");
-				}
-
-				for (Map<String,Object> element : design) {
-					element.put("probability", probability);
-				}
-
-				i++;
-				System.out.println(i);
-			}
-		}
-
-		// Print Designs
-		if (printDesigns){
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				i++;
-				List<Object> design_parts = new ArrayList<>();
-				for (Map<String,Object> element : design) {
-					design_parts.add(element.get("id"));
-				}
-				System.out.println();
-				System.out.println(i);
-				System.out.println(design_parts);
-				
-			}
-		}
-	
-
-		System.out.println("\nEnumerated!");
-        
-        return samplerOutput;
-	}
 
 	public List<List<Map<String, Object>>> enumerateDesignSpaceList(String targetSpaceID, 
     		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
@@ -1323,72 +1259,8 @@ public class DesignSpaceService {
 		System.out.println("\nBegin Enumeration\n");
         List<List<Map<String, Object>>> samplerOutput = designSampler.enumerateList(numDesigns, minLength, maxLength, isSampleSpace, enumerateType);
 
-		return processEnumerateList(samplerOutput, isWeighted, isSampleSpace, printDesigns);
+		return designSampler.processEnumerateList(samplerOutput, isWeighted, isSampleSpace, printDesigns);
     }
-
-	private List<List<Map<String, Object>>> processEnumerateList(List<List<Map<String, Object>>> samplerOutput, 
-			boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
-
-		if (isWeighted && !isSampleSpace) {
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				double total = 0.0;
-				double length = design.size();
-				for (Map<String,Object> element : design) {
-					if (element.get("isBlank") == "true") {
-						length = length - 1.0;
-					} else {
-						total = total + (double) element.get("weight");
-					}
-				}
-				double averageWeight = total / length;
-
-				for (Map<String,Object> element : design) {
-					element.put("average_weight", averageWeight);
-				}
-
-				i++;
-				System.out.println(i);
-			}
-		} else if (isSampleSpace) {
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				double probability = 1.0;
-				
-				for (Map<String,Object> element : design) {
-					probability = probability * (double) element.get("weight");
-				}
-
-				for (Map<String,Object> element : design) {
-					element.put("probability", probability);
-				}
-
-				i++;
-				System.out.println(i);
-			}
-		}
-
-		// Print Designs
-		if (printDesigns){
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				i++;
-				List<Object> design_parts = new ArrayList<>();
-				for (Map<String,Object> element : design) {
-					design_parts.add(element.get("id"));
-				}
-				System.out.println();
-				System.out.println(i);
-				System.out.println(design_parts);
-				
-			}
-		}
-	
-
-		System.out.println("\nEnumerated!");
-        
-        return samplerOutput;
-	}
     
     public List<String> getGraphScore(String targetSpaceID) {
     	
