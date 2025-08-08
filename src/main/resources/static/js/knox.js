@@ -1576,14 +1576,23 @@ $('#delete-design-tooltip').click(() => {
 });
 
 $('#delete-group-tooltip').click(() => {
+  const input = document.createElement("input");
+  input.setAttribute("type", "text");
+  input.setAttribute("placeholder", "Enter Group ID");
+  if (currentGroupID) {
+    input.value = currentGroupID;
+  }
+
   swal({
     title: "Enter Group ID",
     text: "Type the Group ID to confirm deletion:",
-    content: "input", // This enables a text field
+    content: input, 
     icon: "warning",
     buttons: true,
   })
   .then((groupID) => {
+    groupID = groupID || input.value;
+
     if (!groupID) {
       swal("Oops!", "You need to enter a valid Group ID to proceed.", "error");
       return;
