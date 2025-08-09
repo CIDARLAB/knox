@@ -103,6 +103,7 @@ public class DesignSpaceService {
     	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+		outputSpace.setGroupID(groupID);
 
     	JoinOperator.apply(inputSpaces, outputSpace);
     	
@@ -113,7 +114,7 @@ public class DesignSpaceService {
 //
 //    	JoinOperator.apply(inputSnaps, outputSnap);
 
-    	saveDesignSpace(outputSpace, groupID);
+    	saveDesignSpace(outputSpace);
     }
     
     public void joinBranches(String targetSpaceID, List<String> inputBranchIDs) {
@@ -154,6 +155,7 @@ public class DesignSpaceService {
     	List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+		outputSpace.setGroupID(groupID);
     	
     	OROperator.apply(inputSpaces, outputSpace);
     	
@@ -164,7 +166,7 @@ public class DesignSpaceService {
 //    	
 //    	OROperator.apply(inputSnaps, outputSnap);
 
-    	saveDesignSpace(outputSpace, groupID);
+    	saveDesignSpace(outputSpace);
     }
     
     public void orBranches(String targetSpaceID, List<String> inputBranchIDs) {
@@ -205,6 +207,7 @@ public class DesignSpaceService {
     	List<NodeSpace> inputSpaces = new LinkedList<NodeSpace>();
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+		outputSpace.setGroupID(groupID);
     	
     	RepeatOperator.apply(inputSpaces, outputSpace, isOptional);
     	
@@ -215,7 +218,7 @@ public class DesignSpaceService {
 //    	
 //    	RepeatOperator.apply(inputSnaps, outputSnap, isOptional);
 
-    	saveDesignSpace(outputSpace, groupID);
+    	saveDesignSpace(outputSpace);
     }
     
     public void repeatBranches(String targetSpaceID, List<String> inputBranchIDs, boolean isOptional) {
@@ -257,6 +260,7 @@ public class DesignSpaceService {
     	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+		outputSpace.setGroupID(groupID);
     	
     	ANDOperator.apply(inputSpaces, outputSpace, tolerance, isComplete, roles, new ArrayList<String>());
 //    	long endTime = System.nanoTime();
@@ -273,7 +277,7 @@ public class DesignSpaceService {
 //    	
 //    	ANDOperator.apply(inputSnaps, outputSnap, tolerance, isComplete, roles);
     	
-    	saveDesignSpace(outputSpace, groupID);
+    	saveDesignSpace(outputSpace);
     }
     
     public void andBranches(String targetSpaceID, List<String> inputBranchIDs, 
@@ -317,6 +321,7 @@ public class DesignSpaceService {
     	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+		outputSpace.setGroupID(groupID);
     	
     	MergeOperator.apply(inputSpaces, outputSpace, tolerance, weightTolerance, roles, irrelevantParts);
 //    	long endTime = System.nanoTime();
@@ -333,7 +338,7 @@ public class DesignSpaceService {
 //    	
 //    	MergeOperator.apply(inputSnaps, outputSnap, tolerance, roles);
 
-    	saveDesignSpace(outputSpace, groupID);
+    	saveDesignSpace(outputSpace);
     }
 
 	public HashSet<List<Map<String, Object>>> mergeThenAndThenEnumerateDesignSpaces(List<String> mergeSpaceIDs, List<String> andSpaceIDs, String mergeOutputSpaceID, String andOutputSpaceID,
@@ -621,16 +626,16 @@ public class DesignSpaceService {
     	}
     	
     	if (!csvSpaces.isEmpty()) {
-    		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix);
+    		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix, groupID);
     		
     		if (isMerge) {
     			MergeOperator.apply(csvSpaces, outputSpace, 1, weightTolerance, new HashSet<String>(), new ArrayList<String>());
 
-    			saveDesignSpace(outputSpace, groupID);
+    			saveDesignSpace(outputSpace);
     		} else {
     			OROperator.apply(csvSpaces, outputSpace);
     			
-    			saveDesignSpace(outputSpace, groupID);
+    			saveDesignSpace(outputSpace);
     		}
     	}
     }
@@ -814,7 +819,8 @@ public class DesignSpaceService {
 		for (DesignSpace outputSpace: outputSpaces){
 			correctComponentIds(outputSpace);
 			//outputSpace.splitEdges();
-			saveDesignSpace(outputSpace, groupID);
+			outputSpace.setGroupID(groupID);
+			saveDesignSpace(outputSpace);
 		}
 
 	}
@@ -848,7 +854,8 @@ public class DesignSpaceService {
 			//outputSpace.splitEdges();
 
 			if (save) {
-				saveDesignSpace(outputSpace, groupID);
+				outputSpace.setGroupID(groupID);
+				saveDesignSpace(outputSpace);
 			}
 
 			output = outputSpace;
@@ -896,11 +903,11 @@ public class DesignSpaceService {
 
 		NodeSpace outSpace = goldbarConversion.getSpace();
 
-		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix);
+		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix, groupID);
 
 		outputSpace.shallowCopyNodeSpace(outSpace);
 
-		saveDesignSpace(outputSpace, groupID);
+		saveDesignSpace(outputSpace);
 	}
 
 	public Map<String, Object> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, 
@@ -1340,10 +1347,11 @@ public class DesignSpaceService {
     	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+		outputSpace.setGroupID(groupID);
     	
     	WeightOperator.apply(inputSpaces.get(0), inputSpaces.get(1), outputSpace, tolerance, weightTolerance);
 
-    	saveDesignSpace(outputSpace, groupID);
+    	saveDesignSpace(outputSpace);
 
 	}
 
@@ -1357,10 +1365,11 @@ public class DesignSpaceService {
     	List<NodeSpace> inputSpaces = new ArrayList<NodeSpace>(inputSpaceIDs.size());
     	
     	DesignSpace outputSpace = loadIOSpaces(inputSpaceIDs, outputSpaceID, inputSpaces);
+		outputSpace.setGroupID(groupID);
     	
     	ReverseOperator.apply(inputSpaces.get(0), outputSpace, reverseOrientation);
 
-    	saveDesignSpace(outputSpace, groupID);
+    	saveDesignSpace(outputSpace);
 
 	}
     
@@ -1384,7 +1393,7 @@ public class DesignSpaceService {
 			return false;
 		
 		} else {
-			DesignSpace outputSpace = new DesignSpace(targetSpaceID + "_sampleSpace");
+			DesignSpace outputSpace = new DesignSpace(targetSpaceID + "_sampleSpace", groupID);
 
 			inputSpace.weightBlankEdges();
 
@@ -1441,7 +1450,7 @@ public class DesignSpaceService {
 				}
 			}
 
-			saveDesignSpace(outputSpace, groupID);
+			saveDesignSpace(outputSpace);
 			return true;
 		}
 	}
@@ -1745,15 +1754,6 @@ public class DesignSpaceService {
 	}
 	
 	private void saveDesignSpace(DesignSpace space) {
-		saveDesignSpace(space, "none");
-	}
-
-	private void saveDesignSpace(DesignSpace space, String groupID) {
-		// Set GroupID before Saving
-		if (groupID.equals("")) {
-			groupID = "none";
-		}
-		space.setGroupID(groupID);
 
 		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
 

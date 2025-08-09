@@ -35,6 +35,19 @@ public class DesignSpace extends NodeSpace {
         
         branches = new HashSet<Branch>();
     }
+
+	public DesignSpace(String spaceID, String groupID) {
+        super(0);
+
+        this.spaceID = spaceID;
+
+		this.groupID = groupID;
+		if (this.groupID.equals("")) {
+			this.groupID = "none";
+		}
+        
+        branches = new HashSet<Branch>();
+    }
     
     public DesignSpace(String spaceID, ArrayList<String> componentIDs, ArrayList<String> componentRoles) {
     	super(componentIDs, componentRoles);
@@ -228,6 +241,9 @@ public class DesignSpace extends NodeSpace {
 
 	public void setGroupID(String groupID) {
 		this.groupID = groupID;
+		if (this.groupID.equals("")) {
+			this.groupID = "none";
+		}
 	}
 
 	public String getGroupID() {
