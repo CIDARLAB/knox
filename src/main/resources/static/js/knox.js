@@ -1591,8 +1591,7 @@ $('#delete-group-tooltip').click(() => {
     buttons: true,
   })
   .then((groupID) => {
-    groupID = groupID || input.value;
-
+    groupID = input.value.trim();
     if (!groupID) {
       swal("Oops!", "You need to enter a valid Group ID to proceed.", "error");
       return;
