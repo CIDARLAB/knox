@@ -468,7 +468,7 @@ public class GoldbarGeneration {
                 handleDirection("any_except_" + name),                     // %3$s = any_except_parts1andparts2
                 handleDirection("any_except_" + dataSplit[0]),             // %4$s = any_except_parts1 
                 handleDirection("any_except_" + dataSplit[1]),             // %5$s = any_except_parts2
-                handleDirection(dataSplit[0] + "then any_except_" + name)  // %6$s = parts1 then any_except_parts1andparts2
+                handleDirection(dataSplit[0] + " then any_except_" + name)  // %6$s = parts1 then any_except_parts1andparts2
             );
 
             pjiGoldbar.put(key, g);
