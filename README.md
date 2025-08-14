@@ -9,14 +9,21 @@
 4) Open Knox web interface at http://localhost:8080
 
 ### Non-Docker Instructions
-1) Install [Neo4J](http://neo4j.com/download)
-2) Open the Desktop app and add a new project
-3) Within the project, click "Add Graph", then create a local graph using "*kn0x*" as password
-4) Click "Start"
-7) [Download](https://maven.apache.org/download.cgi) and [Install](https://maven.apache.org/install.html) Maven
-8) Clone this repository
-9) Run `mvn spring-boot:run` in the root directory of this repo
-10) Open Knox web interface at http://localhost:8080
+1) Install [Java 17+](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
+2) Set "JAVA_HOME" Environment Variable Path
+3) Install [Neo4J Desktop 2](http://neo4j.com/download)
+4) Open the Desktop app and click "Create instance"
+5) Set Instance name to "knox"
+6) Set Neo4j version to 2025.07.1
+7) Database user should be neo4j
+8) set password to "*kn0xkn0x*"
+9) then click "Create"
+10) Click "Start instance"
+11) [Download](https://maven.apache.org/download.cgi) and [Install](https://maven.apache.org/install.html) Maven
+12) Clone this repository
+13) Run `mvn clean install` in the root directory of this repo
+14) After successful install, Run `mvn spring-boot:run` in the root directory of this repo
+15) Open Knox web interface at http://localhost:8080
 
 ## Manuscript
 
