@@ -257,6 +257,10 @@
                         let weight = 0.0;
                         let error = "";
                         let rules = [];
+
+                        // Update GOLDBAR Tab with results
+                        knox.setGOLDBARTab(data.goldbar, data.categories, outputSpacePrefix);
+
                         Object.entries(data.goldbar).forEach(([key, goldbar]) => {
                         let specification = goldbar;
                         //replace all spaces and special characters for SBOL
@@ -278,7 +282,7 @@
 
                         swal({
                             title: "GOLDBAR and Categories",
-                            text: `GOLDBAR:\n${JSON.stringify(data.goldbar)}\n\nCategories:\n${data.categories}\n\n${error}`,
+                            text: `See GOLDBAR and Categories in GOLDBAR Tab \nGOLDBAR:\n${JSON.stringify(data.goldbar)}\n\nCategories:\n${data.categories}\n\n${error}`,
                             icon: "success",
                         });
                     })

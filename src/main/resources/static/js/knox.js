@@ -579,6 +579,12 @@ $('#roadBlockingRule').on('click', function() {
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
+export function setGOLDBARTab(goldbar, categories, designName) {
+  document.getElementById('designNameInput').value = designName + "_Rules";
+  document.getElementById('groupIDInput').value = "goldbar_generator";
+  editors.specEditor.setValue(JSON.stringify(goldbar));
+  editors.catEditor.setValue(categories);
+}
 
 /*********************
  * TOOLTIPS FUNCTIONS
