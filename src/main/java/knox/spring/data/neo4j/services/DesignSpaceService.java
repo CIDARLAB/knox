@@ -1243,8 +1243,48 @@ public class DesignSpaceService {
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
 		List<DesignSpaceEdgeDTO> designSpaceData = designSpaceRepository.mapDesignSpace(targetSpaceID);
 		Map<String, Object> d3 = mapDesignSpaceToD3Format(designSpaceData);
-        return d3;
+        return reformatD3Graph(targetSpaceID, d3);
     }
+
+	public Map<String, Object> reformatD3Graph(String targetSpaceID, Map<String, Object> d3) {
+		List<Map<String, Object>> nodes = (List<Map<String, Object>>) d3.get("nodes");
+		if (nodes.size() > 100) {
+			Map<String, Object> d3_reformatted = new HashMap<String, Object>();
+			List<Map<String, Object>> newNodes = new ArrayList<Map<String, Object>>();
+			List<Map<String, Object>> newLinks = new ArrayList<Map<String, Object>>();
+			List<Map<String, Object>> links = (List<Map<String, Object>>) d3.get("links");
+
+			ArrayList<String> startNodeTypes = new ArrayList<String>();
+			startNodeTypes.add("start");
+
+			ArrayList<String> acceptNodeTypes = new ArrayList<String>();
+			acceptNodeTypes.add("accept");
+
+			newNodes.add(makeD3("id", targetSpaceID, "nodeTypes", startNodeTypes));
+			newNodes.add(makeD3("id", "Total Nodes: " + nodes.size(), "nodeTypes", acceptNodeTypes));
+			newNodes.add(makeD3("id", "Total Edges: " + links.size(), "nodeTypes", acceptNodeTypes));
+
+			Map<String, Object> link1 = makeD3("source", 0, "target", 1);
+			link1.put("componentRoles", new ArrayList<String>());
+			link1.put("componentIDs", new ArrayList<String>());
+			link1.put("weight", new ArrayList<Double>());
+
+			Map<String, Object> link2 = makeD3("source", 0, "target", 2);
+			link2.put("componentRoles", new ArrayList<String>());
+			link2.put("componentIDs", new ArrayList<String>());
+			link2.put("weight", new ArrayList<Double>());
+
+			newLinks.add(link1);
+			newLinks.add(link2);
+
+			d3_reformatted.put("nodes", newNodes);
+			d3_reformatted.put("links", newLinks);
+
+			return d3_reformatted;
+		}
+		
+		return d3;
+	}
     
     public HashSet<List<Map<String, Object>>> enumerateDesignSpaceSet(String targetSpaceID, 
     		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {

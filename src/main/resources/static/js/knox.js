@@ -222,17 +222,7 @@ export function visualizeDesignAndHistory(spaceid) {
       swalError(JSON.stringify(err));
     } else {
       targets.search.clear();
-      if (data.nodes.length > 100) {
-        let graph = {"nodes":[], "links":[]};
-        graph.nodes.push({id: spaceid, nodeTypes: ["start"]});
-        graph.nodes.push({id: `Total Nodes: ${data.nodes.length}`, nodeTypes: []});
-        graph.nodes.push({id: `Total Edges: ${data.links.length}`, nodeTypes: []});
-        graph.links.push({source: 0, target: 1, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
-        graph.links.push({source: 0, target: 2, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
-        targets.search.setGraph(graph);
-      } else {
-        targets.search.setGraph(data);
-      }
+      targets.search.setGraph(data);
       $("#search-tb").blur();
       $("#search-autocomplete").blur();
       showExplorePageBtns();
