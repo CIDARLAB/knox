@@ -258,27 +258,28 @@ export function showGroupInfo(groupID) {
     if (err) {
       swalError(JSON.stringify(err));
     } else {
-      // Construct Star Graph for Group
+      // Construct Circle Graph for Group
       let graph = {"nodes":[], "links":[]};
 
       // Add center node (groupID)
       graph.nodes.push({id: currentGroupID, nodeTypes: ["start"]});
 
+      // Append Number of Designs
+      graph.nodes.push({id: `Total Designs: ${spaceids.length}`, nodeTypes: ["start"]})
+      graph.links.push({source: 0, target: 1, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
+
       // Add spaceIDs from groupID
       spaceids.forEach((spaceid, index) => {
-        let limit = 10;
-
-        if (index === 0) {
-          // Append Number of Designs
-          graph.nodes.push({id: `Total Designs: ${spaceids.length}`, nodeTypes: []})
-          graph.links.push({source: 0, target: index+1, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
-        }
-
+        let limit = 25;
         if (index < limit) {
           graph.nodes.push({id: spaceid, nodeTypes: []}) // Make spaceID Node
-          graph.links.push({source: 0, target: index+2, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
+          graph.links.push({source: index+1, target: index+2, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
         }
       });
+
+      if (graph.nodes.lenght > 3) {
+        graph.links.push({source: graph.nodes.length - 1, target: 2, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
+      }
       
       targets.search.clear();
       targets.search.setGraph(graph);
