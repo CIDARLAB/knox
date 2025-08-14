@@ -11,9 +11,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.neo4j.ogm.json.JSONObject;
-import org.neo4j.ogm.json.JSONArray;
-import org.neo4j.ogm.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 public class GoldbarGeneration {
     

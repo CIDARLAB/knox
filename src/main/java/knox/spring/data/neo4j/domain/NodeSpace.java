@@ -18,25 +18,27 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import knox.spring.data.neo4j.domain.Edge.Orientation;
 import knox.spring.data.neo4j.domain.Node.NodeType;
+import org.springframework.data.neo4j.core.schema.Property;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@NodeEntity
+@org.springframework.data.neo4j.core.schema.Node
 public class NodeSpace {
-	@GraphId
+	@Id
+	@GeneratedValue
     Long id;
 	
-	int nodeIndex;
+	@Property int nodeIndex;
 	
 	@Relationship(type = "CONTAINS") 
     Set<Node> nodes;

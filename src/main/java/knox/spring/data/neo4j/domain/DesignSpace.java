@@ -10,17 +10,21 @@ import java.util.Stack;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Property;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class DesignSpace extends NodeSpace {
-    String spaceID;
+    @Property String spaceID;
 
-	String groupID;
+	@Property String groupID;
 
-    @Relationship(type = "ARCHIVES") Set<Branch> branches;
 
-    @Relationship(type = "SELECTS") Branch headBranch;
+    @Relationship(type = "ARCHIVES") 
+	Set<Branch> branches;
+
+    @Relationship(type = "SELECTS") 
+	Branch headBranch;
 
     int commitIndex;
 
@@ -32,6 +36,8 @@ public class DesignSpace extends NodeSpace {
         super(0);
 
         this.spaceID = spaceID;
+
+		this.groupID = "none";
         
         branches = new HashSet<Branch>();
     }

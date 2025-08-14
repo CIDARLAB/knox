@@ -17,12 +17,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.neo4j.ogm.json.JSONObject;
-
-import com.google.gson.JsonArray;
-
-import org.neo4j.ogm.json.JSONArray;
-import org.neo4j.ogm.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 public class GoldbarConversion {
 
@@ -54,7 +51,7 @@ public class GoldbarConversion {
         Map<String, JSONArray> operationToVariableList = new HashMap<>();
 
         // Map operation to variableList
-        operationToVariableList = goldbar.toMap();
+        operationToVariableList = jsonObjectToMap(goldbar);
 
         // Add space to spaces
         for (String operation : operationToVariableList.keySet()) {   // Should only be one operation
@@ -163,7 +160,7 @@ public class GoldbarConversion {
 
         // Map Roles to CompIds
         try {
-            rolesToCompIds = categories.getJSONObject(variable).toMap();
+            rolesToCompIds = jsonObjectToMap(categories.getJSONObject(variable));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -342,7 +339,7 @@ public class GoldbarConversion {
 
             try {
                 // Map operation to variableList
-                operationToVariableList = variableList.getJSONObject(i).toMap();
+                operationToVariableList = jsonObjectToMap(variableList.getJSONObject(i));
 
                 for (String operation : operationToVariableList.keySet()) {
                     // Add space to spaces
@@ -355,6 +352,23 @@ public class GoldbarConversion {
         }
 
         return spaces;
+    }
+
+    private Map<String, JSONArray> jsonObjectToMap(JSONObject object) {
+        Map<String, JSONArray> map = new HashMap<>();
+
+        // Map operation to variableList
+        Map<String, Object> rawMap = object.toMap();
+        for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
+            // If the value is a JSONArray, cast directly; if it's a List, convert to JSONArray
+            if (entry.getValue() instanceof JSONArray) {
+                map.put(entry.getKey(), (JSONArray) entry.getValue());
+            } else if (entry.getValue() instanceof java.util.List) {
+                map.put(entry.getKey(), new JSONArray((java.util.List<?>) entry.getValue()));
+            } 
+        }
+
+        return map;
     }
 
     private String convertRole(String csvRole) {

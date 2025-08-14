@@ -6,20 +6,25 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@NodeEntity
+@org.springframework.data.neo4j.core.schema.Node
 public class Branch {
-    @GraphId Long id;
+    @Id
+    @GeneratedValue
+    Long id;
 
-    String branchID;
+    @Property String branchID;
 
-    @Relationship(type = "CONTAINS") Set<Commit> commits;
+    @Relationship(type = "CONTAINS") 
+    Set<Commit> commits;
 
-    @Relationship(type = "LATEST") Commit latestCommit;
+    @Relationship(type = "LATEST") 
+    Commit latestCommit;
 
     public Branch() {}
     

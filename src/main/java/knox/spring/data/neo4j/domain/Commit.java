@@ -8,22 +8,27 @@ import java.util.Stack;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@NodeEntity
+@org.springframework.data.neo4j.core.schema.Node
 public class Commit {
-    @GraphId Long id;
+    @Id
+    @GeneratedValue
+    Long id;
 
-    String commitID;
+    @Property String commitID;
     
-    String mergeID;
+    @Property String mergeID;
 
-    @Relationship(type = "SUCCEEDS") Set<Commit> predecessors;
+    @Relationship(type = "SUCCEEDS") 
+    Set<Commit> predecessors;
 
-    @Relationship(type = "CONTAINS") Snapshot snapshot;
+    @Relationship(type = "CONTAINS") 
+    Snapshot snapshot;
 
     public Commit() {}
 

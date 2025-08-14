@@ -8,6 +8,7 @@ import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
+import knox.spring.data.neo4j.domain.dto.DesignSpaceEdgeDTO;
 import knox.spring.data.neo4j.exception.*;
 import knox.spring.data.neo4j.operations.ANDOperator;
 import knox.spring.data.neo4j.operations.Concatenation;
@@ -36,8 +37,8 @@ import knox.spring.data.neo4j.sbol.SBOLGeneration;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.util.EntityUtils;
-import org.neo4j.ogm.json.JSONException;
-import org.neo4j.ogm.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -1029,7 +1030,7 @@ public class DesignSpaceService {
 	}
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
-        designSpaceRepository.deleteBranch(targetSpaceID, targetBranchID);
+        branchRepository.deleteBranch(targetSpaceID, targetBranchID);
     }
 
     public void copyHeadBranch(String targetSpaceID, String outputBranchID) {
@@ -1174,7 +1175,7 @@ public class DesignSpaceService {
     }
 
     public Map<String, Object> d3GraphBranches(String targetSpaceID) {
-    	return mapBranchesToD3Format(designSpaceRepository.mapBranches(targetSpaceID));
+    	return mapBranchesToD3Format(branchRepository.mapBranches(targetSpaceID));
     }
     
     public List<String> listDesignSpaces() {
@@ -1240,7 +1241,9 @@ public class DesignSpaceService {
     }
 
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
-        return mapDesignSpaceToD3Format(designSpaceRepository.mapDesignSpace(targetSpaceID));
+		List<DesignSpaceEdgeDTO> designSpaceData = designSpaceRepository.mapDesignSpace(targetSpaceID);
+		Map<String, Object> d3 = mapDesignSpaceToD3Format(designSpaceData);
+        return d3;
     }
     
     public HashSet<List<Map<String, Object>>> enumerateDesignSpaceSet(String targetSpaceID, 
@@ -1480,11 +1483,11 @@ public class DesignSpaceService {
 		
 		deleteSnapshots(deletedSnapshots);
 		
-		commitRepository.delete(deletedCommits);
+		commitRepository.deleteAll(deletedCommits);
 	}
 	
 	private void deleteNodes(Set<Node> deletedNodes) {
-		nodeRepository.delete(deletedNodes);
+		nodeRepository.deleteAll(deletedNodes);
 	}
 	
 	private void deleteSnapshots(Set<Snapshot> deletedSnapshots) {
@@ -1496,11 +1499,11 @@ public class DesignSpaceService {
 		
 		deleteNodes(deletedNodes);
 		
-		snapshotRepository.delete(deletedSnapshots);
+		snapshotRepository.deleteAll(deletedSnapshots);
 	}
 	
 	private Branch findBranch(String targetSpaceID, String targetBranchID) {
-		Set<Branch> targetBranches = designSpaceRepository.findBranch(targetSpaceID, targetBranchID);
+		Set<Branch> targetBranches = branchRepository.findBranch(targetSpaceID, targetBranchID);
 		if (targetBranches.size() > 0) {
 			return targetBranches.iterator().next();
 		} else {
@@ -1514,7 +1517,19 @@ public class DesignSpaceService {
 
 	private DesignSpace loadDesignSpace(String targetSpaceID) {
 		System.out.println("\nLoad Design Space\n");
-		DesignSpace targetSpace = designSpaceRepository.findOne(getDesignSpaceGraphID(targetSpaceID), 3);
+		Long graphId = getDesignSpaceGraphID(targetSpaceID);
+        DesignSpace targetSpace = null;
+		if (graphId != null) {
+            targetSpace = designSpaceRepository.findById(graphId).orElse(null);
+        }
+
+		// Set Tail Node for all Edges
+		for (Node node : targetSpace.getNodes()) {
+			for (Edge edge : node.getEdges()) {
+				edge.setTail(node);
+			}
+		}
+
 
 //      No version history
 //		for (Commit commit : targetSpace.getCommits()) {
@@ -1527,11 +1542,15 @@ public class DesignSpaceService {
 	}
 
 	private Snapshot reloadSnapshot(Snapshot snap) {
-		return snapshotRepository.findOne(snap.getGraphID(), 2);
+		Long graphId = snap.getGraphID();
+        if (graphId != null) {
+            return snapshotRepository.findById(graphId).orElse(null);
+        }
+        return null;
 	}
 
 	private Set<String> getBranchIDs(String targetSpaceID) {
-		return designSpaceRepository.getBranchIDs(targetSpaceID);
+		return branchRepository.getBranchIDs(targetSpaceID);
 	}
 	
 	private Long getDesignSpaceGraphID(String targetSpaceID) {
@@ -1610,7 +1629,7 @@ public class DesignSpaceService {
 		return -1;
 	}
 	
-	private Map<String, Object> mapDesignSpaceToD3Format(List<Map<String, Object>> spaceMap) {
+	private Map<String, Object> mapDesignSpaceToD3Format(List<DesignSpaceEdgeDTO> spaceMap) {
 		Map<String, Object> d3Graph = new HashMap<String, Object>();
 		
 	    List<Map<String,Object>> nodes = new ArrayList<Map<String,Object>>();
@@ -1619,13 +1638,13 @@ public class DesignSpaceService {
 	    
 	    int i = 0;
 	    
-	    for (Map<String, Object> row : spaceMap) {
+	    for (DesignSpaceEdgeDTO row : spaceMap) {
 	        if (d3Graph.isEmpty()) {
-	        	d3Graph.put("spaceID", row.get("spaceID"));
+	        	d3Graph.put("spaceID", row.getSpaceID());
 	        }
-	        
-	        Map<String, Object> tail = makeD3("nodeID", row.get("tailID"), "nodeTypes", row.get("tailTypes"));
-	        
+
+	        Map<String, Object> tail = makeD3("nodeID", row.getTailID(), "nodeTypes", row.getTailTypes());
+
 	        int source = locateD3Node(tail, nodes);
 	        
 	        if (source == -1) {
@@ -1634,7 +1653,7 @@ public class DesignSpaceService {
 	        	source = i++;
 	        }
 	        
-	        Map<String, Object> head = makeD3("nodeID", row.get("headID"), "nodeTypes", row.get("headTypes"));
+	        Map<String, Object> head = makeD3("nodeID", row.getHeadID(), "nodeTypes", row.getHeadTypes());
 	       
 	        int target = locateD3Node(head, nodes);
 	        
@@ -1646,19 +1665,19 @@ public class DesignSpaceService {
 	       
 	        Map<String, Object> link = makeD3("source", source, "target", target);
 	        
-	        if (row.containsKey("componentRoles") && row.get("componentRoles") != null) {
-	        	link.put("componentRoles", row.get("componentRoles"));
-	        }
-	        
-	        if (row.containsKey("componentIDs") && row.get("componentIDs") != null) {
-	        	link.put("componentIDs", row.get("componentIDs"));
+	        if (row.getComponentRoles() != null) {
+	        	link.put("componentRoles", row.getComponentRoles());
 	        }
 
-			if (row.containsKey("weight") && row.get("weight") != null) {
-	        	link.put("weight", row.get("weight"));
+	        if (row.getComponentIDs() != null) {
+	        	link.put("componentIDs", row.getComponentIDs());
 	        }
 
-			link.put("orientation", row.get("orientation"));
+			if (row.getWeight() != null) {
+	        	link.put("weight", row.getWeight());
+	        }
+
+			link.put("orientation", row.getOrientation());
 	        
 	        links.add(link);
 	    }

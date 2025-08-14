@@ -24,7 +24,12 @@ import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
 import knox.spring.data.neo4j.sbol.SBOLGeneration;
 import knox.spring.data.neo4j.services.DesignSpaceService;
+import knox.spring.data.neo4j.repositories.BranchRepository;
+import knox.spring.data.neo4j.repositories.CommitRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
+import knox.spring.data.neo4j.repositories.EdgeRepository;
+import knox.spring.data.neo4j.repositories.NodeRepository;
+import knox.spring.data.neo4j.repositories.SnapshotRepository;
 
 import org.jdom.Document;
 import org.sbolstandard.core2.SBOLConversionException;
@@ -37,15 +42,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.neo4j.ogm.json.JSONException;
-import org.neo4j.ogm.json.JSONObject;
+
+import org.json.JSONObject;
+import org.json.JSONException;
 
 import javassist.bytecode.ByteArray;
 
@@ -56,7 +59,17 @@ import javassist.bytecode.ByteArray;
 public class KnoxController {
 	final DesignSpaceService designSpaceService;
 
-	@Autowired DesignSpaceRepository designSpaceRepository;
+	@Autowired BranchRepository branchRepository;
+	
+    @Autowired CommitRepository commitRepository;
+    
+    @Autowired DesignSpaceRepository designSpaceRepository;
+    
+    @Autowired EdgeRepository edgeRepository;
+    
+    @Autowired NodeRepository nodeRepository;
+    
+    @Autowired SnapshotRepository snapshotRepository;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
@@ -87,7 +100,7 @@ public class KnoxController {
 	 * @apiDescription Intersects designs from input branches. Based on tensor product of graphs.
 	 */
 	
-	@RequestMapping(value = "/branch/and", method = RequestMethod.POST)
+	@PostMapping("/branch/and")
     public ResponseEntity<String> andBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
@@ -122,7 +135,7 @@ public class KnoxController {
 	 * target design space.
 	 */
 	
-	@RequestMapping(value = "/branch/checkout", method = RequestMethod.POST)
+	@PostMapping("/branch/checkout")
 	public ResponseEntity<String> checkoutBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 	        @RequestParam(value = "targetBranchID", required = true) String targetBranchID) {
 		long startTime = System.nanoTime();
@@ -144,7 +157,7 @@ public class KnoxController {
 	 * @apiDescription Commits a snapshot of the target design space to the target branch.
 	 */
 
-	@RequestMapping(value = "/branch/commitTo", method = RequestMethod.POST)
+	@PostMapping("/branch/commitTo")
 	public ResponseEntity<String> commitToBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 	        @RequestParam(value = "targetBranchID", required = false) String targetBranchID) {
 		long startTime = System.nanoTime();
@@ -169,7 +182,7 @@ public class KnoxController {
 	 * @apiDescription Creates a new branch that is a copy of the current head branch.
 	 */
 	
-	@RequestMapping(value = "/branch", method = RequestMethod.POST)
+	@PostMapping("/branch")
 	public ResponseEntity<String> createBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 	        @RequestParam(value = "outputBranchID", required = true) String outputBranchID) {
 		long startTime = System.nanoTime();
@@ -191,7 +204,7 @@ public class KnoxController {
 	 * @apiDescription Deletes the target branch.
 	 */
 	
-	@RequestMapping(value = "/branch", method = RequestMethod.DELETE)
+	@DeleteMapping("/branch")
 	public ResponseEntity<String> deleteBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 	        @RequestParam(value = "targetBranchID", required = true) String targetBranchID) {
 		long startTime = System.nanoTime();
@@ -215,7 +228,7 @@ public class KnoxController {
 	 * @apiDescription Concatenates designs from input branches.
 	 */
 	
-	@RequestMapping(value = "/branch/join", method = RequestMethod.POST)
+	@PostMapping("/branch/join")
     public ResponseEntity<String> joinBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
             @RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
@@ -255,7 +268,7 @@ public class KnoxController {
 	 * @apiDescription Merges designs from input design spaces. Based on strong product of graphs.
 	 */
 	
-	@RequestMapping(value = "/branch/merge", method = RequestMethod.POST)
+	@PostMapping("/branch/merge")
     public ResponseEntity<String> mergeBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID, 
     		@RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
     		@RequestParam(value = "outputBranchID", required = false) String outputBranchID,
@@ -291,7 +304,7 @@ public class KnoxController {
 	 * @apiDescription Unions designs from input branches.
 	 */
 	
-	@RequestMapping(value = "/branch/or", method = RequestMethod.POST)
+	@PostMapping("/branch/or")
     public ResponseEntity<String> orBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
             @RequestParam(value = "outputBranchID", required = false) String outputBranchID) {
@@ -322,7 +335,7 @@ public class KnoxController {
 	 * @apiDescription Concatenates and then repeats designs from input branches either zero-or-more or one-or-more times.
 	 */
 	
-	@RequestMapping(value = "/branch/repeat", method = RequestMethod.POST)
+	@PostMapping("/branch/repeat")
     public ResponseEntity<String> repeatBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "inputBranchIDs", required = true) List<String> inputBranchIDs,
             @RequestParam(value = "outputBranchID", required = false) String outputBranchID,
@@ -354,7 +367,7 @@ public class KnoxController {
 	 * preserved.
 	 */
 	
-	@RequestMapping(value = "/branch/reset", method = RequestMethod.POST)
+	@PostMapping("/branch/reset")
 	public ResponseEntity<String> resetBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 	        @RequestParam(value = "targetBranchID", required = false) String targetBranchID,
 	        @RequestParam(value = "commitPath", required = true) List<String> commitPath) {
@@ -385,7 +398,7 @@ public class KnoxController {
 	 * latter to a new latest commit on the target branch. This preserves a record of the reversion.
 	 */
 
-	@RequestMapping(value = "/branch/revert", method = RequestMethod.POST)
+	@PostMapping("/branch/revert")
 	public ResponseEntity<String> revertBranch(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 	        @RequestParam(value = "targetBranchID", required = false) String targetBranchID,
 	        @RequestParam(value = "commitPath", required = true) List<String> commitPath) {
@@ -424,7 +437,7 @@ public class KnoxController {
 	 * @apiDescription Intersects designs from input design spaces. Based on tensor product of graphs.
 	 */
 	
-	@RequestMapping(value = "/designSpace/and", method = RequestMethod.POST)
+	@PostMapping("/designSpace/and")
 	public ResponseEntity<String> andDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -462,7 +475,7 @@ public class KnoxController {
 	 * @apiDescription Deletes the target design space.
 	 */
 
-	@RequestMapping(value = "/designSpace", method = RequestMethod.DELETE)
+	@DeleteMapping("/designSpace")
 	public ResponseEntity<String> deleteDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
 	    try {
 	    	long startTime = System.nanoTime();
@@ -488,7 +501,7 @@ public class KnoxController {
 	 * @apiDescription Deletes all design spaces from target groupID.
 	 */
 
-	@RequestMapping(value = "/designSpace/deleteGroup", method = RequestMethod.DELETE)
+	@DeleteMapping("/designSpace/deleteGroup")
 	public ResponseEntity<String> deleteDesignSpaceGroup(@RequestParam(value = "groupID", required = true) String groupID) {
 	    try {
 	    	long startTime = System.nanoTime();
@@ -517,7 +530,7 @@ public class KnoxController {
 	 * @apiDescription Concatenates designs from input design spaces.
 	 */
 	
-	@RequestMapping(value = "/designSpace/join", method = RequestMethod.POST)
+	@PostMapping("/designSpace/join")
 	public ResponseEntity<String> joinDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 	        @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID) {
@@ -563,7 +576,7 @@ public class KnoxController {
 	 * @apiDescription Merges designs from input design spaces. Based on strong product of graphs.
 	 */
 	
-	@RequestMapping(value = "/designSpace/merge", method = RequestMethod.POST)
+	@PostMapping("/designSpace/merge")
 	public ResponseEntity<String> mergeDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -591,7 +604,7 @@ public class KnoxController {
 		}
 	}
 
-	@RequestMapping(value = "/designSpace/weight", method = RequestMethod.POST)
+	@PostMapping("/designSpace/weight")
 	public ResponseEntity<String> weightDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -614,7 +627,7 @@ public class KnoxController {
 		}
 	}
 
-	@RequestMapping(value = "/designSpace/reverse", method = RequestMethod.POST)
+	@PostMapping("/designSpace/reverse")
 	public ResponseEntity<String> reverseDesignSpaces(@RequestParam(value = "inputSpaceID", required = true) String inputSpaceID,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -703,7 +716,7 @@ public class KnoxController {
 	 * @apiDescription Unions designs from input design spaces.
 	 */
 	
-	@RequestMapping(value = "/designSpace/or", method = RequestMethod.POST)
+	@PostMapping("/designSpace/or")
 	public ResponseEntity<String> orDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 	        @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID) {
@@ -740,7 +753,7 @@ public class KnoxController {
 	 * @apiDescription Concatenates and then repeats designs from input design spaces either zero-or-more or one-or-more times.
 	 */
 	
-	@RequestMapping(value = "/designSpace/repeat", method = RequestMethod.POST)
+	@PostMapping("/designSpace/repeat")
 	public ResponseEntity<String> repeatDesignSpaces(@RequestParam(value = "inputSpaceIDs", required = true) List<String> inputSpaceIDs,
 	        @RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -787,7 +800,8 @@ public class KnoxController {
 
 
 
-	@RequestMapping(value = "/import/csv", method = RequestMethod.POST)
+
+	@PostMapping("/import/csv")
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
     		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, 
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -812,7 +826,7 @@ public class KnoxController {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
-    @RequestMapping(value = "/merge/csv", method = RequestMethod.POST)
+    @PostMapping("/merge/csv")
     public ResponseEntity<String> mergeCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
             @RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix,
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -836,7 +850,7 @@ public class KnoxController {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
-    @RequestMapping(value = "/sbol/import", method = RequestMethod.POST)
+    @PostMapping("/sbol/import")
     public ResponseEntity<String> importSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -864,7 +878,7 @@ public class KnoxController {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
-	@RequestMapping(value = "/goldbarSBOL/import", method = RequestMethod.POST)
+	@PostMapping("/goldbarSBOL/import")
 	public ResponseEntity<String> importGoldbarSBOL(@RequestParam(value = "sbolDoc", required = true) String sbolDoc,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID,
@@ -893,7 +907,7 @@ public class KnoxController {
 		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
 	}
 
-	@RequestMapping(value = "/goldbar/import", method = RequestMethod.POST)
+	@PostMapping("/goldbar/import")
 	public ResponseEntity<String> importGoldbar(@RequestParam(value = "goldbar", required = true) String goldbarString,
 			@RequestParam(value = "categories", required = true) String categoriesString,
 			@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
@@ -919,7 +933,7 @@ public class KnoxController {
 		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
 	}
 
-	@RequestMapping(value = "/goldbarGen/generator", method = RequestMethod.POST)
+	@PostMapping("/goldbarGen/generator")
 	public Map<String, Object> goldbarGenerator(@RequestParam(value = "inputCSVFiles[]", required = true) List<MultipartFile> inputCSVFiles, 
 			@RequestParam(value = "rules", required = false) String rules, 
 			@RequestParam(value = "lengths", required = false) String lengths,
@@ -948,7 +962,7 @@ public class KnoxController {
 	}
 
 	// LIST VER
-	@RequestMapping(value = "/sbol/exportCombinatorial", method = RequestMethod.GET)
+	@GetMapping("/sbol/exportCombinatorial")
 	public ResponseEntity<List<String>> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
 											 @RequestParam(value = "namespace", required = false) String namespace) {
 
@@ -970,12 +984,12 @@ public class KnoxController {
 		return new ResponseEntity<List<String>>(res, HttpStatus.OK);
 	}
     
-    @RequestMapping(value = "/branch/graph/d3", method = RequestMethod.GET)
+    @GetMapping("/branch/graph/d3")
     public Map<String, Object> d3GraphBranches(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
         return designSpaceService.d3GraphBranches(targetSpaceID);
     }
 
-    @RequestMapping(value = "/designSpace", method = RequestMethod.POST)
+    @PostMapping("/designSpace")
     public ResponseEntity<String> createDesignSpace(@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
             @RequestParam(value = "componentIDs", required = false) List<String> compIDs,
             @RequestParam(value = "componentRoles", required = false) List<String> compRoles) {
@@ -1005,12 +1019,12 @@ public class KnoxController {
         }
     }
 
-    @RequestMapping(value = "/designSpace/graph/d3", method = RequestMethod.GET)
+    @GetMapping("/designSpace/graph/d3")
     public Map<String, Object> d3GraphDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
         return designSpaceService.d3GraphDesignSpace(targetSpaceID);
     }
 
-    @RequestMapping(value = "/designSpace/sample", method = RequestMethod.GET)
+    @GetMapping("/designSpace/sample")
     public Set<List<String>> sample(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
 			@RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
@@ -1021,18 +1035,18 @@ public class KnoxController {
         return designSpaceService.sampleDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, isWeighted, positiveOnly, isSampleSpace);
     }
 
-    @RequestMapping(value = "/designSpace/list", method = RequestMethod.GET)
+    @GetMapping("/designSpace/list")
     public List<String> listDesignSpaces() {
         return designSpaceService.listDesignSpaces();
     }
 
-	@RequestMapping(value = "/designSpace/listGroupSpaces", method = RequestMethod.GET)
+	@GetMapping("/designSpace/listGroupSpaces")
     public List<String> listGroupSpaceIDs(@RequestParam(value = "groupID", required = true) String groupID) {
 		System.out.println("\nLIST SPACES FROM GROUP:\n");
         return designSpaceService.getGroupSpaceIDs(groupID);
     }
 
-	@RequestMapping(value = "/designSpace/listUniqueGroups", method = RequestMethod.GET)
+	@GetMapping("/designSpace/listUniqueGroups")
     public List<String> listUniqueGroupIDs() {
 		System.out.println("\nLIST GROUP IDS:\n");
 		List<String> groupIDs = designSpaceService.getUniqueGroupIDs();
@@ -1040,7 +1054,7 @@ public class KnoxController {
         return groupIDs;
     }
 
-    @RequestMapping(value = "/designSpace/enumerateSet", method = RequestMethod.GET)
+    @GetMapping("/designSpace/enumerateSet")
     public HashSet<List<Map<String, Object>>> enumerateSet(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
@@ -1055,7 +1069,7 @@ public class KnoxController {
         		EnumerateType.BFS, isWeighted, isSampleSpace, printDesigns);
     }
 
-	@RequestMapping(value = "/designSpace/enumerateList", method = RequestMethod.GET)
+	@GetMapping("/designSpace/enumerateList")
     public List<List<Map<String, Object>>> enumerateList(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
@@ -1070,38 +1084,38 @@ public class KnoxController {
         		EnumerateType.BFS, isWeighted, isSampleSpace, printDesigns);
     }
 
-	@RequestMapping(value = "/designSpace/score", method = RequestMethod.GET)
+	@GetMapping("/designSpace/score")
     public List<String> graphScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
         
         return designSpaceService.getGraphScore(targetSpaceID);
     }
 
-	@RequestMapping(value = "/designSpace/bestPath", method = RequestMethod.GET)
+	@GetMapping("/designSpace/bestPath")
     public List<List<Map<String, Object>>> getBestPath(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
         
         return designSpaceService.getBestPath(targetSpaceID);
     }
 
-	@RequestMapping(value = "/designSpace/partAnalytics", method = RequestMethod.GET)
+	@GetMapping("/designSpace/partAnalytics")
     public Map<String, Map<String, Object>> partAnalytics(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
         
         return designSpaceService.partAnalytics(targetSpaceID);
     }
 
-	@RequestMapping(value = "/designSpace/createSampleSpace", method = RequestMethod.GET)
+	@GetMapping("/designSpace/createSampleSpace")
 	public Boolean createSampleSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID){
 		return designSpaceService.createSampleSpace(targetSpaceID, groupID);
 	}
 
-	@RequestMapping(value = "/designSpace/setGroupID", method = RequestMethod.POST)
+	@PostMapping("/designSpace/setGroupID")
 	public void setGroupID(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 			@RequestParam(value = "groupID", required = true) String groupID){
 
 		designSpaceService.setGroupID(targetSpaceID, groupID);
 	}
 
-	@RequestMapping(value = "/designSpace/getGroupID", method = RequestMethod.GET)
+	@GetMapping("/designSpace/getGroupID")
 	public Map<String, String> getGroupID(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){
 
 		System.out.println(String.format("\nGet Group ID for (%1$s):\n", targetSpaceID));
@@ -1120,7 +1134,7 @@ public class KnoxController {
 		return output;
 	}
 
-	@RequestMapping(value = "/designSpace/getGroupSize", method = RequestMethod.GET)
+	@GetMapping("/designSpace/getGroupSize")
 	public Map<String, String> getGroupSize(@RequestParam(value = "groupID", required = true) String groupID){
 
 		System.out.println(String.format("\nGet Group Size for (%1$s):\n", groupID));

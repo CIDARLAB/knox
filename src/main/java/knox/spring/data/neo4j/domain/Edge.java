@@ -14,31 +14,35 @@ import java.util.Collections;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
-import javafx.geometry.Orientation;
+//import javafx.geometry.Orientation;
 
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.TargetNode;
+import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@RelationshipEntity(type = "PRECEDES")
+@RelationshipProperties
 public class Edge {
-    @GraphId Long id;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-    @StartNode Node tail;
+    @TargetNode Node head;
 
-    @EndNode Node head;
+    Node tail;
 
-    ArrayList<String> componentIDs;
+    @Property ArrayList<String> componentIDs;
     
-    ArrayList<String> componentRoles;
+    @Property ArrayList<String> componentRoles;
 
-    Orientation orientation;
+    @Property Orientation orientation;
 
-    ArrayList<Double> weight;
+    @Property ArrayList<Double> weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Edge.class);
 
