@@ -29,17 +29,21 @@ public class GoldbarConversion {
 
     Double weight;
 
+    Boolean verbose;
+
     NodeSpace outputSpace;
 
     ArrayList<Node> boundaryStack;
     
-    public GoldbarConversion(JSONObject goldbar, JSONObject categories, Double weight) {
+    public GoldbarConversion(JSONObject goldbar, JSONObject categories, Double weight, Boolean verbose) {
 
         this.goldbar = goldbar;
 
         this.categories = categories;
 
         this.weight = weight;
+
+        this.verbose = verbose;
 
         this.outputSpace = new NodeSpace();
 
@@ -87,66 +91,65 @@ public class GoldbarConversion {
 
         if (operation.equals("Atom")) {
             try {
-                System.out.println("\nAtom: " + variableList.getString(0));
+                debugPrint("\nAtom: " + variableList.getString(0));
                 space = handleAtomAndReverseComp(variableList.getString(0), Edge.Orientation.INLINE);
-                System.out.println("Atom Space Created");
-                System.out.println(space);
+                debugPrint("Atom Space Created");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         
         } else if (operation.equals("ReverseComp")) {
             try {
-                System.out.println("\nReverseComp: " + variableList.getString(0).substring(2,variableList.getString(0).length() - 2));
-                space = handleAtomAndReverseComp(variableList.getString(0).substring(2,variableList.getString(0).length() - 2), Edge.Orientation.REVERSE_COMPLEMENT);
-                System.out.println("Reverse Comp Space Created");
+                JSONArray compIDs = (JSONArray) variableList.get(0);
+                debugPrint("\nReverseComp: " + compIDs.getString(0));
+                space = handleAtomAndReverseComp(compIDs.getString(0), Edge.Orientation.REVERSE_COMPLEMENT);
+                debugPrint("Reverse Comp Space Created");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         
         } else if (operation.equals("Then")) {
             space = handleThen(variableList);
-            System.out.println("\nThen Space Created");
+            debugPrint("\nThen Space Created");
 
         } else if (operation.equals("Or")) {
             space = handleOr(variableList);
-            System.out.println("\nOr Space Created");
+            debugPrint("\nOr Space Created");
 
         } else if (operation.equals("ZeroOrMore")) {
             space = handleZeroOrMore(variableList);
-            System.out.println("\nZeroOrMore Space Created");
+            debugPrint("\nZeroOrMore Space Created");
 
         } else if (operation.equals("OneOrMore")) {
             space = handleOneOrMore(variableList);
-            System.out.println("\nOneOrMore Space Created");
+            debugPrint("\nOneOrMore Space Created");
 
         } else if (operation.equals("ZeroOrOne")) {
             space = handleZeroOrOne(variableList);
-            System.out.println("\nZeroOrOne Space Created");
+            debugPrint("\nZeroOrOne Space Created");
 
         } else if (operation.equals("And0")) {
             space = handleAnd(variableList, 0);
-            System.out.println("\nAnd0 Space Created");
+            debugPrint("\nAnd0 Space Created");
 
         } else if (operation.equals("And1")) {
             space = handleAnd(variableList, 1);
-            System.out.println("\nAnd1 Space Created");
+            debugPrint("\nAnd1 Space Created");
 
         } else if (operation.equals("And2")) {
             space = handleAnd(variableList, 2);
-            System.out.println("\nAnd2 Space Created");
+            debugPrint("\nAnd2 Space Created");
 
         } else if (operation.equals("Merge")) {
             space = handleMerge(variableList);
-            System.out.println("\nMerge Space Created");
+            debugPrint("\nMerge Space Created");
         
         } else if (operation.equals("ForwardOrReverse")) {
             space = handleForwardOrReverse(variableList);
-            System.out.println("\nForwardOrReverse Space Created");
+            debugPrint("\nForwardOrReverse Space Created");
 
         } else {
-            System.out.println("\nError: (operation not valid)");
-            System.out.println(operation);
+            debugPrint("\nError: (operation not valid) " + operation);
         }
 
         return space;
@@ -385,6 +388,10 @@ public class GoldbarConversion {
 			return "http://knox.org/role/" + csvRole;
 		}
 	}
+
+    private void debugPrint(Object x) {
+        if (this.verbose) System.out.println(x);
+    }
 
     public NodeSpace getSpace() {
         return outputSpace;

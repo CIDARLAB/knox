@@ -912,19 +912,22 @@ public class KnoxController {
 			@RequestParam(value = "categories", required = true) String categoriesString,
 			@RequestParam(value = "outputSpaceID", required = true) String outputSpaceID,
 			@RequestParam(value = "groupID", required = false) String groupID,
-			@RequestParam(value = "weight", required = false) Double weight) throws IOException {
+			@RequestParam(value = "weight", required = false) Double weight,
+			@RequestParam(value = "verbose", required = false, defaultValue = "false") Boolean verbose) throws IOException {
 		
-		System.out.println();		
-		System.out.println("GOLDBAR:");
-		System.out.println(goldbarString);
-		System.out.println();
-		System.out.println("Categories:");
-		System.out.println(categoriesString);
+		if (verbose) {
+			System.out.println();		
+			System.out.println("GOLDBAR:");
+			System.out.println(goldbarString);
+			System.out.println();
+			System.out.println("Categories:");
+			System.out.println(categoriesString);
+		}
 		
 		try{
 			JSONObject goldbar = new JSONObject(goldbarString);
 			JSONObject categories = new JSONObject(categoriesString);
-			designSpaceService.importGoldbar(goldbar, categories, outputSpaceID, groupID, weight);
+			designSpaceService.importGoldbar(goldbar, categories, outputSpaceID, groupID, weight, verbose);
 
 		} catch (JSONException e) {
 			e.printStackTrace();

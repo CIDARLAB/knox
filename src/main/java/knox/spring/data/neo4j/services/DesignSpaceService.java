@@ -896,9 +896,10 @@ public class DesignSpaceService {
 		//designSpace.printAllEdges();
 	}
 
-	public void importGoldbar(JSONObject goldbar, JSONObject categories, String outputSpacePrefix, String groupID, Double weight) throws JSONException {
+	public void importGoldbar(JSONObject goldbar, JSONObject categories, String outputSpacePrefix, 
+			String groupID, Double weight, Boolean verbose) throws JSONException {
 
-		GoldbarConversion goldbarConversion = new GoldbarConversion(goldbar, categories, weight);
+		GoldbarConversion goldbarConversion = new GoldbarConversion(goldbar, categories, weight, verbose);
 
 		goldbarConversion.convert();
 
