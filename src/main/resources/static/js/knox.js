@@ -267,7 +267,7 @@ export function showGroupInfo(groupID) {
         }
       });
 
-      if (graph.nodes.lenght > 3) {
+      if (graph.nodes.length > 3) {
         graph.links.push({source: graph.nodes.length - 1, target: 2, show: true, componentRoles: [], componentIDs: [], weight: []}) // Make Link
       }
       
