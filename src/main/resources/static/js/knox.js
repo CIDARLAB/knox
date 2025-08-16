@@ -1844,6 +1844,7 @@ $("#testRulesBtn").click(async function () {
   }
 
   document.getElementById('designNameInput').value = "testing-results";
+  document.getElementById('groupIDInput').value = "testing-results";
   let results = Object.entries(ruleOutcomes)
     .map(([rule, data]) => `${rule}: ${JSON.stringify(data)}\n\n`)
     .join("");
