@@ -316,9 +316,7 @@ public class DesignAnalysis {
 							data.put(nextPartID, nextPartWeights);
 						} else {
 							List<Double> nextPartWeights = (List<Double>) partAnalytics.get(compID).get(nextPartID);
-							if (!(nextPartWeights.contains(thisEdge.getWeight().get(i)))){
-								nextPartWeights.add(thisEdge.getWeight().get(i));
-							}
+							nextPartWeights.add(thisEdge.getWeight().get(i));
 							data.put(nextPartID, nextPartWeights);
 						}
 					}
