@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/KnoxV1.jpg" alt="Logo" width="150"/>
+</p>
+
 # Knox - A Genetic Design Space Repository
 
 ## Quickstart
