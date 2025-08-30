@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/KnoxV1.jpg" alt="Logo" width="150"/>
+  <img src="images/KnoxV1.jpg" alt="Logo" width="600"/>
 </p>
 
 # Knox - A Genetic Design Space Repository
