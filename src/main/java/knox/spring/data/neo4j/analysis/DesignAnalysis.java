@@ -8,6 +8,9 @@ import knox.spring.data.neo4j.domain.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.commons.math3.stat.correlation.KendallsCorrelation;
+import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
+
 import java.util.*;
 
 public class DesignAnalysis {
@@ -343,4 +346,60 @@ public class DesignAnalysis {
 
 		return partAnalytics;
 	}
+
+	public double pairwiseAccuracy(double[] predicted, double[] actual) {
+		int correctPairs = 0;
+		int totalPairs = 0;
+
+		for (int i = 0; i < predicted.length; i++) {
+			for (int j = i + 1; j < predicted.length; j++) {
+				if ((predicted[i] > predicted[j] && actual[i] > actual[j]) || 
+					(predicted[i] < predicted[j] && actual[i] < actual[j])) {
+					correctPairs++;
+				}
+				totalPairs++;
+			}
+		}
+		return (double) correctPairs / totalPairs;
+	}
+
+	public double precisionAtK(ArrayList<String> predicted, ArrayList<String> actual, double k, Boolean isTop) {
+		int groupSize = predicted.size();
+		ArrayList<String> kPredicted = new ArrayList<>();
+		ArrayList<String> kActual = new ArrayList<>();
+
+		// Split Predicted and Actual to Top or Bottom 1/k
+		if (isTop) {
+			int index = (int) Math.ceil(groupSize / k);
+			kPredicted = new ArrayList<>(predicted.subList(groupSize - index, groupSize));
+			kActual = new ArrayList<>(actual.subList(groupSize - index, groupSize));
+		} else {
+			int index = (int) Math.ceil(groupSize / k);
+			kPredicted = new ArrayList<>(predicted.subList(0, index));
+			kActual = new ArrayList<>(actual.subList(0, index));
+		}
+
+		// Calculate Precision at K
+		int trueCount = 0;
+		int totalCount = 0;
+		for (String id : kPredicted) {
+			if (kActual.contains(id)) trueCount++;
+			totalCount++;
+		}
+
+		return (double) trueCount / totalCount;
+	}
+
+	public double kendallTau(double[] predicted, double[] actual) {
+		KendallsCorrelation kendall = new KendallsCorrelation();
+        double tau = kendall.correlation(predicted, actual);
+		return tau;
+	}
+
+	public double spearmansCorrelation(double[] predicted, double[] actual) {
+		SpearmansCorrelation spearman = new SpearmansCorrelation();
+        double rho = spearman.correlation(predicted, actual);
+		return rho;
+	}
+
 }
