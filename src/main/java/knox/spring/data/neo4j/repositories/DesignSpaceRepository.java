@@ -46,6 +46,9 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
 
     DesignSpace findBySpaceID(@Param("spaceID") String spaceID);
 
+    @Query("MATCH (target:DesignSpace) WHERE target.spaceID = $targetSpaceID RETURN count(target)")
+    Integer countBySpaceID(@Param("targetSpaceID") String targetSpaceID);
+
     @Query("MATCH (target:DesignSpace {spaceID: $targetSpaceID}) RETURN ID(target) as graphID")
     Set<Integer> getDesignSpaceGraphID(@Param("targetSpaceID") String targetSpaceID);
 

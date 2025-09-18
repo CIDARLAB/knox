@@ -1814,6 +1814,13 @@ public class DesignSpaceService {
 	}
 	
 	private void saveDesignSpace(DesignSpace space) {
+		// Check to see if spaceID already exists
+		String spaceID = space.getSpaceID();
+		int v = 1;
+		while (designSpaceRepository.countBySpaceID(space.getSpaceID()) > 0) {
+			space.setSpaceID(spaceID + "_v" + v);
+			v++;
+		}
 
 		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
 
