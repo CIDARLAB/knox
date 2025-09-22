@@ -666,92 +666,57 @@ public class DesignSpaceService {
 
 			ArrayList<Double> weight = new ArrayList<Double>(Arrays.asList(default_Weight));
 
-			if (multipleWeightsCSV) {
-				if (csvArray.size() > 0 && csvArray.get(0).length() > 0) {
-					j++;
-					designNumber++;
-	
-					DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + j);
-	
-					Node outputStart = outputSpace.createStartNode();
-	
-					Node outputPredecessor = outputStart;
-	
-					for (int i = 0; i < csvArray.size(); i++) {
-						if (csvArray.get(i).length() > 0) {
-							ArrayList<String> compIDs = new ArrayList<String>(1);
-	
-							compIDs.add(csvArray.get(i));
-	
-							ArrayList<String> compRoles = new ArrayList<String>(1);
-	
-							if (compIDToRole.containsKey(csvArray.get(i))) {
-								compRoles.add(compIDToRole.get(csvArray.get(i)));
-							} else {
-								compRoles.add(so.getName(SequenceOntology.SEQUENCE_FEATURE));
-							}
-							
-							Node outputNode;
-	
-							if (i < csvArray.size() - 1) {
-								outputNode = outputSpace.createNode();
-							} else {
-								outputNode = outputSpace.createAcceptNode();
-							}
+			
+			if (csvArray.size() > 0 && csvArray.get(0).length() > 0) {
+				j++;
+				designNumber++;
 
-							ArrayList<Double> edge_weight = new ArrayList<Double>(Arrays.asList(Double.parseDouble(multipleWeights.get(j).get(i))));
-	
-							outputPredecessor.createEdge(outputNode, compIDs, compRoles, Edge.Orientation.INLINE, edge_weight);
-	
-							outputPredecessor = outputNode;
+				DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + j);
+
+				Node outputStart = outputSpace.createStartNode();
+
+				Node outputPredecessor = outputStart;
+
+				for (int i = 0; i < csvArray.size(); i++) {
+					if (csvArray.get(i).length() > 0) {
+						ArrayList<String> compIDs = new ArrayList<String>(1);
+
+						String compID = csvArray.get(i);
+						Edge.Orientation orientation = Edge.Orientation.INLINE;
+						if (compID.endsWith("_REVERSE")) {
+							compID = compID.replace("_REVERSE", "");
+							orientation = Edge.Orientation.REVERSE_COMPLEMENT;
 						}
+
+						compIDs.add(compID);
+
+						ArrayList<String> compRoles = new ArrayList<String>(1);
+
+						if (compIDToRole.containsKey(compID)) {
+							compRoles.add(compIDToRole.get(compID));
+						} else {
+							compRoles.add(so.getName(SequenceOntology.SEQUENCE_FEATURE));
+						}
+						
+						Node outputNode;
+
+						if (i < csvArray.size() - 1) {
+							outputNode = outputSpace.createNode();
+						} else {
+							outputNode = outputSpace.createAcceptNode();
+						}
+						
+						if (multipleWeightsCSV) {
+							weight = new ArrayList<Double>(Arrays.asList(Double.parseDouble(multipleWeights.get(j).get(i))));
+						}
+						
+						outputPredecessor.createEdge(outputNode, compIDs, compRoles, orientation, weight);
+
+						outputPredecessor = outputNode;
 					}
-	
-					csvSpaces.add(outputSpace);
 				}
 
-			} else {
-				if (csvArray.size() > 0 && csvArray.get(0).length() > 0) {
-					j++;
-					designNumber++;
-	
-					DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + j);
-	
-					Node outputStart = outputSpace.createStartNode();
-	
-					Node outputPredecessor = outputStart;
-	
-					for (int i = 0; i < csvArray.size(); i++) {
-						if (csvArray.get(i).length() > 0) {
-							ArrayList<String> compIDs = new ArrayList<String>(1);
-	
-							compIDs.add(csvArray.get(i));
-	
-							ArrayList<String> compRoles = new ArrayList<String>(1);
-	
-							if (compIDToRole.containsKey(csvArray.get(i))) {
-								compRoles.add(compIDToRole.get(csvArray.get(i)));
-							} else {
-								compRoles.add(so.getName(SequenceOntology.SEQUENCE_FEATURE));
-							}
-							
-							Node outputNode;
-	
-							if (i < csvArray.size() - 1) {
-								outputNode = outputSpace.createNode();
-							} else {
-								outputNode = outputSpace.createAcceptNode();
-							}
-	
-							outputPredecessor.createEdge(outputNode, compIDs, compRoles, Edge.Orientation.INLINE, weight);
-	
-							outputPredecessor = outputNode;
-						}
-					}
-	
-					csvSpaces.add(outputSpace);
-				}
-
+				csvSpaces.add(outputSpace);
 			}
 			
 		}
