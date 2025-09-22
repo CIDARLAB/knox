@@ -1837,6 +1837,10 @@ public class DesignSpaceService {
 			return "http://identifiers.org/so/SO:0000139";
 		case "terminator":
 			return "http://identifiers.org/so/SO:0000141";
+		case "assemblyScar":
+			return "http://identifiers.org/so/SO:0001953";
+		case "spacer":
+			return "http://identifiers.org/so/SO:0002223";
 		default:
 			return "http://knox.org/role/" + csvRole;
 		}

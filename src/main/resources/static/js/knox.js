@@ -357,6 +357,8 @@ export function getSBOLImage(role){
       return sbolpath + "aptamer.svg";
     case "http://identifiers.org/so/SO:0001953":
       return sbolpath + "assembly-scar.svg";
+    case "http://identifiers.org/so/SO:0002223":
+      return sbolpath + "spacer.svg";
     case "http://identifiers.org/so/SO:0001691":
       return sbolpath + "blunt-restriction-site.svg";
     case "http://identifiers.org/so/SO:0000316":
