@@ -511,7 +511,7 @@ public class DesignSpaceService {
     }
 
     public void importCSV(List<InputStream> inputCSVStreams, String outputSpacePrefix, String groupID,
-    		boolean isMerge, String weight, int weightTolerance) {
+    		boolean isMerge, boolean isOr, String weight, int weightTolerance) {
     	List<BufferedReader> designReaders = new LinkedList<BufferedReader>();
     	
     	List<BufferedReader> compReaders = new LinkedList<BufferedReader>();
@@ -608,7 +608,7 @@ public class DesignSpaceService {
     		}
     	}
 		
-    	List<NodeSpace> csvSpaces = new LinkedList<NodeSpace>();
+    	List<DesignSpace> csvSpaces = new LinkedList<DesignSpace>();
     	
     	for (BufferedReader designReader : designReaders) {
     		try {
@@ -628,16 +628,26 @@ public class DesignSpaceService {
     	
     	if (!csvSpaces.isEmpty()) {
     		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix, groupID);
+			
+			List<NodeSpace> csvNodeSpaces = new ArrayList<NodeSpace>(csvSpaces.size());
+			csvNodeSpaces.addAll(csvSpaces);
     		
     		if (isMerge) {
-    			MergeOperator.apply(csvSpaces, outputSpace, 1, weightTolerance, new HashSet<String>(), new ArrayList<String>());
+    			MergeOperator.apply(csvNodeSpaces, outputSpace, 1, weightTolerance, new HashSet<String>(), new ArrayList<String>());
 
     			saveDesignSpace(outputSpace);
-    		} else {
-    			OROperator.apply(csvSpaces, outputSpace);
+
+    		} else if (isOr) {
+    			OROperator.apply(csvNodeSpaces, outputSpace);
     			
     			saveDesignSpace(outputSpace);
-    		}
+
+    		}  else {
+				for (DesignSpace csvSpace : csvSpaces) {
+					csvSpace.setGroupID(groupID);
+					saveDesignSpace(csvSpace);
+				}
+			}
     	}
     }
     
@@ -671,7 +681,7 @@ public class DesignSpaceService {
 				j++;
 				designNumber++;
 
-				DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + j);
+				DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + "_design_" + designNumber);
 
 				Node outputStart = outputSpace.createStartNode();
 

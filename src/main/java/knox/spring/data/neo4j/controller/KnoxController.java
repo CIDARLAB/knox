@@ -804,7 +804,7 @@ public class KnoxController {
 	@PostMapping("/import/csv")
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
     		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, 
-			@RequestParam(value = "groupID", required = false) String groupID,
+			@RequestParam(value = "groupID", required = false, defaultValue = "none") String groupID,
 			@RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
     	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
 
@@ -821,7 +821,32 @@ public class KnoxController {
     		}
     	}
     	
-		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, groupID, false, weight, weightTolerance);
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, groupID, false, false, weight, weightTolerance);
+		
+        return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+    }
+
+	@PostMapping("/or/csv")
+    public ResponseEntity<String> importORCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
+    		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, 
+			@RequestParam(value = "groupID", required = false, defaultValue = "none") String groupID,
+			@RequestParam(value = "weight", defaultValue = "0.0", required = false) String weight) {
+    	List<InputStream> inputCSVStreams = new ArrayList<InputStream>();
+
+		int weightTolerance = 0;
+    	
+    	for (MultipartFile inputCSVFile : inputCSVFiles) {
+    		if (!inputCSVFile.isEmpty()) {
+    			try {
+    				inputCSVStreams.add(inputCSVFile.getInputStream());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    		}
+    	}
+    	
+		designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, groupID, false, true, weight, weightTolerance);
 		
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
@@ -845,7 +870,7 @@ public class KnoxController {
             }
         }
 
-        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, groupID, true, weight, weightTolerance);
+        designSpaceService.importCSV(inputCSVStreams, outputSpacePrefix, groupID, true, false, weight, weightTolerance);
 
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }

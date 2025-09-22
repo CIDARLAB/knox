@@ -124,6 +124,25 @@
       
       <form method="POST" enctype="multipart/form-data"
             action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <div class="import-csv-description">
+          <p>Import Input Designs Seperately</p>
+        </div>
+        <input type="file" name="inputCSVFiles[]" multiple>
+        <br>
+        <label id="weightLabelCSV" for="weightInputCSV"><h5>Weight:</h5></label>
+        <input id="weightInputCSV" type="number" name="weight" placeholder=0.0>
+        <br>
+        <input type="text" name="outputSpacePrefix" placeholder="Space ID"
+               class="form-control" aria-label="..." size="10">
+        <br>
+        <input type="text" name="groupID" placeholder="Group ID"
+               class="form-control" aria-label="..." size="10">
+        <br>
+        <input type="submit" value="Import">
+      </form>
+
+      <form method="POST" enctype="multipart/form-data"
+            action="or/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
         <div class="import-csv-description-OR">
           <p>Apply OR operator on Input Designs</p>
         </div>
