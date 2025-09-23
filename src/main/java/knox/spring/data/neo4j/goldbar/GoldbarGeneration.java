@@ -57,6 +57,7 @@ public class GoldbarGeneration {
         this.ruleOptions.add("L");
         this.ruleOptions.add("P");
         this.ruleOptions.add("E");
+        this.ruleOptions.add("S");
         this.ruleOptions.add("goldbar");
 
         this.columnValues = new HashMap<>();
@@ -510,10 +511,29 @@ public class GoldbarGeneration {
             );
 
             eGoldbar.put(part, g);
-            this.goldbar.put("_" + part + "_Rule_E", g);
+            this.goldbar.put("_Rule_E", g);
         }
 
         return eGoldbar;
+    }
+
+    public Map<String, String> createRuleS() {
+        Map<String, String> sGoldbar = new HashMap<>();
+
+        for (String part : this.columnValues.get("S")) {
+            
+            String g = new String();
+            g = String.format(
+                "%1$s then zero-or-more(%2$s)", 
+                handleDirection(part),                         // %1$s = parts1 
+                handleDirection("any_part_concrete")         // %2$s = any_part_concrete
+            );
+
+            sGoldbar.put(part, g);
+            this.goldbar.put("_Rule_S", g);
+        }
+
+        return sGoldbar;
     }
 
     public Map<String, String> createRuleO() {

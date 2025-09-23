@@ -937,6 +937,10 @@ public class DesignSpaceService {
 			g = goldbarGeneration.createRuleE();
 		}
 
+		if (rules.contains("S")) {
+			g = goldbarGeneration.createRuleS();
+		}
+
 		if (rules.contains("goldbar")) {
 			g = goldbarGeneration.createRuleGoldbar();
 		}
