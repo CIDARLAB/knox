@@ -1001,7 +1001,12 @@ $('#enumerate-designs-tooltip').click(() => {
                       } else {
                         placedFirstPart = true;
                       }
-                      para.appendChild(document.createTextNode(splitElementID(element.id)));
+
+                      if (element.orientation === "reverseComplement") {
+                        para.appendChild(document.createTextNode(splitElementID(element.id) + "_REVERSE"));
+                      } else {
+                        para.appendChild(document.createTextNode(splitElementID(element.id)));
+                      }
                     }
 
                     // append stats
@@ -1053,7 +1058,13 @@ $('#enumerate-designs-tooltip').click(() => {
                       } else {
                         placedFirstPart = true;
                       }
-                      para.appendChild(document.createTextNode(splitElementID(element.id)));
+
+                      if (element.orientation === "reverseComplement") {
+                        para.appendChild(document.createTextNode(splitElementID(element.id) + "_REVERSE"));
+                      } else {
+                        para.appendChild(document.createTextNode(splitElementID(element.id)));
+                      }
+                      
                     }
 
                     // append stats
