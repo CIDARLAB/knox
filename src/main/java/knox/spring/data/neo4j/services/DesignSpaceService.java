@@ -888,72 +888,25 @@ public class DesignSpaceService {
 	}
 
 	public Map<String, Object> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, 
-			ArrayList<String> lengths, String outputSpacePrefix, Boolean verify, String direction) {
+			ArrayList<String> lengths, String outputSpacePrefix, Boolean verify, String direction, Boolean verbose) {
 		
 		Map<String, Object> goldbarAndCategories = new HashMap<>();
-		String spacePrefix;
-		Map<String, String> g = new HashMap<>();
-		String s = "";
 
-		GoldbarGeneration goldbarGeneration = new GoldbarGeneration(rules, inputCSVStream, direction);
+		GoldbarGeneration goldbarGeneration = new GoldbarGeneration(rules, lengths, inputCSVStream, direction);
 
-		if (rules.contains("N")) {
-			g = goldbarGeneration.createRuleN(lengths);
-		}
-
-		if (rules.contains("B")) {
-			g = goldbarGeneration.createRuleB();
-		}
-
-		if (rules.contains("R")) {
-			g = goldbarGeneration.createRuleR();
-		}
-
-		if (rules.contains("I")) {
-			g = goldbarGeneration.createRuleI();
-		}
-		
-		if (rules.contains("M")) {
-			g = goldbarGeneration.createRuleM();
-		}
-
-		if (rules.contains("O")) {
-			g = goldbarGeneration.createRuleO();
-		}
-
-		if (rules.contains("L")) {
-			s = goldbarGeneration.createRuleL();
-		}
-
-		if (rules.contains("P")) {
-			s = goldbarGeneration.createRuleP();
-		}
-
-		if (rules.contains("T")) {
-			g = goldbarGeneration.createRuleT();
-		}
-
-		if (rules.contains("E")) {
-			g = goldbarGeneration.createRuleE();
-		}
-
-		if (rules.contains("S")) {
-			g = goldbarGeneration.createRuleS();
-		}
-
-		if (rules.contains("goldbar")) {
-			g = goldbarGeneration.createRuleGoldbar();
-		}
+		goldbarGeneration.generate();
 
 		Map<String, String> goldbar = goldbarGeneration.getGoldbar();
-		for (String key : goldbar.keySet()) {
-			System.out.println("\nGOLDBAR: ");
-			System.out.println("\n" + key + ": ");
-			System.out.println(goldbar.get(key));
+		
+		if (verbose){
+			for (String key : goldbar.keySet()) {
+				System.out.println("\nGOLDBAR: ");
+				System.out.println("\n" + key + ": ");
+				System.out.println(goldbar.get(key));
+			}
+			System.out.println("\nCategories: ");
+			System.out.println(goldbarGeneration.getCategoriesString());
 		}
-
-		System.out.println("\nCategories: ");
-		System.out.println(goldbarGeneration.getCategoriesString());
 
 		goldbarAndCategories.put("goldbar", goldbar);
 		goldbarAndCategories.put("categories", goldbarGeneration.getCategoriesString());

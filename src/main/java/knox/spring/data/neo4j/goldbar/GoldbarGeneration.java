@@ -27,6 +27,8 @@ public class GoldbarGeneration {
 
     ArrayList<String> rules;
 
+    ArrayList<String> lengths;
+
     ArrayList<String> ruleOptions;
 
     Map<String, ArrayList<String>> columnValues;
@@ -35,7 +37,7 @@ public class GoldbarGeneration {
 
     boolean containsCategories;
 
-    public GoldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, String direction) {
+    public GoldbarGeneration(ArrayList<String> rules, ArrayList<String> lengths, InputStream inputCSVStream, String direction) {
         this.goldbar = new HashMap<>();
         
         this.categories = new JSONObject();
@@ -60,6 +62,8 @@ public class GoldbarGeneration {
         this.ruleOptions.add("S");
         this.ruleOptions.add("goldbar");
 
+        this.lengths = lengths;
+
         this.columnValues = new HashMap<>();
 
         this.containsCategories = false;
@@ -80,6 +84,57 @@ public class GoldbarGeneration {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public void generate() {
+        
+        if (rules.contains("N")) {
+			createRuleN(this.lengths);
+		}
+
+		if (rules.contains("B")) {
+			createRuleB();
+		}
+
+		if (rules.contains("R")) {
+			createRuleR();
+		}
+
+		if (rules.contains("I")) {
+			createRuleI();
+		}
+		
+		if (rules.contains("M")) {
+			createRuleM();
+		}
+
+		if (rules.contains("O")) {
+			createRuleO();
+		}
+
+		if (rules.contains("L")) {
+			createRuleL();
+		}
+
+		if (rules.contains("P")) {
+			createRuleP();
+		}
+
+		if (rules.contains("T")) {
+			createRuleT();
+		}
+
+		if (rules.contains("E")) {
+			createRuleE();
+		}
+
+		if (rules.contains("S")) {
+			createRuleS();
+		}
+
+		if (rules.contains("goldbar")) {
+			createRuleGoldbar();
+		}
     }
 
     private void processCSV(BufferedReader csvReader) {
@@ -326,7 +381,7 @@ public class GoldbarGeneration {
 
     }
 
-    public Map<String, String> createRuleGoldbar() {
+    private Map<String, String> createRuleGoldbar() {
         // User Provided Goldbar
 
         Map<String, String> gGoldbar = new HashMap<>();
@@ -343,7 +398,7 @@ public class GoldbarGeneration {
         return gGoldbar;
     }
     
-    public Map<String, String> createRuleR() {
+    private Map<String, String> createRuleR() {
         // Do Not Repeat Rule
         // if part is present, then part is present once
 
@@ -365,7 +420,7 @@ public class GoldbarGeneration {
         return rGoldbar;
     }
 
-    public Map<String, String> createRuleB() {
+    private Map<String, String> createRuleB() {
         // Before Rule
         // if partA and partB are present, partA must be anywhere before partB
 
@@ -397,7 +452,7 @@ public class GoldbarGeneration {
         return bGoldbar;
     }
 
-    public Map<String, String> createRuleT() {
+    private Map<String, String> createRuleT() {
         /* Together Rule
         if part1 is present, then part2 is present 
         (Converse is also true)
@@ -441,7 +496,7 @@ public class GoldbarGeneration {
         return tGoldbar;
     }
 
-    public Map<String, String> createRuleI() {
+    private Map<String, String> createRuleI() {
         /* Part Junction Interference Rule
         if part1 is present, then part2 is not directly downstream of part1 
         (Converse is not true)
@@ -479,7 +534,7 @@ public class GoldbarGeneration {
         return pjiGoldbar;
     }
 
-    public Map<String, String> createRuleM() {
+    private Map<String, String> createRuleM() {
         Map<String, String> mGoldbar = new HashMap<>();
 
         for (String part : this.columnValues.get("M")) {
@@ -498,7 +553,7 @@ public class GoldbarGeneration {
         return mGoldbar;
     }
 
-    public Map<String, String> createRuleE() {
+    private Map<String, String> createRuleE() {
         Map<String, String> eGoldbar = new HashMap<>();
 
         for (String part : this.columnValues.get("E")) {
@@ -517,7 +572,7 @@ public class GoldbarGeneration {
         return eGoldbar;
     }
 
-    public Map<String, String> createRuleS() {
+    private Map<String, String> createRuleS() {
         Map<String, String> sGoldbar = new HashMap<>();
 
         for (String part : this.columnValues.get("S")) {
@@ -536,7 +591,7 @@ public class GoldbarGeneration {
         return sGoldbar;
     }
 
-    public Map<String, String> createRuleO() {
+    private Map<String, String> createRuleO() {
         /* Not Orthogonal Rule
         if part1 is present, then part2 is not
         (Converse is true)
@@ -573,7 +628,7 @@ public class GoldbarGeneration {
         return oGoldbar;
     }
 
-    public Map<String, String> createRuleN(ArrayList<String> lengths) {
+    private Map<String, String> createRuleN(ArrayList<String> lengths) {
         // Length of Design Rule
 
         Map<String, String> nGoldbar = new HashMap<>();
@@ -595,7 +650,7 @@ public class GoldbarGeneration {
         return nGoldbar;
     }
 
-    public String createRuleL() {
+    private String createRuleL() {
         // Leaky Terminators Rule
         // if leaky terminator present, must be at end of circuit
 
@@ -638,7 +693,7 @@ public class GoldbarGeneration {
         return g;
     }
 
-    public String createRuleP() {
+    private String createRuleP() {
         // Promoter Road Blocking Rule
         // promoter can not be followed by road blocking promoter
 

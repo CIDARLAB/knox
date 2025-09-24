@@ -967,7 +967,8 @@ public class KnoxController {
 			@RequestParam(value = "lengths", required = false) String lengths,
 			@RequestParam(value = "outputSpacePrefix", required = false) String OutputSpacePrefix,
 			@RequestParam(value = "verify", required = false, defaultValue="true") Boolean verify,
-			@RequestParam(value = "direction", required = false, defaultValue="true") String direction) {
+			@RequestParam(value = "direction", required = false, defaultValue="true") String direction,
+			@RequestParam(value = "verbose", required = false, defaultValue="false") Boolean verbose) {
 		
 		System.out.println("Starting GOLDBAR Generator");
 		try {
@@ -981,7 +982,7 @@ public class KnoxController {
 			ArrayList<String> lengthsList = new ArrayList<>(Arrays.asList(lengthsArray));
 			System.out.println("Lengths" + lengthsList);
 			
-			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix, verify, direction);
+			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix, verify, direction, verbose);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
