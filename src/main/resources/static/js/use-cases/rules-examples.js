@@ -18,6 +18,9 @@ let mustIncludeRule =
 let endRule = 
     "zero-or-more(any_part_concrete) then A";
 
+let startRule = 
+    "A then zero-or-more(any_part_concrete)";
+
 let notOrthogonalRule = 
     "(zero-or-more(any_except_AandB)) or " +
     "(zero-or-more(any_except_AandB or A) then A then zero-or-more(any_except_AandB)) or " +
@@ -42,6 +45,7 @@ export let exampleRules = {
     "I": pjiRule,
     "M": mustIncludeRule,
     "E": endRule,
+    "S": startRule,
     "O": notOrthogonalRule,
     "N": lengthRule,
     "L": leakyRule,

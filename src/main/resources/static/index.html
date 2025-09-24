@@ -200,6 +200,8 @@
           <br>"M" : Part must be included. 
           <br>"P" : No Promoter Road Blocking.
           <br>"L" : Leaky Terminators can only appear at end of design.
+          <br>"S" : Design must start with Part or user-provided GOLDBAR (ex: "(part1 or part2 ... or partn)").
+          <br>"E" : Design must end with Part or user-provided GOLDBAR (ex: "(part1 or part2 ... or partn)").
           <br>"goldbar" : GOLDBAR to include.
         </p>
       </div>
@@ -400,6 +402,7 @@
                     <button id='togetherRule' class="dropdown-item" href="#">(T) A and B Together</button>
                     <button id='pjiRule' class="dropdown-item" href="#">(I) A not followed by B</button>
                     <button id='mustIncludeRule' class="dropdown-item" href="#">(M) Must Include A</button>
+                    <button id='startRule' class="dropdown-item" href="#">(S) Start with A</button>
                     <button id='endRule' class="dropdown-item" href="#">(E) End with A</button>
                     <button id='notOrthogonalRule' class="dropdown-item" href="#">(O) A and B not Together</button>
                     <button id='lengthRule' class="dropdown-item" href="#">(N) Designs 4 parts long</button>

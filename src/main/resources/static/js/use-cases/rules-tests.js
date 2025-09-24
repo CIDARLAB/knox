@@ -134,6 +134,22 @@ let testFailE =[
     "(B)"
 ];
 
+// Test for start with A
+let testPassS = [
+    // True Passes
+    "(A)",
+    "(A then C)",
+    "(A then B then A)",
+    "(A then A then B then A then A)"
+];
+let testFailS =[
+    // True Fails
+    "(B then A then B then B)",
+    "(C then A then C)",
+    "(B then A then A then B)",
+    "(B)"
+];
+
 // Test for A and B not Together (Not Orthogonal)
 let testPassO = [
     // True Passes
@@ -219,6 +235,7 @@ export let ruleTests = {
     "I": [testPassI, testFailI],
     "M": [testPassM, testFailM],
     "E": [testPassE, testFailE],
+    "S": [testPassS, testFailS],
     "O": [testPassO, testFailO],
     "N": [testPassN, testFailN], 
     "L": [testPassL, testFailL],

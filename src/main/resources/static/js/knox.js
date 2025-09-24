@@ -553,6 +553,13 @@ $('#endRule').on('click', function() {
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
+$('#startRule').on('click', function() {
+  document.getElementById('designNameInput').value = "mustStartWith-A";
+  document.getElementById('groupIDInput').value = "example";
+  editors.specEditor.setValue(exampleRules.S);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
 $('#notOrthogonalRule').on('click', function() {
   document.getElementById('designNameInput').value = "A-and-B-notTogether";
   document.getElementById('groupIDInput').value = "example";
