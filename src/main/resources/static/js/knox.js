@@ -853,6 +853,12 @@ $('#enumerate-designs-tooltip').click(() => {
   allowDuplicatesInput.setAttribute("type", "checkbox");
   makeDiv(allowDuplicatesDiv, allowDuplicatesInput, 'Allow Duplicates?: ');
 
+  // allow bfs or dfs div
+  let BFSDiv = document.createElement('div');
+  let BFSInput = document.createElement('input');
+  BFSInput.setAttribute("type", "checkbox");
+  makeDiv(BFSDiv, BFSInput, 'BFS? (otherwise DFS): ');
+
   // group ID div
   let groupDiv = document.createElement('div');
   let groupIDInput = document.createElement('input');
@@ -873,6 +879,8 @@ $('#enumerate-designs-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(allowDuplicatesDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(BFSDiv);
+  div.appendChild(document.createElement('br'));
   div.appendChild(groupDiv);
   div.appendChild(document.createElement('br'));
 
@@ -882,7 +890,8 @@ $('#enumerate-designs-tooltip').click(() => {
   minLengthDiv.style.visibility = 'hidden';
   isSampleSpaceDiv.style.visibility='hidden';
   allowDuplicatesDiv.style.visibility='hidden';
-  groupDiv.style.visibility='hidden'
+  BFSDiv.style.visibility='hidden';
+  groupDiv.style.visibility='hidden';
 
   $(enumerateDropdown).change(function() {
     if(this.value === endpoint.enumerate.ENUMERATE){
@@ -892,7 +901,8 @@ $('#enumerate-designs-tooltip').click(() => {
       minLengthDiv.style.visibility = 'visible';
       isSampleSpaceDiv.style.visibility='visible';
       allowDuplicatesDiv.style.visibility='visible';
-      groupDiv.style.visibility='hidden'
+      BFSDiv.style.visibility='visible';
+      groupDiv.style.visibility='hidden';
     }
     if(this.value === endpoint.enumerate.SAMPLE){
       numDesignsDiv.style.visibility = 'visible';
@@ -901,7 +911,8 @@ $('#enumerate-designs-tooltip').click(() => {
       minLengthDiv.style.visibility = 'visible';
       isSampleSpaceDiv.style.visibility='visible';
       allowDuplicatesDiv.style.visibility='hidden';
-      groupDiv.style.visibility='hidden'
+      BFSDiv.style.visibility='hidden';
+      groupDiv.style.visibility='hidden';
     }
     if(this.value === endpoint.enumerate.CREATESAMPLESPACE){
       numDesignsDiv.style.visibility = 'hidden';
@@ -910,7 +921,8 @@ $('#enumerate-designs-tooltip').click(() => {
       minLengthDiv.style.visibility = 'hidden';
       isSampleSpaceDiv.style.visibility='hidden';
       allowDuplicatesDiv.style.visibility='hidden';
-      groupDiv.style.visibility='visible'
+      BFSDiv.style.visibility='hidden';
+      groupDiv.style.visibility='visible';
     }
     if(this.value === endpoint.enumerate.PARTANALYTICS){
       numDesignsDiv.style.visibility = 'hidden';
@@ -919,7 +931,8 @@ $('#enumerate-designs-tooltip').click(() => {
       minLengthDiv.style.visibility = 'hidden';
       isSampleSpaceDiv.style.visibility='hidden';
       allowDuplicatesDiv.style.visibility='hidden';
-      groupDiv.style.visibility='hidden'
+      BFSDiv.style.visibility='hidden';
+      groupDiv.style.visibility='hidden';
     }
   });
 
@@ -939,6 +952,7 @@ $('#enumerate-designs-tooltip').click(() => {
       let isWeighted = isWeightedInput.value;
       let isSampleSpace = isSampleSpaceInput.value;
       let allowDuplicates = allowDuplicatesInput.value;
+      let bfs = BFSInput.value;
       let groupID = groupIDInput.value;
 
       if (isSampleSpaceInput.checked) {
@@ -959,6 +973,12 @@ $('#enumerate-designs-tooltip').click(() => {
         allowDuplicates = "false"
       }
 
+      if (BFSInput.checked) {
+        bfs = "true"
+      } else {
+        bfs = "false"
+      }
+
       switch (enumerateDropdown.value) {
         case endpoint.enumerate.ENUMERATE:
 
@@ -977,7 +997,7 @@ $('#enumerate-designs-tooltip').click(() => {
             className: "enumeration-swal"
           });
           if (allowDuplicates === "true") {
-            endpoint.enumerateDesignsList(currentSpace, numDesigns, minLength, maxLength, isWeighted, isSampleSpace, (err, data) => {
+            endpoint.enumerateDesignsList(currentSpace, numDesigns, minLength, maxLength, bfs, isWeighted, isSampleSpace, (err, data) => {
               if (err) {
                 swalError("Enumeration error: " + JSON.stringify(err));
               } else {
@@ -1034,7 +1054,7 @@ $('#enumerate-designs-tooltip').click(() => {
             });
 
           } else {
-            endpoint.enumerateDesignsSet(currentSpace, numDesigns, minLength, maxLength, isWeighted, isSampleSpace, (err, data) => {
+            endpoint.enumerateDesignsSet(currentSpace, numDesigns, minLength, maxLength, bfs, isWeighted, isSampleSpace, (err, data) => {
               if (err) {
                 swalError("Enumeration error: " + JSON.stringify(err));
               } else {

@@ -1095,7 +1095,7 @@ public class KnoxController {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
         return designSpaceService.enumerateDesignSpaceSet(targetSpaceID, numDesigns, minLength, maxLength, 
-        		EnumerateType.BFS, isWeighted, isSampleSpace, printDesigns);
+        		enumerateType, isWeighted, isSampleSpace, printDesigns);
     }
 
 	@GetMapping("/designSpace/enumerateList")
@@ -1110,7 +1110,7 @@ public class KnoxController {
         EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
         
         return designSpaceService.enumerateDesignSpaceList(targetSpaceID, numDesigns, minLength, maxLength, 
-        		EnumerateType.BFS, isWeighted, isSampleSpace, printDesigns);
+        		enumerateType, isWeighted, isSampleSpace, printDesigns);
     }
 
 	@GetMapping("/designSpace/score")
