@@ -1,0 +1,4 @@
+design,,,,
+P1,rbs1,A,T1,
+T1_REVERSE,A_REVERSE,rbs1_REVERSE,P1_REVERSE,
+P1,P1,rbs2,C,T1

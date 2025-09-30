@@ -779,9 +779,9 @@ VERSION HISTORY SIDEBAR
 }
 
 .example-link {
-  position: fixed;
+  display: inline-block;
   bottom: 20px;
-  right: 20px;
+  margin: 10px 10px 10px 0;
   background-color: #161616; /* Bootstrap blue */
   color: white;
   padding: 10px 15px;

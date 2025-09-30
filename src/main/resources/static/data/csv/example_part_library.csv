@@ -1,0 +1,10 @@
+id,role,sequence
+A,cds,
+B,cds,
+C,cds,
+rbs1,ribosomeBindingSite,
+rbs2,ribosomeBindingSite,
+P1,promoter,
+P2,promoter,
+P3,promoter,
+T1,terminator,
