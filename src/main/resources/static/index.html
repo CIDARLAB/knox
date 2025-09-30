@@ -121,6 +121,22 @@
   </ul>
   <div class="tab-content">
     <div id="CSV" class="tab-pane fade in active">
+
+      <div class="import-csv-description">
+        <p>
+          Import Designs using CSV files
+          <br><br>Required Files: Part Library & Designs Files
+          <br>Optional Files: Weights File or Multiple Weights File
+          <br><br>Download & View Example Files:
+        </p>
+        <a href="/data/csv/example_part_library.csv" download class="example-link">Download Example Part Library CSV</a>
+        <a href="/data/csv/example_designs.csv" download class="example-link">Download Example Designs CSV</a>
+        <a href="/data/csv/example_weights.csv" download class="example-link">Download Example Weights CSV</a>
+        <a href="/data/csv/example_multipleWeights.csv" download class="example-link">Download Example Multiple Weights CSV</a>
+      </div>
+
+      <br>
+      <br>
       
       <form method="POST" enctype="multipart/form-data"
             action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
@@ -185,11 +201,6 @@
         <br>
         <input type="submit" value="Import (MERGE)">
       </form>
-      
-      <a href="/data/csv/example_part_library.csv" download class="example-link">Download Example Part Library CSV</a>
-      <a href="/data/csv/example_designs.csv" download class="example-link">Download Example Designs CSV</a>
-      <a href="/data/csv/example_weights.csv" download class="example-link">Download Example Weights CSV</a>
-      <a href="/data/csv/example_multipleWeights.csv" download class="example-link">Download Example Multiple Weights CSV</a>
     </div>
     <div id="GENERATOR" class="tab-pane fade">
       <div class="goldbar-generator-description">
@@ -209,6 +220,9 @@
           <br>"E" : Design must end with Part or user-provided GOLDBAR (ex: "(part1 or part2 ... or partn)").
           <br>"goldbar" : GOLDBAR to include.
         </p>
+        <br>
+        <a href="/data/goldbarGenerator/example.csv" download class="example-link">Download Example GOLDBAR Generator CSV</a>
+        <br>
       </div>
 
       <form id="goldbarForm" method="POST" enctype="multipart/form-data"
@@ -243,7 +257,6 @@
                
         <input type="submit" value="GOLDBAR Generator">
       </form>
-      <a href="/data/goldbarGenerator/example.csv" download class="example-link">Download Example GOLDBAR Generator CSV</a>
       <script type="module">
         import * as knox from "./js/knox.js";
         document.getElementById('goldbarForm').addEventListener('submit', function(event) {
