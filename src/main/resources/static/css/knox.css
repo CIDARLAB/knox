@@ -795,3 +795,77 @@ VERSION HISTORY SIDEBAR
 .example-link:hover {
   background-color: #2718f7;
 }
+
+/* --- AI Chat Styles --- */
+#ai-chat-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 9999;
+}
+
+#ai-chat-box {
+  display: none;
+  position: fixed;
+  bottom: 90px;
+  right: 30px;
+  width: 400px;
+  height: 600px;
+  background: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 10000;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.ai-chat-header {
+  background: #007bff;
+  color: #fff;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-chat-clear {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 18px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.ai-chat-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.ai-chat-messages {
+  padding: 10px;
+  height: 500px;
+  overflow-y: auto;
+  font-size: 14px;
+  background: #f9f9f9;
+}
+
+.ai-chat-input-area {
+  padding: 10px;
+  border-top: 1px solid #eee;
+  background: #fff;
+}
+
+.ai-chat-input {
+  width: 75%;
+  display: inline-block;
+}
+
+.ai-chat-send {
+  width: 22%;
+  margin-left: 0%;
+}

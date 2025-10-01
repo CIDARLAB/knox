@@ -103,6 +103,8 @@ window.onresize = function(e) {
   });
 };
 
+window.addEventListener('DOMContentLoaded', injectAIChatBox);
+
 /*********************
  * HELPER FUNCTIONS
  *********************/
@@ -2338,4 +2340,117 @@ function suggestCompletions (phrase){
         }
     });
     return results;
+}
+
+// --- AI Chat Box Injection ---
+export function injectAIChatBox() {
+  // Only inject once
+  if (document.getElementById('ai-chat-btn')) return;
+
+  // Chat Button
+  const chatBtn = document.createElement('div');
+  chatBtn.id = 'ai-chat-btn';
+  chatBtn.innerHTML = `<button class="btn btn-primary" onclick="toggleChatBox()">AI Chat</button>`;
+  document.body.appendChild(chatBtn);
+
+  // Chat Box
+  const chatBox = document.createElement('div');
+  chatBox.id = 'ai-chat-box';
+  chatBox.style.display = 'none';
+  chatBox.innerHTML = `
+    <div class="ai-chat-header">
+      <span>AI Chat</span>
+      <button class="ai-chat-clear" onclick="clearChat()" title="Clear chat" style="margin-right:8px;">&#128465;</button>
+      <button class="ai-chat-close" onclick="toggleChatBox()">&times;</button>
+    </div>
+    <div id="chat-messages" class="ai-chat-messages"></div>
+    <div class="ai-chat-input-area">
+      <form id="chat-form">
+        <input id="prompt" name="prompt" type="text" class="form-control ai-chat-input" placeholder="Type your message..." autocomplete="off">
+        <button class="btn btn-success ai-chat-send" type="submit">Send</button>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(chatBox);
+
+  // Add event listeners
+  document.getElementById('chat-form').onsubmit = sendChatMessage;
+}
+
+// --- AI Chat Box Logic ---
+window.toggleChatBox = function() {
+  const box = document.getElementById('ai-chat-box');
+  box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+};
+
+window.clearChat = function() {
+  const msgDiv = document.getElementById('chat-messages');
+  msgDiv.innerHTML = '';
+  promptHistory = [];
+  isFirstMessage = true;
+};
+
+window.appendMessage = function(sender, text) {
+  const msgDiv = document.getElementById('chat-messages');
+  const msg = document.createElement('div');
+  msg.style.marginBottom = '12px';
+  msg.innerHTML = `<strong>${sender}:</strong> ${text.replace(/\n/g, '<br><br>')}`;
+  msgDiv.appendChild(msg);
+  msgDiv.scrollTop = msgDiv.scrollHeight;
+};
+
+let isFirstMessage = true;
+window.sendChatMessage = async function(event) {
+  event.preventDefault();
+  const input = document.getElementById('prompt');
+  let prompt = input.value.trim();
+  if (!prompt) return;
+  appendMessage('You', prompt);
+
+  let promptToSend = promptContext 
+    + "\nOur Chat History:\n" 
+    + promptHistory.join("\n") 
+    + "\nCurrent Context: " + getCurrentContext()
+    + "\nMe: " + prompt;
+
+  if (isFirstMessage) {
+    promptToSend = "Welcome the user to Knox and briefly explain its purpose.\n" + promptToSend;
+    isFirstMessage = false;
+  }
+
+  addToPromptHistory("Me: " + prompt);
+
+  input.value = '';
+  try {
+    const response = await fetch('/agent?prompt=' + encodeURIComponent(promptToSend), {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: promptToSend
+    });
+    const aiReply = await response.text();
+    appendMessage('AI', aiReply);
+    addToPromptHistory("AI: " + aiReply);
+  } catch (e) {
+    appendMessage('AI', 'Sorry, there was an error.');
+  }
+};
+
+let promptHistory = [];
+function addToPromptHistory(prompt) {
+  promptHistory.push(prompt);
+  if (promptHistory.length > 10) {
+    promptHistory.shift();  // Remove oldest prompt if we have more than 10
+  }
+}
+
+let promptContext = "You are an AI assistant (agent) in Knox (with access to certain tools), a design tool for part-based DNA combinatorial libraries that are represented as graphs in Neo4j.\n"
+  + "Knox implements GOLDBAR: Grammars for Combinatorial Biological Design Assembly"
+  + "\nHere is an example GOLDBAR rule:\n"
+  + "Do Not Repeat part A: " + JSON.stringify(exampleRules.R, null, 2)
+  + "\nYou can help the user with questions about GOLDBAR, combinatorial design, and how to use Knox."
+  + " Try to keep your answers brief and to the point.";
+
+function getCurrentContext() {
+  return `currently viewed design spaceid is ${currentSpace || "null"}. `
+  + `currently viewed groupid is ${currentGroupID || "null"}. `
 }

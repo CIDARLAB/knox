@@ -55,7 +55,7 @@ import javassist.bytecode.ByteArray;
 /**
  * @author Nicholas Roehner
  */
-@RestController("/")
+@RestController
 public class KnoxController {
 	final DesignSpaceService designSpaceService;
 
