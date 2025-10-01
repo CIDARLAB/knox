@@ -29,6 +29,13 @@
 14) After successful install, Run `mvn spring-boot:run` in the root directory of this repo
 15) Open Knox web interface at http://localhost:8080
 
+## AI Chat / Agent Integration
+
+### Setup
+1) Get an API-key from [OPENAI](https://platform.openai.com/api-keys)
+2) Place API-key in [application.properties](src/main/resources/application.properties) file (Non-Docker Setup)
+3) You can then run the application and use the AI features via the AI Chat
+
 ## Manuscript
 
 Nicholas Roehner, James Roberts, Andrei Lapets, Dany Gould, Vidya Akavoor, Lucy Qin, D. Benjamin Gordon, Christopher Voigt, and Douglas Densmore. GOLDBAR: A Framework for Combinatorial Biological Design. ACS Synthetic Biology Article ASAP (2024). 
