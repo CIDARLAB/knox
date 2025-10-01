@@ -468,15 +468,20 @@ public class DesignSampler {
 		return comboDesigns;
 	}
 
-	private List<List<Map<String, Object>>> multiplyDesigns(List<List<Map<String, Object>>> designs,
-			Edge edge) {
+	private List<List<Map<String, Object>>> multiplyDesigns(List<List<Map<String, Object>>> designs, Edge edge, int numDesigns) {
 		List<List<Map<String, Object>>> comboDesigns = new LinkedList<List<Map<String, Object>>>();
+		int designCount = 0;
 		
 		if (!edge.hasComponentIDs()) {
 			for (List<Map<String, Object>> design : designs) {
 				List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+				designCount++;
 
 				comboDesigns.add(comboDesign);
+				
+				if (numDesigns > 0 && designCount >= numDesigns) {
+					return comboDesigns;
+				}
 			}
 		} else {
 
@@ -485,32 +490,35 @@ public class DesignSampler {
 
 			for (String compID : edge.getComponentIDs()) {
 				Map<String, Object> comp = new HashMap<String, Object>();
-
 				comp.put("id", compID);
-
 				comp.put("roles", componentIDstoRoles.get(compID));
-
 				comp.put("weight", componentIDstoWeights.get(compID));
-
 				comp.put("isBlank", "false");
-
-//				comp.put("orientation", edge.getOrientation());
-				comp.put("orientation", edge.getOrientation().getValue()); //does this need to be string?
+				comp.put("orientation", edge.getOrientation().getValue());
 
 				if (!designs.isEmpty()) {
 					for (List<Map<String, Object>> design : designs) {
 						List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>(design);
+						designCount++;
 
 						comboDesign.add(comp);
 
 						comboDesigns.add(comboDesign);
+
+						if (numDesigns > 0 && designCount >= numDesigns) {
+							return comboDesigns;
+						}
 					}
 				} else {
 					List<Map<String, Object>> comboDesign = new ArrayList<Map<String, Object>>();
+					designCount++;
 
 					comboDesign.add(comp);
 
 					comboDesigns.add(comboDesign);
+					if (numDesigns > 0 && designCount >= numDesigns) {
+						return comboDesigns;
+					}
 				}
 			}
 		}
