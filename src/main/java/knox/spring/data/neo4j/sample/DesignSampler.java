@@ -219,10 +219,15 @@ public class DesignSampler {
 						}
 
 					}
-
 				
 					if (edge.hasComponentIDs()) {
-						design.add(edge.getComponentIDs().get(rand.nextInt(edge.getComponentIDs().size())));
+						String part = edge.getComponentIDs().get(rand.nextInt(edge.getComponentIDs().size()));
+
+						if (edge.getOrientation() != null && edge.getOrientation().getValue().equals("reverseComplement")) {
+							part = part + "_REVERSE";
+						}
+						
+						design.add(part);
 					}
 				}
 				
