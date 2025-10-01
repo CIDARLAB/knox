@@ -16,8 +16,8 @@ const endpoints = {
   LIST: "/designSpace/list",
   LISTGROUPIDS: "/designSpace/listUniqueGroups",
   LISTGROUPSPACEIDS: "/designSpace/listGroupSpaces",
-  ENUMERATESET: "/designSpace/enumerateSet",
-  ENUMERATELIST: "/designSpace/enumerateList",
+  ENUMERATE: "/designSpace/enumerate",
+  ENUMERATECSV: "/designSpace/enumerateCSV",
   SAMPLE: "/designSpace/sample",
   SCORE: "/designSpace/score",
   BESTPATH: "/designSpace/bestPath",
@@ -93,26 +93,17 @@ export function getHistory (id, callback){
   d3.json(endpoints.BRANCH+endpoints.D3 + query, callback);
 }
 
-export function enumerateDesignsSet(id, numDesigns, minLength, maxLength, bfs, isWeighted, isSampleSpace, callback){
+export function enumerateDesigns(id, numDesigns, minLength, maxLength, maxCycles, bfs, isWeighted, isSampleSpace, allowDuplicates, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
   query += "&numDesigns=" + encodeURIComponent(numDesigns);
   query += "&minLength=" + encodeURIComponent(minLength);
   query += "&maxLength=" + encodeURIComponent(maxLength);
+  query += "&maxCycles=" + encodeURIComponent(maxCycles);
   query += "&bfs=" + encodeURIComponent(bfs);
   query += "&isWeighted=" + encodeURIComponent(isWeighted);
   query += "&isSampleSpace=" + encodeURIComponent(isSampleSpace);
-  d3.json(endpoints.ENUMERATESET + query, callback);
-}
-
-export function enumerateDesignsList(id, numDesigns, minLength, maxLength, bfs, isWeighted, isSampleSpace, callback){
-  let query = "?targetSpaceID=" + encodeURIComponent(id);
-  query += "&numDesigns=" + encodeURIComponent(numDesigns);
-  query += "&minLength=" + encodeURIComponent(minLength);
-  query += "&maxLength=" + encodeURIComponent(maxLength);
-  query += "&bfs=" + encodeURIComponent(bfs);
-  query += "&isWeighted=" + encodeURIComponent(isWeighted);
-  query += "&isSampleSpace=" + encodeURIComponent(isSampleSpace);
-  d3.json(endpoints.ENUMERATELIST + query, callback);
+  query += "&allowDuplicates=" + encodeURIComponent(allowDuplicates);
+  d3.json(endpoints.ENUMERATE + query, callback);
 }
 
 export function sampleDesigns(id, numDesigns, minLength, maxLength, isWeighted, isSampleSpace, callback){
@@ -531,6 +522,36 @@ export function importGoldbar(goldbar, categories, outputSpace, groupID, weight)
   request.open("POST", endpoints.GOLDBAR + query, false);
   request.send(null);
 
+}
+
+
+export function enumerateCSV(id, numDesigns, minLength, maxLength, maxCycles, bfs, isWeighted, isSampleSpace, allowDuplicates, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  query += "&numDesigns=" + encodeURIComponent(numDesigns);
+  query += "&minLength=" + encodeURIComponent(minLength);
+  query += "&maxLength=" + encodeURIComponent(maxLength);
+  query += "&maxCycles=" + encodeURIComponent(maxCycles);
+  query += "&bfs=" + encodeURIComponent(bfs);
+  query += "&isWeighted=" + encodeURIComponent(isWeighted);
+  query += "&isSampleSpace=" + encodeURIComponent(isSampleSpace);
+  query += "&allowDuplicates=" + encodeURIComponent(allowDuplicates);
+  
+  fetch(endpoints.ENUMERATECSV + query)
+    .then(response => {
+      if (!response.ok) throw new Error("CSV export failed");
+      return response.blob();
+    })
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = id + "_enumerated_designs.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    })
+    .catch(err => swalError("CSV export error: " + err.message));
 }
 
 

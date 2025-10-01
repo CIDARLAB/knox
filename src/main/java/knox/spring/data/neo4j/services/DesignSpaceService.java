@@ -58,16 +58,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collection;
 
 @Service
 //@Transactional
@@ -1219,30 +1223,21 @@ public class DesignSpaceService {
 		return d3;
 	}
     
-    public HashSet<List<Map<String, Object>>> enumerateDesignSpaceSet(String targetSpaceID, 
-    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
+    public Collection<List<Map<String, Object>>> enumerateDesignSpace(String targetSpaceID, 
+    		int numDesigns, int minLength, int maxLength, int maxCycles,
+			EnumerateType enumerateType, boolean isWeighted, boolean allowDuplicates,
+			boolean isSampleSpace, boolean printDesigns) {
 
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
     	
         DesignSampler designSampler = new DesignSampler(designSpace);
         
-		System.out.println("\nBegin Enumeration\n");
-        HashSet<List<Map<String, Object>>> samplerOutput = designSampler.enumerateSet(numDesigns, minLength, maxLength, isSampleSpace, enumerateType);
-
-		return designSampler.processEnumerateSet(samplerOutput, isWeighted, isSampleSpace, printDesigns);
-    }
-
-	public List<List<Map<String, Object>>> enumerateDesignSpaceList(String targetSpaceID, 
-    		int numDesigns, int minLength, int maxLength, EnumerateType enumerateType, boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
-
-    	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
-    	
-        DesignSampler designSampler = new DesignSampler(designSpace);
-        
-		System.out.println("\nBegin Enumeration\n");
-        List<List<Map<String, Object>>> samplerOutput = designSampler.enumerateList(numDesigns, minLength, maxLength, isSampleSpace, enumerateType);
-
-		return designSampler.processEnumerateList(samplerOutput, isWeighted, isSampleSpace, printDesigns);
+		//System.out.println("\nBegin Enumeration\n");
+        Collection<List<Map<String, Object>>> samplerOutput = designSampler.enumerate(numDesigns, minLength, maxLength, maxCycles, 
+				allowDuplicates,isSampleSpace, enumerateType);
+		samplerOutput = designSampler.processEnumerate(samplerOutput, isWeighted, isSampleSpace, printDesigns);
+		
+		return samplerOutput;
     }
     
     public List<String> getGraphScore(String targetSpaceID) {

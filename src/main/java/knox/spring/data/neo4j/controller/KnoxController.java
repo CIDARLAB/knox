@@ -1083,35 +1083,87 @@ public class KnoxController {
         return groupIDs;
     }
 
-    @GetMapping("/designSpace/enumerateSet")
-    public HashSet<List<Map<String, Object>>> enumerateSet(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+    @GetMapping("/designSpace/enumerate")
+    public Object enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
 			@RequestParam(value = "isSampleSpace", required = false, defaultValue = "false") boolean isSampleSpace,
 			@RequestParam(value = "printDesigns", required = false, defaultValue = "false") boolean printDesigns,
             @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
             @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
-            @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
-        EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
+			@RequestParam(value = "maxCycles", required = false, defaultValue = "0") int maxCycles,
+            @RequestParam(value = "bfs", required = true, defaultValue = "false") boolean bfs,
+			@RequestParam(value = "allowDuplicates", required = false, defaultValue = "false") boolean allowDuplicates,
+			@RequestParam(value = "allDesigns", required = true, defaultValue = "false") boolean allDesigns) {
         
-        return designSpaceService.enumerateDesignSpaceSet(targetSpaceID, numDesigns, minLength, maxLength, 
-        		enumerateType, isWeighted, isSampleSpace, printDesigns);
+		EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // DFS is default
+		Collection<List<Map<String, Object>>> designsCollection = designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, maxCycles,
+				enumerateType, isWeighted, allowDuplicates, isSampleSpace, printDesigns);
+		
+		List<List<Map<String, Object>>> designs = new ArrayList<>(designsCollection);
+		Map<String, Object> result = new HashMap<>();
+		result.put("numDesigns", designs.size());
+		if (!allDesigns) {
+			if (designs.size() < 100) {
+				result.put("designs", designs);
+			} else {
+				result.put("designs", designs.subList(0, 100));
+				result.put("message", "Only the first 100 designs are returned. To return all designs, set the allDesigns parameter to true.");
+			}
+		} else {
+			result.put("designs", designs);
+		}
+		return result;
     }
 
-	@GetMapping("/designSpace/enumerateList")
-    public List<List<Map<String, Object>>> enumerateList(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-            @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
+	@GetMapping("/designSpace/enumerateCSV")
+	public ResponseEntity<byte[]> enumerateCSV(
+			@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+			@RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
 			@RequestParam(value = "isWeighted", required = false, defaultValue = "true") boolean isWeighted,
 			@RequestParam(value = "isSampleSpace", required = false, defaultValue = "false") boolean isSampleSpace,
-			@RequestParam(value = "printDesigns", required = false, defaultValue = "false") boolean printDesigns,
-            @RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
-            @RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
-            @RequestParam(value = "bfs", required = true, defaultValue = "true") boolean bfs) {
-        EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // BFS is default
-        
-        return designSpaceService.enumerateDesignSpaceList(targetSpaceID, numDesigns, minLength, maxLength, 
-        		enumerateType, isWeighted, isSampleSpace, printDesigns);
-    }
+			@RequestParam(value = "minLength", required = false, defaultValue = "0") int minLength,
+			@RequestParam(value = "maxLength", required = false, defaultValue = "0") int maxLength,
+			@RequestParam(value = "maxCycles", required = false, defaultValue = "0") int maxCycles,
+			@RequestParam(value = "bfs", required = true, defaultValue = "false") boolean bfs,
+			@RequestParam(value = "allowDuplicates", required = false, defaultValue = "false") boolean allowDuplicates) {
+
+		EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;
+		Collection<List<Map<String, Object>>> designsCollection = designSpaceService.enumerateDesignSpace(
+				targetSpaceID, numDesigns, minLength, maxLength, maxCycles, enumerateType, isWeighted, allowDuplicates, isSampleSpace, false);
+
+		// Convert designsCollection to CSV string
+		StringBuilder csvBuilder = new StringBuilder();
+		csvBuilder.append("Inputs\n");
+		csvBuilder.append("targetSpaceID,").append(targetSpaceID).append("\n");
+		csvBuilder.append("numDesigns,").append(numDesigns).append("\n");
+		csvBuilder.append("minLength,").append(minLength).append("\n");
+		csvBuilder.append("maxLength,").append(maxLength).append("\n");
+		csvBuilder.append("maxCycles,").append(maxCycles).append("\n");
+		csvBuilder.append("bfs,").append(bfs).append("\n");
+		csvBuilder.append("allowDuplicates,").append(allowDuplicates).append("\n");
+		
+		csvBuilder.append("design\n");
+		for (List<Map<String, Object>> design : designsCollection) {
+			List<String> parts = new ArrayList<>();
+			for (Map<String, Object> part : design) {
+				if (part.get("id") != null) {
+					String compID = part.get("id").toString();
+					if (part.get("orientation") != null && part.get("orientation").toString().equals("reverseComplement")) {
+						compID = compID + "_REVERSE";
+					}
+					parts.add(compID);
+				}
+			}
+			csvBuilder.append(String.join(",", parts)).append("\n");
+		}
+		byte[] csvBytes = csvBuilder.toString().getBytes();
+
+		return ResponseEntity.ok()
+				.header("Content-Disposition", "attachment; filename=\"" + targetSpaceID + "_enumerated_designs.csv\"")
+				.contentType(org.springframework.http.MediaType.parseMediaType("text/csv"))
+				.body(csvBytes);
+	}
 
 	@GetMapping("/designSpace/score")
     public List<String> graphScore(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID){

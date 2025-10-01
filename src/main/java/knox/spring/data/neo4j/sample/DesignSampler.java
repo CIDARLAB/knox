@@ -275,21 +275,12 @@ public class DesignSampler {
 			- Set<List<String>>: The paths that are generated. Each List<String> represents an ordering of
 								 the specific component ids.
 	 */
-	public HashSet<List<Map<String, Object>>> enumerateSet(int numDesigns, int minLength, 
-			int maxLength, Boolean isSampleSpace, EnumerateType type) {
+	public Collection<List<Map<String, Object>>> enumerate(int numDesigns, int minLength, 
+			int maxLength, int maxCycles, Boolean allowDuplicates, Boolean isSampleSpace, EnumerateType type) {
 		if (type == EnumerateType.BFS) {
-			return bfsEnumerateSet(numDesigns, minLength, maxLength, isSampleSpace);
+			return bfsEnumerate(numDesigns, minLength, maxLength, maxCycles, allowDuplicates, isSampleSpace);
 		} else {
-			return dfsEnumerateSet(numDesigns, minLength, maxLength, isSampleSpace);
-		}
-	}
-
-	public List<List<Map<String, Object>>> enumerateList(int numDesigns, int minLength, 
-			int maxLength, Boolean isSampleSpace, EnumerateType type) {
-		if (type == EnumerateType.BFS) {
-			return bfsEnumerateList(numDesigns, minLength, maxLength, isSampleSpace);
-		} else {
-			return dfsEnumerateList(numDesigns, minLength, maxLength, isSampleSpace);
+			return dfsEnumerate(numDesigns, minLength, maxLength, maxCycles, allowDuplicates, isSampleSpace);
 		}
 	}
 
@@ -526,7 +517,8 @@ public class DesignSampler {
 		return comboDesigns;
 	}
 	
-	private HashSet<List<Map<String, Object>>> bfsEnumerateSet(int numDesigns, int minLength, int maxLength, boolean isSampleSpace) {
+	/* 
+	public HashSet<List<Map<String, Object>>> bfsEnumerateSet(int numDesigns, int minLength, int maxLength, boolean isSampleSpace) {
 		HashSet<List<Map<String, Object>>> allDesigns = new HashSet<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -562,7 +554,7 @@ public class DesignSampler {
 				if (isSampleSpace) {
 					designs = multiplyDesignsSampleSpace(designs, edge);
 				} else {
-					designs = multiplyDesigns(designs, edge);
+					designs = multiplyDesigns(designs, edge, numDesigns);
 				}
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
@@ -655,7 +647,7 @@ public class DesignSampler {
 				if (isSampleSpace) {
 					designs = multiplyDesignsSampleSpace(designs, edge);
 				} else {
-					designs = multiplyDesigns(designs, edge);
+					designs = multiplyDesigns(designs, edge, numDesigns);
 				}
 				
 				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
@@ -712,7 +704,7 @@ public class DesignSampler {
 		return allDesigns;
 	}
 
-	private List<List<Map<String, Object>>> bfsEnumerateList(int numDesigns, int minLength, int maxLength, Boolean isSampleSpace) {
+	private List<List<Map<String, Object>>> bfsEnumerates(int numDesigns, int minLength, int maxLength, Boolean isSampleSpace) {
 		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
 	
 		for (Node startNode : startNodes) {
@@ -748,7 +740,7 @@ public class DesignSampler {
 				if (isSampleSpace) {
 					designs = multiplyDesignsSampleSpace(designs, edge);
 				} else {
-					designs = multiplyDesigns(designs, edge);
+					designs = multiplyDesigns(designs, edge, numDesigns);
 				}
 
 				
@@ -805,165 +797,143 @@ public class DesignSampler {
 		
 		return allDesigns;
 	}
-	
-	private List<List<Map<String, Object>>> dfsEnumerateList(int numDesigns, int minLength, int maxLength, Boolean isSampleSpace) {
-		List<List<Map<String, Object>>> allDesigns = new ArrayList<List<Map<String, Object>>>();
-	
+	*/
+	private Collection<List<Map<String, Object>>> bfsEnumerate(int numDesigns, int minLength, int maxLength, int maxCycles, 
+			Boolean allowDuplicates, Boolean isSampleSpace) {
+
+		Collection<List<Map<String, Object>>> allDesigns = allowDuplicates ? new ArrayList<>() : new LinkedHashSet<>();
+		int maxVisitsPerNode = maxCycles + 1;
+
 		for (Node startNode : startNodes) {
-			List<List<Map<String, Object>>> designs = new LinkedList<List<Map<String, Object>>>();
-			
-			Set<Node> localNodes = new HashSet<Node>();
-			
-			localNodes.add(startNode);
-			
-			Stack<Set<Node>> localNodeStack = new Stack<Set<Node>>();
-			
-			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
-				localNodeStack.push(new HashSet<Node>(localNodes));
-			}
-			
-			Stack<Edge> edgeStack = new Stack<Edge>();
-			
-			if (startNode.hasEdges()) {
-				for (Edge edge : startNode.getEdges()) {
-					edgeStack.push(edge);
-				}
-			}
-			
-			Stack<List<List<Map<String, Object>>>> designStack = new Stack<List<List<Map<String, Object>>>>();
-			
-			for (int i = 0; i < startNode.getNumEdges() - 1; i++) {
-				designStack.push(designs);
-			}
-			
-			while (!edgeStack.isEmpty()) {
-				Edge edge = edgeStack.pop();
-				
-				if (isSampleSpace) {
-					designs = multiplyDesignsSampleSpace(designs, edge);
-				} else {
-					designs = multiplyDesigns(designs, edge);
-				}
-				
-				if (!designs.isEmpty() && maxLength > 0 && designs.get(0).size() > maxLength) {
-					if (!designStack.isEmpty()) {
-						localNodes = localNodeStack.pop();
-						
-						designs = designStack.pop();
-					}
-				} else { 
-					if (edge.getHead().isAcceptNode()) {
-						List<List<Map<String, Object>>> atLeastMinDesigns = filterUnderMinDesigns(designs,
-								minLength);
-						
-						if (numDesigns < 1 || allDesigns.size() + atLeastMinDesigns.size() < numDesigns) {
-							allDesigns.addAll(atLeastMinDesigns);
-						} else {
-							int diffDesignCount = numDesigns - allDesigns.size();
+			Queue<BFSState> queue = new LinkedList<>();
+			Map<Node, Integer> initialVisitCounts = new HashMap<>();
+			initialVisitCounts.put(startNode, 1);
 
-							Iterator<List<Map<String, Object>>> designerator = atLeastMinDesigns.iterator();
+			// Start with an empty design
+			queue.add(new BFSState(startNode, new ArrayList<>(), initialVisitCounts));
 
-							for (int i = 0; i < diffDesignCount; i++) {
-								allDesigns.add(designerator.next());
+			while (!queue.isEmpty() && (numDesigns < 1 || allDesigns.size() < numDesigns)) {
+				BFSState state = queue.poll();
+				Node node = state.node;
+				List<List<Map<String, Object>>> currentDesigns = state.currentDesigns;
+				Map<Node, Integer> visitCounts = state.visitCounts;
+
+			// If accept node, add all designs that meet minLength
+				if (node.isAcceptNode()) {
+					for (List<Map<String, Object>> design : currentDesigns) {
+						if (design.size() >= minLength) {
+							if (allowDuplicates || !allDesigns.contains(design)) {
+							allDesigns.add(new ArrayList<>(design));
+							if (numDesigns > 0 && allDesigns.size() >= numDesigns) {
+								break;
 							}
+							}
+						}
+					}
+				}
 
-							return allDesigns;
+				for (Edge edge : node.getEdges()) {
+					Node nextNode = edge.getHead();
+					if (nextNode != null) {
+						int visits = visitCounts.getOrDefault(nextNode, 0);
+						if (visits < maxVisitsPerNode) {
+							List<List<Map<String, Object>>> nextDesigns;
+							if (isSampleSpace) {
+								nextDesigns = multiplyDesignsSampleSpace(currentDesigns, edge);
+							} else {
+								nextDesigns = multiplyDesigns(currentDesigns, edge, numDesigns);
+							}
+							// Prune designs that exceed maxLength
+							List<List<Map<String, Object>>> prunedDesigns = new ArrayList<>();
+							for (List<Map<String, Object>> d : nextDesigns) {
+								if (maxLength <= 0 || d.size() <= maxLength) {
+									prunedDesigns.add(d);
+								}
+							}
+						Map<Node, Integer> nextVisitCounts = new HashMap<>(visitCounts);
+						nextVisitCounts.put(nextNode, visits + 1);
+						queue.add(new BFSState(nextNode, prunedDesigns, nextVisitCounts));
 						}
-					} 
-
-					if (edge.getHead().hasEdges() 
-							&& (!localNodes.contains(edge.getHead()) || numDesigns > 0 
-									|| maxLength > 0)) {
-						localNodes.add(edge.getHead());
-						
-						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
-							localNodeStack.push(new HashSet<Node>(localNodes));
-						}
-						
-						for (Edge headEdge : edge.getHead().getEdges()) {
-							edgeStack.push(headEdge);
-						}
-
-						for (int i = 0; i < edge.getHead().getNumEdges() - 1; i++) {
-							designStack.push(designs);
-						}
-					} else if (!designStack.isEmpty()) {
-						localNodes = localNodeStack.pop();
-						
-						designs = designStack.pop();
 					}
 				}
 			}
 		}
-		
 		return allDesigns;
 	}
 
-	public HashSet<List<Map<String, Object>>> processEnumerateSet(HashSet<List<Map<String, Object>>> samplerOutput, 
-			boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
+	private Collection<List<Map<String, Object>>> dfsEnumerate(int numDesigns, int minLength, int maxLength, int maxCycles, 
+			Boolean allowDuplicates, Boolean isSampleSpace) {
 
-		if (isWeighted && !isSampleSpace) {
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				double total = 0.0;
-				double length = design.size();
-				for (Map<String,Object> element : design) {
-					if (element.get("isBlank") == "true") {
-						length = length - 1.0;
-					} else {
-						total = total + (double) element.get("weight");
-					}
-				}
-				double averageWeight = total / length;
+		Collection<List<Map<String, Object>>> allDesigns = allowDuplicates ? new ArrayList<>() : new LinkedHashSet<>();
+		Map<Node, Integer> visitCounts = new HashMap<>();
 
-				for (Map<String,Object> element : design) {
-					element.put("average_weight", averageWeight);
-				}
+		int maxVisitsPerNode = maxCycles + 1;
 
-				i++;
-				System.out.println(i);
-			}
-		} else if (isSampleSpace) {
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				double probability = 1.0;
-				
-				for (Map<String,Object> element : design) {
-					probability = probability * (double) element.get("weight");
-				}
-
-				for (Map<String,Object> element : design) {
-					element.put("probability", probability);
-				}
-
-				i++;
-				System.out.println(i);
-			}
+		for (Node startNode : startNodes) {
+			dfsHelper(startNode, new ArrayList<>(), allDesigns, numDesigns, minLength, maxLength, 
+					allowDuplicates, isSampleSpace, visitCounts, maxVisitsPerNode);
+			
+			if (allDesigns.size() >= numDesigns && numDesigns > 0) break;
 		}
-
-		// Print Designs
-		if (printDesigns){
-			int i = 0;
-			for (List<Map<String,Object>> design : samplerOutput) {
-				i++;
-				List<Object> design_parts = new ArrayList<>();
-				for (Map<String,Object> element : design) {
-					design_parts.add(element.get("id"));
-				}
-				System.out.println();
-				System.out.println(i);
-				System.out.println(design_parts);
-				
-			}
-		}
-	
-
-		System.out.println("\nEnumerated!");
-        
-        return samplerOutput;
+		return allDesigns;
 	}
 
-	public List<List<Map<String, Object>>> processEnumerateList(List<List<Map<String, Object>>> samplerOutput, 
+	private void dfsHelper(Node node, List<List<Map<String, Object>>> currentDesigns,
+                       Collection<List<Map<String, Object>>> allDesigns,
+                       int numDesigns, int minLength, int maxLength, Boolean allowDuplicates, Boolean isSampleSpace,
+                       Map<Node, Integer> visitCounts, int maxVisitsPerNode) {
+
+		if (allDesigns.size() >= numDesigns && numDesigns > 0) return;
+
+		int visits = visitCounts.getOrDefault(node, 0);
+		if (visits >= maxVisitsPerNode) return; // limit reached
+
+		visitCounts.put(node, visits + 1);
+
+		// If accept node, add all designs that meet minLength
+		if (node.isAcceptNode()) {
+			for (List<Map<String, Object>> design : currentDesigns) {
+				if (design.size() >= minLength) {
+					if (allowDuplicates || !allDesigns.contains(design)) {
+						allDesigns.add(new ArrayList<>(design));
+						if (allDesigns.size() >= numDesigns && numDesigns > 0) {
+							visitCounts.put(node, visits); // backtrack
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		for (Edge edge : node.getEdges()) {
+			if (edge.getHead() != null) {
+				List<List<Map<String, Object>>> nextDesigns;
+				if (isSampleSpace) {
+					nextDesigns = multiplyDesignsSampleSpace(currentDesigns, edge);
+				} else {
+					nextDesigns = multiplyDesigns(currentDesigns, edge, numDesigns);
+				}
+				// Prune designs that exceed maxLength
+				List<List<Map<String, Object>>> prunedDesigns = new ArrayList<>();
+				for (List<Map<String, Object>> d : nextDesigns) {
+					if (maxLength <= 0 || d.size() <= maxLength) {
+						prunedDesigns.add(d);
+					}
+				}
+				dfsHelper(edge.getHead(), prunedDesigns, allDesigns, numDesigns, minLength, maxLength, 
+						allowDuplicates, isSampleSpace, visitCounts, maxVisitsPerNode);
+			}
+		}
+
+		// backtrack
+		if (visits + 1 == 1) {
+			visitCounts.remove(node);
+		} else {
+			visitCounts.put(node, visits);
+		}
+	}
+
+	public Collection<List<Map<String, Object>>> processEnumerate(Collection<List<Map<String, Object>>> samplerOutput, 
 			boolean isWeighted, boolean isSampleSpace, boolean printDesigns) {
 
 		if (isWeighted && !isSampleSpace) {
@@ -985,7 +955,6 @@ public class DesignSampler {
 				}
 
 				i++;
-				System.out.println(i);
 			}
 		} else if (isSampleSpace) {
 			int i = 0;
@@ -1001,12 +970,11 @@ public class DesignSampler {
 				}
 
 				i++;
-				System.out.println(i);
 			}
 		}
 
 		// Print Designs
-		if (printDesigns){
+		if (printDesigns) {
 			int i = 0;
 			for (List<Map<String,Object>> design : samplerOutput) {
 				i++;
@@ -1020,9 +988,6 @@ public class DesignSampler {
 				
 			}
 		}
-	
-
-		System.out.println("\nEnumerated!");
         
         return samplerOutput;
 	}
@@ -1191,5 +1156,17 @@ public class DesignSampler {
     }
     
     public enum EnumerateType { BFS, DFS }
+
+	private static class BFSState {
+		Node node;
+		List<List<Map<String, Object>>> currentDesigns;
+		Map<Node, Integer> visitCounts;
+
+		BFSState(Node node, List<List<Map<String, Object>>> currentDesigns, Map<Node, Integer> visitCounts) {
+			this.node = node;
+			this.currentDesigns = currentDesigns;
+			this.visitCounts = visitCounts;
+		}
+	}
 
 }

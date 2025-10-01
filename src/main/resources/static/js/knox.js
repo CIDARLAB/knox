@@ -816,13 +816,13 @@ $('#enumerate-designs-tooltip').click(() => {
   numDesignsInput.setAttribute("type", "number");
   numDesignsInput.setAttribute("value", "0");
   numDesignsInput.setAttribute("min", "0");
-  makeDiv(numDesignsDiv, numDesignsInput, 'Number of Designs (0 means all possible): ');
+  makeDiv(numDesignsDiv, numDesignsInput, 'Number of Designs (0 means all possible for Enumerate): ');
 
   // min length div
   let minLengthDiv = document.createElement('div');
   let minLengthInput = document.createElement('input');
   minLengthInput.setAttribute("type", "number");
-  minLengthInput.setAttribute("value", "0");
+  minLengthInput.setAttribute("value", "1");
   minLengthInput.setAttribute("min", "0");
   makeDiv(minLengthDiv, minLengthInput, 'Minimum Length of Designs: ');
 
@@ -834,11 +834,19 @@ $('#enumerate-designs-tooltip').click(() => {
   maxLengthInput.setAttribute("min", "0");
   makeDiv(maxLengthDiv, maxLengthInput, 'Maximum Length of Designs (0 means no Max): ');
 
+  // max cycles div
+  let maxCyclesDiv = document.createElement('div');
+  let maxCyclesInput = document.createElement('input');
+  maxCyclesInput.setAttribute("type", "number");
+  maxCyclesInput.setAttribute("value", "0");
+  maxCyclesInput.setAttribute("min", "0");
+  makeDiv(maxCyclesDiv, maxCyclesInput, 'Maximum Cycles: ');
+
   // is weighted div
   let isWeightedDiv = document.createElement('div');
   let isWeightedInput = document.createElement('input');
   isWeightedInput.setAttribute("type", "checkbox");
-  isWeightedInput.checked = "true";
+  //isWeightedInput.checked = "true";
   makeDiv(isWeightedDiv, isWeightedInput, 'Is Space Weighted?: ');
 
   // is sample space div
@@ -875,6 +883,8 @@ $('#enumerate-designs-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(minLengthDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(maxCyclesDiv);
+  div.appendChild(document.createElement('br'));
   div.appendChild(isSampleSpaceDiv);
   div.appendChild(document.createElement('br'));
   div.appendChild(allowDuplicatesDiv);
@@ -888,6 +898,7 @@ $('#enumerate-designs-tooltip').click(() => {
   isWeightedDiv.style.visibility = 'hidden';
   maxLengthDiv.style.visibility = 'hidden';
   minLengthDiv.style.visibility = 'hidden';
+  maxCyclesDiv.style.visibility = 'hidden';
   isSampleSpaceDiv.style.visibility='hidden';
   allowDuplicatesDiv.style.visibility='hidden';
   BFSDiv.style.visibility='hidden';
@@ -899,6 +910,7 @@ $('#enumerate-designs-tooltip').click(() => {
       isWeightedDiv.style.visibility = 'visible';
       maxLengthDiv.style.visibility = 'visible';
       minLengthDiv.style.visibility = 'visible';
+      maxCyclesDiv.style.visibility = 'visible';
       isSampleSpaceDiv.style.visibility='visible';
       allowDuplicatesDiv.style.visibility='visible';
       BFSDiv.style.visibility='visible';
@@ -909,6 +921,7 @@ $('#enumerate-designs-tooltip').click(() => {
       isWeightedDiv.style.visibility = 'visible';
       maxLengthDiv.style.visibility = 'visible';
       minLengthDiv.style.visibility = 'visible';
+      maxCyclesDiv.style.visibility = 'hidden';
       isSampleSpaceDiv.style.visibility='visible';
       allowDuplicatesDiv.style.visibility='hidden';
       BFSDiv.style.visibility='hidden';
@@ -919,6 +932,7 @@ $('#enumerate-designs-tooltip').click(() => {
       isWeightedDiv.style.visibility = 'hidden';
       maxLengthDiv.style.visibility = 'hidden';
       minLengthDiv.style.visibility = 'hidden';
+      maxCyclesDiv.style.visibility = 'hidden';
       isSampleSpaceDiv.style.visibility='hidden';
       allowDuplicatesDiv.style.visibility='hidden';
       BFSDiv.style.visibility='hidden';
@@ -929,6 +943,7 @@ $('#enumerate-designs-tooltip').click(() => {
       isWeightedDiv.style.visibility = 'hidden';
       maxLengthDiv.style.visibility = 'hidden';
       minLengthDiv.style.visibility = 'hidden';
+      maxCyclesDiv.style.visibility = 'hidden';
       isSampleSpaceDiv.style.visibility='hidden';
       allowDuplicatesDiv.style.visibility='hidden';
       BFSDiv.style.visibility='hidden';
@@ -949,6 +964,7 @@ $('#enumerate-designs-tooltip').click(() => {
       let numDesigns = numDesignsInput.value;
       let maxLength = maxLengthInput.value;
       let minLength = minLengthInput.value;
+      let maxCycles = maxCyclesInput.value;
       let isWeighted = isWeightedInput.value;
       let isSampleSpace = isSampleSpaceInput.value;
       let allowDuplicates = allowDuplicatesInput.value;
@@ -996,122 +1012,83 @@ $('#enumerate-designs-tooltip').click(() => {
             content: div,
             className: "enumeration-swal"
           });
-          if (allowDuplicates === "true") {
-            endpoint.enumerateDesignsList(currentSpace, numDesigns, minLength, maxLength, bfs, isWeighted, isSampleSpace, (err, data) => {
-              if (err) {
-                swalError("Enumeration error: " + JSON.stringify(err));
-              } else {
-                div.removeChild(loadingDiv);
-                let para = document.createElement("p");
-                para.appendChild(document.createTextNode("Allow Duplicates: True"))
-                para.appendChild(document.createElement('br'));
-                para.appendChild(document.createTextNode("Number of Designs: " + data.length.toString()))
-                para.appendChild(document.createElement('br'));
-                if (isSampleSpace === "true") {
-                  para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
-                } else if (isWeighted === "true") {
-                  para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
-                } else {
-                  para.appendChild(document.createTextNode("[part1, part2, ..., partn]"))
-                }
-                para.appendChild(document.createElement('br'));
-                para.appendChild(document.createElement('br'));
-                data.map((list) => {
-                  para.appendChild(document.createTextNode("["));
-                  const length = list.length;
-                  let placedFirstPart = false;
-                  list.map((element, i) => {
-                    if (splitElementID(element.isBlank) !== "true") {
+          endpoint.enumerateDesigns(currentSpace, numDesigns, minLength, maxLength, maxCycles, bfs, isWeighted, isSampleSpace, allowDuplicates, (err, data) => {
+            if (err) {
+              swalError("Enumeration error: " + JSON.stringify(err));
+            } else {
+              div.removeChild(loadingDiv);
+              
+              // add export button
+              const exportBtn = document.createElement('button');
+              exportBtn.textContent = "Export All to CSV";
+              exportBtn.onclick = function() {
+                endpoint.enumerateCSV(currentSpace, numDesigns, minLength, maxLength, maxCycles, bfs, isWeighted, isSampleSpace, allowDuplicates);
+              };
+              div.appendChild(exportBtn);
 
-                      if (placedFirstPart === true) {
-                        para.appendChild(document.createTextNode(","));
-                      } else {
-                        placedFirstPart = true;
-                      }
+              let para = document.createElement("p");
+              para.appendChild(document.createElement('br'));
+              para.appendChild(document.createElement('br'));
+              para.appendChild(document.createTextNode("Allow Duplicates: " + allowDuplicates.toString()));
+              para.appendChild(document.createElement('br'));
+              para.appendChild(document.createTextNode("Number of Designs: " + data.numDesigns.toString()))
+              para.appendChild(document.createElement('br'));
 
-                      if (element.orientation === "reverseComplement") {
-                        para.appendChild(document.createTextNode(splitElementID(element.id) + "_REVERSE"));
-                      } else {
-                        para.appendChild(document.createTextNode(splitElementID(element.id)));
-                      }
-                    }
-
-                    // append stats
-                    if (length === i+1 && isSampleSpace === "true"){
-                      para.appendChild(document.createTextNode(","));
-                      para.appendChild(document.createTextNode(element.probability));
-                    } else if (length === i+1 && isWeighted === "true") {
-                      para.appendChild(document.createTextNode(","));
-                      para.appendChild(document.createTextNode(element.average_weight));
-                    }
-                  });
-                  para.appendChild(document.createTextNode("]"));
-                  para.appendChild(document.createElement('br'));
-                });
-          
-                div.appendChild(para);
+              // limit number of designs shown to DESIGN_LIMIT
+              const DESIGN_LIMIT = data.designs.length;
+              if (data.numDesigns > DESIGN_LIMIT) {
+                para.appendChild(document.createElement('br'));
+                para.appendChild(document.createElement('br'));
+                para.appendChild(document.createTextNode("Only showing up to " + DESIGN_LIMIT + " designs"));
+                para.appendChild(document.createElement('br'));
+                para.appendChild(document.createElement('br'));
               }
-            });
 
-          } else {
-            endpoint.enumerateDesignsSet(currentSpace, numDesigns, minLength, maxLength, bfs, isWeighted, isSampleSpace, (err, data) => {
-              if (err) {
-                swalError("Enumeration error: " + JSON.stringify(err));
+              if (isSampleSpace === "true") {
+                para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
+              } else if (isWeighted === "true") {
+                para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
               } else {
-                div.removeChild(loadingDiv);
-                let para = document.createElement("p");
-                para.appendChild(document.createTextNode("Allow Duplicates: False"))
-                para.appendChild(document.createElement('br'));
-                para.appendChild(document.createTextNode("Number of Designs: " + data.length.toString()))
-                para.appendChild(document.createElement('br'));
-                if (isSampleSpace === "true") {
-                  para.appendChild(document.createTextNode("[part1, part2, ..., partn, probability]"))
-                } else if (isWeighted === "true") {
-                  para.appendChild(document.createTextNode("[part1, part2, ..., partn, average weight of parts]"))
-                } else {
-                  para.appendChild(document.createTextNode("[part1, part2, ..., partn]"))
-                }
-                para.appendChild(document.createElement('br'));
-                para.appendChild(document.createElement('br'));
-                data.map((list) => {
-                  para.appendChild(document.createTextNode("["));
-                  const length = list.length;
-                  let placedFirstPart = false;
-                  list.map((element, i) => {
-                    if (splitElementID(element.isBlank) !== "true") {
-
-                      if (placedFirstPart === true) {
-                        para.appendChild(document.createTextNode(","));
-                      } else {
-                        placedFirstPart = true;
-                      }
-
-                      if (element.orientation === "reverseComplement") {
-                        para.appendChild(document.createTextNode(splitElementID(element.id) + "_REVERSE"));
-                      } else {
-                        para.appendChild(document.createTextNode(splitElementID(element.id)));
-                      }
-                      
-                    }
-
-                    // append stats
-                    if (length === i+1 && isSampleSpace === "true"){
-                      para.appendChild(document.createTextNode(","));
-                      para.appendChild(document.createTextNode(element.probability));
-                    } else if (length === i+1 && isWeighted === "true") {
-                      para.appendChild(document.createTextNode(","));
-                      para.appendChild(document.createTextNode(element.average_weight));
-                    }
-                  });
-                  para.appendChild(document.createTextNode("]"));
-                  para.appendChild(document.createElement('br'));
-                });
-          
-                div.appendChild(para);
+                para.appendChild(document.createTextNode("[part1, part2, ..., partn]"))
               }
-            });
-            
-          }
+              para.appendChild(document.createElement('br'));
+              para.appendChild(document.createElement('br'));
+              data.designs.map((list) => {
+                para.appendChild(document.createTextNode("["));
+                const length = list.length;
+                let placedFirstPart = false;
+                list.map((element, i) => {
+                  if (splitElementID(element.isBlank) !== "true") {
+
+                    if (placedFirstPart === true) {
+                      para.appendChild(document.createTextNode(","));
+                    } else {
+                      placedFirstPart = true;
+                    }
+
+                    if (element.orientation === "reverseComplement") {
+                      para.appendChild(document.createTextNode(splitElementID(element.id) + "_REVERSE"));
+                    } else {
+                      para.appendChild(document.createTextNode(splitElementID(element.id)));
+                    }
+                  }
+
+                  // append stats
+                  if (length === i+1 && isSampleSpace === "true"){
+                    para.appendChild(document.createTextNode(","));
+                    para.appendChild(document.createTextNode(element.probability));
+                  } else if (length === i+1 && isWeighted === "true") {
+                    para.appendChild(document.createTextNode(","));
+                    para.appendChild(document.createTextNode(element.average_weight));
+                  }
+                });
+                para.appendChild(document.createTextNode("]"));
+                para.appendChild(document.createElement('br'));
+              });
+        
+              div.appendChild(para);
+            }
+          });
           
           break;
 
@@ -1946,22 +1923,28 @@ function quickEnumerate(inputSpace, callback) {
   let numDesigns = 0;
   let minLength = 0;
   let maxLength = 0;
-  let isWeighted = true;
+  let maxCycles = 0;
+  let bfs = false;
+  let isWeighted = false;
   let isSampleSpace = false;
+  let allowDuplicates = true;
 
-  endpoint.enumerateDesignsList(
+  endpoint.enumerateDesigns(
     inputSpace,
     numDesigns,
     minLength,
     maxLength,
+    maxCycles,
+    bfs,
     isWeighted,
     isSampleSpace,
+    allowDuplicates,
     (err, data) => {
       if (err) {
         swalError("Enumeration error: " + JSON.stringify(err));
         callback(err, null);
       } else {
-        const designs = data.map(list =>
+        const designs = data.designs.map(list =>
           list
             .filter(element => element.isBlank)
             .map(element => element.id)
