@@ -56,8 +56,9 @@ public class AiController {
 
         System.out.printf("\nTokens:\nPrompt: %d, Completion: %d, Total: %d%n", promptTokens, completionTokens, totalTokens);
 
-        double costPerThousand = 0.0015; // example rate for input/output
-        double cost = (totalTokens / 1000.0) * costPerThousand;
+        double costPerThousandPrompt = 0.0015; // rates for gpt-3.5-turbo
+        double costPerThousandCompletion = 0.002;
+        double cost = (promptTokens / 1000.0) * costPerThousandPrompt + (completionTokens / 1000.0) * costPerThousandCompletion;
         System.out.printf("Estimated cost: $%.4f%n", cost);
 
         System.out.println("\n\nAI response: " + response.getResult().getOutput().getText());
