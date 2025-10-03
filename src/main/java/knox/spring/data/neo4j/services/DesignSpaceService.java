@@ -1140,6 +1140,15 @@ public class DesignSpaceService {
 		}
     }
 
+	public String renameDesignSpace(String targetSpaceID, String newSpaceID) throws DesignSpaceNotFoundException {
+		validateDesignSpaceOperator(targetSpaceID);
+		if (hasDesignSpace(newSpaceID)) {
+			return "ERROR: Design space with ID " + newSpaceID + " already exists."; // cannot rename to existing ID
+		}
+		designSpaceRepository.renameDesignSpace(targetSpaceID, newSpaceID);
+		return "Successfully renamed design space " + targetSpaceID + " to " + newSpaceID;
+	}
+
 	public void setGroupID(String targetSpaceID, String groupID) {
 		validateDesignSpaceOperator(targetSpaceID);
 		designSpaceRepository.setGroupID(targetSpaceID, groupID);

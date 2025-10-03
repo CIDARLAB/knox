@@ -62,6 +62,9 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
     @Query("MATCH (n:DesignSpace) RETURN n.spaceID")
     List<String> listDesignSpaces();
 
+    @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID SET n.spaceID = $newSpaceID")
+    void renameDesignSpace(@Param("targetSpaceID") String targetSpaceID, @Param("newSpaceID") String newSpaceID);
+
     @Query("MATCH (n:DesignSpace) RETURN count(n)")
     Integer getNumberOfDesignSpaces();
 

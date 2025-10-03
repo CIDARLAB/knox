@@ -23,7 +23,8 @@ const endpoints = {
   BESTPATH: "/designSpace/bestPath",
   CREATESAMPLESPACE: "/designSpace/createSampleSpace",
   PARTANALYTICS: "/designSpace/partAnalytics",
-  
+
+  RENAME: "/designSpace/rename",
   SETGROUPID: "/designSpace/setGroupID",
   GETGROUPID: "/designSpace/getGroupID",
   GETGROUPSIZE: "/designSpace/getGroupSize",
@@ -151,6 +152,15 @@ export function getGroupID(id, callback){
 export function getGroupSize(groupID, callback){
   let query = "?groupID=" + encodeURIComponent(groupID);
   d3.json(endpoints.GETGROUPSIZE + query, callback);
+}
+
+/**
+ * Rename Design Space
+ */
+export function renameDesignSpace(id, newSpaceID, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  query += "&newSpaceID=" + encodeURIComponent(newSpaceID);
+  d3.json(endpoints.RENAME + query, callback);
 }
 
 /***************************

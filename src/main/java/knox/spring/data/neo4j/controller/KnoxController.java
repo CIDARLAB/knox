@@ -1189,6 +1189,16 @@ public class KnoxController {
 		return designSpaceService.createSampleSpace(targetSpaceID, groupID);
 	}
 
+	@GetMapping("/designSpace/rename")
+	public Map<String, Object> renameDesignSpace(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+			@RequestParam(value = "newSpaceID", required = true) String newSpaceID) throws DesignSpaceNotFoundException {
+
+		String result = designSpaceService.renameDesignSpace(targetSpaceID, newSpaceID);
+		Map<String, Object> response = new HashMap<>();
+    	response.put("result", result);
+		return response;
+	}
+
 	@PostMapping("/designSpace/setGroupID")
 	public void setGroupID(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
 			@RequestParam(value = "groupID", required = true) String groupID){

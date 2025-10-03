@@ -45,7 +45,8 @@ const exploreBtnIDs = {
   sbol: "#sbol-btn",
   score: "#score-btn",
   bestPath: "#bestpath-btn",
-  group: "#group-btn"
+  group: "#group-btn",
+  rename: "#rename-btn"
   // save: "#save-btn",
 };
 
@@ -705,11 +706,64 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
+
+  let renameBtn = $('#rename-btn');
+  renameBtn.tooltipster({
+    content: $('#rename-design-space-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
 }
 
 
 $('#export-sbol-tooltip').click(() => {
   endpoint.exportDesign();
+});
+
+$('#rename-design-space-tooltip').click(() => {
+  let div = document.createElement('div');
+
+  // current spaceID
+  let currentSpaceIDDiv = document.createElement('div');
+  makeDiv(currentSpaceIDDiv, document.createTextNode(currentSpace), "Current Space ID: ");
+
+  // rename spaceID div
+  let renameDiv = document.createElement('div');
+  let renameInput = document.createElement('input');
+  makeDiv(renameDiv, renameInput, 'New Space ID: ');
+
+  // append all
+  div.appendChild(currentSpaceIDDiv)
+  div.appendChild(document.createElement('br'));
+  div.appendChild(document.createElement('br'));
+  div.appendChild(renameDiv);
+  div.appendChild(document.createElement('br'));
+
+  swal({
+    title: "Space ID",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (confirm) {
+
+      let newSpaceID = renameInput.value;
+
+      endpoint.renameDesignSpace(currentSpace, newSpaceID, (err, data) => {
+        if (err && !isEmptyObject(err)) {
+          swalError("Rename failed: " + JSON.stringify(err));
+        } else if (JSON.stringify(data.result).startsWith('"ERROR')) {
+          document.getElementById('search-tb').value = newSpaceID;
+          visualizeDesignAndHistory(newSpaceID);
+          swalError("Rename failed: " + JSON.stringify(data.result));
+        } else {
+          document.getElementById('search-tb').value = newSpaceID;
+          visualizeDesignAndHistory(newSpaceID);
+          swalSuccess(JSON.stringify(data.result));
+        }
+      });
+    }
+  });
 });
 
 // Individual Groups
@@ -1709,9 +1763,10 @@ export function swalError(errorMsg){
   });
 }
 
-export function swalSuccess(){
+export function swalSuccess(msg = ""){
   swal({
     title: "Success!",
+    text: msg,
     icon: "success"
   });
 }
