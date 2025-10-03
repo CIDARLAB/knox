@@ -2378,14 +2378,20 @@ export function injectAIChatBox() {
 }
 
 // --- AI Chat Box Logic ---
+let isFirstToggle = true;
 window.toggleChatBox = function() {
   const box = document.getElementById('ai-chat-box');
   box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+  if (isFirstToggle) {
+    appendMessage('AI', initialMessage);
+    isFirstToggle = false;
+  }
 };
 
 window.clearChat = function() {
   const msgDiv = document.getElementById('chat-messages');
   msgDiv.innerHTML = '';
+  isFirstToggle = true;
   promptHistory = [];
   isFirstMessage = true;
 };
@@ -2399,7 +2405,6 @@ window.appendMessage = function(sender, text) {
   msgDiv.scrollTop = msgDiv.scrollHeight;
 };
 
-let isFirstMessage = true;
 window.sendChatMessage = async function(event) {
   event.preventDefault();
   const input = document.getElementById('prompt');
@@ -2413,11 +2418,6 @@ window.sendChatMessage = async function(event) {
     + "\nCurrent Context: " + getCurrentContext()
     + "\nMe: " + prompt;
 
-  if (isFirstMessage) {
-    promptToSend = "Welcome the user to Knox and briefly explain its purpose.\n" + promptToSend;
-    isFirstMessage = false;
-  }
-
   addToPromptHistory("Me: " + prompt);
 
   input.value = '';
@@ -2427,13 +2427,45 @@ window.sendChatMessage = async function(event) {
       headers: {'Content-Type': 'text/plain'},
       body: promptToSend
     });
-    const aiReply = await response.text();
-    appendMessage('AI', aiReply);
-    addToPromptHistory("AI: " + aiReply);
+    let aiReply = await response.text();
+    let cleanedReply = checkKeyForKeywords(aiReply);
+    appendMessage('AI', cleanedReply);
+    addToPromptHistory("AI: " + cleanedReply);
   } catch (e) {
     appendMessage('AI', 'Sorry, there was an error.');
   }
 };
+
+function checkKeyForKeywords(aiReply) {
+  let cleanedReply = aiReply;
+
+  // Define keyword patterns and their handlers
+  const keywordHandlers = [
+    {
+      regex: /VISUALIZE_DESIGN_SPACE\((.*)\)/,
+      handler: (spaceId) => {
+        document.getElementById('search-tb').value = spaceId;
+        visualizeDesignAndHistory(spaceId);
+      }
+    },
+    // Add more keyword handlers here as needed
+    // {
+    //   regex: /ANOTHER_KEYWORD\(([^)]+)\)/,
+    //   handler: (param) => { ... }
+    // }
+  ];
+
+  for (const {regex, handler} of keywordHandlers) {
+    const match = aiReply.match(regex);
+    if (match) {
+      handler(match[1]);
+      cleanedReply = cleanedReply.replace(regex, '').replace(/\s+$/, '');
+      break; // Only handle the first matching keyword
+    }
+  }
+
+  return cleanedReply;
+}
 
 let promptHistory = [];
 function addToPromptHistory(prompt) {
@@ -2443,14 +2475,22 @@ function addToPromptHistory(prompt) {
   }
 }
 
+function getCurrentContext() {
+  return `currently viewed design spaceid is ${currentSpace || "null"}. `
+  + `currently viewed groupid is ${currentGroupID || "null"}. `
+}
+
+let initialMessage = 
+  "Welcome to Knox! I am your AI assistant. I can help you with questions about GOLDBAR, combinatorial design, and how to use Knox.\n"
+  + "You can ask me to retrieve information about design spaces and groups.\n"
+  + "I can also apply operators to design spaces for you.\n"
+  + "Feel free to ask me anything related to these topics!";
+
 let promptContext = "You are an AI assistant (agent) in Knox (with access to certain tools), a design tool for part-based DNA combinatorial libraries that are represented as graphs in Neo4j.\n"
   + "Knox implements GOLDBAR: Grammars for Combinatorial Biological Design Assembly"
   + "\nHere is an example GOLDBAR rule:\n"
   + "Do Not Repeat part A: " + JSON.stringify(exampleRules.R, null, 2)
   + "\nYou can help the user with questions about GOLDBAR, combinatorial design, and how to use Knox."
-  + " Try to keep your answers brief and to the point.";
-
-function getCurrentContext() {
-  return `currently viewed design spaceid is ${currentSpace || "null"}. `
-  + `currently viewed groupid is ${currentGroupID || "null"}. `
-}
+  + " Try to keep your answers brief and to the point."
+  + "\nKeywords for frontend actions (Always use keywords when sent by a Tool) and (only use one keyword at end) and (Do not mention keywords) user will not see the keyword:\n"
+  + "VISUALIZE_DESIGN_SPACE(spaceid) - use this keyword to visualize a design space\n";
