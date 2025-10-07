@@ -1095,6 +1095,10 @@ public class KnoxController {
             @RequestParam(value = "bfs", required = true, defaultValue = "false") boolean bfs,
 			@RequestParam(value = "allowDuplicates", required = false, defaultValue = "false") boolean allowDuplicates,
 			@RequestParam(value = "allDesigns", required = true, defaultValue = "false") boolean allDesigns) {
+
+		if ((numDesigns == 0 || numDesigns > 1_000_000) && !allDesigns) {
+			numDesigns = 1_000_000;
+		}
         
 		EnumerateType enumerateType = bfs ? EnumerateType.BFS : EnumerateType.DFS;  // DFS is default
 		Collection<List<Map<String, Object>>> designsCollection = designSpaceService.enumerateDesignSpace(targetSpaceID, numDesigns, minLength, maxLength, maxCycles,
