@@ -41,3 +41,23 @@
 Nicholas Roehner, James Roberts, Andrei Lapets, Dany Gould, Vidya Akavoor, Lucy Qin, D. Benjamin Gordon, Christopher Voigt, and Douglas Densmore. GOLDBAR: A Framework for Combinatorial Biological Design. ACS Synthetic Biology Article ASAP (2024). 
 
 DOI: https://pubs.acs.org/doi/full/10.1021/acssynbio.4c00296
+
+## Screen Shots
+
+<p align="center">
+  Design Spaces are represent as directed graphs
+</p>
+
+<p align="center">
+  <img src="images/WebImage1.jpg" alt="Logo" width="900"/>
+</p>
+
+
+<p align="center">
+  The Design Space above was created using the following GOLDBAR specification
+</p>
+
+<p align="center">
+  <img src="images/WebImage2.jpg" alt="Logo" width="900"/>
+</p>
+
