@@ -1745,7 +1745,12 @@ public class DesignSpaceService {
 	     return makeD3("source", source, "target", target);
 	}
 	
-	private void saveDesignSpace(DesignSpace space) {
+	public void saveDesignSpace(DesignSpace space) {
+
+		System.out.println("\nSaving SpaceID: " + space.getSpaceID());
+		System.out.println("Number of Nodes: " + space.getNodes().size());
+		System.out.println("Number of Edges: " + space.getEdges().size());
+
 		// Check to see if spaceID already exists
 		String spaceID = space.getSpaceID();
 		int v = 1;
@@ -1779,7 +1784,7 @@ public class DesignSpaceService {
 //			commit.getSnapshot().loadEdges(commitIDToEdges.get(commit.getCommitID()));
 //
 //		}
-		System.out.println("\nSaving DesignSpace!\n");
+		//System.out.println("\nSaving DesignSpace!\n");
 		
 		designSpaceRepository.save(space);
 	}
