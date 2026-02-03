@@ -54,6 +54,7 @@ public class GoldbarGeneration {
         this.ruleOptions.add("T");
         this.ruleOptions.add("I");
         this.ruleOptions.add("M");
+        this.ruleOptions.add("NI");
         this.ruleOptions.add("O");
         this.ruleOptions.add("N");
         this.ruleOptions.add("L");
@@ -106,6 +107,10 @@ public class GoldbarGeneration {
 		
 		if (rules.contains("M")) {
 			createRuleM();
+		}
+
+        if (rules.contains("NI")) {
+			createRuleNI();
 		}
 
 		if (rules.contains("O")) {
@@ -551,6 +556,23 @@ public class GoldbarGeneration {
         }
 
         return mGoldbar;
+    }
+
+    private Map<String, String> createRuleNI() {
+        Map<String, String> notIncludeGoldbar = new HashMap<>();
+        for (String part : this.columnValues.get("NI")) {
+            
+            String g = new String();
+            g = String.format(
+                "zero-or-more(%1$s)", 
+                handleDirection("any_except_" + part)          // %1$s = any_except_parts1
+            );
+
+            notIncludeGoldbar.put(part, g);
+            this.goldbar.put("_" + part + "_Rule_NI", g);
+        }
+
+        return notIncludeGoldbar;
     }
 
     private Map<String, String> createRuleE() {
