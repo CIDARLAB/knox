@@ -19,30 +19,35 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
 import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @RelationshipProperties
 public class Edge {
-    @Id
+    @RelationshipId
     @GeneratedValue
     private Long id;
 
-    @TargetNode Node head;
+    @TargetNode 
+    Node head;
 
     Node tail;
 
-    @Property ArrayList<String> componentIDs;
+    @Property 
+    ArrayList<String> componentIDs;
     
-    @Property ArrayList<String> componentRoles;
+    @Property 
+    ArrayList<String> componentRoles;
 
-    @Property Orientation orientation;
+    @Property 
+    Orientation orientation;
 
-    @Property ArrayList<Double> weight;
+    @Property 
+    ArrayList<Double> weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Edge.class);
 

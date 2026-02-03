@@ -38,10 +38,11 @@ public class NodeSpace {
 	@GeneratedValue
     Long id;
 	
-	@Property int nodeIndex;
+	@Property 
+	int nodeIndex;
 	
 	@Relationship(type = "CONTAINS") 
-    Set<Node> nodes;
+    private Set<Node> nodes;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(NodeSpace.class);
 	
@@ -1178,7 +1179,7 @@ public class NodeSpace {
 	public void clearNodeWeights() {
 		Set<Node> nodes = getNodes();
 		for (Node node: nodes) {
-			node.hasWeight = false;
+			node.setHasWeight(false);
 		}
 	}
 

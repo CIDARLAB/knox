@@ -88,7 +88,7 @@ public class DesignAnalysis {
 				if (edge.getTailID() == node.getNodeID()) {
 					
 					if (edge.isBlank()) {
-						if (edge.getHead().hasWeight()) {
+						if (edge.getHead().getHasWeight()) {
 							if (edge.getTail().getWeight() > edge.getHead().getWeight()) {
 								edge.getHead().setWeight(edge.getTail().getWeight());
 							}
@@ -98,7 +98,7 @@ public class DesignAnalysis {
 
 
 					} else {
-						if (edge.getHead().hasWeight()) {
+						if (edge.getHead().getHasWeight()) {
 							if ((edge.getTail().getWeight() + edge.getMaxWeight()) > edge.getHead().getWeight()) {
 								edge.getHead().setWeight(edge.getTail().getWeight() + edge.getMaxWeight());
 							}

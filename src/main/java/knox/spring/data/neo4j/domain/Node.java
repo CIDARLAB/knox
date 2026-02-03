@@ -27,16 +27,20 @@ public class Node {
 	@GeneratedValue
     Long id;
 
-    @Property String nodeID;
+    @Property 
+	private String nodeID;
 
     @Relationship(type = "PRECEDES") 
-	Set<Edge> edges = new HashSet<>();
+	private Set<Edge> edges = new HashSet<>();
     
-    @Property ArrayList<String> nodeTypes;
+    @Property 
+	private ArrayList<String> nodeTypes;
 
-	@Property boolean hasWeight;
+	@Property 
+	private boolean hasWeight;
 
-	@Property double weight;
+	@Property 
+	private double weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Node.class);
 
@@ -635,7 +639,11 @@ public class Node {
 		return this.weight;
 	}
 
-	public boolean hasWeight() {
+	public boolean getHasWeight() {
 		return this.hasWeight;
+	}
+
+	public void setHasWeight(boolean hasWeight) {
+		this.hasWeight = hasWeight;
 	}
 }
