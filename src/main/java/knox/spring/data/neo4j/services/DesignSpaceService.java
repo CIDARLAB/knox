@@ -1311,7 +1311,7 @@ public class DesignSpaceService {
 
 		Map<String, Map<String, Object>> thisPartAnalytics = designAnalysis.partAnalytics();
 
-		System.out.println(thisPartAnalytics);
+		//System.out.println(thisPartAnalytics);
 
 		return thisPartAnalytics;
 	}
@@ -1489,7 +1489,6 @@ public class DesignSpaceService {
     }
 
 	private DesignSpace loadDesignSpace(String targetSpaceID) {
-		System.out.println("\nLoad Design Space\n");
 		Long graphId = getDesignSpaceGraphID(targetSpaceID);
         DesignSpace targetSpace = null;
 		if (graphId != null) {
@@ -1509,7 +1508,6 @@ public class DesignSpaceService {
 //			commit.setSnapshot(reloadSnapshot(commit.getSnapshot()));
 //		}
 
-		System.out.println("Design Space Loaded\n");
 
 		return targetSpace;
 	}
