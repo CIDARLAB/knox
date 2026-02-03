@@ -15,10 +15,11 @@ import org.springframework.data.neo4j.core.schema.Property;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class DesignSpace extends NodeSpace {
-    @Property String spaceID;
+    @Property 
+	private String spaceID;
 
-	@Property String groupID;
-
+	@Property 
+	private String groupID;
 
     @Relationship(type = "ARCHIVES") 
 	Set<Branch> branches;
@@ -247,7 +248,7 @@ public class DesignSpace extends NodeSpace {
 
 	public void setGroupID(String groupID) {
 		this.groupID = groupID;
-		if (this.groupID.equals("")) {
+		if (this.groupID == null || this.groupID.equals("")) {
 			this.groupID = "none";
 		}
 	}
