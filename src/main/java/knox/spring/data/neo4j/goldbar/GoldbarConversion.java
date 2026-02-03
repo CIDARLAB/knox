@@ -10,12 +10,7 @@ import knox.spring.data.neo4j.operations.ANDOperator;
 import knox.spring.data.neo4j.operations.MergeOperator;
 import knox.spring.data.neo4j.operations.ReverseOperator;
 
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import org.json.JSONObject;
 import org.json.JSONArray;
