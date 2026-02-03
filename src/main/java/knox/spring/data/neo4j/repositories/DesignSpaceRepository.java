@@ -91,4 +91,9 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
 
     @Query("MATCH (n:DesignSpace) WHERE n.groupID = $group RETURN n.spaceID, n.designGroupIndex ORDER BY n.designGroupIndex")
     List<Map<String, Object>> getDesignsFromGroup(@Param("group") String group);
+    @Query(
+        "MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID " +
+        "MATCH (n)-[:CONTAINS]->(c:ContextSpace) " +
+        "RETURN c.spaceID")
+    String getContextSpaceID(@Param("targetSpaceID") String targetSpaceID);
 }

@@ -7,6 +7,7 @@ import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
+import knox.spring.data.neo4j.domain.ContextSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.domain.dto.DesignSpaceEdgeDTO;
 import knox.spring.data.neo4j.exception.*;
@@ -27,6 +28,8 @@ import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.NodeRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
+import knox.spring.data.neo4j.repositories.ContextSpaceRepository;
+import knox.spring.data.neo4j.repositories.ComponentRepository;
 import knox.spring.data.neo4j.sample.DesignSampler;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
@@ -88,6 +91,10 @@ public class DesignSpaceService {
     
     @Autowired SnapshotRepository snapshotRepository;
     
+    @Autowired ContextSpaceRepository contextSpaceRepository;
+
+	@Autowired ComponentRepository componentRepository;
+
     private static final Logger LOG = LoggerFactory.getLogger(DesignSpaceService.class);
 
     public static final String RESERVED_ID = "knox";
@@ -1123,7 +1130,9 @@ public class DesignSpaceService {
 		System.out.println("\nDeleting Design Space: " + targetSpaceID + "\n");
         validateDesignSpaceOperator(targetSpaceID);
 
+		String contextSpaceID = designSpaceRepository.getContextSpaceID(targetSpaceID);
         designSpaceRepository.deleteDesignSpace(targetSpaceID);
+		contextSpaceRepository.deleteContextSpaceIfOrphan(contextSpaceID);
     }
 
 	public void deleteDesignSpaceGroup(String groupID) {
@@ -1785,6 +1794,11 @@ public class DesignSpaceService {
 		//System.out.println("\nSaving DesignSpace!\n");
 		
 		designSpaceRepository.save(space);
+	}
+
+	public void saveContextSpace(ContextSpace space) {
+		System.out.println("\nSaving SpaceID: " + space.getSpaceID());
+		contextSpaceRepository.save(space);
 	}
 	
 	private String convertCSVRole(String csvRole) {

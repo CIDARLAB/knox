@@ -27,6 +27,9 @@ public class DesignSpace extends NodeSpace {
     @Relationship(type = "SELECTS") 
 	Branch headBranch;
 
+	@Relationship(type = "CONTAINS")
+	ContextSpace contextSpace;
+
     int commitIndex;
 
     public DesignSpace() {
@@ -257,3 +260,11 @@ public class DesignSpace extends NodeSpace {
 		return this.groupID;
 	}
 }
+	public void setContextSpace(ContextSpace contextSpace) {
+		this.contextSpace = contextSpace;
+	}
+
+	public ContextSpace getContextSpace() {
+		return contextSpace;
+	}
+

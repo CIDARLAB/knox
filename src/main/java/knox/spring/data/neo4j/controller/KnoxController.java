@@ -30,6 +30,8 @@ import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.NodeRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
+import knox.spring.data.neo4j.repositories.ContextSpaceRepository;
+import knox.spring.data.neo4j.repositories.ComponentRepository;
 
 import org.jdom.Document;
 import org.sbolstandard.core2.SBOLConversionException;
@@ -70,6 +72,10 @@ public class KnoxController {
     @Autowired NodeRepository nodeRepository;
     
     @Autowired SnapshotRepository snapshotRepository;
+    
+    @Autowired ContextSpaceRepository contextSpaceRepository;
+
+	@Autowired ComponentRepository componentRepository;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
