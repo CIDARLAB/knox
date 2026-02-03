@@ -250,6 +250,19 @@ public class NodeSpace {
 			return false;
 		}
 	}
+
+	public Node getAcceptNode() {
+    	
+    	if (hasNodes()) {
+    		for (Node node : nodes) {
+    			if (node.isAcceptNode()) {
+    				return node;
+    			}
+    		}
+    	}
+
+    	return null;
+    }
 	
 	public Set<Node> getAcceptNodes() {
     	Set<Node> acceptNodes = new HashSet<Node>();
