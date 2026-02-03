@@ -925,50 +925,6 @@ public class DesignSpaceService {
 		return goldbarAndCategories;
 	}
 
-	private String constellationGoldbarRequest(String OutputSpacePrefix, String goldbar, String categories) {
-		
-		String responseBody = "Error";
-
-		try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-			// Create the POST request
-            HttpPost postRequest = new HttpPost("http://localhost:8082/postSpecs");
-            postRequest.setHeader("Content-Type", "application/json");
-
-			String parameters = String.format(
-				"{" +
-				"\"designName\":" + "\"%1$s\"," +
-				"\"specification\":" + "\"%2$s\"," +
-				"\"categories\":" + "%3$s," +
-				"\"numDesigns\":" + "\"1\"," +
-				"\"maxCycles\":" + "\"1\"," +
-				"\"number\":" + "\"2.0\"," +
-				"\"name\":" + "\"specificationname\"," +
-				"\"clientid\":" + "\"userid\"," +
-				"\"representation\":" + "\"EDGE\"" +
-			    "}",
-				 OutputSpacePrefix, goldbar, categories);
-
-			System.out.println(parameters);
-
-			postRequest.setEntity(new StringEntity(parameters));
-
-			try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
-                // Handle the response
-                responseBody = EntityUtils.toString(response.getEntity());
-                System.out.println("Status code: " + response.getStatusLine().getStatusCode());
-                System.out.println("Response body: " + responseBody);
-
-				// Parse the JSON response and extract the "sbol" portion
-                JSONObject jsonResponse = new JSONObject(responseBody);
-                if (jsonResponse.has("sbol")) {
-                    return jsonResponse.getString("sbol");
-                } else {
-                    return "SBOL not found in response";
-                }
-            }
-		}  catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		return responseBody;
 	}
