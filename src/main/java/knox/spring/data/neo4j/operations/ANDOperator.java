@@ -16,8 +16,8 @@ public class ANDOperator {
 	
 	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, int tolerance, boolean isComplete, Set<String> roles, ArrayList<String> irrelevantParts) {
 		
-		System.out.println("AND Operator:");
-		System.out.println("tolerance: " + String.valueOf(tolerance));
+		//System.out.println("AND Operator:");
+		//System.out.println("tolerance: " + String.valueOf(tolerance));
 		Product product = new Product(inputSpaces.get(0));
 				
 		for (int i = 1; i < inputSpaces.size(); i++) {
