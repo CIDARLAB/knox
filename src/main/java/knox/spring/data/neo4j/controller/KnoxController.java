@@ -656,60 +656,6 @@ public class KnoxController {
 	}
 
 	/**
-	 * @api {post} /designSpace/merge Merge
-	 * @apiName mergeDesignSpaces
-	 * @apiGroup DesignSpace
-	 * 
-	 * @apiParam {String[]} mergeSpaceIDs IDs for the input design spaces to be merged.
-	 * @apiParam {String[]} andSpaceIDs IDs for the input design spaces to be anded with output of merge.
-	 * @apiParam {String} [mergeOutputSpaceID] ID for the output design space resulting from Merge. 
-	 * @apiParam {String} [andOutputSpaceID] ID for the output design space resulting from And.
-	 * @apiParam {Integer=0,1,2,3,4} mergeTolerance=1 This parameter determines the criteria by which edges are matched. If mergeTolerance
-	 * = 0, then matching edges must be labeled with the same component IDs and roles. If mergeTolerance = 1 or 2, then matching edges 
-	 * must share at least one component ID and role. If mergeTolerance = 3, then matching edges must be labeled with the same component 
-	 * roles. If mergeTolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
-	 * labeled with the same orientation. If mergeTolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
-	 * unioned.
-	 * @apiParam {Integer=0,1,2,3,4} andTolerance=1 This parameter determines the criteria by which edges are matched. If AndTolerance
-	 * = 0, then matching edges must be labeled with the same component IDs and roles. If andTolerance = 1 or 2, then matching edges 
-	 * must share at least one component ID and role. If tolerance = 3, then matching edges must be labeled with the same component 
-	 * roles. If andTolerance = 4, then matching edges must share at least one component role. In any case, matching edges must be 
-	 * labeled with the same orientation. If andTolerance <= 1, then labels on matching edges are intersected; otherwise, they are 
-	 * unioned.
-	 * @apiParam {Integer=0,1,2} weightTolerance=0 This parameter determines the criteria by which how to combine the weights of matched edges. 
-	 * If weightTolerance = 0, the weights are summed. 
-	 * If weightTolerance = 1, the weights are summed if their edges are the same distance to Start or Accept Node, otherwise they are averaged. 
-	 * If weightTolerance = 2, the weights are summed if their edges are next to the same part, otherwise they are averaged.
-	 * @apiParam {Boolean} isComplete=true If true, then only the matching edges that belong to paths for designs common to all 
-	 * input design spaces are retained.
-	 * @apiParam {String[]} [roles] If specified, then only edges labeled with at least one of these roles will be AND-ed.
-	 * 
-	 * @apiDescription Merges designs from merge design spaces then ands output of merge with and design spaces then Enumerates Set.
-	 */
-	
-	 @RequestMapping(value = "/designSpace/mergeThenAndThenEnumerate", method = RequestMethod.GET)
-	 public HashSet<List<Map<String, Object>>> mergeThenAndThenEnumerateDesignSpaces(@RequestParam(value = "mergeSpaceIDs", required = true) List<String> mergeSpaceIDs,
-	 		@RequestParam(value = "andSpaceIDs", required = true) List<String> andSpaceIDs,
-			@RequestParam(value = "mergeOutputSpaceID", required = true) String mergeOutputSpaceID,
-			@RequestParam(value = "andOutputSpaceID", required = true) String andOutputSpaceID,
-			@RequestParam(value = "mergeTolerance", required = false, defaultValue = "0") int mergeTolerance,
-			@RequestParam(value = "andTolerance", required = false, defaultValue = "1") int andTolerance,
-			@RequestParam(value = "weightTolerance", required = false, defaultValue = "0") int weightTolerance,
-			@RequestParam(value = "isComplete", required = false, defaultValue = "true") boolean isComplete,
-			@RequestParam(value = "roles", required = false, defaultValue = "") Set<String> roles) {
-		
-		Set<String> uniqueRoles = new HashSet<String>(roles);
-		
-		try {
-			return designSpaceService.mergeThenAndThenEnumerateDesignSpaces(mergeSpaceIDs, andSpaceIDs, 
-					mergeOutputSpaceID, andOutputSpaceID, mergeTolerance, andTolerance, weightTolerance, isComplete, roles);
-		} catch (ParameterEmptyException | DesignSpaceNotFoundException | 
-				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
-			return null;
-		}
-	 }
-
-	/**
 	 * @api {post} /designSpace/or OR
 	 * @apiName orDesignSpaces
 	 * @apiGroup DesignSpace
