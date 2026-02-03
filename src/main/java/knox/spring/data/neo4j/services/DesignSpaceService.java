@@ -353,46 +353,16 @@ public class DesignSpaceService {
     	saveDesignSpace(outputSpace);
     }
 
-	public HashSet<List<Map<String, Object>>> mergeThenAndThenEnumerateDesignSpaces(List<String> mergeSpaceIDs, List<String> andSpaceIDs, String mergeOutputSpaceID, String andOutputSpaceID,
-			int mergeTolerance, int andTolerance, int weightTolerance, boolean isComplete, Set<String> roles)
-    		throws ParameterEmptyException, DesignSpaceNotFoundException, 
-    		DesignSpaceConflictException, DesignSpaceBranchesConflictException {
 
-		// Merge
-    	validateCombinationalDesignSpaceOperator(mergeSpaceIDs, mergeOutputSpaceID);
 
-    	List<NodeSpace> mergeInputSpaces = new ArrayList<NodeSpace>(mergeSpaceIDs.size());
-    	
-    	DesignSpace mergeOutputSpace = loadIOSpaces(mergeSpaceIDs, mergeOutputSpaceID, mergeInputSpaces);
-    	
-    	MergeOperator.apply(mergeInputSpaces, mergeOutputSpace, mergeTolerance, weightTolerance, roles, new ArrayList<String>());
 
-    	saveDesignSpace(mergeOutputSpace);
 
-		// AND
-		validateCombinationalDesignSpaceOperator(andSpaceIDs, andOutputSpaceID);
 
-    	List<NodeSpace> andInputSpaces = new ArrayList<NodeSpace>(andSpaceIDs.size());
-    	
-    	DesignSpace andOutputSpace = loadIOSpaces(andSpaceIDs, andOutputSpaceID, andInputSpaces);
 
-		andInputSpaces.add((NodeSpace) mergeOutputSpace);
 
-		System.out.println("length of And Input Spaces");
-		System.out.println(andInputSpaces.size());
-    	
-    	ANDOperator.apply(andInputSpaces, andOutputSpace, andTolerance, isComplete, roles, new ArrayList<String>());
 
-		saveDesignSpace(andOutputSpace);
 
-		// Enumerate
-		DesignSampler designSampler = new DesignSampler(andOutputSpace);
-        
-		System.out.println("\nBegin Enumeration\n");
-        HashSet<List<Map<String, Object>>> samplerOutput = designSampler.enumerateSet(0, 0, 0, false, EnumerateType.BFS);
 
-		return designSampler.processEnumerateSet(samplerOutput, true, false, false);
-		
     }
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
