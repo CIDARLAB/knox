@@ -912,6 +912,19 @@ public class NodeSpace {
     		return false;
     	}
     }
+
+	public Boolean isEmpty() {
+		// An Empty NodeSpace has only blank edges
+
+		Set<Edge> edges = getEdges();
+		for (Edge edge : edges) {
+			if (!edge.isBlank()) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
     
     public String toString() {
     	String spaceMap = "";
