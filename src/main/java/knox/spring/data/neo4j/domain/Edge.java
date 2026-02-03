@@ -812,8 +812,10 @@ public class Edge {
         Set<String> compIDsTail2 = new HashSet<>();
 
         // Check if edges have same up stream part
-        compIDsHead1 = getNextPartsHead(compIDsHead1);
-        compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+        Integer count1 = 0;
+        Integer count2 = 0;
+        compIDsHead1 = getNextPartsHead(compIDsHead1, count1);
+        compIDsHead2 = edge.getNextPartsHead(compIDsHead2, count2);
 
         for (String compID : compIDsHead2) {
             if (compIDsHead1.contains(compID)) {
@@ -868,9 +870,10 @@ public class Edge {
         
         // Check if first edges have same up stream part
         if (this.tail.isStartNode() && edge.getTail().isStartNode()) {
-
-            compIDsHead1 = getNextPartsHead(compIDsHead1);
-            compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+            Integer count1 = 0;
+            Integer count2 = 0;
+            compIDsHead1 = getNextPartsHead(compIDsHead1, count1);
+            compIDsHead2 = edge.getNextPartsHead(compIDsHead2, count2);
             //System.out.println(compIDsHead1);
             //System.out.println(compIDsHead2);
 
@@ -905,8 +908,10 @@ public class Edge {
         }
 
         // Check if edges have same up stream part
-        compIDsHead1 = getNextPartsHead(compIDsHead1);
-        compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+        Integer count1 = 0;
+        Integer count2 = 0;
+        compIDsHead1 = getNextPartsHead(compIDsHead1, count1);
+        compIDsHead2 = edge.getNextPartsHead(compIDsHead2, count2);
         //System.out.println(compIDsHead1);
         //System.out.println(compIDsHead2);
 
@@ -1040,8 +1045,10 @@ public class Edge {
         // Check if first edges have same up stream part
         if (this.tail.isStartNode() && edge.getTail().isStartNode()) {
 
-            compIDsHead1 = getNextPartsHead(compIDsHead1);
-            compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+            Integer count1 = 0;
+            Integer count2 = 0;
+            compIDsHead1 = getNextPartsHead(compIDsHead1, count1);
+            compIDsHead2 = edge.getNextPartsHead(compIDsHead2, count2);
 
             for (String compID : compIDsHead2) {
                 if (compIDsHead1.contains(compID)) {
@@ -1064,8 +1071,10 @@ public class Edge {
         Set<String> compIDsTail2 = new HashSet<>();
         
         // Check if edges have same down stream part
-        compIDsHead1 = getNextPartsHead(compIDsHead1);
-        compIDsHead2 = edge.getNextPartsHead(compIDsHead2);
+        Integer count1 = 0;
+        Integer count2 = 0;
+        compIDsHead1 = getNextPartsHead(compIDsHead1, count1);
+        compIDsHead2 = edge.getNextPartsHead(compIDsHead2, count2);
 
         for (String compID : compIDsHead2) {
             if (compIDsHead1.contains(compID)) {
@@ -1092,11 +1101,15 @@ public class Edge {
         return same;
     }
 
-    private Set<String> getNextPartsHead(Set<String> compIDs){
+    private Set<String> getNextPartsHead(Set<String> compIDs, Integer count){
         for (Edge e : head.getEdges()) {
             
-            if (e.isBlank()) {
-                compIDs = getNextPartsHead(compIDs);
+            if (count > 5) {
+                System.out.println("Blank Loop at: " + e.getHeadID());
+                return compIDs;
+
+            } else if (e.isBlank()) {
+                compIDs = e.getNextPartsHead(compIDs, count + 1);
 
             } else {
                 compIDs.addAll(e.getComponentIDs());
@@ -1110,9 +1123,11 @@ public class Edge {
 
     private Set<String> getNextPartsTail(Set<String> compIDs, HashMap<String, Set<Edge>> nodeIDToIncomingEdges){
         for (Edge e : tail.getIncomingEdges(nodeIDToIncomingEdges)) {
+
+            //TODO: add loop detection
             
             if (e.isBlank()) {
-                compIDs = getNextPartsTail(compIDs, nodeIDToIncomingEdges);
+                compIDs = e.getNextPartsTail(compIDs, nodeIDToIncomingEdges);
 
             } else {
                 compIDs.addAll(e.getComponentIDs());
