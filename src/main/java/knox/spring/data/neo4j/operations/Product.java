@@ -143,10 +143,10 @@ public class Product {
 			
 			for (Edge colEdge : colEdges) {
 				String colIDs = colEdge.getTailID() + colEdge.getHeadID();
-				if (isStrongProduct && rowEdge.isMatching(colEdge, tolerance, roles)) {
+				/*if (isStrongProduct && rowEdge.isMatching(colEdge, tolerance, roles)) {
 					System.out.println(rowEdge);
 					System.out.println(colEdge);
-				}
+				}*/
 				if (rowEdge.isMatching(colEdge, tolerance, roles) && 
 						(weightTolerance < 3 || 
 						(weightTolerance == 3 && colEdge.sameNextPartsHead(rowEdge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace)) ||
@@ -165,6 +165,8 @@ public class Product {
 					
 					rowIDsToProductEdges.get(rowIDs).add(productEdge);
 					colIDsToProductEdges.get(colIDs).add(productEdge);
+
+					//System.out.println(productEdge);
 				}
 			}
     	}
