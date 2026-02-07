@@ -259,7 +259,6 @@ public class DesignSpace extends NodeSpace {
 	public String getGroupID() {
 		return this.groupID;
 	}
-}
 	public void setContextSpace(ContextSpace contextSpace) {
 		this.contextSpace = contextSpace;
 	}
@@ -267,4 +266,5 @@ public class DesignSpace extends NodeSpace {
 	public ContextSpace getContextSpace() {
 		return contextSpace;
 	}
+}
 

@@ -45,7 +45,7 @@ public class DesignSampler {
 		double stdev = 0;
 		if (isWeighted && !positiveOnly && !isSampleSpace) {
 			// Get average weight of edges and standard deviation.
-			avgWeight = Double.parseDouble(space.getAvgScoreofAllNonBlankEdges());
+			avgWeight = space.getAvgScoreofAllNonBlankEdges();
 			stdev = space.getStdev();
 		}
 
