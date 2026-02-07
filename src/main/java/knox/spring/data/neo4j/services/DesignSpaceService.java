@@ -363,7 +363,6 @@ public class DesignSpaceService {
 
 
 
-    }
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
     		int tolerance, int weightTolerance, Set<String> roles) {
