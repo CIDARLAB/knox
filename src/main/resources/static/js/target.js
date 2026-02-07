@@ -139,37 +139,41 @@ export default class Target{
       .attr("title", (d) => {
         if (d.hasOwnProperty("componentIDs") && d["componentIDs"].length > 0) {
           let titleStr = "";
-          const length = d["componentIDs"].length;
+          let partLst = [];
+          let weightLst = [];
           for(let i=0; i<d["componentIDs"].length; i++){
-            titleStr += splitElementID(d["componentIDs"][i]);
-            if (length !== i+1){
-              titleStr += ",";
-            }
+            partLst.push(splitElementID(d["componentIDs"][i]));
+          }
+
+          if (partLst.length > 0){
+            titleStr += "compIDs: [" + partLst.join(",") + "]";
           }
 
           if (d.hasOwnProperty("weight")) {
-            titleStr += ",";
-            const lengthWeights = d["weight"].length;
             for(let i=0; i<d["weight"].length; i++){
-              titleStr += d["weight"][i];
-              if (lengthWeights !== i+1){
-                titleStr += ",";
-              }
+              weightLst.push(parseFloat(d["weight"][i].toFixed(2)));
             }
-          } 
+          }
+
+          if (weightLst.length > 0 && weightLst.some(x => x !== 0)){
+            titleStr += " ,";
+            titleStr += "weights: [" + weightLst.join(",") + "]";
+          }
 
           return titleStr;
         } else if (d.hasOwnProperty("weight")) {
           let titleStr = "";
-          const lengthWeights = d["weight"].length;
+          let weightLst = [];
+          
           for(let i=0; i<d["weight"].length; i++){
-            titleStr += d["weight"][i];
-            if (lengthWeights !== i+1){
-              titleStr += ",";
-            }
+            weightLst.push(parseFloat(d["weight"][i].toFixed(2)));
           }
 
-          return titleStr
+          if (weightLst.length > 0 && weightLst.some(x => x !== 0)){
+            titleStr += "weights: [" + weightLst.join(",") + "]";
+          }
+
+          return titleStr;
         }
       })
       .attr("href", (d) => {
