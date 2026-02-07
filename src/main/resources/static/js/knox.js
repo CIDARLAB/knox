@@ -46,7 +46,8 @@ const exploreBtnIDs = {
   score: "#score-btn",
   bestPath: "#bestpath-btn",
   group: "#group-btn",
-  rename: "#rename-btn"
+  rename: "#rename-btn",
+  show: "#show-btn",
   // save: "#save-btn",
 };
 
@@ -714,8 +715,21 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
+
+  let showBtn = $('#show-btn');
+  showBtn.tooltipster({
+    content: $('#show-sbol-tooltips'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
 }
 
+$('#show-sbol-tooltips').click(() => {
+
+  targets.search.showTooltips();
+
+});
 
 $('#export-sbol-tooltip').click(() => {
   endpoint.exportDesign();

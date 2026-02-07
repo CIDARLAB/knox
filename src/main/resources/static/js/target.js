@@ -266,6 +266,12 @@ export default class Target{
     });
   }
 
+  showTooltips(){
+    $('.sboltip').each(function () {
+      $(this).tooltipster('open');
+    });
+  }
+  
   setHistory(graph){
     let zoom = d3.behavior.zoom()
       .scaleExtent([1, 10])
