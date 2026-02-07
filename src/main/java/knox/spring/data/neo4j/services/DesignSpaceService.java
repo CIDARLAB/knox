@@ -894,9 +894,6 @@ public class DesignSpaceService {
 		return goldbarAndCategories;
 	}
 
-
-	}
-    
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
         branchRepository.deleteBranch(targetSpaceID, targetBranchID);
     }
