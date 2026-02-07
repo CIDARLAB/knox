@@ -1103,7 +1103,7 @@ public class NodeSpace {
 
 	}
 
-	public String getTotalScoreOfNonBlankEdges() {
+	public Double getTotalScoreOfNonBlankEdges() {
 		Set<Edge> allEdges = getEdges();
 		Set<Edge> blankEdges = getBlankEdges();
 
@@ -1120,10 +1120,10 @@ public class NodeSpace {
 			blankEdgesTotalWeight += b.weight.get(0);
 		}
 
-		return String.valueOf(totalWeight - blankEdgesTotalWeight);
+		return totalWeight - blankEdgesTotalWeight;
 	}
 
-	public String getTotalScoreOfEdges() {
+	public Double getTotalScoreOfEdges() {
 		Set<Edge> allEdges = getEdges();
 
 		double totalWeight = 0;
@@ -1134,10 +1134,10 @@ public class NodeSpace {
 			}
 		}
 
-		return String.valueOf(totalWeight);
+		return totalWeight;
 	}
 
-	public String getAvgScoreofAllNonBlankEdges() {
+	public Double getAvgScoreofAllNonBlankEdges() {
 		Set<Edge> allEdges = getEdges();
 
 		double totalNumberOfNonBlankEdges = 0;
@@ -1152,10 +1152,10 @@ public class NodeSpace {
 			}
 		}
 
-		return String.valueOf(totalWeightOfNonBlankEdges / totalNumberOfNonBlankEdges);
+		return totalWeightOfNonBlankEdges / totalNumberOfNonBlankEdges;
 	}
 
-	public String getAvgScoreofAllEdges() {
+	public Double getAvgScoreofAllEdges() {
 		Set<Edge> allEdges = getEdges();
 
 		double totalNumberOfEdges = 0;
@@ -1168,12 +1168,12 @@ public class NodeSpace {
 			}
 		}
 
-		return String.valueOf(totalWeightOfEdges / totalNumberOfEdges);
+		return totalWeightOfEdges / totalNumberOfEdges;
 	}
 
 	public double getStdev() {
 		// Sample Standard Deviation Formula
-		double avgWeight = Double.parseDouble(getAvgScoreofAllNonBlankEdges());
+		double avgWeight = getAvgScoreofAllNonBlankEdges();
 		double sumSquared = 0;
 		double n = 0;
 

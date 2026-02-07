@@ -896,7 +896,6 @@ public class DesignSpaceService {
 	}
 
 
-		return responseBody;
 	}
     
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
@@ -1188,16 +1187,16 @@ public class DesignSpaceService {
 		designSpace.weightBlankEdges();
     	
 		// Total Score of All Non-Blank Edges
-        String graphScoreOfNonBlankEdges = designSpace.getTotalScoreOfNonBlankEdges();
+        String graphScoreOfNonBlankEdges = String.valueOf(designSpace.getTotalScoreOfNonBlankEdges());
 
 		// Total Score of All Non-Blank Edges
-        String graphScoreOfEdges = designSpace.getTotalScoreOfEdges();
+        String graphScoreOfEdges = String.valueOf(designSpace.getTotalScoreOfEdges());
 
 		// Average Score of All Non-Blank Edges
-		String avgScoreOfAllNonBlankEdges = designSpace.getAvgScoreofAllNonBlankEdges();
+		String avgScoreOfAllNonBlankEdges = String.valueOf(designSpace.getAvgScoreofAllNonBlankEdges());
 
 		// Average Score of All Non-Blank Edges
-		String avgScoreOfAllEdges = designSpace.getAvgScoreofAllEdges();
+		String avgScoreOfAllEdges = String.valueOf(designSpace.getAvgScoreofAllEdges());
 
 		// Make List of Scores
 		List<String> scores = new ArrayList<String>();
@@ -1308,7 +1307,7 @@ public class DesignSpaceService {
 
 			inputSpace.weightBlankEdges();
 
-			double avgWeight = Double.parseDouble(inputSpace.getAvgScoreofAllNonBlankEdges());
+			double avgWeight = inputSpace.getAvgScoreofAllNonBlankEdges();
 			double stdev = inputSpace.getStdev();
 
 			outputSpace.copyNodeSpace(inputSpace);
