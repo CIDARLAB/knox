@@ -30,6 +30,9 @@ public class DesignSpace extends NodeSpace {
 	@Relationship(type = "CONTAINS")
 	ContextSpace contextSpace;
 
+	@Property
+	private String goldbar;
+
     int commitIndex;
 
     public DesignSpace() {
@@ -266,5 +269,12 @@ public class DesignSpace extends NodeSpace {
 	public ContextSpace getContextSpace() {
 		return contextSpace;
 	}
-}
 
+	public String getGoldbar() {
+		return goldbar;
+	}
+
+	public void setGoldbar(String goldbar) {
+		this.goldbar = goldbar;
+	}
+}
