@@ -32,6 +32,7 @@ import knox.spring.data.neo4j.repositories.NodeRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
 import knox.spring.data.neo4j.repositories.ContextSpaceRepository;
 import knox.spring.data.neo4j.repositories.ComponentRepository;
+import knox.spring.data.neo4j.repositories.RuleEvaluationRepository;
 
 import org.jdom.Document;
 import org.sbolstandard.core2.SBOLConversionException;
@@ -76,6 +77,8 @@ public class KnoxController {
     @Autowired ContextSpaceRepository contextSpaceRepository;
 
 	@Autowired ComponentRepository componentRepository;
+
+	@Autowired RuleEvaluationRepository ruleEvaluationRepository;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
@@ -940,6 +943,73 @@ public class KnoxController {
 		}
 
 		return new HashMap<>();
+	}
+	
+	@PostMapping("/rule/evaluate")
+	public Map<String, Map<String, Object>> evaluateGoldbar(@RequestParam(value = "evaluationName", required = true) String evaluationName,
+		    @RequestParam(value = "poorSpaceIDs", required = false) ArrayList<String> poorSpaceIDs,
+			@RequestParam(value = "goodSpaceIDs", required = false) ArrayList<String> goodSpaceIDs,
+			@RequestParam(value = "designSpaceIDs", required = false) ArrayList<String> designSpaceIDs,
+			@RequestParam(value = "goodGroupID", required = false) String goodGroupID,
+			@RequestParam(value = "poorGroupID", required = false) String poorGroupID,
+			@RequestParam(value = "designGroupID", required = false) String designGroupID,
+			@RequestParam(value = "designLabels", required = false) ArrayList<Integer> designLabels,
+			@RequestParam(value = "designScores", required = false) ArrayList<Double> designScores,
+		    @RequestParam(value = "rulesGroupID", required = true) String rulesGroupID,
+		    @RequestParam(value = "labelingMethod", required = false, defaultValue = "median") String labelingMethod) {
+
+		System.out.println("\nStarting GOLDBAR Evaluation");
+		if (designLabels == null) {
+			designLabels = new ArrayList<Integer>();
+		}
+
+		if (designScores == null) {
+			designScores = new ArrayList<Double>();
+		}
+
+		if (goodSpaceIDs != null && poorSpaceIDs != null) {
+			designSpaceIDs = new ArrayList<String>();
+			designSpaceIDs.addAll(goodSpaceIDs);
+			designSpaceIDs.addAll(poorSpaceIDs);
+			return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
+		
+		} else if (designSpaceIDs != null) {
+			return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
+		
+		} else if (goodGroupID != null && poorGroupID != null) {
+			designSpaceIDs = new ArrayList<String>();
+			designSpaceIDs.addAll(designSpaceService.getGroupSpaceIDs(goodGroupID));
+			designSpaceIDs.addAll(designSpaceService.getGroupSpaceIDs(poorGroupID));
+			return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
+
+		} else if (designGroupID != null) {
+			designSpaceIDs = new ArrayList<String>();
+			designSpaceIDs.addAll(designSpaceService.getGroupSpaceIDs(designGroupID));
+			return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
+		}
+
+		return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
+	}
+
+	@GetMapping("/rule/getEvaluation")
+	public Map<String, Map<String, Object>> getEvaluation(@RequestParam(value = "evaluationName", required = true) String evaluationName) {
+		return designSpaceService.getEvaluationResults(evaluationName);
+	}
+
+	@DeleteMapping("/rule")
+	public ResponseEntity<String> deleteRuleEvaluations(@RequestParam(value = "evaluationName", required = true) String evaluationName) {
+	try {
+		long startTime = System.nanoTime();
+	    	
+        designSpaceService.deleteRuleEvaluation(evaluationName);
+        
+        return new ResponseEntity<String>("{\"message\": \"Rule Evaluation was deleted successfully after " +
+				(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+    } catch (DesignSpaceNotFoundException ex) {
+        return new ResponseEntity<String>(
+                "{\"message\": \"" + ex.getMessage() + "\"}",
+                HttpStatus.BAD_REQUEST);
+	    }
 	}
 
 	// LIST VER

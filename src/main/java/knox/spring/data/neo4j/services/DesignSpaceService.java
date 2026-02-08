@@ -7,6 +7,7 @@ import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.Edge;
 import knox.spring.data.neo4j.domain.Node;
 import knox.spring.data.neo4j.domain.NodeSpace;
+import knox.spring.data.neo4j.domain.RuleEvaluation;
 import knox.spring.data.neo4j.domain.ContextSpace;
 import knox.spring.data.neo4j.domain.Snapshot;
 import knox.spring.data.neo4j.domain.dto.DesignSpaceEdgeDTO;
@@ -30,6 +31,7 @@ import knox.spring.data.neo4j.repositories.NodeRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
 import knox.spring.data.neo4j.repositories.ContextSpaceRepository;
 import knox.spring.data.neo4j.repositories.ComponentRepository;
+import knox.spring.data.neo4j.repositories.RuleEvaluationRepository;
 import knox.spring.data.neo4j.sample.DesignSampler;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.sbol.SBOLConversion;
@@ -94,6 +96,8 @@ public class DesignSpaceService {
     @Autowired ContextSpaceRepository contextSpaceRepository;
 
 	@Autowired ComponentRepository componentRepository;
+
+	@Autowired RuleEvaluationRepository ruleEvaluationRepository;
 
     private static final Logger LOG = LoggerFactory.getLogger(DesignSpaceService.class);
 
@@ -894,6 +898,42 @@ public class DesignSpaceService {
 		return goldbarAndCategories;
 	}
 
+	public Map<String, Map<String, Object>> ruleEvaluation(String evaluationName, ArrayList<String> designSpaceIDs, String ruleGroupID,
+			ArrayList<Integer> designLabels, ArrayList<Double> designScores, String labelingMethod) {
+		
+		ArrayList<String> ruleSpaceIDs = new ArrayList<>(getGroupSpaceIDs(ruleGroupID));
+		
+		System.out.println("Loading Spaces...");
+		ArrayList<NodeSpace> designSpaces = loadSpaces(designSpaceIDs);
+		ArrayList<NodeSpace> ruleSpaces = loadSpaces(ruleSpaceIDs);
+		System.out.println("Spaces Loaded.");
+
+		// Populate design scores if not provided
+		if (designScores.isEmpty()) {
+			System.out.println("Populating design scores...");
+			for (int i = 0; i < designSpaces.size(); i++) {
+				designScores.add(designSpaces.get(i).getAvgScoreofAllNonBlankEdges());
+			}
+		}
+
+		RuleEvaluation ruleEvaluation = new RuleEvaluation(evaluationName, ruleSpaceIDs, designSpaceIDs, designLabels, designScores, ruleSpaces, designSpaces, labelingMethod);
+		Map<String, Map<String, Object>> ruleResults = ruleEvaluation.getEvaluationResults();
+		System.out.println("Rule Evaluation Completed.");
+
+		saveRuleEvaluation(ruleEvaluation);
+		System.out.println("Rule Evaluation Saved.\n");
+
+		return ruleResults;
+	}
+
+	public Map<String, Map<String, Object>> getEvaluationResults(String evaluationName) {
+		RuleEvaluation ruleEvaluation = loadRuleEvaluation(evaluationName);
+		if (ruleEvaluation == null) {
+			return new HashMap<>();
+		}
+		return ruleEvaluation.getEvaluationResults();
+	}
+
     public void deleteBranch(String targetSpaceID, String targetBranchID) {
         branchRepository.deleteBranch(targetSpaceID, targetBranchID);
     }
@@ -1442,6 +1482,14 @@ public class DesignSpaceService {
 		return targetSpace;
 	}
 
+	private RuleEvaluation loadRuleEvaluation(String evaluationName) {
+		Long graphId = getRuleEvaluationGraphID(evaluationName);
+        RuleEvaluation targetEvaluation = null;
+		if (graphId != null) {
+            targetEvaluation = ruleEvaluationRepository.findById(graphId).orElse(null);
+        }
+		return targetEvaluation;
+	}
 	private Snapshot reloadSnapshot(Snapshot snap) {
 		Long graphId = snap.getGraphID();
         if (graphId != null) {
@@ -1456,6 +1504,16 @@ public class DesignSpaceService {
 	
 	private Long getDesignSpaceGraphID(String targetSpaceID) {
 		Set<Integer> graphIDs = designSpaceRepository.getDesignSpaceGraphID(targetSpaceID);
+		
+		if (graphIDs.size() > 0) {
+			return new Long(graphIDs.iterator().next());
+		} else {
+			return null;
+		}
+	}
+
+	private Long getRuleEvaluationGraphID(String targetEvaluationName) {
+		Set<Integer> graphIDs = ruleEvaluationRepository.getRuleEvaluationGraphID(targetEvaluationName);
 		
 		if (graphIDs.size() > 0) {
 			return new Long(graphIDs.iterator().next());
@@ -1720,6 +1778,16 @@ public class DesignSpaceService {
 	public void saveContextSpace(ContextSpace space) {
 		System.out.println("\nSaving SpaceID: " + space.getSpaceID());
 		contextSpaceRepository.save(space);
+	}
+
+	public void saveRuleEvaluation(RuleEvaluation evaluation) {
+		//System.out.println("\nSaving Rule Evaluation: " + evaluation.getEvaluationName());
+		ruleEvaluationRepository.save(evaluation);
+	}
+
+	public void deleteRuleEvaluation(String targetEvaluationName) {
+		System.out.println("\nDeleting Rule Evaluation: " + targetEvaluationName + "\n");
+		ruleEvaluationRepository.deleteRuleEvaluation(targetEvaluationName);
 	}
 	
 	private String convertCSVRole(String csvRole) {
