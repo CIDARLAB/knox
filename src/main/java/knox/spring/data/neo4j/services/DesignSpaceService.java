@@ -367,6 +367,19 @@ public class DesignSpaceService {
 
 
 
+
+	private ArrayList<NodeSpace> loadSpaces(ArrayList<String> inputSpaceIDs) {
+		ArrayList<NodeSpace> spaces = new ArrayList<>();
+		for (String inputSpaceID : inputSpaceIDs) {
+			DesignSpace inputSpace = loadDesignSpace(inputSpaceID);
+			if (inputSpace == null) {
+				throw new DesignSpaceNotFoundException("Input space with ID " + inputSpace + " not found.");
+			} else {
+				spaces.add(inputSpace);
+			}
+		}
+		return spaces;
+	}
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
     		int tolerance, int weightTolerance, Set<String> roles) {
