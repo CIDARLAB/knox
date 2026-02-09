@@ -1674,38 +1674,15 @@ $('#delete-design-tooltip').click(() => {
 });
 
 $('#delete-group-tooltip').click(() => {
-  const input = document.createElement("input");
-  input.setAttribute("type", "text");
-  input.setAttribute("placeholder", "Enter Group ID");
-  if (currentGroupID) {
-    input.value = currentGroupID;
-  }
-
   swal({
-    title: "Enter Group ID",
-    text: "Type the Group ID to confirm deletion:",
-    content: input, 
+    title: "Really delete?",
+    text: "You will not be able to recover the data!\nGroup ID: " + currentGroupID,
     icon: "warning",
-    buttons: true,
-  })
-  .then((groupID) => {
-    groupID = input.value.trim();
-    if (!groupID) {
-      swal("Oops!", "You need to enter a valid Group ID to proceed.", "error");
-      return;
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      endpoint.deleteDesignGroup(currentGroupID);
     }
-
-    swal({
-      title: "Really delete?",
-      text: `Group ${groupID} will be permanently deleted!`,
-      icon: "warning",
-      buttons: true,
-      dangerMode: true
-    }).then((confirm) => {
-      if (confirm) {
-        endpoint.deleteDesignGroup(groupID);
-      }
-    });
   });
 });
 
