@@ -1536,6 +1536,7 @@ $('#apply-operators-tooltip').click(() => {
 
   swal({
     title: "Apply Operator",
+    text: "Current space: " + currentSpace,
     buttons: true,
     content: div
   }).then((confirm) => {
