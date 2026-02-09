@@ -134,7 +134,8 @@
           <br><br>Required Files: Part Library & Designs Files
           <br>Optional Files/Inputs: Weights File OR Multiple Weights File OR Weight Value
           <br>Required Inputs: OutputPrefix OR Space ID
-          <br> optional Input: Group ID
+          <br>Optional Input: Group ID
+          <br><br>Designs from Import Separately will have space IDs of outputPrefix + "_design_i" where i is a unique integer for each design.
           <br><br>Download & View Example Files:
         </p>
         <a href="/data/csv/example_part_library.csv" download class="example-link">Download Example Part Library CSV</a>
@@ -149,7 +150,7 @@
       <form method="POST" enctype="multipart/form-data"
             action="import/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
         <div class="import-csv-description">
-          <p>Import Input Designs Seperately</p>
+          <p>Import Designs Separately</p>
         </div>
         <input type="file" name="inputCSVFiles[]" multiple>
         <br>
