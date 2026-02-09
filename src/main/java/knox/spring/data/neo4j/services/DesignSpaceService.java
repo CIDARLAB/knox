@@ -1746,10 +1746,6 @@ public class DesignSpaceService {
 	
 	public void saveDesignSpace(DesignSpace space) {
 
-		System.out.println("\nSaving SpaceID: " + space.getSpaceID());
-		System.out.println("Number of Nodes: " + space.getNodes().size());
-		System.out.println("Number of Edges: " + space.getEdges().size());
-
 		// Check to see if spaceID already exists
 		String spaceID = space.getSpaceID();
 		int v = 1;
@@ -1757,6 +1753,10 @@ public class DesignSpaceService {
 			space.setSpaceID(spaceID + "_v" + v);
 			v++;
 		}
+
+		System.out.println("\nSaving SpaceID: " + space.getSpaceID());
+		System.out.println("Number of Nodes: " + space.getNodes().size());
+		System.out.println("Number of Edges: " + space.getEdges().size());
 
 		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
 
