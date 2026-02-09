@@ -1421,6 +1421,9 @@ $('#apply-operators-tooltip').click(() => {
   let groupDiv = document.createElement('div');
   let groupIDInput = document.createElement('input');
   makeDiv(groupDiv, groupIDInput, 'Output group ID: ');
+  if (currentGroupID) {
+    groupIDInput.value = currentGroupID;
+  }
 
   //operator dropdown
   let operatorDiv = document.createElement('div');
