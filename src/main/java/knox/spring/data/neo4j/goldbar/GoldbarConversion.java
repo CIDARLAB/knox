@@ -302,7 +302,7 @@ public class GoldbarConversion {
 
     private NodeSpace handleAnd(JSONArray variableList, int tolerance) {
         NodeSpace outSpace = new NodeSpace();
-        ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
+        ArrayList<NodeSpace> spaces = correctAllStartAndAcceptNodes(getSpacesForOperation(variableList));
         Set<String> roles = new HashSet<String>();
         ANDOperator.apply(spaces, outSpace, tolerance, true, roles, new ArrayList<String>());
 
@@ -311,7 +311,7 @@ public class GoldbarConversion {
 
     private NodeSpace handleMerge(JSONArray variableList) {
         NodeSpace outSpace = new NodeSpace();
-        ArrayList<NodeSpace> spaces = getSpacesForOperation(variableList);
+        ArrayList<NodeSpace> spaces = correctAllStartAndAcceptNodes(getSpacesForOperation(variableList));
         Set<String> roles = new HashSet<String>();
         MergeOperator.apply(spaces, outSpace, 0, 0, roles, new ArrayList<String>());
 
@@ -350,6 +350,38 @@ public class GoldbarConversion {
         }
 
         return spaces;
+    }
+
+    private ArrayList<NodeSpace> correctAllStartAndAcceptNodes(ArrayList<NodeSpace> spaces) {
+        ArrayList<NodeSpace> correctedSpaces = new ArrayList<>();
+        for (NodeSpace space : spaces) {
+            // Add new accept nodes if current accept nodes have outgoing edges
+            Set<Node> acceptNodes = space.getAcceptNodes();
+            for (Node acceptNode : acceptNodes) {
+                if (acceptNode.hasEdges()) {
+                    Node newAcceptNode = space.createAcceptNode();
+                    Edge blankEdge = new Edge(acceptNode, newAcceptNode);
+                    acceptNode.addEdge(blankEdge);
+                    acceptNode.deleteAcceptNodeType();
+                }
+            }
+
+            // add new start nodes if current start nodes have incoming edges
+            Set<Node> startNodes = space.getStartNodes();
+            HashMap<String, Set<Edge>> nodeIDToIncomingEdges = space.mapNodeIDsToIncomingEdges();
+            for (Node startNode : startNodes) {
+                if (startNode.hasIncomingEdges(nodeIDToIncomingEdges)) {
+                    Node newStartNode = space.createStartNode();
+                    Edge blankEdge = new Edge(newStartNode, startNode);
+                    newStartNode.addEdge(blankEdge);
+                    startNode.deleteStartNodeType();
+                }
+            }
+
+            correctedSpaces.add(space);
+        }
+
+        return correctedSpaces;
     }
 
     private Map<String, JSONArray> jsonObjectToMap(JSONObject object) {
