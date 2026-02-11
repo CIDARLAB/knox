@@ -46,7 +46,8 @@ public class AiController {
         ChatResponse response = chatClient.prompt(prompt)
             .tools(new GroupTools(designSpaceService), 
                    new DesignTools(designSpaceService),
-                   new OperatorTools(designSpaceService))
+                   new OperatorTools(designSpaceService),
+                   new GoldbarTools(designSpaceService))
             .call().chatResponse();
 
         Usage usage = response.getMetadata().getUsage();
