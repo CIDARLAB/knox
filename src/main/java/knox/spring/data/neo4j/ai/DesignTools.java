@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.ai;
 
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
 import knox.spring.data.neo4j.services.DesignSpaceService;
@@ -15,31 +16,31 @@ public class DesignTools {
         this.designSpaceService = designSpaceService;
     }
 
-    @Tool(description = "Delete Design Space")
-    String deleteDesignSpace(String spaceID) {
+    @Tool(description = "Delete Design Space", returnDirect = true)
+    String deleteDesignSpace() {
         System.out.println("\nAI: deleteDesignSpace\n");
         return "Design Space deletion not enabled for safety. User can delete via User Interface, Search by Design Space ID and delete desired space.";
     }
 
-    @Tool(description = "Design Space Information Details via spaceid")
-    String getDesignSpaceDetails(String spaceID) {
+    @Tool(description = "Design Space Information and Details via spaceid", returnDirect = true)
+    String getDesignSpaceDetails(@ToolParam(description = "Design Space ID") String spaceID) {
         System.out.println("\nAI: getDesignSpaceDetails\n");
 
-        String context = "Design Space ID: " + spaceID + "\n";
+        String context = "Design Space ID: " + spaceID + "<br><br>";
 
         Map<String, Object> d3 = designSpaceService.d3GraphDesignSpace(spaceID);
 
-        context += "In a design space, edges (links) represent parts with componentIDs (part ids) and componentRoles (roles).\n"; 
-        context += "To get a design, you start at a start node and traverse the graph to an accept node, collecting parts from edges along the way.\n";
-        context += "componentIDs are identifiers or names of parts";
-        context += "componentRoles are the roles or types of parts";
-        context += "Weights on edges represent the value assigned to a part";
-        context += "Orientation describes the direction the part is facing in the design";
+        context += "In a design space, edges represent parts with componentIDs (part ids) and componentRoles (roles).<br>"; 
+        context += "To get a design, you start at a start node and traverse the graph to an accept node, collecting parts from edges along the way.<br>";
+        context += "componentIDs are identifiers or names of parts<br>";
+        context += "componentRoles are the roles or types of parts<br>";
+        context += "Weights on edges represent the value assigned to a part<br>";
+        context += "Orientation describes the direction the part is facing in the design<br>";
 
-        return context + "\nGraph Representation: " + d3.toString();
+        return context + "<br><br>Graph Representation: " + d3.toString();
     }
 
-    @Tool(description = "Some Design Spaces")
+    @Tool(description = "Some Design Spaces and Number of designs", returnDirect = true)
     String listDesignSpaces() {
         System.out.println("\nAI: listDesignSpaces\n");
 
@@ -47,12 +48,35 @@ public class DesignTools {
 
         Random random = new Random();
         Collections.shuffle(spaceIDs, random);
-        List<String> sampleSpaceIDs = spaceIDs.subList(0, 5);
+        List<String> sampleSpaceIDs = spaceIDs.subList(0, 10);
 
-        String context = "5 Design Spaces in Neo4j:\n";
-        context += "Number of Design Spaces: " + spaceIDs.size() + "\n";
+        String context = "Number of Design Spaces: " + spaceIDs.size() + " <br><br> ";
+        context += "10 Design Spaces in Neo4j: <br> ";
         
         return context + String.join(", ", sampleSpaceIDs);
+    }
+
+    @Tool(description = "Get Best Path", returnDirect = true)
+    String getBestPath(@ToolParam(description = "Design Space ID") String spaceID) {
+        System.out.println("\nAI: getBestPath\n");
+
+        List<List<Map<String, Object>>> bestPaths = designSpaceService.getBestPath(spaceID);
+
+        List<Map<String, Object>> bestPath = bestPaths.get(0);
+
+        String context = "Best Path in Design Space ID: " + spaceID;
+
+        ArrayList<String> parts = new ArrayList<>();
+        String pathScore = new String();
+
+        for (Map<String, Object> part : bestPath) {
+            parts.add((String) part.get("id"));
+            pathScore = part.get("pathScore").toString();
+        }
+        context += " Parts: " + parts.toString();
+        context += " with a Path Score: " + pathScore;
+
+        return context;
     }
 
     /*
