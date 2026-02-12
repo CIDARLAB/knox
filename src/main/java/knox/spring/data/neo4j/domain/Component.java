@@ -7,7 +7,7 @@ import org.json.JSONException;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import com.google.j2objc.annotations.Property;
+import org.springframework.data.neo4j.core.schema.Property;
 
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
