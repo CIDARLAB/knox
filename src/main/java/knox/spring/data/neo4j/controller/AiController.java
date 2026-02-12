@@ -12,6 +12,7 @@ import org.springframework.ai.chat.metadata.*;
 import knox.spring.data.neo4j.ai.GroupTools;
 import knox.spring.data.neo4j.ai.DesignTools;
 import knox.spring.data.neo4j.ai.OperatorTools;
+import knox.spring.data.neo4j.ai.GoldbarTools;
 import knox.spring.data.neo4j.domain.DesignSpace;
 
 import knox.spring.data.neo4j.services.DesignSpaceService;
@@ -33,7 +34,7 @@ public class AiController {
 
     @PostMapping("/agent")
     public String agent(@RequestParam(value = "prompt", required = true) String prompt,
-            @RequestBody(required = false) String system) {
+            @RequestParam(value = "includeCost", required = false, defaultValue = "true") boolean includeCost) {
 
         if (openAiApiKey.equals("ENTER_OPENAI_API_KEY_HERE")) {
             return "Error: Please set 'spring.ai.openai.api-key' in application.properties to use AI Chat Features.";
@@ -43,12 +44,20 @@ public class AiController {
 
         ChatClient chatClient = ChatClient.create(chatModel);
         
-        ChatResponse response = chatClient.prompt(prompt)
+        ChatResponse response = chatClient
+            .prompt(prompt)
             .tools(new GroupTools(designSpaceService), 
                    new DesignTools(designSpaceService),
                    new OperatorTools(designSpaceService),
                    new GoldbarTools(designSpaceService))
             .call().chatResponse();
+
+        String output = response.getResult().getOutput().getText();
+
+        // Remove surrounding quotes if present (Occurs when tool has returnDirect = true)
+        if (output.startsWith("\"") && output.endsWith("\"")) {
+            output = output.substring(1, output.length() - 1);
+        }
 
         Usage usage = response.getMetadata().getUsage();
         int promptTokens = usage.getPromptTokens();
@@ -57,13 +66,18 @@ public class AiController {
 
         System.out.printf("\nTokens:\nPrompt: %d, Completion: %d, Total: %d%n", promptTokens, completionTokens, totalTokens);
 
-        double costPerThousandPrompt = 0.0015; // rates for gpt-3.5-turbo
-        double costPerThousandCompletion = 0.002;
+        double costPerThousandPrompt = 0.0005; // rates for gpt-3.5-turbo
+        double costPerThousandCompletion = 0.0015;
         double cost = (promptTokens / 1000.0) * costPerThousandPrompt + (completionTokens / 1000.0) * costPerThousandCompletion;
         System.out.printf("Estimated cost: $%.4f%n", cost);
 
-        System.out.println("\n\nAI response: " + response.getResult().getOutput().getText());
-        return response.getResult().getOutput().getText().toString();
+        if (includeCost) {
+            output = output + "<br><br>Tokens: Prompt: " + promptTokens + ", Completion: " + completionTokens + ", Total: " + totalTokens + 
+                    "<br>Estimated cost: $" + String.format("%.4f", cost);
+        }
+
+        System.out.println("\n\nAI response: " + output);
+        return output;
     }
     
 }
