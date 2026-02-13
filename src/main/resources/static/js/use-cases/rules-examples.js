@@ -57,23 +57,24 @@ export let exampleRules = {
 };
 
 export let ruleCategories = {
-    "any_part_concrete": {"cds": ["A", "B", "C"], "terminator": ["T1", "T2", "T3"], "promoter": ["P1", "P2", "P3"]},
+    "any_part_concrete": {"cds": ["A", "B", "C", "D"], "terminator": ["T1", "T2", "T3"], "promoter": ["P1", "P2", "P3"]},
     "A": {"cds": ["A"]},
     "B": {"cds": ["B"]},
-    "any_except_A": {"cds": ["B", "C"], "terminator": ["T1", "T2", "T3"], "promoter": ["P1", "P2", "P3"]},
-    "any_except_B": {"cds": ["A", "C"], "terminator": ["T1", "T2", "T3"], "promoter": ["P1", "P2", "P3"]},
-    "any_except_AandB": {"cds": ["C"], "terminator": ["T1", "T2", "T3"], "promoter": ["P1", "P2", "P3"]},
-    "any_except_terminator_leaky": {"cds": ["A", "B", "C"], "terminator": ["T1", "T2"], "promoter": ["P1", "P2", "P3"]},
+    "any_except_A": {"cds": ["B", "C", "D"], "terminator": ["T1", "T2", "T3"], "promoter": ["P1", "P2", "P3"]},
+    "any_except_B": {"cds": ["A", "C", "D"], "terminator": ["T1", "T2", "T3"], "promoter": ["P1", "P2", "P3"]},
+    "any_except_AandB": {"cds": ["C", "D"], "terminator": ["T1", "T2", "T3"], "promoter": ["P1", "P2", "P3"]},
+    "any_except_terminator_leaky": {"cds": ["A", "B", "C", "D"], "terminator": ["T1", "T2"], "promoter": ["P1", "P2", "P3"]},
     "terminator": {"terminator": ["T1", "T2", "T3"]},
-    "any_except_roadBlockingPromoter": {"promoter": ["P1", "P2"], "cds": ["A", "B", "C"], "terminator": ["T1", "T2", "T3"]},
+    "any_except_roadBlockingPromoter": {"promoter": ["P1", "P2"], "cds": ["A", "B", "C", "D"], "terminator": ["T1", "T2", "T3"]},
     "promoter": {"promoter": ["P1", "P2", "P3"]},
     "terminator_leaky": {"terminator": ["T3"]},
     "roadBlockingPromoter": {"promoter": ["P3"]},
     "any_promoter_except_roadBlocking": {"promoter": ["P1", "P2"]},
-    "any_except_promoter": {"cds": ["A", "B", "C"], "terminator": ["T1", "T2", "T3"]},
+    "any_except_promoter": {"cds": ["A", "B", "C", "D"], "terminator": ["T1", "T2", "T3"]},
 
     // Extras Not used in rules above
     "C": {"cds": ["C"]},
+    "D": {"cds": ["D"]},
     "P1": {"promoter": ["P1"]},
     "P2": {"promoter": ["P2"]},
     "P3": {"promoter": ["P3"]},
