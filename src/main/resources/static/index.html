@@ -122,7 +122,7 @@
   <ul class="nav nav-pills nav-justified">
     <li class="active"><a data-toggle="pill" href="#CSV">CSV</a></li>
     <li><a data-toggle="pill" href="#GENERATOR">GOLDBAR Generator</a></li>
-    <li><a data-toggle="pill" href="#Eugene">Eugene</a></li>
+    <!--li><a data-toggle="pill" href="#Eugene">Eugene</a></li-->
     <li><a data-toggle="pill" href="#SBOL">SBOL</a></li>
   </ul>
   <div class="tab-content">
@@ -346,13 +346,13 @@
         });
       </script>
     </div>
-    <div id="Eugene" class="tab-pane fade">
+    <!--div id="Eugene" class="tab-pane fade">
       <form method="POST" enctype="multipart/form-data"
             action="import/eugene" class="navbar-form navbar-left" ng-show="isEugeneMode">
         <input type="file" name="inputEugeneFiles[]" multiple>
         <input type="submit" value="Import">
       </form>
-    </div>
+    </div-->
     <div id="SBOL" class="tab-pane fade">
       <form method="POST" enctype="multipart/form-data"
             action="sbol/import" class="navbar-form navbar-left" ng-show="isSBOLMode">
