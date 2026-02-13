@@ -146,7 +146,7 @@ export default class Target{
           }
 
           if (partLst.length > 0){
-            titleStr += "compIDs: [" + partLst.join(",") + "]";
+            titleStr += "partIDs: [" + partLst.join(",") + "]";
           }
 
           if (d.hasOwnProperty("weight")) {
