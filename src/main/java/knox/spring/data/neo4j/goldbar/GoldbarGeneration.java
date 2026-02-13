@@ -635,12 +635,11 @@ public class GoldbarGeneration {
 
             String g = new String();
             g = String.format(
-                "(zero-or-more(%3$s)) or " +
-                "(zero-or-more(%3$s or %1$s) then %1$s then zero-or-more(%3$s)) or " +
-                "(zero-or-more(%3$s or %2$s) then %2$s then zero-or-more(%3$s))", 
+                "(zero-or-more(%5$s)) or " +
+                "(zero-or-more(%3$s) then %2$s then zero-or-more(%3$s))", 
                 handleDirection(dataSplit[0]),                         // %1$s = parts1 
-                handleDirection(dataSplit[1]),                         // %2$s = parts2  
-                handleDirection("any_except_" + name)                 // %3$s = any_except_parts1andparts2
+                handleDirection(dataSplit[1]),                         // %2$s = parts2
+                handleDirection("any_except_" + dataSplit[0]),         // %3$s = any_except_parts1
             );
             
             oGoldbar.put(key, g);

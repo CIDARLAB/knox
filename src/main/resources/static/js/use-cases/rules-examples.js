@@ -26,8 +26,8 @@ let startRule =
 
 let notOrthogonalRule = 
     "(zero-or-more(any_except_AandB)) or " +
-    "(zero-or-more(any_except_AandB or A) then A then zero-or-more(any_except_AandB)) or " +
-    "(zero-or-more(any_except_AandB or B) then B then zero-or-more(any_except_AandB))";
+    "(zero-or-more(any_except_B) then A then zero-or-more(any_except_AandB)) or " +
+    "(zero-or-more(any_except_A) then B then zero-or-more(any_except_AandB))";
 
 let lengthRule = 
     "any_part_concrete then any_part_concrete then any_part_concrete then any_part_concrete";
