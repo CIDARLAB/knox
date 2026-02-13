@@ -933,6 +933,11 @@ public class KnoxController {
 			ArrayList<String> rulesList = new ArrayList<>(Arrays.asList(rulesArray));
 			System.out.println("Rules" + rulesList);
 
+			if (lengths.equals("")) {
+				ArrayList<String> emptyList = new ArrayList<String>();
+				return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, emptyList, OutputSpacePrefix, verify, direction, verbose);
+			} 
+
 			String[] lengthsArray = lengths.split(",");
 			ArrayList<String> lengthsList = new ArrayList<>(Arrays.asList(lengthsArray));
 			System.out.println("Lengths" + lengthsList);

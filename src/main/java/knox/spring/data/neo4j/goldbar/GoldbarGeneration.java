@@ -46,8 +46,6 @@ public class GoldbarGeneration {
 
         this.partTypesMap = new HashMap<String, ArrayList<String>>();
 
-        this.rules = rules;
-
         this.ruleOptions = new ArrayList<>();
         this.ruleOptions.add("R");
         this.ruleOptions.add("B");
@@ -64,6 +62,12 @@ public class GoldbarGeneration {
         this.ruleOptions.add("E");
         this.ruleOptions.add("S");
         this.ruleOptions.add("goldbar");
+
+        if (rules.contains("all")){
+            this.rules = this.ruleOptions;
+        } else {
+            this.rules = new ArrayList<>(rules);
+        }
 
         this.lengths = lengths;
 
@@ -90,64 +94,63 @@ public class GoldbarGeneration {
     }
 
     public void generate() {
-        
-        if (rules.contains("N")) {
+        if (rules.contains("N") && !this.lengths.isEmpty()) {
 			createRuleN(this.lengths);
 		}
 
-		if (rules.contains("B")) {
+		if (rules.contains("B") && checkRuleExists("B")) {
 			createRuleB();
 		}
 
-		if (rules.contains("R")) {
+		if (rules.contains("R") && checkRuleExists("R")) {
 			createRuleR();
 		}
 
-		if (rules.contains("I")) {
+		if (rules.contains("I") && checkRuleExists("I")) {
 			createRuleI();
 		}
 
-        if (rules.contains("F")) {
+        if (rules.contains("F") && checkRuleExists("F")) {
 			createRuleF();
 		}
 
-        if (rules.contains("A")) {
+        if (rules.contains("A") && checkRuleExists("A")) {
 			createRuleA();
 		}
 		
-		if (rules.contains("M")) {
+		if (rules.contains("M") && checkRuleExists("M")) {
 			createRuleM();
 		}
 
-        if (rules.contains("NI")) {
+        if (rules.contains("NI") && checkRuleExists("NI")) {
 			createRuleNI();
 		}
 
-		if (rules.contains("O")) {
+		if (rules.contains("O") && checkRuleExists("O")) {
 			createRuleO();
 		}
 
-		if (rules.contains("L")) {
+		if (rules.contains("L") && checkRuleExists("L")) {
 			createRuleL();
 		}
 
-		if (rules.contains("P")) {
+		if (rules.contains("P") && checkRuleExists("P")) {
 			createRuleP();
 		}
 
-		if (rules.contains("T")) {
+		if (rules.contains("T") && checkRuleExists("T")) {
 			createRuleT();
 		}
 
-		if (rules.contains("E")) {
+		if (rules.contains("E") && checkRuleExists("E")) {
 			createRuleE();
 		}
 
-		if (rules.contains("S")) {
+		if (rules.contains("S") && checkRuleExists("S")) {
 			createRuleS();
 		}
 
-		if (rules.contains("goldbar")) {
+		if (rules.contains("goldbar") && checkRuleExists("goldbar")) {
 			createRuleGoldbar();
 		}
     }
@@ -882,6 +885,15 @@ public class GoldbarGeneration {
         this.goldbar.put("_PromoterRoadBlocking_Rule_P", g);
 
         return g;
+    }
+
+    private boolean checkRuleExists(String rule){
+        if (!this.columnValues.containsKey(rule)) {
+            return false;
+        } else if (this.columnValues.get(rule).isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
     private void multiplePartsCategory(String rule) {
