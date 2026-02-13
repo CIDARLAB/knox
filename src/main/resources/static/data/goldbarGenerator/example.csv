@@ -1,5 +1,5 @@
-promoter,ribosomeBindingSite,cds,terminator,T,I,R,M,P,L,O,B,categories,goldbar
-P1,RBS1,A,T1,A:B,A:B,A,B,P2,T2,A:D,A:B,ABC:A+B+C,ABC
-P2,,B,T2,,,,C,,,,,,promoter then zero-or-one(promoter) then ribosomeBindingSite then cds then terminator
-,,C,,,,,,,,,,,
-,,D,,,,,,,,,,,
+promoter,ribosomeBindingSite,cds,terminator,S,E,M,NI,T,O,B,I,F,A,R,P,L,categories,goldbar
+P1,RBS1,A,T1,A,T1,A,D,A:B,C:B,A:B,D:A,A:B,A:B,RBS1,,,ABC:A+B+C,ABC
+P2,,B,T2,,,B,,A:C,AandC:T1andT2,AandB:T1andT2,,,,,,,,promoter then zero-or-one(promoter) then ribosomeBindingSite then cds then terminator
+,,C,,,,C,,DandB:T1andT2,,,,,,,,,,
+,,D,,,,,,,,,,,,,,,,
