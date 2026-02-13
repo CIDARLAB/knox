@@ -219,11 +219,9 @@
         <p>Available Rules (Seperate Rules with comma):
           <br>"R" : Do not repeat part. 
           <br>"B" : All instrances of Part1 must be before all instances of Part2. 
-          <br>"T" : Part1 and Part2 must be in same design. 
-          <br>"I" : Part1 can not be directly upstream of Part2
-          <br>"O" : Part1 and Part2 can not be in same design. 
-          <br>"M" : Part must be included. 
-          <br>"NI" : Part must not be included.
+          <br>"T" : Part1 and Part2 must be in same design. "O" : Part1 and Part2 can not be in same design. 
+          <br>"I" : Part1 can not be directly upstream of Part2. "F" : Part1 can only be directly before Part2. "A" : Part1 can only be directly after Part2.
+          <br>"M" : Part must be included. "NI" : Part must not be included.
           <br>"P" : No Promoter Road Blocking.
           <br>"L" : Leaky Terminators can only appear at end of design.
           <br>"S" : Design must start with Part or user-provided GOLDBAR (ex: "(part1 or part2 ... or partn)").
@@ -429,6 +427,8 @@
                     <button id='beforeRule' class="dropdown-item" href="#">(B) A before B</button>
                     <button id='togetherRule' class="dropdown-item" href="#">(T) A and B Together</button>
                     <button id='pjiRule' class="dropdown-item" href="#">(I) A not followed by B</button>
+                    <button id='fRule' class="dropdown-item" href="#">(F) A Followed by B</button>
+                    <button id='aRule' class="dropdown-item" href="#">(A) A only After B</button>
                     <button id='mustIncludeRule' class="dropdown-item" href="#">(M) Must Include A</button>
                     <button id='notIncludeRule' class="dropdown-item" href="#">(NI) Must Not Include A</button>
                     <button id='startRule' class="dropdown-item" href="#">(S) Start with A</button>

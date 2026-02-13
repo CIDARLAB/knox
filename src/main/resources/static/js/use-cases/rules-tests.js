@@ -99,6 +99,55 @@ let testFailI = [
     "(C then B then A then B then C then A)"
 ];
 
+// Test for A must be followed by B
+let testPassF = [
+    // True Passes
+    "(A then B)",
+    "(C)",
+    "(B then A then B)",
+    "(A then B then C)",
+    "(C then A then B)",
+    "(C then B then A then B)",
+    "(B then B)",
+    "(A then B then B)"
+];
+let testFailF = [
+    // True Fails
+    "(A)",
+    "(B then A)",
+    "(A then A)",
+    "(C then A then C)",
+    "(B then A then A)",
+    "(A then C then A then A)",
+    "(C then B then C then B then C then A)",
+    "(C then B then A)",
+    "(A then B then A)"
+];
+
+// Test for A only comes after B
+let testPassA = [
+    // True Passes
+    "(B then A)",
+    "(C)",
+    "(B then A then B)",
+    "(B then B then A)",
+    "(C then B then A)",
+    "(C then B then A then B then A)",
+    "(C then B then A then B)",
+    "(B then B)"
+];
+let testFailA = [
+    // True Fails
+    "(A)",
+    "(A then A)",
+    "(C then A then C)",
+    "(B then A then A)",
+    "(A then C then A then A)",
+    "(C then B then C then B then C then A)",
+    "(A then B then A)",
+    "(A then B then C)"
+];
+
 // Test for must include A
 let testPassM = [
     // True Passes
@@ -252,6 +301,8 @@ export let ruleTests = {
     "B": [testPassB, testFailB],
     "T": [testPassT, testFailT],
     "I": [testPassI, testFailI],
+    "F": [testPassF, testFailF],
+    "A": [testPassA, testFailA],
     "M": [testPassM, testFailM],
     "NI": [testPassNI, testFailNI],
     "E": [testPassE, testFailE],

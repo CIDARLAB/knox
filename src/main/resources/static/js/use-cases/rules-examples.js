@@ -4,6 +4,12 @@ let doNotRepeatRule =
 let beforeRule = 
     "(zero-or-more(any_except_B) then A then zero-or-more(any_except_A)) or (zero-or-more(any_except_A))";
 
+let followedByRule =
+    "zero-or-more(any_except_A or (A then B))";
+
+let comesAfterRule = 
+    "zero-or-more(any_except_A or (B then A))";
+
 let togetherRule = 
     "((zero-or-more(any_part_concrete) then A then zero-or-more(any_except_AandB) then B then zero-or-more(any_except_A)) or " + 
     "(zero-or-more(any_part_concrete) then B then zero-or-more(any_except_AandB) then A then zero-or-more(any_except_B)) or " +
@@ -46,6 +52,8 @@ export let exampleRules = {
     "B": beforeRule,
     "T": togetherRule,
     "I": pjiRule,
+    "F": followedByRule,
+    "A": comesAfterRule,
     "M": mustIncludeRule,
     "NI": notIncludeRule,
     "E": endRule,

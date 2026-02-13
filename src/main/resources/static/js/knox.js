@@ -543,6 +543,20 @@ $('#pjiRule').on('click', function() {
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
+$('#fRule').on('click', function() {
+  document.getElementById('designNameInput').value = "A-FollowedBy-B";
+  document.getElementById('groupIDInput').value = "example";
+  editors.specEditor.setValue(exampleRules.F);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
+$('#aRule').on('click', function() {
+  document.getElementById('designNameInput').value = "A-onlyAfter-B";
+  document.getElementById('groupIDInput').value = "example";
+  editors.specEditor.setValue(exampleRules.A);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
 $('#mustIncludeRule').on('click', function() {
   document.getElementById('designNameInput').value = "mustInclude-A";
   document.getElementById('groupIDInput').value = "example";

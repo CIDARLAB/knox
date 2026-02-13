@@ -53,6 +53,8 @@ public class GoldbarGeneration {
         this.ruleOptions.add("B");
         this.ruleOptions.add("T");
         this.ruleOptions.add("I");
+        this.ruleOptions.add("A");
+        this.ruleOptions.add("F");
         this.ruleOptions.add("M");
         this.ruleOptions.add("NI");
         this.ruleOptions.add("O");
@@ -103,6 +105,14 @@ public class GoldbarGeneration {
 
 		if (rules.contains("I")) {
 			createRuleI();
+		}
+
+        if (rules.contains("F")) {
+			createRuleF();
+		}
+
+        if (rules.contains("A")) {
+			createRuleA();
 		}
 		
 		if (rules.contains("M")) {
@@ -539,6 +549,84 @@ public class GoldbarGeneration {
         return pjiGoldbar;
     }
 
+    private Map<String, String> createRuleF() {
+        /* Part Junction Interference Rule
+        if part1 is present, then part2 is directly downstream of part1 
+        (Converse is not true)
+        */
+        
+        // add to categories
+        multiplePartsCategory("F");
+
+        // goldbar
+        Map<String, String> fGoldbar = new HashMap<>();
+        for (String data : this.columnValues.get("F")) {
+            // data example = "PP1andPP2:P1andP2"
+
+            String[] dataSplit = data.split(":");
+
+            String name = String.join("and", dataSplit);
+
+            String key = String.join("_", dataSplit);
+
+            String g = new String();
+            g = String.format(
+                "(zero-or-more((%5$s) or (%3$s)))", 
+                handleDirection(dataSplit[0]),                             // %1$s = parts1 
+                handleDirection(dataSplit[1]),                             // %2$s = parts2
+                handleDirection(dataSplit[0] + " then " + dataSplit[1]),   // %3$s = parts1 then parts2  
+                handleDirection("any_except_" + name),                     // %4$s = any_except_parts1andparts2
+                handleDirection("any_except_" + dataSplit[0]),             // %5$s = any_except_parts1 
+                handleDirection("any_except_" + dataSplit[1]),             // %6$s = any_except_parts2
+                handleDirection(dataSplit[0] + " then any_except_" + name)  // %7$s = parts1 then any_except_parts1andparts2
+            );
+
+            fGoldbar.put(key, g);
+            this.goldbar.put("_" + key + "_Rule_F", g);
+        }
+    
+        return fGoldbar;
+    }
+
+    private Map<String, String> createRuleA() {
+        /* Part Junction Interference Rule
+        if part1 is present, then part2 is directly upstream of part1 
+        (Converse is not true)
+        */
+        
+        // add to categories
+        multiplePartsCategory("A");
+
+        // goldbar
+        Map<String, String> aGoldbar = new HashMap<>();
+        for (String data : this.columnValues.get("A")) {
+            // data example = "PP1andPP2:P1andP2"
+
+            String[] dataSplit = data.split(":");
+
+            String name = String.join("and", dataSplit);
+
+            String key = String.join("_", dataSplit);
+
+            String g = new String();
+            g = String.format(
+                "(zero-or-more((%5$s) or (%3$s)))", 
+                handleDirection(dataSplit[0]),                             // %1$s = parts1 
+                handleDirection(dataSplit[1]),                             // %2$s = parts2
+                handleDirection(dataSplit[1] + " then " + dataSplit[0]),   // %3$s = parts2 then parts1  
+                handleDirection("any_except_" + name),                     // %4$s = any_except_parts1andparts2
+                handleDirection("any_except_" + dataSplit[0]),             // %5$s = any_except_parts1 
+                handleDirection("any_except_" + dataSplit[1]),             // %6$s = any_except_parts2
+                handleDirection(dataSplit[0] + " then any_except_" + name)  // %7$s = parts1 then any_except_parts1andparts2
+            );
+
+            aGoldbar.put(key, g);
+            this.goldbar.put("_" + key + "_Rule_A", g);
+        }
+    
+        return aGoldbar;
+    }
+
     private Map<String, String> createRuleM() {
         Map<String, String> mGoldbar = new HashMap<>();
 
@@ -636,10 +724,13 @@ public class GoldbarGeneration {
             String g = new String();
             g = String.format(
                 "(zero-or-more(%5$s)) or " +
+                "(zero-or-more(%4$s) then %1$s then zero-or-more(%3$s)) or " +
                 "(zero-or-more(%3$s) then %2$s then zero-or-more(%3$s))", 
                 handleDirection(dataSplit[0]),                         // %1$s = parts1 
                 handleDirection(dataSplit[1]),                         // %2$s = parts2
                 handleDirection("any_except_" + dataSplit[0]),         // %3$s = any_except_parts1
+                handleDirection("any_except_" + dataSplit[1]),         // %4$s = any_except_parts2  
+                handleDirection("any_except_" + name)                  // %5$s = any_except_parts1andparts2
             );
             
             oGoldbar.put(key, g);
