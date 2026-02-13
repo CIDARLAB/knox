@@ -15,6 +15,9 @@ let pjiRule =
 let mustIncludeRule = 
     "one-or-more(zero-or-more(any_except_A) then A) then zero-or-more(any_except_A)";
 
+let notIncludeRule = 
+    "zero-or-more(any_except_A)";
+
 let endRule = 
     "zero-or-more(any_part_concrete) then A";
 
@@ -44,6 +47,7 @@ export let exampleRules = {
     "T": togetherRule,
     "I": pjiRule,
     "M": mustIncludeRule,
+    "NI": notIncludeRule,
     "E": endRule,
     "S": startRule,
     "O": notOrthogonalRule,

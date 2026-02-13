@@ -118,6 +118,25 @@ let testFailM = [
     "(B)"
 ];
 
+// Test for not include A
+let testPassNI = [
+    // True Passes
+    "(B then B then B)",
+    "(B then C)",
+    "(B then B then B then T1)",
+    "(B then C then B then C)",
+    "(C then B then C)",
+    "(T1 then T2 then B then C then C)",
+    "(B)"
+];
+let testFailNI = [
+    // True Fails
+    "(B then A)",
+    "(C then A then B)",
+    "(A then B)",
+    "(A)"
+];
+
 // Test for end with A
 let testPassE = [
     // True Passes
@@ -234,6 +253,7 @@ export let ruleTests = {
     "T": [testPassT, testFailT],
     "I": [testPassI, testFailI],
     "M": [testPassM, testFailM],
+    "NI": [testPassNI, testFailNI],
     "E": [testPassE, testFailE],
     "S": [testPassS, testFailS],
     "O": [testPassO, testFailO],

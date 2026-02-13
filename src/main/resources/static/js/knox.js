@@ -550,6 +550,13 @@ $('#mustIncludeRule').on('click', function() {
   editors.catEditor.setValue(JSON.stringify(ruleCategories));
 });
 
+$('#notIncludeRule').on('click', function() {
+  document.getElementById('designNameInput').value = "notInclude-A";
+  document.getElementById('groupIDInput').value = "example";
+  editors.specEditor.setValue(exampleRules.NI);
+  editors.catEditor.setValue(JSON.stringify(ruleCategories));
+});
+
 $('#endRule').on('click', function() {
   document.getElementById('designNameInput').value = "mustEndWith-A";
   document.getElementById('groupIDInput').value = "example";
