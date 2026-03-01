@@ -15,10 +15,6 @@ COPY --from=build /app/target/*.jar app.jar
 # Expose Spring Boot port
 EXPOSE 8080
 
-# Pass through LLM provider keys (Docker Compose will inject it)
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
-ENV CLAUDE_API_KEY=${CLAUDE_API_KEY}
-
 # JVM tuning for Neo4j + Spring AI workloads
 ENV JAVA_OPTS="-Xms512m -Xmx2g"
 

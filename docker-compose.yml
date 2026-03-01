@@ -29,8 +29,8 @@ services:
       SPRING_NEO4J_AUTHENTICATION_PASSWORD: kn0xkn0x
 
       # Spring AI / OpenAI
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-disabled}
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-disabled}
 
     ports:
       - "127.0.0.1:8080:8080"   # Localhost only

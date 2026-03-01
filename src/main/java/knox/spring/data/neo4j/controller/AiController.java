@@ -36,7 +36,7 @@ public class AiController {
     public String agent(@RequestParam(value = "prompt", required = true) String prompt,
             @RequestParam(value = "includeCost", required = false, defaultValue = "true") boolean includeCost) {
 
-        if (openAiApiKey.equals("")) {
+        if (openAiApiKey.equals("disabled")) {
             return "Error: Please set 'OPENAI_API_KEY' in environment variables to use AI Chat Features.";
         }
         
