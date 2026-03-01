@@ -1,27 +1,45 @@
-version: '3.7'
-
 services:
-  knox-db:
-    image: neo4j:2025.7.1
-    ports:
-      - '7474:7474'
-      - '7687:7687' # for bolt
-    container_name: knox-db
+  neo4j:
+    image: neo4j:2025.07.1
+    container_name: neo4j
     environment:
-      - NEO4J_AUTH=neo4j/kn0xkn0x
-      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      NEO4J_AUTH: neo4j/kn0xkn0x
+    ports:
+      - "127.0.0.1:7474:7474"   # Localhost only
+      - "127.0.0.1:7687:7687"   # Localhost only
     volumes:
-    # local_folder:container_folder
-    # for persistence
-      - ./data:/data
-      - ./logs:/logs
-  knox-app:
-    build:
-      context: .
-    ports:
-      - '8080:8080'
-    container_name: knox-app
-    environment:
-      - spring.data.neo4j.uri=bolt://knox-db:7687
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "kn0xkn0x", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - knox
+
+  backend:
+    build: .
+    container_name: knox-backend
     depends_on:
-      - knox-db
+      neo4j:
+        condition: service_healthy
+    environment:
+      SPRING_NEO4J_URI: bolt://neo4j:7687
+      SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      SPRING_NEO4J_AUTHENTICATION_PASSWORD: kn0xkn0x
+
+      # Spring AI / OpenAI
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+
+    ports:
+      - "127.0.0.1:8080:8080"   # Localhost only
+    networks:
+      - knox
+
+volumes:
+  neo4j_data:
+
+networks:
+  knox:
+

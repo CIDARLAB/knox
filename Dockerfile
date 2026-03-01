@@ -1,12 +1,26 @@
-# Build the JAR
-FROM maven:3.5-jdk-8 AS build
-COPY src /usr/src/knox/src
-COPY pom.xml /usr/src/knox
-RUN mvn -f /usr/src/knox/pom.xml clean package
+# ---- Build stage ----
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn -q -DskipTests package
 
-# Base image containing Java runtime
-FROM openjdk:8-jdk-alpine
-COPY --from=build /usr/src/knox/target/knox-0.0.1-SNAPSHOT.jar /usr/knox/knox-0.0.1-SNAPSHOT.jar
-# Make port 8080 available to the world outside this container
+# ---- Runtime stage ----
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+
+# Copy the built jar
+COPY --from=build /app/target/*.jar app.jar
+
+# Expose Spring Boot port
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/usr/knox/knox-0.0.1-SNAPSHOT.jar"]
+
+# Pass through LLM provider keys (Docker Compose will inject it)
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+ENV CLAUDE_API_KEY=${CLAUDE_API_KEY}
+
+# JVM tuning for Neo4j + Spring AI workloads
+ENV JAVA_OPTS="-Xms512m -Xmx2g"
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+

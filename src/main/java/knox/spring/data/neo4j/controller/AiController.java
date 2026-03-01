@@ -36,8 +36,8 @@ public class AiController {
     public String agent(@RequestParam(value = "prompt", required = true) String prompt,
             @RequestParam(value = "includeCost", required = false, defaultValue = "true") boolean includeCost) {
 
-        if (openAiApiKey.equals("ENTER_OPENAI_API_KEY_HERE")) {
-            return "Error: Please set 'spring.ai.openai.api-key' in application.properties to use AI Chat Features.";
+        if (openAiApiKey.equals("")) {
+            return "Error: Please set 'OPENAI_API_KEY' in environment variables to use AI Chat Features.";
         }
         
         System.out.println("\n\nReceived prompt: " + prompt);

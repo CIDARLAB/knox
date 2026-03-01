@@ -7,10 +7,11 @@
 ## Quickstart
 
 ### Docker Instructions
-1) Install [Docker Compose](https://docs.docker.com/compose/install/)
+1) Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 2) Clone this repository 
 3) Run `docker-compose up --build` in the root directory of this repo
 4) Open Knox web interface at http://localhost:8080
+5) Open Neo4j web interface at http://localhost:7474
 
 ### Non-Docker Instructions
 1) Install [Java 17+](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
@@ -33,7 +34,7 @@
 
 ### Setup
 1) Get an API-key from [OPENAI](https://platform.openai.com/api-keys)
-2) Place API-key in [application.properties](src/main/resources/application.properties) file (Non-Docker Setup)
+2) Set "OPENAI_API_KEY" Environment Variable with API-key
 3) You can then run the application and use the AI features via the AI Chat
 
 ## Manuscript
