@@ -682,10 +682,7 @@ public class DesignSpaceService {
     			saveDesignSpace(outputSpace);
 
     		}  else {
-				for (DesignSpace csvSpace : csvSpaces) {
-					csvSpace.setGroupID(groupID);
-					saveDesignSpace(csvSpace);
-				}
+				saveDesignSpacesParallel(csvSpaces);
 			}
     	}
     }
