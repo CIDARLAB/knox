@@ -1701,7 +1701,7 @@ public class DesignSpaceService {
 		Set<Integer> graphIDs = designSpaceRepository.getDesignSpaceGraphID(targetSpaceID);
 		
 		if (graphIDs.size() > 0) {
-			return new Long(graphIDs.iterator().next());
+			return (graphIDs.iterator().next()).longValue();
 		} else {
 			return null;
 		}
@@ -1711,7 +1711,7 @@ public class DesignSpaceService {
 		Set<Integer> graphIDs = ruleEvaluationRepository.getRuleEvaluationGraphID(targetEvaluationName);
 		
 		if (graphIDs.size() > 0) {
-			return new Long(graphIDs.iterator().next());
+			return (graphIDs.iterator().next()).longValue();
 		} else {
 			return null;
 		}
@@ -1859,7 +1859,7 @@ public class DesignSpaceService {
 	    		nodes.add(makeD3("nodeID", node.getNodeID()));
 	    	}
 	    	
-	    	nodeIndices.put(node.getNodeID(), new Integer(nodes.size()));
+	    	nodeIndices.put(node.getNodeID(), nodes.size());
 	    }
 	    
 	    for (Node node : space.getNodes()) {
