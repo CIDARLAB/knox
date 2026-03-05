@@ -19,6 +19,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.PostLoad;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @org.springframework.data.neo4j.core.schema.Node
@@ -163,6 +164,16 @@ public class Node {
     	return edges; 
     }
     
+	@PostLoad
+	public void setEdgesTail() {
+		// Set Tail Node for all Edges after loading from neo4j
+		if (hasEdges()) {
+			for (Edge edge : edges) {
+				edge.setTail(this);
+			}
+		}
+	}
+
     public void setEdges(Set<Edge> edges) {
     	this.edges = edges;
     }

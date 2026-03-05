@@ -1520,13 +1520,6 @@ public class DesignSpaceService {
             targetSpace = designSpaceRepository.findById(graphId).orElse(null);
         }
 
-		// Set Tail Node for all Edges
-		for (Node node : targetSpace.getNodes()) {
-			for (Edge edge : node.getEdges()) {
-				edge.setTail(node);
-			}
-		}
-
 
 //      No version history
 //		for (Commit commit : targetSpace.getCommits()) {
