@@ -278,9 +278,11 @@ async function loadEvaluations() {
   select.innerHTML = evals.map(e => 
     `<option value="${e}">${e}</option>`
   ).join('');
-
-  //currentEval = evals[0];
-  //loadData(currentEval);
+  
+  if (evals.length > 0) {
+    currentEval = evals[0];
+    loadData(currentEval);
+  }
 }
 
 async function loadData(evalName) {
