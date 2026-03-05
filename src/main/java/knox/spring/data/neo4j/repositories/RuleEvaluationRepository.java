@@ -23,4 +23,7 @@ public interface RuleEvaluationRepository extends Neo4jRepository<RuleEvaluation
         "DETACH DELETE target")
     void deleteRuleEvaluation(@Param("targetEvaluationName") String targetEvaluationName);
 
+    @Query("MATCH (r:RuleEvaluation) RETURN r.evaluationName")
+    Set<String> getAllEvaluationNames();
+
 }

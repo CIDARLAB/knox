@@ -1000,6 +1000,11 @@ public class KnoxController {
 		return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
 	}
 
+	@GetMapping("/rule/listEvaluations")
+	public Set<String> listRuleEvaluations() {
+		return designSpaceService.listRuleEvaluations();
+	}
+
 	@GetMapping("/rule/getEvaluation")
 	public Map<String, Map<String, Object>> getEvaluation(@RequestParam(value = "evaluationName", required = true) String evaluationName) {
 		return designSpaceService.getEvaluationResults(evaluationName);
