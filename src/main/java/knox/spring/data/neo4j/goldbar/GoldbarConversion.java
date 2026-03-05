@@ -416,7 +416,7 @@ public class GoldbarConversion {
 		case "spacer":
 			return "http://identifiers.org/so/SO:0002223";
 		default:
-			return "http://knox.org/role/" + csvRole;
+			return csvRole;
 		}
 	}
 
