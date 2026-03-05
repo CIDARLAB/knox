@@ -1153,12 +1153,7 @@ public class DesignSpaceService {
 
 	public void deleteDesignSpaceGroup(String groupID) {
 		System.out.println("\nDeleting Group: " + groupID + "\n");
-
-		List<String> spaceIDs = designSpaceRepository.listDesignSpaces(groupID);
-
-		for (String spaceID : spaceIDs) {
-			deleteDesignSpace(spaceID);
-		}
+		designSpaceRepository.deleteDesignSpacesByGroupID(groupID);
     }
 
 	public String renameDesignSpace(String targetSpaceID, String newSpaceID) throws DesignSpaceNotFoundException {
