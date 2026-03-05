@@ -26,6 +26,12 @@ public class ANDOperator {
 			} else {
 				product.applyTensor(inputSpaces.get(i), tolerance, 0, 0, roles, irrelevantParts);
 			}
+
+			// Early exit if product is already empty
+			if (!product.getSpace().hasNodes()) {
+				outputSpace.shallowCopyNodeSpace(new NodeSpace(new ArrayList<String>(), new ArrayList<String>()));
+				return;
+			}
 			
 			product.getSpace().deleteBlankEdges(product.getSpace().getBlankEdges());
 		}
