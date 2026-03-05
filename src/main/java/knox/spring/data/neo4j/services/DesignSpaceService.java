@@ -1081,8 +1081,8 @@ public class DesignSpaceService {
 		ArrayList<String> ruleSpaceIDs = new ArrayList<>(getGroupSpaceIDs(ruleGroupID));
 		
 		System.out.println("Loading Spaces...");
-		ArrayList<NodeSpace> designSpaces = loadSpaces(designSpaceIDs);
-		ArrayList<NodeSpace> ruleSpaces = loadSpaces(ruleSpaceIDs);
+		ArrayList<NodeSpace> designSpaces = loadSpacesParallel(designSpaceIDs);
+		ArrayList<NodeSpace> ruleSpaces = loadSpacesParallel(ruleSpaceIDs);
 		System.out.println("Spaces Loaded.");
 
 		// Populate design scores if not provided
