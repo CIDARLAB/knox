@@ -76,6 +76,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.Collection;
 
 @Service
@@ -379,6 +382,45 @@ public class DesignSpaceService {
 			}
 		}
 		return spaces;
+	}
+
+	private ArrayList<NodeSpace> loadSpacesParallel(ArrayList<String> inputSpaceIDs) {
+		int size = inputSpaceIDs.size();
+		
+		if (size <= 3) {
+			return loadSpaces(inputSpaceIDs);
+		}
+		
+		// Use fixed thread pool to limit concurrent DB connections
+		int numThreads = Math.min(size, Runtime.getRuntime().availableProcessors() * 2);
+		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+		
+		try {
+			// Create futures for all load operations
+			List<CompletableFuture<DesignSpace>> futures = new ArrayList<>(size);
+			
+			for (String inputSpaceID : inputSpaceIDs) {
+				CompletableFuture<DesignSpace> future = CompletableFuture.supplyAsync(() -> {
+					DesignSpace space = loadDesignSpace(inputSpaceID);
+					if (space == null) {
+						throw new DesignSpaceNotFoundException("Input space with ID " + inputSpaceID + " not found.");
+					}
+					return space;
+				}, executor);
+				futures.add(future);
+			}
+			
+			// Wait for all to complete and collect results
+			ArrayList<NodeSpace> spaces = new ArrayList<>(size);
+			for (CompletableFuture<DesignSpace> future : futures) {
+				spaces.add(future.join()); // Throws exception if any failed
+			}
+			
+			return spaces;
+			
+		} finally {
+			executor.shutdown();
+		}
 	}
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
