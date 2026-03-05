@@ -1014,7 +1014,33 @@ public class DesignSpaceService {
 	}
 
 	public Map<String, Map<String, Object>> ruleEvaluation(String evaluationName, ArrayList<String> designSpaceIDs, String ruleGroupID,
-			ArrayList<Integer> designLabels, ArrayList<Double> designScores, String labelingMethod) {
+			ArrayList<Integer> designLabels, ArrayList<Double> designScores, String labelingMethod) throws RuntimeException {
+		
+		ArrayList<String> ruleSpaceIDs = new ArrayList<>(getGroupSpaceIDs(ruleGroupID));
+		
+		System.out.println("Loading Spaces...");
+		ArrayList<NodeSpace> designSpaces = loadSpacesParallel(designSpaceIDs);
+		ArrayList<NodeSpace> ruleSpaces = loadSpacesParallel(ruleSpaceIDs);
+		System.out.println("Spaces Loaded.");
+
+		// Populate design scores if not provided
+		if (designScores.isEmpty()) {
+			System.out.println("Populating design scores...");
+			for (int i = 0; i < designSpaces.size(); i++) {
+				designScores.add(designSpaces.get(i).getAvgScoreofAllNonBlankEdges());
+			}
+		}
+
+		RuleEvaluation ruleEvaluation = new RuleEvaluation(evaluationName, ruleSpaceIDs, designSpaceIDs, designLabels, designScores, ruleSpaces, designSpaces, labelingMethod);
+		Map<String, Map<String, Object>> evaluationResults = ruleEvaluation.getEvaluationResults();
+		System.out.println("Rule Evaluation Completed.");
+
+		saveRuleEvaluation(ruleEvaluation);
+		System.out.println("Rule Evaluation Saved.\n");
+
+		return evaluationResults;
+	}
+
 	private void importGoldbarsParallel(
 			Map<String, String> goldbar, 
 			JSONObject categories, 
@@ -1077,6 +1103,8 @@ public class DesignSpaceService {
 			completed.get(), elapsed / 1000.0, completed.get() / (elapsed / 1000.0), failed.get());
 	}
 
+	public void runRuleEvaluation(String evaluationName, ArrayList<String> designSpaceIDs, String ruleGroupID,
+			ArrayList<Integer> designLabels, ArrayList<Double> designScores, String labelingMethod) throws RuntimeException {
 		
 		ArrayList<String> ruleSpaceIDs = new ArrayList<>(getGroupSpaceIDs(ruleGroupID));
 		
@@ -1094,13 +1122,11 @@ public class DesignSpaceService {
 		}
 
 		RuleEvaluation ruleEvaluation = new RuleEvaluation(evaluationName, ruleSpaceIDs, designSpaceIDs, designLabels, designScores, ruleSpaces, designSpaces, labelingMethod);
-		Map<String, Map<String, Object>> ruleResults = ruleEvaluation.getEvaluationResults();
+		ruleEvaluation.runEvaluationParallel();
 		System.out.println("Rule Evaluation Completed.");
 
 		saveRuleEvaluation(ruleEvaluation);
 		System.out.println("Rule Evaluation Saved.\n");
-
-		return ruleResults;
 	}
 
 	public Map<String, Map<String, Object>> getEvaluationResults(String evaluationName) {
