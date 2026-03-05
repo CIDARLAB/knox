@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.stream.IntStream;
 
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
@@ -64,7 +69,7 @@ public class RuleEvaluation {
     }
 
     public RuleEvaluation(String evaluationName, ArrayList<String> ruleSpaceIDs, ArrayList<String> designSpaceIDs, ArrayList<Integer> designLabels, ArrayList<Double> designScores,
-            ArrayList<NodeSpace> ruleSpaces, ArrayList<NodeSpace> designSpaces, String labelingMethod) {
+            ArrayList<NodeSpace> ruleSpaces, ArrayList<NodeSpace> designSpaces, String labelingMethod) throws IllegalArgumentException {
 
         this.evaluationName = evaluationName;
         this.ruleSpaceIDs = ruleSpaceIDs;
@@ -77,6 +82,10 @@ public class RuleEvaluation {
         this.labelingMethod = labelingMethod;
 
         if (this.designLabels.isEmpty() && !this.designScores.isEmpty()) {
+            if (this.designScores.size() != this.designSpaces.size()) {
+                throw new IllegalArgumentException("Design scores size must match design spaces size.");
+            }
+
             if (labelingMethod.equals("median")) {
                 populateLabelsByMedian();
             } else if (labelingMethod.equals("sign")) {
@@ -92,14 +101,15 @@ public class RuleEvaluation {
     public Map<String, Map<String, Object>> getEvaluationResults() {
         System.out.println("Getting Evaluation Results...");
         if (flattenedRuleEvaluations.isEmpty()) {
-            runEvaluation();
+            runEvaluationParallel();
         }
         return evaluateRuleSpace();
     }
 
-    private void runEvaluation() {
+    public void runEvaluation() {
         System.out.println("Running Rule Evaluation...");
-        int ruleIndex = 0;
+        flattenedRuleEvaluations.ensureCapacity(ruleSpaces.size() * designSpaces.size());
+        //int ruleIndex = 0;
         for (NodeSpace ruleSpace : ruleSpaces) {
             ArrayList<Integer> designResults = new ArrayList<>();
 
@@ -119,13 +129,130 @@ public class RuleEvaluation {
 
             flattenedRuleEvaluations.addAll(designResults);
 
-            System.out.println("Rule Space ID: " + ruleSpaceIDs.get(ruleIndex));
-            System.out.println("\n--------------------------------------------------\n");
-            ruleIndex++;
+            //System.out.println("Rule Space ID: " + ruleSpaceIDs.get(ruleIndex));
+            //System.out.println("\n--------------------------------------------------\n");
+            //ruleIndex++;
+        }
+    }
+
+    public void runEvaluationParallel() throws IllegalArgumentException, RuntimeException {
+        System.out.println("Running Rule Evaluation (Parallel)...");
+        
+        int numRules = ruleSpaces.size();
+        int numDesigns = designSpaces.size();
+        int totalSize = numRules * numDesigns;
+        System.out.println("Total Evaluations: " + totalSize);
+
+        if (totalSize == 0) {
+            throw new IllegalArgumentException("No rule spaces or design spaces provided for evaluation.");
+        }
+        
+        // Use array for thread-safe indexed writes
+        AtomicIntegerArray results = new AtomicIntegerArray(totalSize);
+        AtomicInteger completed = new java.util.concurrent.atomic.AtomicInteger(0);
+        
+        HashSet<String> emptyRoles = new HashSet<>();
+        ArrayList<String> emptyIrrelevantParts = new ArrayList<>();
+
+        // Sort rules by complexity (edge count) - process complex ones first
+        // This improves load balancing across threads
+        List<Integer> ruleIndices = new ArrayList<>();
+        for (int i = 0; i < numRules; i++) {
+            ruleIndices.add(i);
+        }
+        //ruleIndices.sort((a, b) -> {
+        //    int edgesA = ruleSpaces.get(a).getEdges().size();
+        //    int edgesB = ruleSpaces.get(b).getEdges().size();
+        //    return Integer.compare(edgesA, edgesB); // Descending - complex first
+        //});
+
+        // Progress reporter thread
+        long startTime = System.currentTimeMillis();
+        Thread progressThread = startProgressThread(completed, totalSize, startTime);
+        
+        // Use custom ForkJoinPool with more threads
+        int numThreads = Math.min(totalSize, Runtime.getRuntime().availableProcessors() * 2);
+        System.out.println("Using " + numThreads + " threads...");
+
+        // ThreadLocal to reuse ArrayList per thread (reduces GC pressure)
+        ThreadLocal<ArrayList<NodeSpace>> threadLocalInputSpaces = ThreadLocal.withInitial(() -> {
+            ArrayList<NodeSpace> list = new ArrayList<>(2);
+            list.add(null);
+            list.add(null);
+            return list;
+        });
+        
+        ForkJoinPool customPool = new ForkJoinPool(numThreads);
+        
+        try {
+            customPool.submit(() -> 
+                ruleIndices.parallelStream().forEach(ruleIdx -> {
+                    NodeSpace ruleSpace = ruleSpaces.get(ruleIdx);
+                    
+                    for (int designIdx = 0; designIdx < numDesigns; designIdx++) {
+                        NodeSpace designSpace = designSpaces.get(designIdx);
+                        
+                        ArrayList<NodeSpace> inputSpaces = threadLocalInputSpaces.get();
+                        inputSpaces.set(0, designSpace);
+                        inputSpaces.set(1, ruleSpace);
+                        
+                        boolean isEmpty = ANDOperator.evaluateOnlyFast(inputSpaces, 1, true, emptyRoles, emptyIrrelevantParts);
+                        
+                        int flatIndex = ruleIdx * numDesigns + designIdx;
+                        results.set(flatIndex, isEmpty ? 1 : 0);
+                        completed.incrementAndGet();
+                    }
+                })
+            ).get(); // Wait for completion
+        } catch (Exception e) {
+            throw new RuntimeException("Parallel evaluation failed", e);
+        } finally {
+            customPool.shutdown();
+        }
+
+        progressThread.interrupt();
+    
+        long totalTime = System.currentTimeMillis() - startTime;
+        System.out.printf("Completed %d evaluations in %.1f seconds (%.0f eval/sec)%n",
+            totalSize, totalTime / 1000.0, totalSize / (totalTime / 1000.0));
+        
+        // Convert to ArrayList
+        flattenedRuleEvaluations = new ArrayList<>(totalSize);
+        for (int i = 0; i < totalSize; i++) {
+            flattenedRuleEvaluations.add(results.get(i));
         }
     }
 
     private Map<String, Map<String, Object>> evaluateRuleSpace() {
+    private Thread startProgressThread(AtomicInteger completed, int totalSize, long startTime) {
+    Thread progressThread = new Thread(() -> {
+        int lastCompleted = 0;
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                Thread.sleep(5000);
+                int done = completed.get();
+                double percent = (done * 100.0) / totalSize;
+                long elapsed = System.currentTimeMillis() - startTime;
+                double rate = done / (elapsed / 1000.0);
+                int remaining = totalSize - done;
+                double etaSeconds = rate > 0 ? remaining / rate : 0;
+                
+                // Instantaneous rate
+                double instantRate = (done - lastCompleted) / 5.0;
+                lastCompleted = done;
+                
+                System.out.printf("Progress: %.1f%% (%d/%d) - %.0f eval/sec (inst: %.0f) - ETA: %.0f sec%n",
+                    percent, done, totalSize, rate, instantRate, etaSeconds);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+    });
+    progressThread.setDaemon(true);
+    progressThread.start();
+    return progressThread;
+}
+
         Map<String, Map<String, Object>> ruleResults = new HashMap<>();
         Map<String, Map<String, Object>> evaluationResults = new HashMap<>();
         Map<String, ArrayList<Object>> designToRule = new HashMap<>();
