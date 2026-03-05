@@ -1789,9 +1789,9 @@ public class DesignSpaceService {
 			v++;
 		}
 
-		System.out.println("\nSaving SpaceID: " + space.getSpaceID());
-		System.out.println("Number of Nodes: " + space.getNodes().size());
-		System.out.println("Number of Edges: " + space.getEdges().size());
+		//System.out.println("\nSaving SpaceID: " + space.getSpaceID());
+		//System.out.println("Number of Nodes: " + space.getNodes().size());
+		//System.out.println("Number of Edges: " + space.getEdges().size());
 
 		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
 
