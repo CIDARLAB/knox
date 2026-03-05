@@ -242,7 +242,10 @@ public class RuleEvaluation {
     private ArrayList<ArrayList<Integer>> chunkRuleEvaluations() {
         ArrayList<ArrayList<Integer>> chunks = new ArrayList<>();
         int totalSize = flattenedRuleEvaluations.size();
-        int chunkSize = designLabels.size();
+        int chunkSize = designSpaceIDs.size();
+        if (chunkSize == 0) {
+            throw new IllegalArgumentException("Design space IDs cannot be empty when chunking rule evaluations.");
+        }
         for (int i = 0; i < totalSize; i += chunkSize) {
             ArrayList<Integer> chunk = new ArrayList<>(flattenedRuleEvaluations.subList(i, Math.min(totalSize, i + chunkSize)));
             chunks.add(chunk);
