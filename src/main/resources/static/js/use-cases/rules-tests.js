@@ -235,8 +235,8 @@ let testPassO = [
     "(A then A then A)",
     "(A then C then C)",
     "(B then C then C)",
-    "(C then C then A then A then C",
-    "(C then C then B then B then C"
+    "(C then C then A then A then C)",
+    "(C then C then B then B then C)"
 ];
 let testFailO = [
     // True Fails
