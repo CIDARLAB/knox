@@ -15,16 +15,32 @@ public class ANDOperator {
 	private static final Logger LOG = LoggerFactory.getLogger(NodeSpace.class);
 	
 	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, int tolerance, boolean isComplete, Set<String> roles, ArrayList<String> irrelevantParts) {
+		apply(inputSpaces, outputSpace, tolerance, 0, isComplete, roles, irrelevantParts);
+	}
+	
+	public static void apply(List<NodeSpace> inputSpaces, NodeSpace outputSpace, int tolerance, int weightTolerance, boolean isComplete, Set<String> roles, ArrayList<String> irrelevantParts) {
 		
 		//System.out.println("AND Operator:");
 		//System.out.println("tolerance: " + String.valueOf(tolerance));
-		Product product = new Product(inputSpaces.get(0));
+
+		// Sort input spaces by number of edges (ascending)
+		List<Integer> indices = new ArrayList<>();
+		for (int i = 0; i < inputSpaces.size(); i++) {
+			indices.add(i);
+		}
+		indices.sort((a, b) -> {
+			int edgesA = inputSpaces.get(a).getEdges().size();
+			int edgesB = inputSpaces.get(b).getEdges().size();
+			return Integer.compare(edgesA, edgesB);
+		});
+
+		Product product = new Product(inputSpaces.get(indices.get(0)));
 				
 		for (int i = 1; i < inputSpaces.size(); i++) {
 			if (isComplete) {
-				product.applyTensor(inputSpaces.get(i), tolerance, 0, 2, roles, irrelevantParts);
+				product.applyTensor(inputSpaces.get(indices.get(i)), tolerance, weightTolerance, 2, roles, irrelevantParts);
 			} else {
-				product.applyTensor(inputSpaces.get(i), tolerance, 0, 0, roles, irrelevantParts);
+				product.applyTensor(inputSpaces.get(indices.get(i)), tolerance, weightTolerance, 0, roles, irrelevantParts);
 			}
 
 			// Early exit if product is already empty
