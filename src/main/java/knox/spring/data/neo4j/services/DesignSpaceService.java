@@ -823,6 +823,60 @@ public class DesignSpaceService {
 		return MultipleWeights;
 	}
 
+	private void saveDesignSpacesParallel(List<DesignSpace> spaces) {
+		int size = spaces.size();
+		
+		// For small lists, sequential is fine
+		if (size <= 5) {
+			System.out.println("Saving " + size + " design spaces sequentially...");
+			for (DesignSpace space : spaces) {
+				saveDesignSpace(space);
+			}
+			return;
+		}
+		
+		System.out.println("Saving " + size + " design spaces in parallel...");
+		long startTime = System.currentTimeMillis();
+		
+		// Limit concurrent DB writes to avoid overwhelming the database
+		int numThreads = Math.min(size, Runtime.getRuntime().availableProcessors() * 2);
+		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+		
+		java.util.concurrent.atomic.AtomicInteger completed = new java.util.concurrent.atomic.AtomicInteger(0);
+		java.util.concurrent.atomic.AtomicInteger failed = new java.util.concurrent.atomic.AtomicInteger(0);
+		
+		try {
+			List<CompletableFuture<Void>> futures = new ArrayList<>(size);
+			
+			for (DesignSpace space : spaces) {
+				CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+					try {
+						saveDesignSpace(space);
+						
+						int done = completed.incrementAndGet();
+						if (done % 100 == 0 || done == size) {
+							System.out.printf("Saved %d/%d spaces (%.1f%%)%n", done, size, done * 100.0 / size);
+						}
+					} catch (Exception e) {
+						failed.incrementAndGet();
+						System.err.println("Failed to save space: " + space.getSpaceID() + " - " + e.getMessage());
+					}
+				}, executor);
+				futures.add(future);
+			}
+			
+			// Wait for all to complete
+			CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+			
+		} finally {
+			executor.shutdown();
+		}
+		
+		long elapsed = System.currentTimeMillis() - startTime;
+		System.out.printf("Saved %d spaces in %.1f seconds (%.1f spaces/sec), %d failed%n",
+			completed.get(), elapsed / 1000.0, completed.get() / (elapsed / 1000.0), failed.get());
+	}
+
 	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID, String groupID, Double weight)
 			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
 		SBOLConversion sbolConv = new SBOLConversion();
