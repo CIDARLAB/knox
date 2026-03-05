@@ -651,7 +651,7 @@ public class DesignSpaceService {
     	
     	for (BufferedReader designReader : designReaders) {
     		try {
-    			csvSpaces.addAll(processCSVDesigns(designReader, outputSpacePrefix, compIDToRole, weights, multipleWeights, weightCSV, multipleWeightsCSV));
+    			csvSpaces.addAll(processCSVDesigns(designReader, outputSpacePrefix, groupID, compIDToRole, weights, multipleWeights, weightCSV, multipleWeightsCSV));
     		} catch (IOException e) {
     			e.printStackTrace();
     		} finally {
@@ -690,7 +690,7 @@ public class DesignSpaceService {
     	}
     }
     
-    public List<DesignSpace> processCSVDesigns(BufferedReader csvReader, String outputSpacePrefix, 
+    public List<DesignSpace> processCSVDesigns(BufferedReader csvReader, String outputSpacePrefix, String groupID,
     		HashMap<String, String> compIDToRole, List<String> defaultWeight, List<List<String>> multipleWeights, Boolean weightCSV, Boolean multipleWeightsCSV) throws IOException {
     	List<DesignSpace> csvSpaces = new LinkedList<DesignSpace>();
     	
@@ -720,7 +720,7 @@ public class DesignSpaceService {
 				j++;
 				designNumber++;
 
-				DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + "_design_" + designNumber);
+				DesignSpace outputSpace = new DesignSpace(outputSpacePrefix + "_design_(" + designNumber + ")", groupID);
 
 				Node outputStart = outputSpace.createStartNode();
 
