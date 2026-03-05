@@ -927,13 +927,17 @@ public class NodeSpace {
     	}
     }
 
-	public Boolean isEmpty() {
+	public boolean isEmpty() {
 		// An Empty NodeSpace has only blank edges
 
-		Set<Edge> edges = getEdges();
-		for (Edge edge : edges) {
-			if (!edge.isBlank()) {
-				return false;
+		// General case: iterate until non-blank found
+		for (Node node : nodes) {
+			if (node.hasEdges()) {
+				for (Edge edge : node.getEdges()) {
+					if (!edge.isBlank()) {
+						return false;
+					}
+				}
 			}
 		}
 		
