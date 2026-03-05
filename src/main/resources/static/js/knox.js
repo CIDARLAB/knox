@@ -744,7 +744,19 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
+
+  let tableBtn = $('#table-btn');
+  tableBtn.tooltipster({
+    content: $('#table-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
 }
+
+$('#table-tooltip').click(() => {
+  window.open('/purityTable.html', '_blank');
+});
 
 $('#show-sbol-tooltips').click(() => {
 

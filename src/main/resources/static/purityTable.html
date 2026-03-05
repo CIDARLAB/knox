@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rule Purity Table</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #e8ff47;
+    --accent2: #47c9ff;
+    --accent3: #ff6b6b;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --row-hover: #161624;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 24px;
+  }
+
+  .container { width: 100%; max-width: 1400px; }
+
+  header {
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    padding: 10px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box::placeholder { color: var(--muted); }
+  .search-box:focus { border-color: var(--accent); }
+
+  .table-wrap {
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+
+  thead tr {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 16px;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+    white-space: nowrap;
+  }
+
+  th:hover { color: var(--accent); }
+  th.sorted { color: var(--accent); }
+  th .sort-icon { margin-left: 4px; opacity: 0.5; font-size: 0.6rem; }
+  th.sorted .sort-icon { opacity: 1; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    animation: rowIn 0.4s ease both;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--row-hover); }
+
+  td {
+    padding: 12px 16px;
+    font-size: 0.78rem;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .rule-id { color: var(--muted); font-size: 0.72rem; }
+
+  .num-accent  { color: var(--accent);  font-weight: 600; }
+  .num-blue    { color: var(--accent2); font-weight: 600; }
+  .num-red     { color: var(--accent3); font-weight: 600; }
+  .num-neutral { color: var(--muted); }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .badge-true  { background: rgba(232,255,71,0.15);  color: var(--accent); }
+  .badge-false { background: rgba(90,90,122,0.2);    color: var(--muted); }
+
+  .pct-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    min-width: 50px;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+
+  .bar-fill.red  { background: var(--accent3); }
+  .bar-fill.blue { background: var(--accent2); }
+
+  .pct-label { font-size: 0.72rem; font-weight: 600; min-width: 36px; text-align: right; }
+  .pct-label.red  { color: var(--accent3); }
+  .pct-label.blue { color: var(--accent2); }
+  .pct-label.green { color: var(--accent); }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border: 1px solid var(--border);
+    border-top: none;
+    background: var(--surface);
+    font-size: 0.75rem;
+    color: var(--muted);
+    animation: fadeUp 0.6s 0.3s ease both;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .page-btns { display: flex; gap: 6px; }
+
+  .page-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    width: 30px; height: 30px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: grid; place-items: center;
+  }
+
+  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+
+  .empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+  }
+
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:none; } }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:none; } }
+  @keyframes rowIn    { from { opacity:0; } to { opacity:1; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Rule <span>Analysis</span></h1>
+    <p>Rule evaluation · Purity metrics</p>
+  </header>
+
+  <p id="sourceLabel" style="margin-top:6px; color:var(--accent2);">
+    Source: —
+  </p>
+
+  <div class="controls">
+    <input class="search-box" type="text" placeholder="Search by Rule Space ID..." id="searchInput">
+    <select class="search-box" id="evalSelect" style="flex:0; min-width:220px;">
+      <option value="">Loading evaluations...</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-col="ruleSpaceID">Rule Space ID <span class="sort-icon">↕</span></th>
+          <th data-col="impact">Impact <span class="sort-icon">↕</span></th>
+          <th data-col="numCorrect">Correct <span class="sort-icon">↕</span></th>
+          <th data-col="numIncorrect">Incorrect <span class="sort-icon">↕</span></th>
+          <th data-col="goodDesignsElim">Good Elim <span class="sort-icon">↕</span></th>
+          <th data-col="poorDesignsElim">Poor Elim <span class="sort-icon">↕</span></th>
+          <th data-col="totalDesignsElim">Total Elim <span class="sort-icon">↕</span></th>
+          <th data-col="goodnessPercent">Goodness % <span class="sort-icon">↕</span></th>
+          <th data-col="poornessPercent">Poorness % <span class="sort-icon">↕</span></th>
+          <th data-col="poorEliminationPercent">Poor Elim % <span class="sort-icon">↕</span></th>
+          <th data-col="totalPerfection">Total Perf <span class="sort-icon">↕</span></th>
+          <th data-col="totalImperfection">Total Imperf <span class="sort-icon">↕</span></th>
+          <th data-col="goodPerfection">Good Perf <span class="sort-icon">↕</span></th>
+          <th data-col="poorPerfection">Poor Perf <span class="sort-icon">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" style="display:none">No records found.</div>
+  </div>
+
+  <div class="pagination">
+    <span id="pageInfo">Showing 0–0 of 0</span>
+    <div class="page-btns" id="pageBtns"></div>
+  </div>
+</div>
+
+<script>
+let currentEval = '';
+let RAW_DATA = [];
+
+async function loadEvaluations() {
+  const res = await fetch('/rule/listEvaluations');
+  const evals = await res.json();
+
+  const select = document.getElementById('evalSelect');
+  select.innerHTML = evals.map(e => 
+    `<option value="${e}">${e}</option>`
+  ).join('');
+
+  //currentEval = evals[0];
+  //loadData(currentEval);
+}
+
+async function loadData(evalName) {
+  if (evalName) {
+    const res = await fetch(`/table/purity?evaluationName=${evalName}`);
+    RAW_DATA = await res.json();
+    document.getElementById('sourceLabel').textContent = `Source: ${evalName}`;
+  } else {
+    // Fallback sample data matching your columns
+    // TODO: Check the accuracy of this example
+    RAW_DATA = [
+      {
+        ruleSpaceID: 'RuleTestBsub_H1_S1_Rule_O',
+        impact: 0,
+        numCorrect: 1998,
+        numIncorrect: 1998,
+        goodDesignsElim: 18,
+        poorDesignsElim: 54,
+        totalDesignsElim: 72,
+        goodnessPercent: 99,
+        poornessPercent: 97,
+        poorEliminationPercent: 75,
+        totalPerfection: false,
+        totalImperfection: false,
+        goodPerfection: false,
+        poorPerfection: false,
+      },
+      {
+        ruleSpaceID: 'RuleTestBsub_H2_S1_Rule_A',
+        impact: 3,
+        numCorrect: 2100,
+        numIncorrect: 1850,
+        goodDesignsElim: 32,
+        poorDesignsElim: 88,
+        totalDesignsElim: 120,
+        goodnessPercent: 95,
+        poornessPercent: 91,
+        poorEliminationPercent: 82,
+        totalPerfection: false,
+        totalImperfection: true,
+        goodPerfection: false,
+        poorPerfection: true,
+      },
+      {
+        ruleSpaceID: 'RuleTestBsub_H1_S2_Rule_B',
+        impact: 7,
+        numCorrect: 1750,
+        numIncorrect: 2200,
+        goodDesignsElim: 10,
+        poorDesignsElim: 70,
+        totalDesignsElim: 80,
+        goodnessPercent: 88,
+        poornessPercent: 99,
+        poorEliminationPercent: 90,
+        totalPerfection: true,
+        totalImperfection: false,
+        goodPerfection: true,
+        poorPerfection: false,
+      },
+      {
+        ruleSpaceID: 'RuleTestBsub_H3_S1_Rule_C',
+        impact: 1,
+        numCorrect: 3000,
+        numIncorrect: 500,
+        goodDesignsElim: 5,
+        poorDesignsElim: 95,
+        totalDesignsElim: 100,
+        goodnessPercent: 100,
+        poornessPercent: 85,
+        poorEliminationPercent: 95,
+        totalPerfection: false,
+        totalImperfection: false,
+        goodPerfection: false,
+        poorPerfection: false,
+      },
+      {
+        ruleSpaceID: 'RuleTestBsub_H2_S3_Rule_D',
+        impact: 5,
+        numCorrect: 2500,
+        numIncorrect: 1200,
+        goodDesignsElim: 22,
+        poorDesignsElim: 60,
+        totalDesignsElim: 82,
+        goodnessPercent: 93,
+        poornessPercent: 78,
+        poorEliminationPercent: 68,
+        totalPerfection: false,
+        totalImperfection: true,
+        goodPerfection: false,
+        poorPerfection: true,
+      },
+    ];
+
+    document.getElementById('sourceLabel').textContent = `Source: Example Data`;
+  }
+  render();
+}
+
+const PER_PAGE = 15;
+let sortCol = 'ruleSpaceID', sortDir = 1, search = '', page = 1;
+
+function filtered() {
+  return RAW_DATA
+    .filter(r => {
+      const q = search.toLowerCase();
+      return !q || r.ruleSpaceID.toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      let va = a[sortCol], vb = b[sortCol];
+      if (typeof va === 'boolean') return (va === vb ? 0 : va ? -1 : 1) * sortDir;
+      if (typeof va === 'string') return va.localeCompare(vb) * sortDir;
+      return (va - vb) * sortDir;
+    });
+}
+
+function boolBadge(val) {
+  return `<span class="badge ${val ? 'badge-true' : 'badge-false'}">${val ? 'True' : 'False'}</span>`;
+}
+
+function pctBar(val, colorClass) {
+  return `
+    <div class="pct-bar">
+      <div class="bar-track"><div class="bar-fill ${colorClass}" style="width:${val}%"></div></div>
+      <span class="pct-label ${colorClass || 'green'}">${val}%</span>
+    </div>`;
+}
+
+function render() {
+  const rows = filtered();
+  const totalPages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
+  if (page > totalPages) page = totalPages;
+  const slice = rows.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  const body = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyMsg');
+
+  if (slice.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    body.innerHTML = slice.map((r, i) => `
+      <tr style="animation-delay:${i * 0.04}s">
+        <td class="rule-id">${r.ruleSpaceID}</td>
+        <td class="${r.impact > 0 ? 'num-blue' : 'num-neutral'}">${r.impact}</td>
+        <td class="num-accent">${r.numCorrect.toLocaleString()}</td>
+        <td class="num-red">${r.numIncorrect.toLocaleString()}</td>
+        <td class="num-neutral">${r.goodDesignsElim}</td>
+        <td class="num-neutral">${r.poorDesignsElim}</td>
+        <td class="num-blue">${r.totalDesignsElim}</td>
+        <td>${pctBar(r.goodnessPercent, 'green')}</td>
+        <td>${pctBar(r.poornessPercent, 'red')}</td>
+        <td>${pctBar(r.poorEliminationPercent, 'blue')}</td>
+        <td>${boolBadge(r.totalPerfection)}</td>
+        <td>${boolBadge(r.totalImperfection)}</td>
+        <td>${boolBadge(r.goodPerfection)}</td>
+        <td>${boolBadge(r.poorPerfection)}</td>
+      </tr>
+    `).join('');
+  }
+
+  const start = rows.length ? (page - 1) * PER_PAGE + 1 : 0;
+  const end   = Math.min(page * PER_PAGE, rows.length);
+  document.getElementById('pageInfo').textContent = `Showing ${start}–${end} of ${rows.length}`;
+
+  const btns = document.getElementById('pageBtns');
+  btns.innerHTML = '';
+  for (let p = 1; p <= totalPages; p++) {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (p === page ? ' active' : '');
+    b.textContent = p;
+    b.onclick = () => { page = p; render(); };
+    btns.appendChild(b);
+  }
+
+  document.querySelectorAll('th[data-col]').forEach(th => {
+    const col = th.dataset.col;
+    th.classList.toggle('sorted', col === sortCol);
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = col === sortCol ? (sortDir === 1 ? '↑' : '↓') : '↕';
+  });
+}
+
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortDir *= -1;
+    else { sortCol = col; sortDir = 1; }
+    page = 1;
+    render();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  search = e.target.value;
+  page = 1;
+  render();
+});
+
+document.getElementById('evalSelect').addEventListener('change', e => {
+  currentEval = e.target.value;
+  page = 1;
+  loadData(currentEval);
+});
+
+loadEvaluations();
+loadData(currentEval);
+
+</script>
+</body>
+</html>
