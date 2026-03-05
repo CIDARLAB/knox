@@ -1916,6 +1916,8 @@ $("#testRulesBtn").click(async function () {
   let designName = "test_Rule_";
   let groupID = "testing_rules"
 
+  endpoint.deleteDesignGroup(groupID);
+
   for (let rule of Object.keys(exampleRules)) {
     // Space names
     let ruleSpaceName = designName + rule + "_ruleSpace";
@@ -1923,13 +1925,6 @@ $("#testRulesBtn").click(async function () {
     let failSpaceName = designName + rule + "_failSpace";
     let outputPass = designName + rule + "_and1_Pass";
     let outputFail = designName + rule + "_and1_Fail";
-
-    // Clean up any previous designs
-    endpoint.deleteThisDesign(ruleSpaceName, false);
-    endpoint.deleteThisDesign(passSpaceName, false);
-    endpoint.deleteThisDesign(failSpaceName, false);
-    endpoint.deleteThisDesign(outputPass, false);
-    endpoint.deleteThisDesign(outputFail, false);
 
     // Create new designs
     submitGoldbar(exampleRules[rule], JSON.stringify(ruleCategories), ruleSpaceName, groupID, weight);
