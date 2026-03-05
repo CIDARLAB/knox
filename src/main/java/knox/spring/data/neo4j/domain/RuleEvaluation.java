@@ -187,11 +187,13 @@ public class RuleEvaluation {
             // Populate metrics
             Integer numCorrect = goodRemaining + poorDesignsElim;
             Integer numIncorrect = poorRemaining + goodDesignsElim;
+            metrics.put("ruleSpaceID", ruleSpaceID);
             metrics.put("numCorrect", numCorrect);
             metrics.put("numIncorrect", numIncorrect);
             metrics.put("goodDesignsElim", goodDesignsElim);
             metrics.put("poorDesignsElim", poorDesignsElim);
-            metrics.put("Impact", 100 * (numCorrect - numIncorrect)/(totalGoodDesigns + totalPoorDesigns));
+            metrics.put("totalDesignsElim", totalDesignsElim);
+            metrics.put("impact", 100 * (numCorrect - numIncorrect)/(totalGoodDesigns + totalPoorDesigns));
             metrics.put("goodnessPercent", 100 * goodRemaining / totalGoodDesigns);
             metrics.put("poornessPercent", 100 * poorRemaining / totalPoorDesigns);
 
@@ -217,6 +219,12 @@ public class RuleEvaluation {
                 metrics.put("totalPerfection", true);
             } else {
                 metrics.put("totalPerfection", false);
+            }
+
+            if (totalDesignsElim.equals(totalGoodDesigns + totalPoorDesigns)) {
+                metrics.put("totalImperfection", true);
+            } else {
+                metrics.put("totalImperfection", false);
             }
 
             // Store results
