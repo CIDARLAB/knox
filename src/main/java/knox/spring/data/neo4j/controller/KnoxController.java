@@ -1097,20 +1097,21 @@ public class KnoxController {
 
     @GetMapping("/designSpace/list")
     public List<String> listDesignSpaces() {
+		//System.out.println("\nLIST DESIGN SPACES:\n");
         return designSpaceService.listDesignSpaces();
     }
 
 	@GetMapping("/designSpace/listGroupSpaces")
     public List<String> listGroupSpaceIDs(@RequestParam(value = "groupID", required = true) String groupID) {
-		System.out.println("\nLIST SPACES FROM GROUP:\n");
+		//System.out.println("\nLIST SPACES FROM GROUP:\n");
         return designSpaceService.getGroupSpaceIDs(groupID);
     }
 
 	@GetMapping("/designSpace/listUniqueGroups")
     public List<String> listUniqueGroupIDs() {
-		System.out.println("\nLIST GROUP IDS:\n");
+		//System.out.println("\nLIST GROUP IDS:\n");
 		List<String> groupIDs = designSpaceService.getUniqueGroupIDs();
-		System.out.println(groupIDs);
+		//System.out.println(groupIDs);
         return groupIDs;
     }
 
