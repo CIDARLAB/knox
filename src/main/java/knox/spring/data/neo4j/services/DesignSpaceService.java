@@ -1829,7 +1829,7 @@ public class DesignSpaceService {
 	}
 
 	public void saveRuleEvaluation(RuleEvaluation evaluation) {
-		//System.out.println("\nSaving Rule Evaluation: " + evaluation.getEvaluationName());
+		System.out.println("\nSaving Rule Evaluation: " + evaluation.getEvaluationName());
 		ruleEvaluationRepository.save(evaluation);
 	}
 
