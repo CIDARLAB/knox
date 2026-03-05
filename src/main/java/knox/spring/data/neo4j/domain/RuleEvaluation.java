@@ -103,7 +103,7 @@ public class RuleEvaluation {
         if (flattenedRuleEvaluations.isEmpty()) {
             runEvaluationParallel();
         }
-        return evaluateRuleSpace();
+        return evaluateRuleSpace(false);
     }
 
     public void runEvaluation() {
@@ -223,7 +223,6 @@ public class RuleEvaluation {
         }
     }
 
-    private Map<String, Map<String, Object>> evaluateRuleSpace() {
     private Thread startProgressThread(AtomicInteger completed, int totalSize, long startTime) {
     Thread progressThread = new Thread(() -> {
         int lastCompleted = 0;
@@ -253,6 +252,7 @@ public class RuleEvaluation {
     return progressThread;
 }
 
+    private Map<String, Map<String, Object>> evaluateRuleSpace(boolean ruleEvaluationOnly) {
         Map<String, Map<String, Object>> ruleResults = new HashMap<>();
         Map<String, Map<String, Object>> evaluationResults = new HashMap<>();
         Map<String, ArrayList<Object>> designToRule = new HashMap<>();
