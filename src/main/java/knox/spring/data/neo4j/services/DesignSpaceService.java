@@ -926,8 +926,15 @@ public class DesignSpaceService {
 		saveDesignSpace(outputSpace);
 	}
 
-	public Map<String, Object> goldbarGeneration(ArrayList<String> rules, InputStream inputCSVStream, 
-			ArrayList<String> lengths, String outputSpacePrefix, Boolean verify, String direction, Boolean verbose) {
+	public Map<String, Object> goldbarGeneration(
+			ArrayList<String> rules, 
+			InputStream inputCSVStream, 
+			ArrayList<String> lengths, 
+			String outputSpacePrefix, 
+			String groupID,
+			Boolean verify, 
+			String direction, 
+			Boolean verbose) {
 		
 		Map<String, Object> goldbarAndCategories = new HashMap<>();
 

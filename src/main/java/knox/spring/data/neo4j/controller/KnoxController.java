@@ -923,12 +923,13 @@ public class KnoxController {
 	public Map<String, Object> goldbarGenerator(@RequestParam(value = "inputCSVFiles[]", required = true) List<MultipartFile> inputCSVFiles, 
 			@RequestParam(value = "rules", required = false) String rules, 
 			@RequestParam(value = "lengths", required = false) String lengths,
-			@RequestParam(value = "outputSpacePrefix", required = false) String OutputSpacePrefix,
+			@RequestParam(value = "outputSpacePrefix", required = false) String outputSpacePrefix,
+			@RequestParam(value = "groupID", required = false) String groupID,
 			@RequestParam(value = "verify", required = false, defaultValue="true") Boolean verify,
 			@RequestParam(value = "direction", required = false, defaultValue="true") String direction,
 			@RequestParam(value = "verbose", required = false, defaultValue="false") Boolean verbose) {
 		
-		System.out.println("Starting GOLDBAR Generator");
+		System.out.println("\nStarting GOLDBAR Generator");
 		try {
 			InputStream inputCSVStream = inputCSVFiles.get(0).getInputStream();
 
@@ -938,14 +939,14 @@ public class KnoxController {
 
 			if (lengths.equals("")) {
 				ArrayList<String> emptyList = new ArrayList<String>();
-				return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, emptyList, OutputSpacePrefix, verify, direction, verbose);
+				return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, emptyList, outputSpacePrefix, groupID, verify, direction, verbose);
 			} 
 
 			String[] lengthsArray = lengths.split(",");
 			ArrayList<String> lengthsList = new ArrayList<>(Arrays.asList(lengthsArray));
 			System.out.println("Lengths" + lengthsList);
 			
-			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, OutputSpacePrefix, verify, direction, verbose);
+			return designSpaceService.goldbarGeneration(rulesList, inputCSVStream, lengthsList, outputSpacePrefix, groupID, verify, direction, verbose);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
