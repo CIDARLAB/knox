@@ -312,17 +312,10 @@
                         knox.setGOLDBARTab(data.goldbar, data.categories, outputSpacePrefix);
 
                         Object.entries(data.goldbar).forEach(([key, goldbar]) => {
-                        let specification = goldbar;
                         //replace all spaces and special characters for SBOL
                         let designName = outputSpacePrefix + key;
                         designName = designName.replace(/[^A-Z0-9]/ig, "_");
                         rules.push(designName);
-                        
-                        try {
-                          knox.submitGoldbar(specification, categories, designName, groupID, weight);
-                        } catch {
-                          error = error + "Error Submitting";
-                        }
 
                         });
 
@@ -508,8 +501,8 @@
   <script type="module" src="js/knox.js"></script>
   <script type="module" src="js/target.js"></script>
   <script type="module" src="js/endpoints.js"></script>
-  <script type="module" src="js/simplifyOperators.js"></script>
-  <script src="https://imparse.org/lib/imparse.js"></script>
+  <!--script type="module" src="js/simplifyOperators.js"></script-->
+  <!--script src="https://imparse.org/lib/imparse.js"></script-->
 
   <script type="module" src="js/use-cases/rebeccamycin.js"></script>
   <script type="module" src="js/use-cases/cello-AND-circuits.js"></script>

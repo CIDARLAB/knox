@@ -910,8 +910,8 @@ public class DesignSpaceService {
 		//designSpace.printAllEdges();
 	}
 
-	public void importGoldbar(JSONObject goldbar, JSONObject categories, String outputSpacePrefix, 
-			String groupID, Double weight, Boolean verbose) throws JSONException {
+	public void importGoldbar(String goldbar, JSONObject categories, String outputSpacePrefix, 
+			String groupID, Double weight, Boolean verbose) throws JSONException, IllegalArgumentException {
 
 		GoldbarConversion goldbarConversion = new GoldbarConversion(goldbar, categories, weight, verbose);
 
@@ -957,11 +957,75 @@ public class DesignSpaceService {
 		goldbarAndCategories.put("goldbar", goldbar);
 		goldbarAndCategories.put("categories", goldbarGeneration.getCategoriesString());
 
+		importGoldbarsParallel(goldbar, goldbarGeneration.getCategories(), outputSpacePrefix, groupID, verbose);
+
 		return goldbarAndCategories;
 	}
 
 	public Map<String, Map<String, Object>> ruleEvaluation(String evaluationName, ArrayList<String> designSpaceIDs, String ruleGroupID,
 			ArrayList<Integer> designLabels, ArrayList<Double> designScores, String labelingMethod) {
+	private void importGoldbarsParallel(
+			Map<String, String> goldbar, 
+			JSONObject categories, 
+			String outputSpacePrefix, 
+			String groupID, 
+			Boolean verbose) {
+
+		int size = goldbar.size();
+		
+		// For small lists, sequential is fine
+		if (size <= 5) {
+			for (String key : goldbar.keySet()) {
+				importGoldbar(goldbar.get(key), categories, outputSpacePrefix + key, groupID, 0.0, verbose);
+			}
+			return;
+		}
+		
+		System.out.println("Importing " + size + " goldbars in parallel...");
+		long startTime = System.currentTimeMillis();
+		
+		// Limit concurrent operations
+		int numThreads = Math.min(size, Runtime.getRuntime().availableProcessors() * 2);
+		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+		
+		java.util.concurrent.atomic.AtomicInteger completed = new java.util.concurrent.atomic.AtomicInteger(0);
+		java.util.concurrent.atomic.AtomicInteger failed = new java.util.concurrent.atomic.AtomicInteger(0);
+		
+		// Convert to list for easier parallel processing
+		List<String> keys = new ArrayList<>(goldbar.keySet());
+		
+		try {
+			List<CompletableFuture<Void>> futures = new ArrayList<>(size);
+			
+			for (String key : keys) {
+				CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+					try {
+						importGoldbar(goldbar.get(key), categories, outputSpacePrefix + key, groupID, 0.0, verbose);
+						
+						int done = completed.incrementAndGet();
+						if (done % 50 == 0 || done == size) {
+							System.out.printf("Imported %d/%d goldbars (%.1f%%)%n", done, size, done * 100.0 / size);
+						}
+					} catch (Exception e) {
+						failed.incrementAndGet();
+						System.err.println("Failed to import goldbar: " + key + " - " + e.getMessage());
+					}
+				}, executor);
+				futures.add(future);
+			}
+			
+			// Wait for all to complete
+			CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+			
+		} finally {
+			executor.shutdown();
+		}
+		
+		long elapsed = System.currentTimeMillis() - startTime;
+		System.out.printf("Imported %d goldbars in %.1f seconds (%.1f goldbars/sec), %d failed%n",
+			completed.get(), elapsed / 1000.0, completed.get() / (elapsed / 1000.0), failed.get());
+	}
+
 		
 		ArrayList<String> ruleSpaceIDs = new ArrayList<>(getGroupSpaceIDs(ruleGroupID));
 		

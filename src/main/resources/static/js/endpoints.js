@@ -531,6 +531,11 @@ export function importGoldbar(goldbar, categories, outputSpace, groupID, weight)
   let request = new XMLHttpRequest();
   request.open("POST", endpoints.GOLDBAR + query, false);
   request.send(null);
+  if (request.status >= 200 && request.status < 300) {
+    swalSuccess();
+  } else {
+    swalError(request.response);
+  }
 
 }
 

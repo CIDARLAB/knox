@@ -18,21 +18,19 @@ import org.json.JSONException;
 
 public class GoldbarConversion {
 
-    JSONObject goldbar;
+    private JSONObject goldbarTree;
 
-    JSONObject categories;
+    private JSONObject categories;
 
-    Double weight;
+    private Double weight;
 
-    Boolean verbose;
+    private Boolean verbose;
 
-    NodeSpace outputSpace;
-
-    ArrayList<Node> boundaryStack;
+    private NodeSpace outputSpace;
     
-    public GoldbarConversion(JSONObject goldbar, JSONObject categories, Double weight, Boolean verbose) {
+    public GoldbarConversion(String goldbar, JSONObject categories, Double weight, Boolean verbose) {
 
-        this.goldbar = goldbar;
+        this.goldbarTree = parseGoldbar(goldbar);
 
         this.categories = categories;
 
@@ -42,15 +40,13 @@ public class GoldbarConversion {
 
         this.outputSpace = new NodeSpace();
 
-        this.boundaryStack = new ArrayList<>();
-
     }
 
-    public void convert() throws JSONException {
+    public void convert() throws JSONException, IllegalArgumentException {
         Map<String, JSONArray> operationToVariableList = new HashMap<>();
 
         // Map operation to variableList
-        operationToVariableList = jsonObjectToMap(goldbar);
+        operationToVariableList = jsonObjectToMap(goldbarTree);
 
         // Add space to spaces
         for (String operation : operationToVariableList.keySet()) {   // Should only be one operation
@@ -150,7 +146,7 @@ public class GoldbarConversion {
         return space;
     }
 
-    private NodeSpace handleAtomAndReverseComp(String variable, Edge.Orientation orientation) {
+    private NodeSpace handleAtomAndReverseComp(String variable, Edge.Orientation orientation) throws JSONException, IllegalArgumentException {
         ArrayList<String> componentIDs = new ArrayList<>();
         ArrayList<String> componentRoles = new ArrayList<>();
         ArrayList<Double> weights = new ArrayList<>();
@@ -160,7 +156,8 @@ public class GoldbarConversion {
         try {
             rolesToCompIds = jsonObjectToMap(categories.getJSONObject(variable));
         } catch (JSONException e) {
-            e.printStackTrace();
+            System.out.println("ERROR: Missing context for: " + variable);
+			throw new IllegalArgumentException("Missing Category for: " + variable);
         }
 
         Map<String, Boolean> roleIsAbstract = new HashMap<>();
@@ -399,6 +396,10 @@ public class GoldbarConversion {
         }
 
         return map;
+    }
+
+    private JSONObject parseGoldbar(String goldbar) throws IllegalArgumentException{
+        return new JSONObject(Parse.parse(goldbar));
     }
 
     private String convertRole(String csvRole) {

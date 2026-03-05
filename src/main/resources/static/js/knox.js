@@ -1,6 +1,5 @@
 import Target from './target.js';
 import * as endpoint from "./endpoints.js";
-import * as simplify from './simplifyOperators.js';
 import {and0GOLDBAR, and1GOLDBAR_NORB, and1GOLDBAR_RB, and2GOLDBAR} from "./use-cases/cello-AND-circuits.js";
 import {celloCategories} from "./use-cases/cello-categories.js";
 import {rebeccamycinGOLDBAR, biosynthesisCategories} from "./use-cases/rebeccamycin.js";
@@ -36,7 +35,7 @@ const editors = {
 
 editors.specEditor.setOption("theme", THEME);
 editors.catEditor.setOption("theme", THEME);
-const GRAMMAR_DEF = [{'Seq':[{'Then':[['Exp'],'.',['Seq']]},{'Then':[['Exp'],'then',['Seq']]},{'':[['Exp']]}]},{'Exp':[{'Or':[['Term'],'or',['Exp']]},{'And0':[['Term'],'and0',['Exp']]}, {'And1':[['Term'],'and1',['Exp']]}, {'And2':[['Term'],'and2',['Exp']]},{'Merge':[['Term'],'merge',['Exp']]},{'':[['Term']]}]},{'Term':[{'OneOrMore':['one-or-more',['Term']]},{'ZeroOrMore':['zero-or-more',['Term']]},{'ZeroOrOne':['zero-or-one',['Term']]}, {'ReverseComp':['reverse-comp',['Term']]}, {'ForwardOrReverse':['forward-or-reverse',['Term']]},{'ZeroOrOneSBOL':['zero-or-one-sbol',['Term']]},{'ZeroOrMoreSBOL':['zero-or-more-sbol',['Term']]},{'':['{',['Seq'],'}']},{'':['(',['Seq'],')']},{'Atom':[{'RegExp':'([A-Za-z0-9]|-|_)+'}]}]}];
+//const GRAMMAR_DEF = [{'Seq':[{'Then':[['Exp'],'.',['Seq']]},{'Then':[['Exp'],'then',['Seq']]},{'':[['Exp']]}]},{'Exp':[{'Or':[['Term'],'or',['Exp']]},{'And0':[['Term'],'and0',['Exp']]}, {'And1':[['Term'],'and1',['Exp']]}, {'And2':[['Term'],'and2',['Exp']]},{'Merge':[['Term'],'merge',['Exp']]},{'':[['Term']]}]},{'Term':[{'OneOrMore':['one-or-more',['Term']]},{'ZeroOrMore':['zero-or-more',['Term']]},{'ZeroOrOne':['zero-or-one',['Term']]}, {'ReverseComp':['reverse-comp',['Term']]}, {'ForwardOrReverse':['forward-or-reverse',['Term']]},{'ZeroOrOneSBOL':['zero-or-one-sbol',['Term']]},{'ZeroOrMoreSBOL':['zero-or-more-sbol',['Term']]},{'':['{',['Seq'],'}']},{'':['(',['Seq'],')']},{'Atom':[{'RegExp':'([A-Za-z0-9]|-|_)+'}]}]}];
 
 const exploreBtnIDs = {
   delete: "#delete-btn",
@@ -2073,17 +2072,16 @@ $("#goldbarImportBtn").click(function() {
 
   submitGoldbar(specification, categories, designName, groupID, weight);
   $('#spinner').addClass('hidden'); // remove spinner
-  swalSuccess();
 });
 
 export function submitGoldbar(specification, categories, designName, groupID, weight) {
-  let sparsed, pcategories
-  [sparsed, pcategories] = getParsedGOLDBARAndCategories(specification, categories);
-  endpoint.importGoldbar(JSON.stringify(sparsed), JSON.stringify(pcategories), designName, groupID, weight)
+  let parsed, pcategories
+  [parsed, pcategories] = getParsedGOLDBARAndCategories(specification, categories);
+  endpoint.importGoldbar(parsed, JSON.stringify(pcategories), designName, groupID, weight)
 }
 
 export function getParsedGOLDBARAndCategories(specification, categories) {
-  let parsed, sparsed, error, pcategories;
+  let parsed, error, pcategories;
   error = "";
   try {
     parsed = parseGoldbar(specification);
@@ -2093,8 +2091,6 @@ export function getParsedGOLDBARAndCategories(specification, categories) {
     swalError(error);
     $("#spinner").addClass('hidden');
   }
-
-  parsed = propagateReverseComplements(parsed);
 
   try {
     pcategories = parseCategories(categories);
@@ -2108,9 +2104,7 @@ export function getParsedGOLDBARAndCategories(specification, categories) {
     swalError("No Categories");
   }
 
-  sparsed = simplify.simplify(parsed);
-
-  return [sparsed, pcategories];
+  return [parsed, pcategories];
 }
 
 export function parseCategories(categories) {
@@ -2122,65 +2116,7 @@ export function parseCategories(categories) {
 export function parseGoldbar(langText) {
   langText = String(langText).replace('\t', ' ');
   langText = langText.trim();
-  return imparse.parse(GRAMMAR_DEF, langText);
-}
-
-export function propagateReverseComplements(ast_node, reverse) {
-  var reverse = (reverse == null) ? false : reverse;
-  var a = ast_node;
-  var rec = propagateReverseComplements;
-
-  if ("ReverseComp" in a) {
-    //a["ReverseComp"][0] = rec(a["ReverseComp"][0], reverse);
-    //return a;
-
-    return rec(a["ReverseComp"][0], !reverse);
-  } else if ("Then" in a) {
-    a["Then"][0] = rec(a["Then"][0], reverse);
-    a["Then"][1] = rec(a["Then"][1], reverse);
-    a["Then"] = reverse ? a["Then"].reverse() : a["Then"];
-    return a;
-  } else if ("Or" in a) {
-    a["Or"][0] = rec(a["Or"][0], reverse);
-    a["Or"][1] = rec(a["Or"][1], reverse);
-    return a;
-  } else if ("And0" in a) {
-    a["And0"][0] = rec(a["And0"][0], reverse);
-    a["And0"][1] = rec(a["And0"][1], reverse);
-    return a;
-  } else if ("And1" in a) {
-    a["And1"][0] = rec(a["And1"][0], reverse);
-    a["And1"][1] = rec(a["And1"][1], reverse);
-    return a;
-  } else if ("And2" in a) {
-    a["And2"][0] = rec(a["And2"][0], reverse);
-    a["And2"][1] = rec(a["And2"][1], reverse);
-    return a;
-  } else if ("Merge" in a) {
-    a["Merge"][0] = rec(a["Merge"][0], reverse);
-    a["Merge"][1] = rec(a["Merge"][1], reverse);
-    return a;
-  } else if ("OneOrMore" in a) {
-    a["OneOrMore"][0] = rec(a["OneOrMore"][0], reverse);
-    return a;
-  } else if ("ZeroOrOne" in a) {
-    a["ZeroOrOne"][0] = rec(a["ZeroOrOne"][0], reverse);
-    return a;
-  } else if ("ZeroOrMore" in a) {
-    a["ZeroOrMore"][0] = rec(a["ZeroOrMore"][0], reverse);
-    return a;
-  } else if ("ZeroOrOneSBOL" in a) {
-    a["ZeroOrOneSBOL"][0] = rec(a["ZeroOrOneSBOL"][0], reverse);
-    return a;
-  } else if ("ZeroOrMoreSBOL" in a) {
-    a["ZeroOrMoreSBOL"][0] = rec(a["ZeroOrMoreSBOL"][0], reverse);
-    return a;
-  } else if ("ForwardOrReverse" in a) {
-    a["ForwardOrReverse"][0] = rec(a["ForwardOrReverse"][0], reverse);
-    return a;
-  } else if ("Atom" in a) {
-    return reverse ? {"ReverseComp": [a]} : a;
-  }
+  return langText
 }
 
 export function verifyRules(inputSpaces, outputSpace, groupID) {
