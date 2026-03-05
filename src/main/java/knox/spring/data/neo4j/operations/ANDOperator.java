@@ -64,4 +64,61 @@ public class ANDOperator {
 			outputSpace.shallowCopyNodeSpace(new NodeSpace(new ArrayList<String>(), new ArrayList<String>()));
 		}
 	}
+
+	public static boolean evaluateOnly(
+			List<NodeSpace> inputSpaces, 
+			int tolerance, 
+			boolean isComplete, 
+			Set<String> roles, 
+			ArrayList<String> irrelevantParts) {
+		
+		Product product = new Product(inputSpaces.get(0));
+		NodeSpace outputSpace = new NodeSpace();
+		
+		for (int i = 1; i < inputSpaces.size(); i++) {
+			if (isComplete) {
+				product.applyTensor(inputSpaces.get(i), tolerance, -1, 2, roles, irrelevantParts);
+			} else {
+				product.applyTensor(inputSpaces.get(i), tolerance, -1, 0, roles, irrelevantParts);
+			}
+			
+			if (!product.getSpace().hasNodes()) {
+				return true;
+			}
+
+			product.getSpace().deleteBlankEdges(product.getSpace().getBlankEdges());
+		}
+
+		Union union = new Union(product.getSpace());
+		Set<Edge> blankEdges = union.apply();
+		union.getSpace().deleteBlankEdges(blankEdges);
+		outputSpace.shallowCopyNodeSpace(union.getSpace());
+		
+		return outputSpace.isEmpty();
+	}
+
+	/*
+	* This method checks if the product of the input spaces is empty.
+	*/
+	public static boolean evaluateOnlyFast(
+			List<NodeSpace> inputSpaces, 
+			int tolerance, 
+			boolean isComplete, 
+			Set<String> roles, 
+			ArrayList<String> irrelevantParts) {
+		
+		Product product = new Product(inputSpaces.get(0));
+		
+		for (int i = 1; i < inputSpaces.size(); i++) {
+			int degree = isComplete ? 2 : 0;
+			
+			boolean isEmpty = product.applyTensorFast(inputSpaces.get(i), tolerance, degree, roles, irrelevantParts);
+			
+			if (isEmpty) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 }
