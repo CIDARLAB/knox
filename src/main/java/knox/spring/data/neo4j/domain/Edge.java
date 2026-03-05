@@ -401,9 +401,12 @@ public class Edge {
             int tolerance, int weightTolerance, Boolean isStrongProduct, ArrayList<String> irrelevantParts) {
         
         // Map componentIDs to Weight
-
-        HashMap<String, Double> componentIDstoWeight = componentIDtoWeight();
-        HashMap<String, Double> otherComponentIDstoWeight = new HashMap<String, Double>(edge.componentIDtoWeight());
+        HashMap<String, Double> componentIDstoWeight = new HashMap<>();
+        HashMap<String, Double> otherComponentIDstoWeight = new HashMap<>();
+        if (weightTolerance >= 0) {
+            componentIDstoWeight = componentIDtoWeight();
+            otherComponentIDstoWeight = new HashMap<String, Double>(edge.componentIDtoWeight());
+        }
 
         // Map other component IDs to roles and other component roles to IDs
         
@@ -490,55 +493,59 @@ public class Edge {
         }
 
         // Update Edge Weights
-        ArrayList<Double> newWeights = new ArrayList<Double>();
-
-        Boolean weightToleranceResult = false;
-        if ((weightTolerance == 1) && isStrongProduct) {
-            // Check if edges in same position
-            if ((thisEdge.distanceToAcceptNode() == edge.distanceToAcceptNode()) || (thisEdge.distanceToStartNode(nodeIDToIncomingEdgesColSpace) == edge.distanceToStartNode(nodeIDToIncomingEdgesRowSpace))) {
-                weightToleranceResult = true;
-            } else {
-                weightToleranceResult = false;
-            }
-
-        } else if ((weightTolerance == 2) && isStrongProduct) {
-            // Check if edges next to same component
-            if (thisEdge.sameNextParts(edge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace, false)) {
-                weightToleranceResult = true;
-            } else {
-                weightToleranceResult = false;
-            }
-        }
-
-        for (String ID : componentIDs) {
-            if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
-
-                if (isStrongProduct){
-
-                    if (weightTolerance > 0) {
-                        if ((weightToleranceResult || weightTolerance > 2) && !irrelevantParts.contains(ID)) {
-                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights
-                        } else {
-                            newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights
-                        }
-                        
-                    } else {
-                        newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights
-                    }
-
+        if (weightTolerance >= 0) {
+            ArrayList<Double> newWeights = new ArrayList<Double>();
+            Boolean weightToleranceResult = false;
+            
+            if ((weightTolerance == 1) && isStrongProduct) {
+                // Check if edges in same position
+                if ((thisEdge.distanceToAcceptNode() == edge.distanceToAcceptNode()) || (thisEdge.distanceToStartNode(nodeIDToIncomingEdgesColSpace) == edge.distanceToStartNode(nodeIDToIncomingEdgesRowSpace))) {
+                    weightToleranceResult = true;
                 } else {
-                    newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights (AND Operator)
+                    weightToleranceResult = false;
                 }
 
-            } else if (componentIDstoWeight.containsKey(ID)) {
-                newWeights.add(componentIDstoWeight.get(ID));
-
-            } else if (otherComponentIDstoWeight.containsKey(ID)) {
-                newWeights.add(otherComponentIDstoWeight.get(ID));
+            } else if ((weightTolerance == 2) && isStrongProduct) {
+                // Check if edges next to same component
+                if (thisEdge.sameNextParts(edge, nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace, false)) {
+                    weightToleranceResult = true;
+                } else {
+                    weightToleranceResult = false;
+                }
             }
-        }
 
-        this.weight = newWeights;
+            for (String ID : componentIDs) {
+                if (componentIDstoWeight.containsKey(ID) && otherComponentIDstoWeight.containsKey(ID)) {
+
+                    if (isStrongProduct){
+
+                        if (weightTolerance > 0) {
+                            if ((weightToleranceResult || weightTolerance > 2) && !irrelevantParts.contains(ID)) {
+                                newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights
+                            } else {
+                                newWeights.add((componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)) / 2); // average weights
+                            }
+                            
+                        } else {
+                            newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights
+                        }
+
+                    } else {
+                        newWeights.add(componentIDstoWeight.get(ID) + otherComponentIDstoWeight.get(ID)); // sum weights (AND Operator)
+                    }
+
+                } else if (componentIDstoWeight.containsKey(ID)) {
+                    newWeights.add(componentIDstoWeight.get(ID));
+
+                } else if (otherComponentIDstoWeight.containsKey(ID)) {
+                    newWeights.add(otherComponentIDstoWeight.get(ID));
+                }
+            }
+            this.weight = newWeights;
+            
+        } else {
+            this.weight = new ArrayList<Double>();
+        }
     }
     
     public void unionWithEdge(Edge edge) {

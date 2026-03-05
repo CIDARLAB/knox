@@ -47,9 +47,13 @@ public class Product {
     	
     	if (productSpace.hasNodes() && colSpace.hasNodes()) {
     		NodeSpace rowSpace = initializeProduct(colSpace);
-
-			HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace = rowSpace.mapNodeIDsToIncomingEdges();
-			HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace = colSpace.mapNodeIDsToIncomingEdges();
+			
+			HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace = new HashMap<>();
+			HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace = new HashMap<>();
+			if (weightTolerance > 0) {
+				nodeIDToIncomingEdgesRowSpace = rowSpace.mapNodeIDsToIncomingEdges();
+				nodeIDToIncomingEdgesColSpace = colSpace.mapNodeIDsToIncomingEdges();
+			}
 			
     		crossNodes(rowSpace.getStartNodes(), colSpace.getStartNodes(), degree);
     		crossNodes(rowSpace.getAcceptNodes(), colSpace.getAcceptNodes(), degree);
