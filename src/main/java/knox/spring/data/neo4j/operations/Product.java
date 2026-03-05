@@ -91,6 +91,62 @@ public class Product {
     	
     	return blankProductEdges;
     }
+
+	/**
+	 * Lightweight tensor for evaluateOnly - does blank edge processing but skips returning blank edge sets.
+	 * Returns true if product is empty.
+	 */
+	public boolean applyTensorFast(NodeSpace colSpace, int tolerance, int degree, Set<String> roles, ArrayList<String> irrelevantParts) {
+		
+		if (!productSpace.hasNodes() || !colSpace.hasNodes()) {
+			productSpace = new NodeSpace(0);
+			return true;
+		}
+		
+		Set<Edge> rowEdgesCheck = productSpace.getEdges();
+		Set<Edge> colEdgesCheck = colSpace.getEdges();
+		
+		if (rowEdgesCheck.isEmpty() || colEdgesCheck.isEmpty()) {
+			productSpace = new NodeSpace(0);
+			return true;
+		}
+		
+		NodeSpace rowSpace = initializeProduct(colSpace);
+		
+		HashMap<String, Set<Edge>> nodeIDToIncomingEdgesRowSpace = new HashMap<>();
+		HashMap<String, Set<Edge>> nodeIDToIncomingEdgesColSpace = new HashMap<>();
+		
+		crossNodes(rowSpace.getStartNodes(), colSpace.getStartNodes(), degree);
+		crossNodes(rowSpace.getAcceptNodes(), colSpace.getAcceptNodes(), degree);
+		
+		crossEdges(rowSpace.getEdges(), colSpace.getEdges(), 
+			nodeIDToIncomingEdgesRowSpace, nodeIDToIncomingEdgesColSpace, 
+			tolerance, -1, degree, roles, false, irrelevantParts);
+		
+		// Get blank edges
+		Set<Edge> blankRowEdges = rowSpace.getBlankEdges();
+		Set<Edge> blankColEdges = colSpace.getBlankEdges();
+		
+		// Dummy blank product edges
+		List<Set<Edge>> blankProductEdges = new LinkedList<Set<Edge>>();
+		blankProductEdges.add(new HashSet<Edge>());
+		blankProductEdges.add(new HashSet<Edge>());
+		
+		insertBlankEdges(blankRowEdges, colSpace.getNodes(), rowIDToProductNodes, colIDToProductNodes, blankProductEdges);
+		insertBlankEdges(blankColEdges, rowSpace.getNodes(), colIDToProductNodes, rowIDToProductNodes, blankProductEdges);
+		
+		multiCrossBlankEdges(blankRowEdges, blankColEdges, blankProductEdges);
+		
+		if (degree == 0) {
+			productSpace.labelSourceNodesStart();
+			productSpace.labelSinkNodesAccept();
+			productSpace.deleteUnacceptableNodes();
+		} else if (degree == 2) {
+			productSpace.deleteUnacceptableNodes();
+		}
+		
+		return !productSpace.hasNodes();
+	}
     
     private NodeSpace initializeProduct(NodeSpace colSpace) {
     	NodeSpace rowSpace = productSpace;
