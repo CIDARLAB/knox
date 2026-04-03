@@ -249,10 +249,15 @@ public class Imparse {
         // --- Term ---
         List<Map<String, List<Object>>> termOptions = new ArrayList<>();
         termOptions.add(opt("OneOrMore",   List.of("one-or-more", List.of("Term"))));
+        termOptions.add(opt("OneOrMore",   List.of("oom", List.of("Term"))));
         termOptions.add(opt("ZeroOrMore",  List.of("zero-or-more", List.of("Term"))));
+        termOptions.add(opt("ZeroOrMore",  List.of("zom", List.of("Term"))));
         termOptions.add(opt("ZeroOrOne",   List.of("zero-or-one", List.of("Term"))));
+        termOptions.add(opt("ZeroOrOne",   List.of("zoo", List.of("Term"))));
         termOptions.add(opt("ReverseComp", List.of("reverse-comp", List.of("Term"))));
+        termOptions.add(opt("ReverseComp", List.of("rev", List.of("Term"))));
         termOptions.add(opt("ForwardOrReverse", List.of("forward-or-reverse", List.of("Term"))));
+        termOptions.add(opt("ForwardOrReverse", List.of("frev", List.of("Term"))));
         termOptions.add(opt("ZeroOrOneSBOL",  List.of("zero-or-one-sbol", List.of("Term"))));
         termOptions.add(opt("ZeroOrMoreSBOL", List.of("zero-or-more-sbol", List.of("Term"))));
         termOptions.add(opt("", List.of("{", List.of("Seq"), "}")));
@@ -262,6 +267,7 @@ public class Imparse {
         // --- Exp ---
         List<Map<String, List<Object>>> expOptions = new ArrayList<>();
         expOptions.add(opt("Or",    List.of(List.of("Term"), "or",    List.of("Exp"))));
+        expOptions.add(opt("And1",  List.of(List.of("Term"), "and",  List.of("Exp")))); // Default 'and' behavior
         expOptions.add(opt("And0",  List.of(List.of("Term"), "and0",  List.of("Exp"))));
         expOptions.add(opt("And1",  List.of(List.of("Term"), "and1",  List.of("Exp"))));
         expOptions.add(opt("And2",  List.of(List.of("Term"), "and2",  List.of("Exp"))));
