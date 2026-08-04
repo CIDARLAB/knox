@@ -24,6 +24,7 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.RelationshipId;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.annotation.Transient;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @RelationshipProperties
@@ -33,21 +34,22 @@ public class Edge {
     private Long id;
 
     @TargetNode 
-    Node head;
+    private Node head;
 
-    Node tail;
+    @Transient
+    private Node tail;
 
     @Property 
-    ArrayList<String> componentIDs;
+    private ArrayList<String> componentIDs;
     
     @Property 
-    ArrayList<String> componentRoles;
+    private ArrayList<String> componentRoles;
 
     @Property 
-    Orientation orientation;
+    private Orientation orientation;
 
     @Property 
-    ArrayList<Double> weight;
+    private ArrayList<Double> weight;
     
     private static final Logger LOG = LoggerFactory.getLogger(Edge.class);
 

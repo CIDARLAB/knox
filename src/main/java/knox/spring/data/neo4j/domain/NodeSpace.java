@@ -1083,15 +1083,15 @@ public class NodeSpace {
 		} else {
 			for (Edge e : allEdges) {
 				if (edge.getHeadID() == e.getTailID()) {
-					if (e.isBlank() && e.weight.size() == 0) {
+					if (e.isBlank() && e.getWeight().size() == 0) {
 						avgWeight(e);
 
-						weight += e.weight.get(0);
+						weight += e.getWeight().get(0);
 						countParts += 1;
 					}
 
 					else {
-						for (Double w : e.weight) {
+						for (Double w : e.getWeight()) {
 							weight += w;
 							countParts += 1;
 						}
@@ -1103,7 +1103,7 @@ public class NodeSpace {
 		ArrayList<Double> averageWeight = new ArrayList<Double>(
             Arrays.asList(weight / countParts));
 
-		edge.weight = averageWeight;
+		edge.setWeight(averageWeight);
 
 	}
 
@@ -1115,13 +1115,13 @@ public class NodeSpace {
 		double blankEdgesTotalWeight = 0;
 
 		for (Edge e : allEdges) {
-			for (Double w : e.weight) {
+			for (Double w : e.getWeight()) {
 				totalWeight += w;
 			}
 		}
 
 		for (Edge b : blankEdges) {
-			blankEdgesTotalWeight += b.weight.get(0);
+			blankEdgesTotalWeight += b.getWeight().get(0);
 		}
 
 		return totalWeight - blankEdgesTotalWeight;
@@ -1133,7 +1133,7 @@ public class NodeSpace {
 		double totalWeight = 0;
 
 		for (Edge e : allEdges) {
-			for (Double w : e.weight) {
+			for (Double w : e.getWeight()) {
 				totalWeight += w;
 			}
 		}
