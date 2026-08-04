@@ -1136,20 +1136,32 @@ function addTooltips(){
   });
 }
 
+function bindTooltipToButton(buttonSelector, tooltipSelector) {
+  $(tooltipSelector).trigger('click');
+
+  $(buttonSelector).on('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $(tooltipSelector).trigger('click');
+  });
+}
+
+bindTooltipToButton(allBtnIDs.openTable, '#table-tooltip');
 $('#table-tooltip').click((e) => {
   window.open('/purityTable.html', '_blank');
 });
 
+bindTooltipToButton(allBtnIDs.show, '#show-sbol-tooltips');
 $('#show-sbol-tooltips').click(() => {
-
   targets.search.showTooltips();
-
 });
 
+//bindTooltipToButton(allBtnIDs.export, '#export-sbol-tooltip');
 $('#export-sbol-tooltip').click(() => {
   endpoint.exportDesign();
 });
 
+bindTooltipToButton(allBtnIDs.rename, '#rename-design-space-tooltip');
 $('#rename-design-space-tooltip').click(() => {
   let div = document.createElement('div');
 
@@ -1196,6 +1208,7 @@ $('#rename-design-space-tooltip').click(() => {
 });
 
 // Individual Groups
+bindTooltipToButton(allBtnIDs.group, '#graph-group-tooltip');
 $('#graph-group-tooltip').click(() => {
   let div = document.createElement('div');
 
@@ -1287,6 +1300,7 @@ function makeGroupInfoDropdown(){
   return groupInfoDropdown;
 }
 
+bindTooltipToButton(allBtnIDs.list, '#enumerate-designs-tooltip');
 $('#enumerate-designs-tooltip').click(() => {
   let div = document.createElement('div');
   
@@ -1704,6 +1718,7 @@ function makeEnumerateDropdown(){
   return enumerateDropdown;
 }
 
+bindTooltipToButton(allBtnIDs.bestPath, '#best-path-tooltip');
 $('#best-path-tooltip').click(() => {
   let div = document.createElement('div');
   div.style.height = "inherit";
@@ -1762,6 +1777,7 @@ $('#best-path-tooltip').click(() => {
 
 });
 
+bindTooltipToButton(allBtnIDs.score, '#graph-score-tooltip');
 $('#graph-score-tooltip').click(() => {
   let div = document.createElement('div');
   div.style.height = "inherit";
@@ -1817,6 +1833,7 @@ $('#graph-score-tooltip').click(() => {
 
 });
 
+bindTooltipToButton(allBtnIDs.goldbar, '#goldbar-tooltip');
 $('#goldbar-tooltip').click(() => {
   let div = document.createElement('div');
   div.style.height = "inherit";
@@ -1853,6 +1870,7 @@ $('#goldbar-tooltip').click(() => {
 
 });
 
+bindTooltipToButton(allBtnIDs.combine, '#apply-operators-tooltip');
 $('#apply-operators-tooltip').click(() => {
   let div = document.createElement('div');
 
@@ -2110,6 +2128,7 @@ function makeDiv(div, input, title){
   div.appendChild(input);
 }
 
+bindTooltipToButton(allBtnIDs.ruleEval, '#rule-eval-tooltip');
 $('#rule-eval-tooltip').click(() => {
   let div = document.createElement('div');
 
@@ -2168,6 +2187,7 @@ function makeLabelingMethodDropdown(){
   return modelDropdown;
 }
 
+bindTooltipToButton(allBtnIDs.delete, '#delete-design-tooltip');
 $('#delete-design-tooltip').click(() => {
   swal({
     title: "Really delete?",
@@ -2181,6 +2201,7 @@ $('#delete-design-tooltip').click(() => {
   });
 });
 
+bindTooltipToButton(allBtnIDs.deleteGroup, '#delete-group-tooltip');
 $('#delete-group-tooltip').click(() => {
   swal({
     title: "Really delete?",
@@ -2194,6 +2215,7 @@ $('#delete-group-tooltip').click(() => {
   });
 });
 
+bindTooltipToButton(allBtnIDs.createExperiment, '#create-experiment-tooltip');
 $('#create-experiment-tooltip').click(() => {
   let div = document.createElement('div');
 
@@ -2275,6 +2297,7 @@ $('#create-experiment-tooltip').click(() => {
   });
 });
 
+bindTooltipToButton(allBtnIDs.deleteExperiment, '#delete-experiment-tooltip');
 $('#delete-experiment-tooltip').click(() => {
   if (!currentExperimentID) {
     swalError("No experiment is currently open. Please open an experiment first.");
@@ -2293,6 +2316,7 @@ $('#delete-experiment-tooltip').click(() => {
   });
 });
 
+bindTooltipToButton(allBtnIDs.ml, '#ml-experiment-tooltip');
 $('#ml-experiment-tooltip').click(() => {
   // if currentExperimentID is null or undefined, then swal error
   if (!currentExperimentID) {
