@@ -925,6 +925,22 @@ public class KnoxController {
 		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
 	}
 
+	@GetMapping("/goldbar")
+	public Map<String, String> getGoldbar(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+		Map<String, String> response = new HashMap<>();
+		try {
+			response.put("goldbar", designSpaceService.getGoldbarBySpaceID(targetSpaceID));
+		} catch (DesignSpaceNotFoundException e) {
+			response.put("goldbar", "GOLDBAR not found for the target space ID: " + targetSpaceID);
+		}
+		return response;
+	}
+
+	@GetMapping("/goldbar/parse")
+	public Map<String, Object> parseGoldbar(@RequestParam(value = "goldbar", required = true) String goldbar) {
+		return designSpaceService.parseGoldbar(goldbar);
+	}
+
 	@PostMapping("/goldbarGen/generator")
 	public Map<String, Object> goldbarGenerator(@RequestParam(value = "inputCSVFiles[]", required = true) List<MultipartFile> inputCSVFiles, 
 			@RequestParam(value = "rules", required = false) String rules, 
