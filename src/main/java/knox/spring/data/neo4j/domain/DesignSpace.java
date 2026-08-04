@@ -14,22 +14,22 @@ import org.springframework.data.neo4j.core.schema.Property;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class DesignSpace extends NodeSpace {
-    @Property 
+    @Property
 	private String spaceID;
 
     @Relationship(type = "ARCHIVES") 
-	Set<Branch> branches;
+	private Set<Branch> branches;
 
     @Relationship(type = "SELECTS") 
-	Branch headBranch;
+	private Branch headBranch;
 
 	@Relationship(type = "CONTAINS")
-	ContextSpace contextSpace;
+	private ContextSpace contextSpace;
 
 	@Property
 	private String goldbar;
 
-    int commitIndex;
+    private int commitIndex;
 
     public DesignSpace() {
     	
