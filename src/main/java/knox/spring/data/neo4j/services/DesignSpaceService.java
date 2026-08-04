@@ -773,7 +773,7 @@ public class DesignSpaceService {
 					if (csvArray.get(i).length() > 0) {
 						ArrayList<String> compIDs = new ArrayList<String>(1);
 
-						String compID = csvArray.get(i);
+						String compID = checkAlphanumeric(csvArray.get(i));
 						Edge.Orientation orientation = Edge.Orientation.INLINE;
 						if (compID.endsWith("_REVERSE")) {
 							compID = compID.replace("_REVERSE", "");
@@ -1010,10 +1010,14 @@ public class DesignSpaceService {
 
 	public void importGoldbar(String goldbar, JSONObject categories, String outputSpacePrefix, 
 			String groupID, Double weight, Boolean verbose) throws JSONException, IllegalArgumentException {
-
+		
+		long startTime = System.nanoTime();
 		GoldbarConversion goldbarConversion = new GoldbarConversion(goldbar, categories, weight, verbose);
+		//printTime(startTime, "Parse GOLDBAR");
 
+		startTime = System.nanoTime();
 		goldbarConversion.convert();
+		//printTime(startTime, "Import GOLDBAR");
 
 		NodeSpace outSpace = goldbarConversion.getSpace();
 
@@ -1518,15 +1522,19 @@ public class DesignSpaceService {
     		int numDesigns, int minLength, int maxLength, int maxCycles,
 			EnumerateType enumerateType, boolean isWeighted, boolean allowDuplicates,
 			boolean isSampleSpace, boolean printDesigns) {
-
+		
+		long startTime = System.nanoTime();
     	DesignSpace designSpace = loadDesignSpace(targetSpaceID);
+		//printTime(startTime, "Load Design Space");
     	
+		startTime = System.nanoTime();
         DesignSampler designSampler = new DesignSampler(designSpace);
         
 		//System.out.println("\nBegin Enumeration\n");
         Collection<List<Map<String, Object>>> samplerOutput = designSampler.enumerate(numDesigns, minLength, maxLength, maxCycles, 
 				allowDuplicates,isSampleSpace, enumerateType);
 		samplerOutput = designSampler.processEnumerate(samplerOutput, isWeighted, isSampleSpace, printDesigns);
+		//printTime(startTime, "Enumeration - " + enumerateType.toString());
 		
 		return samplerOutput;
     }
@@ -2043,6 +2051,7 @@ public class DesignSpaceService {
 	}
 	
 	public void saveDesignSpace(DesignSpace space) {
+		space.setSpaceID(checkAlphanumeric(space.getSpaceID()));
 
 		// Check to see if spaceID already exists
 		String spaceID = space.getSpaceID();
@@ -2087,13 +2096,32 @@ public class DesignSpaceService {
 	}
 
 	public void saveContextSpace(ContextSpace space) {
-		System.out.println("\nSaving SpaceID: " + space.getSpaceID());
+		// TODO: check name uniqueness
+		
+		space.setSpaceID(checkAlphanumeric(space.getSpaceID()));
+		System.out.println("\nSaving Context SpaceID: " + space.getSpaceID());
 		contextSpaceRepository.save(space);
 	}
 
 	public void saveRuleEvaluation(RuleEvaluation evaluation) {
+		// TODO: check name uniqueness
+
+		evaluation.setEvaluationName(checkAlphanumeric(evaluation.getEvaluationName()));
 		System.out.println("\nSaving Rule Evaluation: " + evaluation.getEvaluationName());
 		ruleEvaluationRepository.save(evaluation);
+	}
+
+	public String checkAlphanumeric(String s) {
+		/**
+		 *  Checks if String contains only alphanumeric characters, underscores, and parentheses.
+		 * 
+		 *  @param s String to check
+		 *  @return Alphanumeric String (non-alphanumeric characters replaced with underscores)
+		*/
+		if (!s.matches("^[a-zA-Z0-9_()]+$")) {
+			return s.replaceAll("[^a-zA-Z0-9_()]", "_");
+		}
+		return s;
 	}
 
 	// TODO: Check GOLDBAR syntax
