@@ -956,6 +956,56 @@ public class NodeSpace {
     	return spaceMap;
     }
 
+	public Boolean isLinearDAG() {
+		if (getStartNodes().size() != 1) {
+			return false;
+		}
+
+		Node startNode = getStartNode();
+		// Traverse the NodeSpace to check if it is a linear DAG
+		Node currentNode = startNode;
+		while (currentNode.hasEdges()) {
+			if (currentNode.getEdges().size() > 1) {
+				return false;
+			}
+			Edge edge = currentNode.getEdges().iterator().next();
+			currentNode = edge.getHead();
+
+			// Make sure edge has only one compID and one compRole
+			if (edge.getComponentIDs().size() != 1 || edge.getComponentRoles().size() != 1) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public Map<String, List<String>> getLinearDAGRepresentation() {
+		Map<String, List<String>> representation = new HashMap<>();
+		List<String> compIDs = new ArrayList<>();
+		List<String> compRoles = new ArrayList<>();
+		List<String> orientation = new ArrayList<>();
+		
+		if (!isLinearDAG()) {
+			return representation;
+		}
+
+		Node currentNode = getStartNode();
+		while (currentNode.hasEdges()) {
+			Edge edge = currentNode.getEdges().iterator().next();
+			compIDs.add(edge.getComponentIDs().get(0));
+			compRoles.add(edge.getComponentRoles().get(0));
+			orientation.add(edge.getOrientation().toString());
+			currentNode = edge.getHead();
+		}
+
+		representation.put("compIDs", compIDs);
+		representation.put("compRoles", compRoles);
+		representation.put("orientation", orientation);
+
+		return representation;
+	}
+
 	public Boolean isCyclic() {
 		Boolean isCyclic = false;
 

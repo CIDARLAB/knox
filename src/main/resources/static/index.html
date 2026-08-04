@@ -35,6 +35,7 @@
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav navbar-right" id="navigation-bar">
         <li><a data-toggle="tabs" href="#explore">Explore</a></li>
+        <li><a data-toggle="tabs" href="#experiments">Experiments</a></li>
         <li><a data-toggle="tabs" href="#goldbar">GOLDBAR</a></li>
         <li><a data-toggle="tabs" href="#import">Import</a></li>
         <li><a data-toggle="tabs" href="#help">Help</a></li>
@@ -73,6 +74,7 @@
       <select id="search-type">
         <option value="space">Space IDs</option>
         <option value="group">Group IDs</option>
+        <option value="experiment">Experiment IDs</option>
       </select>
       <br>
       <input type="text" autocomplete="off" class="card" id="search-tb">
@@ -145,6 +147,7 @@
           <br>Optional Files/Inputs: Weights File OR Multiple Weights File OR Weight Value
           <br>Required Inputs: OutputPrefix OR Space ID
           <br>Optional Input: Group ID
+          <br>Note: The Part Library CSV requires the columns "id", "role", "sequence", and "description" in that order (case-sensitive).
           <br><br>Designs from Import Separately will have space IDs of outputPrefix + "_design_i" where i is a unique integer for each design.
           <br><br>Download & View Example Files:
         </p>
@@ -220,7 +223,21 @@
         <br>
         <input type="submit" value="Import (MERGE)">
       </form>
+
+      <form method="POST" enctype="multipart/form-data"
+            action="partLibrary/csv" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <div class="import-csv-description-PartLibrary">
+          <p>Import Part Library from CSV</p>
+        </div>
+        <input type="file" name="inputCSVFile[]">
+        <br>
+        <label id="namePartLibrary" for="namePartLibrary"><h5>Name:</h5></label>
+        <input id="namePartLibrary" type="text" name="partLibraryName" placeholder="Name">
+        <br>
+        <input type="submit" value="Import (Part Library)">
+      </form>
     </div>
+
     <div id="GENERATOR" class="tab-pane fade">
       <div class="goldbar-generator-description">
         <p>The GOLDBAR Generator allows you to quickly create design spaces from a set of known biological principles</p>
@@ -466,6 +483,28 @@
 
 </section>
 
+<section id = "experiments">
+  <br>
+  <br>
+  <div id="experiment-info-panel"></div>
+
+  <!-- Experiment Buttons -->
+  <div id="btn-holder">
+    <span class="circle-float-btn" id="create-experiment-btn">
+      <i class="fa fa-flask btn-img" style="font-size: 50px; line-height: 50px;"></i>
+    </span>
+    <span class="circle-float-btn" id="ml-experiment-btn">
+      <i class="fa fa-bar-chart btn-img" style="font-size: 50px; line-height: 50px;"></i>
+    </span>
+    <span class="circle-float-btn" id="export-experiment-btn">
+      <i class="fa fa-download btn-img" style="font-size: 50px; line-height: 50px;"></i>
+    </span>
+    <span class="circle-float-btn" id="delete-experiment-btn">
+      <i class="fa fa-trash btn-img" style="font-size: 50px; line-height: 50px;"></i>
+    </span>
+  </div>
+</section>
+
 <section id="help">
   <div id="help-info-panel"></div>
 
@@ -512,6 +551,14 @@
   <a id="rule-eval-tooltip">Rule Evaluation</a>
 
   <a id="table-tooltip">Open Purity Table</a>
+
+  <a id="create-experiment-tooltip">Create Experiment</a>
+
+  <a id="ml-experiment-tooltip">Machine Learning</a>
+
+  <a id="export-experiment-tooltip">Export</a>
+
+  <a id="delete-experiment-tooltip">Delete Experiment</a>
 </div>
 
 <footer>
@@ -538,6 +585,7 @@
   <script type="module" src="js/use-cases/small-example.js"></script>
   <script type="module" src="js/use-cases/rules-examples.js"></script>
   <script type="module" src="js/use-cases/rules-tests.js"></script>
+  <script type="module" src="js/model-configs/modelconfig.js"></script>
 
   <!--script type="module" src="js/constellation.js"></script-->
   

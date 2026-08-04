@@ -1,5 +1,6 @@
 package knox.spring.data.neo4j.services;
 
+import org.springframework.transaction.annotation.Transactional;
 import knox.spring.data.neo4j.analysis.DesignAnalysis;
 import knox.spring.data.neo4j.domain.Branch;
 import knox.spring.data.neo4j.domain.Commit;
@@ -27,6 +28,7 @@ import knox.spring.data.neo4j.operations.ReverseOperator;
 import knox.spring.data.neo4j.repositories.BranchRepository;
 import knox.spring.data.neo4j.repositories.CommitRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
+import knox.spring.data.neo4j.repositories.DesignGroupRepository;
 import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.NodeRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
@@ -382,7 +384,8 @@ public class DesignSpaceService {
 		return spaces;
 	}
 
-	private ArrayList<NodeSpace> loadSpacesParallel(ArrayList<String> inputSpaceIDs) {
+	public ArrayList<NodeSpace> loadSpacesParallel(ArrayList<String> inputSpaceIDs) {
+		long startTime = System.nanoTime();
 		int size = inputSpaceIDs.size();
 		
 		if (size <= 3) {
@@ -414,11 +417,55 @@ public class DesignSpaceService {
 				spaces.add(future.join()); // Throws exception if any failed
 			}
 			
+			printTime(startTime, "LOAD_SPACES_PARALLEL");
 			return spaces;
 			
 		} finally {
 			executor.shutdown();
 		}
+	}
+
+	public List<DesignSpaceLinearDAGRepresentation> getLinearDAGRepresentationsParallel(List<String> inputSpaceIDs) {
+		long startTime = System.nanoTime();
+		int size = inputSpaceIDs.size();
+
+		// Use fixed thread pool to limit concurrent DB connections
+		int numThreads = Math.min(size, Runtime.getRuntime().availableProcessors() * 2);
+		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+		
+		try {
+			// Create futures for all load operations
+			List<CompletableFuture<DesignSpaceLinearDAGRepresentation>> futures = new ArrayList<>(size);
+			
+			for (String inputSpaceID : inputSpaceIDs) {
+				CompletableFuture<DesignSpaceLinearDAGRepresentation> future = CompletableFuture.supplyAsync(() -> {
+					DesignSpaceLinearDAGRepresentation design = designSpaceRepository.getLinearDAGRepresentation(inputSpaceID);
+					if (design == null) {
+						throw new DesignSpaceNotFoundException("Input space with ID " + inputSpaceID + " not found.");
+					}
+					return design;
+				}, executor);
+				futures.add(future);
+			}
+			
+			// Wait for all to complete and collect results
+			ArrayList<DesignSpaceLinearDAGRepresentation> representations = new ArrayList<>(size);
+			for (CompletableFuture<DesignSpaceLinearDAGRepresentation> future : futures) {
+				representations.add(future.join()); // Throws exception if any failed
+			}
+			
+			printTime(startTime, "LOAD_LINEAR_DAG_REPRESENTATIONS_PARALLEL");
+			return representations;
+			
+		} finally {
+			executor.shutdown();
+		}
+	}
+
+	public static void printTime(long startTime, String operation) {
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime)/1_000_000; // Convert to milliseconds
+        System.out.println(String.format("\n%1$s Time: %2$d ms\n", operation, duration));
 	}
     
     public void mergeBranches(String targetSpaceID, List<String> inputBranchIDs, 
@@ -1747,7 +1794,7 @@ public class DesignSpaceService {
 		return targetSpace;
 	}
 
-	private RuleEvaluation loadRuleEvaluation(String evaluationName) {
+	public RuleEvaluation loadRuleEvaluation(String evaluationName) {
 		Long graphId = getRuleEvaluationGraphID(evaluationName);
         RuleEvaluation targetEvaluation = null;
 		if (graphId != null) {

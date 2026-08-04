@@ -59,6 +59,9 @@ import org.json.JSONException;
 import javassist.bytecode.ByteArray;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import knox.spring.data.neo4j.repositories.ExperimentRepository;
+import knox.spring.data.neo4j.repositories.PartLibraryRepository;
+import knox.spring.data.neo4j.services.ExperimentService;
 
 
 /**
@@ -67,6 +70,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 public class KnoxController {
 	final DesignSpaceService designSpaceService;
+	final ExperimentService experimentService;
 
 	// Bounded worker pool for general requests.
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
@@ -88,12 +92,17 @@ public class KnoxController {
 	@Autowired ComponentRepository componentRepository;
 
 	@Autowired RuleEvaluationRepository ruleEvaluationRepository;
+
+	@Autowired ExperimentRepository experimentRepository;
+
+    @Autowired PartLibraryRepository partLibraryRepository;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
 	@Autowired
-	public KnoxController(DesignSpaceService designSpaceService) {
+	public KnoxController(DesignSpaceService designSpaceService, ExperimentService experimentService) {
 		this.designSpaceService = designSpaceService;
+		this.experimentService = experimentService;
 	}
 	
 	/**
@@ -1122,6 +1131,13 @@ public class KnoxController {
         return designSpaceService.getSpaceIDsInDesignGroup(groupID);
     }
 
+	@GetMapping("/experiment/list")
+    public List<String> listExperiments() {
+		System.out.println("\nLIST Experiments:\n");
+		System.out.println(experimentService.listExperiments());
+        return experimentService.listExperiments();
+    }
+
 	@GetMapping("/designGroup/list")
     public List<String> listDesignGroupIDs() {
 		//System.out.println("\nLIST GROUP IDS:\n");
@@ -1294,4 +1310,62 @@ public class KnoxController {
 
 		return output;
 	}
+
+	/*@PostMapping("/designSpace/testLoading")
+	public void testLoading(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID) {
+		designSpaceService.testLoading(targetSpaceID);
+	}*/
+
+	@PostMapping("/partLibrary/csv")
+	public ResponseEntity<String> importPartLibraryCSV(@RequestParam(value = "inputCSVFile[]", required = true) MultipartFile inputCSVFile,
+			@RequestParam(value = "partLibraryName", required = true) String partLibraryName) {
+		
+		try {
+			experimentService.buildPartLibraryFromCSV(partLibraryName, inputCSVFile.getInputStream());
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new ResponseEntity<String>(
+	                "{\"message\": \"" + e.getMessage() + "\"}",
+	                HttpStatus.BAD_REQUEST);
+		}
+		
+		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+	}
+
+	@PostMapping("/experiment")
+	public ResponseEntity<String> createExperiment(@RequestParam(value = "experimentName", required = true) String experimentName,
+			@RequestParam(value = "description", required = false, defaultValue = "") String description,
+			@RequestParam(value = "designsGroupID", required = false) String designsGroupID,
+			@RequestParam(value = "rulesGroupID", required = false) String rulesGroupID,
+			@RequestParam(value = "rulesToEvalGroupID", required = false) String rulesToEvalGroupID,
+			@RequestParam(value = "ruleEvaluationName", required = false) String ruleEvaluationName,
+			@RequestParam(value = "partLibraryName", required = false, defaultValue = "") String partLibraryName) {
+
+		experimentService.createExperiment(experimentName, description, designsGroupID, rulesGroupID, rulesToEvalGroupID, ruleEvaluationName, partLibraryName);
+		
+		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+	}
+
+	// KnoxController.java
+	@GetMapping("/experiment")
+	public Map<String, Object> getExperimentInfo(@RequestParam(value = "experimentName") String experimentName) {
+		return experimentService.getExperimentInfo(experimentName);
+	}
+
+	@DeleteMapping("/experiment")
+	public ResponseEntity<String> deleteExperiment(@RequestParam(value = "experimentName", required = true) String experimentName) {
+		try {
+	    	long startTime = System.nanoTime();
+	    	
+	        experimentService.deleteExperiment(experimentName);
+	        
+	        return new ResponseEntity<String>("{\"message\": \"Experiment was deleted successfully after " +
+					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+	    } catch (Exception ex) {
+	        return new ResponseEntity<String>(
+	                "{\"message\": \"" + ex.getMessage() + "\"}",
+	                HttpStatus.BAD_REQUEST);
+	    }
+	}
+
 }

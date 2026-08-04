@@ -90,4 +90,25 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
         "MATCH (n)-[:CONTAINS]->(c:ContextSpace) " +
         "RETURN c.spaceID")
     String getContextSpaceID(@Param("targetSpaceID") String targetSpaceID);
+
+    @Query(
+        "MATCH (space:DesignSpace {spaceID: $spaceID})-[:CONTAINS]->(start:Node) " +
+        "WHERE ('start' IN coalesce(start.nodeTypes, [])) " +
+
+        "MATCH p = (start)-[:PRECEDES*1..]->(accept:Node) " +
+        "WHERE ('accept' IN coalesce(accept.nodeTypes, [])) " +
+
+        "AND ALL(n IN nodes(p)[1..-1] " +
+            "WHERE size([(n)-[:PRECEDES]->() | 1]) = 1 " +
+            "AND size([(m)-[:PRECEDES]->(n) | 1]) = 1) " +
+        "AND ALL(r IN relationships(p) " +
+            "WHERE size(r.componentIDs) = 1 AND size(r.componentRoles) = 1) " +
+
+        "RETURN " +
+        "[r IN relationships(p) | r.componentIDs[0]] as compIDs, " +
+        "[r IN relationships(p) | r.componentRoles[0]] as compRoles, " +
+        "[r IN relationships(p) | toString(r.orientation)] as orientation, " +
+        "[r IN relationships(p) | r.weight[0]] as weights"
+    )
+    DesignSpaceLinearDAGRepresentation getLinearDAGRepresentation(@Param("spaceID") String spaceID);
 }

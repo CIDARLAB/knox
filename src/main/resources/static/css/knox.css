@@ -534,6 +534,32 @@ section {
     pointer-events: none;
 }
 
+#experiment-info-panel {
+  padding: 20px;
+}
+
+.table-wrap {
+    max-height: 550px;
+    overflow-y: auto;
+}
+
+.info-summary {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border-left: 3px solid #F05F40;
+}
+
+.sequence-cell {
+max-width: 420px;
+overflow-x: auto;
+overflow-y: hidden;
+white-space: nowrap;
+display: block;
+font-family: monospace;
+}
+
 #search-card {
     position: absolute;
     margin-top: 95px;

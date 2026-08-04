@@ -16,6 +16,8 @@ const endpoints = {
   LIST: "/designSpace/list",
   LISTGROUPIDS: "/designGroup/list",
   LISTGROUPSPACEIDS: "/designGroup/listSpaces",
+  LISTEXPERIMENTS: "/experiment/list",
+  EXPERIMENT: "/experiment",  //post vs get vs delete
   ENUMERATE: "/designSpace/enumerate",
   ENUMERATECSV: "/designSpace/enumerateCSV",
   SAMPLE: "/designSpace/sample",
@@ -46,6 +48,9 @@ const endpoints = {
   GOLDBARSBOL: "/goldbarSBOL/import",
   GOLDBAR: "/goldbar/import",
   GETGOLDBAR: "/goldbar",
+
+  RUNJOB: "/job/submit",
+  JOB: "/job"  //get vs delete
 };
 
 export const operators = {
@@ -56,6 +61,28 @@ export const operators = {
   REPEAT: 'repeat',
   WEIGHT: 'weight',
   REVERSE: 'reverse'
+};
+
+export const mlActions = {
+  TRAIN: 'train',
+  PREDICT: 'predict',
+  TUNE: 'tune',
+  // EVALUATE: 'evaluate'
+};
+
+export const mlTasks = {
+  REGRESSION: 'regression',
+  CLASSIFICATION: 'classification',
+  MULTICLASSCLASSIFICATION: 'multiclass_classification'
+};
+
+export const mlModels = {
+  GNN: 'gnn',
+  TRANSFORMER: 'transformer',
+  MLP: 'mlp',
+  RANDOM_FOREST: 'random_forest',
+  XGBOOST: 'xgboost',
+  EBM: 'ebm'
 };
 
 export const enumerate = {
@@ -95,6 +122,10 @@ export function listGroups (callback){
 export function listGroupSpaceIDs (groupID, callback){
   let query = "?groupID=" + encodeURIComponent(groupID);
   d3.json(endpoints.LISTGROUPSPACEIDS + query, callback);
+}
+
+export function listExperiments (callback){
+  d3.json(endpoints.LISTEXPERIMENTS, callback);
 }
 
 export function getHistory (id, callback){
@@ -177,6 +208,11 @@ export function renameDesignSpace(id, newSpaceID, callback){
 export function getGoldbar(id, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
   d3.json(endpoints.GETGOLDBAR + query, callback);
+}
+
+export function getExperiment(experimentName, callback) {
+  const query = "?experimentName=" + encodeURIComponent(experimentName);
+  d3.json(endpoints.EXPERIMENT + query, callback);
 }
 
 /***************************
@@ -363,6 +399,63 @@ export function deleteDesignGroup(groupID){
     clearAllPages();
   } else {
     swalError("Failed to delete design space group " + groupID);
+  }
+}
+
+/**
+ * Deletes the experiment
+ */
+export function deleteExperiment(experimentName){
+  let request = new XMLHttpRequest();
+  let query = "?experimentName=" + experimentName;
+  request.open("DELETE", endpoints.EXPERIMENT + query, false);
+  request.send(null);
+
+  if (request.status >= 200 && request.status < 300) {
+    swalSuccess();
+    clearAllPages();
+  } else {
+    swalError("Failed to delete experiment " + experimentName);
+  }
+}
+
+/**
+ * Creates the experiment
+ */
+export function createExperiment(experimentName, description, designsGroupID, rulesGroupID, rulesToEvalGroupID, ruleEvaluationName, partLibraryName){
+  let request = new XMLHttpRequest();
+  let query = "?experimentName=" + experimentName;
+  query += "&description=" + encodeURIComponent(description);
+  query += "&designsGroupID=" + encodeURIComponent(designsGroupID);
+  query += "&rulesGroupID=" + encodeURIComponent(rulesGroupID);
+  query += "&rulesToEvalGroupID=" + encodeURIComponent(rulesToEvalGroupID);
+  query += "&ruleEvaluationName=" + encodeURIComponent(ruleEvaluationName);
+  query += "&partLibraryName=" + encodeURIComponent(partLibraryName);
+  request.open("POST", endpoints.EXPERIMENT + query, false);
+  request.send(null);
+
+  if (request.status >= 200 && request.status < 300) {
+    swalSuccess();
+    clearAllPages();
+  } else {
+    swalError("Failed to create experiment " + experimentName);
+  }
+}
+
+/**
+ * Deletes the Job
+ */
+export function deleteJob(jobID, onSuccess) {
+  let request = new XMLHttpRequest();
+  let query = "?jobID=" + jobID;
+  request.open("DELETE", endpoints.JOB + query, false);
+  request.send(null);
+
+  if (request.status >= 200 && request.status < 300) {
+    if (onSuccess) onSuccess();
+    swalSuccess();
+  } else {
+    swalError("Failed to delete job " + jobID);
   }
 }
 
@@ -578,6 +671,71 @@ export function evaluateRules(evaluationName, designGroupID, rulesGroupID, label
   
   .catch((err) => {
     swalError("Failed to run rule evaluation: " + err.message);
+    if (callback) callback(err);
+  });
+}
+
+export function trainModelSubmit(experimentName, runName, model, config, task, trainRatio, valRatio, testRatio, seed, callback) {
+  let query = "?";
+  query += encodeQueryParameter("experimentName", experimentName, query);
+  query += encodeQueryParameter("runName", runName, query);
+  query += encodeQueryParameter("model", model, query);
+  query += encodeQueryParameter("config", JSON.stringify(config), query);
+  query += encodeQueryParameter("task", task, query);
+  query += encodeQueryParameter("trainRatio", trainRatio, query);
+  query += encodeQueryParameter("valRatio", valRatio, query);
+  query += encodeQueryParameter("testRatio", testRatio, query);
+  query += encodeQueryParameter("seed", seed, query);
+
+  fetch(endpoints.TRAIN + "/" + model + "/submit" + query, { method: "POST" })
+  
+  .then(async (response) => {
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    return response.json();
+  })
+  
+  .then((data) => {
+    swalSuccess("Training job submitted: " + data.jobId);
+    if (callback) callback(null, data);
+  })
+  
+  .catch((err) => {
+    swalError("Failed to submit training job: " + err.message);
+    if (callback) callback(err);
+  });
+}
+
+export function mlJobSubmit(action, experimentName, runName, model, config, task, trainRatio, valRatio, testRatio, seed, callback) {
+  let query = "?";
+  query += encodeQueryParameter("action", action, query);
+  query += encodeQueryParameter("experimentName", experimentName, query);
+  query += encodeQueryParameter("runName", runName, query);
+  query += encodeQueryParameter("model", model, query);
+  query += encodeQueryParameter("config", JSON.stringify(config), query);
+  query += encodeQueryParameter("task", task, query);
+  query += encodeQueryParameter("trainRatio", trainRatio, query);
+  query += encodeQueryParameter("valRatio", valRatio, query);
+  query += encodeQueryParameter("testRatio", testRatio, query);
+  query += encodeQueryParameter("seed", seed, query);
+
+  fetch(endpoints.RUNJOB + query, { method: "POST" })
+  
+  .then(async (response) => {
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    return response.json();
+  })
+  
+  .then((data) => {
+    swalSuccess("Training job submitted: " + data.jobId);
+    if (callback) callback(null, data);
+  })
+  
+  .catch((err) => {
+    swalError("Failed to submit training job: " + err.message);
     if (callback) callback(err);
   });
 }

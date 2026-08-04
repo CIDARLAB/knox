@@ -7,6 +7,7 @@ import {reverseGOLDBAR} from "./use-cases/reverse.js";
 import {exampleCategories, concreteGOLDBAR, abstractGOLDBAR, concreteAndAbstractGOLDBAR} from "./use-cases/small-example.js";
 import {exampleRules, ruleCategories} from "./use-cases/rules-examples.js";
 import {ruleTests} from './use-cases/rules-tests.js';
+import {modelConfigs} from './model-configs/modelconfig.js';
 
 /******************
  * GLOBAL VARIABLES
@@ -51,6 +52,21 @@ const exploreBtnIDs = {
   // save: "#save-btn",
 };
 
+const experimentBtnIDs = {
+  createExperiment: "#create-experiment-btn",
+  ml: "#ml-experiment-btn",
+  exportExperiment: "#export-experiment-btn",
+  deleteExperiment: "#delete-experiment-btn"
+};
+
+const allBtnIDs = {
+  ...exploreBtnIDs,
+  ...experimentBtnIDs,
+  deleteGroup: "#deleteGroup-btn",
+  ruleEval: "#rule-eval-btn",
+  openTable: "#table-btn",
+};
+
 export const knoxClass = {
   HEAD: "Head",
   BRANCH: "Branch",
@@ -60,6 +76,7 @@ export const knoxClass = {
 let historyNodes;
 export let currentSpace;
 export let currentGroupID;
+export let currentExperimentID;
 export let currentBranch;
 export function setcurrentBranch(branchName){
   currentBranch = branchName;
@@ -282,6 +299,323 @@ export function showGroupInfo(groupID) {
     }
   });
 }
+
+export function showExperimentInfo(experimentID) {
+  targets.search.clear();
+  $("#search-tb").blur();
+  $("#search-autocomplete").blur();
+
+  // Set currentExperimentID
+  currentExperimentID = experimentID
+  const panel = document.getElementById("experiment-info-panel");
+  if (!panel) {
+    swalError("Missing #experiment-info-panel");
+    return;
+  }
+
+  panel.innerHTML = "<p>Loading experiment...</p>";
+
+  endpoint.getExperiment(experimentID, (err, experiment) => {
+    if (err || !experiment) {
+      swalError("Failed to load experiment: " + JSON.stringify(err || experimentID));
+      panel.innerHTML = "<p>Failed to load experiment.</p>";
+      return;
+    }
+
+    renderExperimentTabs(panel, experiment);
+    loadExperimentTab(panel, "designs", experiment);
+
+    // Navigate to Experiments tab
+    $('a[href="#experiments"]').click();
+    window.scrollTo(0, document.getElementById('experiments').offsetTop);
+  });
+}
+
+function renderExperimentTabs(panel, experiment) {
+  panel.innerHTML = `
+    <div class="experiment-header">
+      <h3>Experiment Name: ${escapeHtml(experiment.experimentName || "Experiment")}</h3>
+      <p>Description: ${escapeHtml(experiment.experimentDescription || "")}</p>
+    </div>
+
+    <ul class="nav nav-tabs" id="experiment-tabs">
+      <li class="active"><a href="#" data-tab="designs">Designs</a></li>
+      <li><a href="#" data-tab="rules">Rules</a></li>
+      <li><a href="#" data-tab="rulesToEval">RulesToEval</a></li>
+      <li><a href="#" data-tab="parts">Parts</a></li>
+      <li><a href="#" data-tab="jobs">Jobs</a></li>
+    </ul>
+
+    <div class="tab-pane">
+      <div id="experiment-table-container"></div>
+    </div>
+  `;
+
+  panel.querySelectorAll("#experiment-tabs a").forEach(link => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      panel.querySelectorAll("#experiment-tabs li").forEach(li => li.classList.remove("active"));
+      link.parentElement.classList.add("active");
+
+      loadExperimentTab(panel, link.dataset.tab, experiment);
+    });
+  });
+}
+
+function loadExperimentTab(panel, tabName, experiment) {
+  const container = panel.querySelector("#experiment-table-container");
+  container.innerHTML = "<p>Loading...</p>";
+
+  if (tabName === "designs") {
+    endpoint.listGroupSpaceIDs(experiment.designsGroupID || "", (err, data) => {
+      if (err) {
+        container.innerHTML = "<p>Failed to load designs.</p>";
+        return;
+      }
+      const count = (data || []).length;
+      const groupID = experiment.designsGroupID || "N/A";
+      
+      // Add summary info
+      let summary = `<div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+        <strong>Group ID:</strong> ${escapeHtml(groupID)} | <strong>Total Designs:</strong> ${count}
+      </div>`;
+      
+      container.innerHTML = summary;
+      renderSimpleTable(container, "Design Space ID", data || []);
+    });
+    return;
+  }
+
+  if (tabName === "rules") {
+    endpoint.listGroupSpaceIDs(experiment.rulesGroupID || "", (err, data) => {
+      if (err) {
+        container.innerHTML = "<p>Failed to load rules.</p>";
+        return;
+      }
+      const count = (data || []).length;
+      const groupID = experiment.rulesGroupID || "N/A";
+      
+      // Add summary info
+      let summary = `<div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+        <strong>Group ID:</strong> ${escapeHtml(groupID)} | <strong>Total Rules:</strong> ${count}
+      </div>`;
+      
+      container.innerHTML = summary;
+      renderSimpleTable(container, "Rule Space ID", data || []);
+    });
+    return;
+  }
+
+  if (tabName === "rulesToEval") {
+    endpoint.listGroupSpaceIDs(experiment.rulesToEvalGroupID || "", (err, data) => {
+      if (err) {
+        container.innerHTML = "<p>Failed to load rules to eval.</p>";
+        return;
+      }
+      const count = (data || []).length;
+      const groupID = experiment.rulesToEvalGroupID || "N/A";
+      
+      // Add summary info
+      let summary = `<div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+        <strong>Group ID:</strong> ${escapeHtml(groupID)} | <strong>Total Rules to Eval:</strong> ${count}
+      </div>`;
+      
+      container.innerHTML = summary;
+      renderSimpleTable(container, "RulesToEval Space ID", data || []);
+    });
+    return;
+  }
+
+  if (tabName === "parts") {
+    const componentIDs = experiment.componentIDs || [];
+    const componentRoles = experiment.componentRoles || [];
+    const componentSequences = experiment.componentSequences || [];
+    const componentDescriptions = experiment.componentDescriptions || [];
+
+    const count = componentIDs.length;
+    const groupID = experiment.partLibraryName || "N/A";
+    
+    // Build rows pairing IDs and Roles
+    const rows = componentIDs.map((id, index) => ({
+      id: id,
+      role: componentRoles[index] || "",
+      sequence: componentSequences[index] || "",
+      description: componentDescriptions[index] || "",
+      index: index + 1
+    }));
+
+    // Add summary info
+    let summary = `<div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+      <strong>Name:</strong> ${escapeHtml(groupID)} | <strong>Total Parts:</strong> ${count}
+    </div>`;
+    
+    container.innerHTML = summary;
+    
+    renderPartsTable(container, rows);
+    return;
+  }
+
+  if (tabName === "jobs") {
+    renderJobsTable(container, experiment.jobs || [], experiment);
+  }
+}
+
+function renderJobsTable(container, jobs, experimentData = null) {
+  const refreshButton = `
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+      <button type="button" class="btn btn-default btn-sm refresh-jobs-btn">
+        <span class="glyphicon glyphicon-refresh"></span> Refresh
+      </button>
+    </div>
+  `;
+
+  const reloadJobs = () => {
+    if (!currentExperimentID) return;
+
+    container.innerHTML = "<p>Loading...</p>";
+    endpoint.getExperiment(currentExperimentID, (err, experiment) => {
+      if (err) {
+        container.innerHTML = `${refreshButton}<p>Failed to refresh jobs.</p>`;
+        return;
+      }
+      renderJobsTable(container, experiment.jobs || [], experiment);
+    });
+  };
+
+  if (!jobs || jobs.length === 0) {
+    container.innerHTML = `${refreshButton}<p>No jobs submitted yet.</p>`;
+    container.querySelector('.refresh-jobs-btn')?.addEventListener('click', reloadJobs);
+    return;
+  }
+
+  const rows = jobs.map(job => {
+    const jobID = String(job.jobID || "");
+    return `
+      <tr>
+        <td>
+          <button
+            type="button"
+            class="btn btn-link btn-xs job-delete-btn"
+            title="Delete job"
+            data-job-id="${escapeHtml(jobID)}"
+            style="padding: 0; color: #d9534f;"
+          >
+            <span class="glyphicon glyphicon-trash"></span>
+          </button>
+        </td>
+        <td>${escapeHtml(String(job.runName || ""))}</td>
+        <td>${escapeHtml(String(job.model || ""))}</td>
+        <td>${escapeHtml(String(job.status || ""))}</td>
+        <td>${escapeHtml(String(job.mlflowRunID || ""))}</td>
+        <td>${escapeHtml(String(job.errorMessage || ""))}</td>
+      </tr>
+    `;
+  }).join("");
+
+  container.innerHTML = `${refreshButton}
+    <div class="table-wrap">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th style="width: 40px;"></th>
+            <th>Run Name</th>
+            <th>Model</th>
+            <th>Status</th>
+            <th>MLflow Run ID</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+
+  container.querySelector('.refresh-jobs-btn')?.addEventListener('click', reloadJobs);
+
+  container.querySelectorAll(".job-delete-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      const jobID = button.getAttribute("data-job-id");
+      if (!jobID) return;
+
+      swal({
+        title: "Delete this job?",
+        text: "This cannot be undone.",
+        icon: "warning",
+        buttons: true
+      }).then((confirm) => {
+        if (!confirm) return;
+
+        endpoint.deleteJob(jobID, () => {
+          showExperimentInfo(currentExperimentID);
+        });
+      });
+    });
+  });
+}
+
+function renderSimpleTable(container, header, rows, emptyMessage = "No records found.") {
+  if (!rows || rows.length === 0) {
+    container.innerHTML += `<p>${escapeHtml(emptyMessage)}</p>`;
+    return;
+  }
+
+  const body = rows.map(row => `
+    <tr>
+      <td>${escapeHtml(String(row))}</td>
+    </tr>
+  `).join("");
+
+  container.innerHTML += `
+    <div class="table-wrap">
+      <table class="table table-striped">
+        <thead>
+          <tr><th>${escapeHtml(header)}</th></tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderPartsTable(container, rows, emptyMessage = "No parts data.") {
+  if (!rows || rows.length === 0) {
+    container.innerHTML += `<p>${escapeHtml(emptyMessage)}</p>`;
+    return;
+  }
+
+  const body = rows.map(row => `
+    <tr>
+      <td>${escapeHtml(String(row.id))}</td>
+      <td>${escapeHtml(String(row.role))}</td>
+      <td><div class="sequence-cell">${escapeHtml(String(row.sequence))}</div></td>
+      <td>${escapeHtml(String(row.description))}</td>
+      <td>${escapeHtml(String(row.index))}</td>
+    </tr>
+  `).join("");
+
+  container.innerHTML += `
+    <div class="table-wrap">
+      <table class="table table-striped">
+        <thead>
+          <tr><th>Component ID</th><th>Component Role</th><th>Sequence</th><th>Description</th><th>Index</th></tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// TODO: Clear Experiment Dashboard
 
 function getGroupID(inputSpace) {
   endpoint.getGroupID(inputSpace, (err, data) => {
@@ -768,9 +1102,41 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
+
+  let experimentBtn = $('#create-experiment-btn');
+  experimentBtn.tooltipster({
+    content: $('#create-experiment-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let experimentLearningBtn = $('#ml-experiment-btn');
+  experimentLearningBtn.tooltipster({
+    content: $('#ml-experiment-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let exportExperimentBtn = $('#export-experiment-btn');
+  exportExperimentBtn.tooltipster({
+    content: $('#export-experiment-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let deleteExperimentBtn = $('#delete-experiment-btn');
+  deleteExperimentBtn.tooltipster({
+    content: $('#delete-experiment-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
 }
 
-$('#table-tooltip').click(() => {
+$('#table-tooltip').click((e) => {
   window.open('/purityTable.html', '_blank');
 });
 
@@ -1828,6 +2194,374 @@ $('#delete-group-tooltip').click(() => {
   });
 });
 
+$('#create-experiment-tooltip').click(() => {
+  let div = document.createElement('div');
+
+  // Experiment Name div
+  let experimentNameDiv = document.createElement('div');
+  let experimentNameInput = document.createElement('input');
+  makeDiv(experimentNameDiv, experimentNameInput, 'Experiment Name: ');
+
+  // Experiment Description div
+  let experimentDescriptionDiv = document.createElement('div');
+  let experimentDescriptionInput = document.createElement('input');
+  makeDiv(experimentDescriptionDiv, experimentDescriptionInput, 'Experiment Description: ');
+
+  // Designs Group ID div
+  let designsGroupIDDiv = document.createElement('div');
+  let designsGroupIDInput = document.createElement('input');
+  makeDiv(designsGroupIDDiv, designsGroupIDInput, 'Designs Group ID: ');
+
+  // Rules Group ID div
+  let rulesGroupIDDiv = document.createElement('div');
+  let rulesGroupIDInput = document.createElement('input');
+  makeDiv(rulesGroupIDDiv, rulesGroupIDInput, 'Rules Group ID: ');
+
+  // Rules To Eval Group ID div
+  let rulesToEvalGroupIDDiv = document.createElement('div');
+  let rulesToEvalGroupIDInput = document.createElement('input');
+  makeDiv(rulesToEvalGroupIDDiv, rulesToEvalGroupIDInput, 'Rules To Eval Group ID: ');
+
+  // Rule Evaluation Name Div
+  let ruleEvaluationNameDiv = document.createElement('div');
+  let ruleEvaluationNameInput = document.createElement('input');
+  makeDiv(ruleEvaluationNameDiv, ruleEvaluationNameInput, 'Rule Evaluation: ');
+
+  // Part Library File div
+  let partLibraryNameDiv = document.createElement('div');
+  let partLibraryNameInput = document.createElement('input');
+  makeDiv(partLibraryNameDiv, partLibraryNameInput, 'Part Library: ');
+
+
+  // Append all divs to the main div
+  div.appendChild(experimentNameDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(experimentDescriptionDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(designsGroupIDDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(rulesGroupIDDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(rulesToEvalGroupIDDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(ruleEvaluationNameDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(partLibraryNameDiv);
+  div.appendChild(document.createElement('br'));
+
+
+  swal({
+    title: "Create Experiment",
+    // text: "Current Experiment: " + currentExperimentID,
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (confirm) {
+      let experimentName = experimentNameInput.value;
+      let experimentDescription = experimentDescriptionInput.value;
+      let designsGroupID = designsGroupIDInput.value;
+      let rulesGroupID = rulesGroupIDInput.value;
+      let rulesToEvalGroupID = rulesToEvalGroupIDInput.value;
+      let ruleEvaluationName = ruleEvaluationNameInput.value;
+      let partLibraryName = partLibraryNameInput.value;
+      if (experimentName) {
+        endpoint.createExperiment(experimentName, experimentDescription, designsGroupID, rulesGroupID, rulesToEvalGroupID, ruleEvaluationName, partLibraryName, (err, data) => {
+          if (!err) {
+            showExperimentInfo(experimentName);
+          }
+        });
+      }
+    }
+  });
+});
+
+$('#delete-experiment-tooltip').click(() => {
+  if (!currentExperimentID) {
+    swalError("No experiment is currently open. Please open an experiment first.");
+    return;
+  }
+
+  swal({
+    title: "Really delete?",
+    text: "You will not be able to recover the data!",
+    icon: "warning",
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      endpoint.deleteExperiment(currentExperimentID);
+    }
+  });
+});
+
+$('#ml-experiment-tooltip').click(() => {
+  // if currentExperimentID is null or undefined, then swal error
+  if (!currentExperimentID) {
+    swalError("No experiment is currently open. Please open an experiment first.");
+    return;
+  }
+
+  let div = document.createElement('div');
+  div.style.maxHeight = "60vh";
+  div.style.overflowY = "auto";
+  div.style.overflowX = "hidden";
+  div.style.paddingRight = "8px";
+
+  // ML Action Dropdown
+  let mlActionDiv = document.createElement('div');
+  let mlActionDropdown = makeMLActionDropdown();
+  makeDiv(mlActionDiv, mlActionDropdown, 'ML Action: ');
+
+  // Model Dropdown
+  let modelDiv = document.createElement('div');
+  let modelDropdown = makeModelDropdown();
+  makeDiv(modelDiv, modelDropdown, 'Model: ');
+
+  // Run Name div
+  let runNameDiv = document.createElement('div');
+  let runNameInput = document.createElement('input');
+  makeDiv(runNameDiv, runNameInput, 'Run Name: ');
+
+  // num classes div
+  let numClassesDiv = document.createElement('div');
+  let numClassesInput = document.createElement('input');
+  numClassesInput.setAttribute("type", "number");
+  numClassesInput.setAttribute("value", "2");
+  numClassesInput.setAttribute("min", "2");
+  numClassesInput.setAttribute("step", "1");
+  makeDiv(numClassesDiv, numClassesInput, 'Num Classes (Classification): ');
+
+  // train ratio div
+  let trainRatioDiv = document.createElement('div');
+  let trainRatioInput = document.createElement('input');
+  trainRatioInput.setAttribute("type", "number");
+  trainRatioInput.setAttribute("value", "0.8");
+  trainRatioInput.setAttribute("min", "0");
+  trainRatioInput.setAttribute("max", "1");
+  trainRatioInput.setAttribute("step", "0.05");
+  makeDiv(trainRatioDiv, trainRatioInput, 'Train Ratio: ');
+
+  // val ratio div
+  let valRatioDiv = document.createElement('div');
+  let valRatioInput = document.createElement('input');
+  valRatioInput.setAttribute("type", "number");
+  valRatioInput.setAttribute("value", "0.1");
+  valRatioInput.setAttribute("min", "0");
+  valRatioInput.setAttribute("max", "0.2");
+  valRatioInput.setAttribute("step", "0.05");
+  makeDiv(valRatioDiv, valRatioInput, 'Validation Ratio: ');
+
+  // test ratio div
+  let testRatioDiv = document.createElement('div');
+  let testRatioInput = document.createElement('input');
+  testRatioInput.setAttribute("type", "number");
+  testRatioInput.setAttribute("value", "0.1");
+  testRatioInput.setAttribute("min", "0");
+  testRatioInput.setAttribute("max", "0.2");
+  testRatioInput.setAttribute("step", "0.05");
+  makeDiv(testRatioDiv, testRatioInput, 'Test Ratio: ');
+
+  // Seed div
+  let seedDiv = document.createElement('div');
+  let seedInput = document.createElement('input');
+  seedInput.setAttribute("type", "number");
+  seedInput.setAttribute("value", "42");
+  seedInput.setAttribute("step", "1");
+  makeDiv(seedDiv, seedInput, 'Seed: ');
+
+  let configDiv = document.createElement('div');
+  let configTextarea = document.createElement("textarea");
+  configTextarea.rows = 8;
+  configTextarea.style.width = "100%";
+  configTextarea.value = JSON.stringify(getDefaultConfigForModel(modelDropdown.value), null, 2);
+  configDiv.appendChild(configTextarea);
+
+  function buildConfigFromUI() {
+    try {
+      const parsed = JSON.parse(configTextarea.value || "{}");
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        throw new Error("Config must be a JSON object.");
+      }
+      return parsed;
+    } catch (e) {
+      swalError("Invalid config JSON: " + e.message);
+      return null;
+    }
+  }
+
+  //append all
+  div.appendChild(mlActionDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(modelDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(runNameDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(numClassesDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(trainRatioDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(valRatioDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(testRatioDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(seedDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(configDiv);
+  div.appendChild(document.createElement('br'));
+
+  setRowVisible(runNameDiv, false);
+  setRowVisible(numClassesDiv, false);
+  setRowVisible(seedDiv, false);
+  setRowVisible(trainRatioDiv, false);
+  setRowVisible(valRatioDiv, false);
+  setRowVisible(testRatioDiv, false);
+  setRowVisible(configDiv, false);
+
+  $(mlActionDropdown).change(function() {
+    if (this.value === endpoint.mlActions.TRAIN){
+      setRowVisible(runNameDiv, true);
+      setRowVisible(seedDiv, true);
+      setRowVisible(numClassesDiv, true);
+      setRowVisible(trainRatioDiv, true);
+      setRowVisible(valRatioDiv, true);
+      setRowVisible(testRatioDiv, true);
+      setRowVisible(configDiv, true);
+    }
+    if (this.value === endpoint.mlActions.PREDICT){
+      setRowVisible(runNameDiv, false);
+      setRowVisible(numClassesDiv, false);
+      setRowVisible(seedDiv, false);
+      setRowVisible(trainRatioDiv, false);
+      setRowVisible(valRatioDiv, false);
+      setRowVisible(testRatioDiv, false);
+      setRowVisible(configDiv, false);
+    }
+  });
+
+  $(modelDropdown).change(function() {
+    configTextarea.value = JSON.stringify(getDefaultConfigForModel(modelDropdown.value), null, 2);
+
+    if (this.value === endpoint.mlModels.EBM || this.value === endpoint.mlModels.RANDOM_FOREST || this.value === endpoint.mlModels.XGBOOST){
+      setRowVisible(valRatioDiv, false);
+      trainRatioInput.value = 0.8;
+      valRatioInput.value = 0;
+      testRatioInput.value = 0.2;
+    }
+
+    if (this.value === endpoint.mlModels.TRANSFORMER || this.value === endpoint.mlModels.GNN || this.value === endpoint.mlModels.MLP){
+      setRowVisible(valRatioDiv, true);
+      trainRatioInput.value = 0.8;
+      valRatioInput.value = 0.1;
+      testRatioInput.value = 0.1;
+    }
+
+  });
+
+  swal({
+    title: "Machine Learning",
+    text: "Current Experiment: " + currentExperimentID,
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (!confirm) return;
+
+    const experiment = currentExperimentID;
+    
+    const runName = runNameInput.value;
+    if (!runName) {
+      swalError("Run Name is required.");
+      return;
+    }
+
+    const model = modelDropdown.value;
+    if (!model) {
+      swalError("Please select a Model.");
+      return;
+    }
+
+    const config = buildConfigFromUI();
+    const task = "regression"; // default task is regression, can be changed later if needed
+    
+    const trainRatio = Number(trainRatioInput.value);
+    const valRatio = Number(valRatioInput.value);
+    const testRatio = Number(testRatioInput.value);
+    const seed = Number(seedInput.value);
+    // Numeric validation
+    if (![trainRatio, valRatio, testRatio, seed].every(Number.isFinite)) {
+      swalError("Train/Validation/Test ratios and Seed must be valid numbers.");
+      return;
+    }
+
+    // Ratio bounds
+    if (trainRatio < 0 || valRatio < 0 || testRatio < 0 || trainRatio > 1 || valRatio > 1 || testRatio > 1) {
+      swalError("Train/Validation/Test ratios must each be between 0 and 1.");
+      return;
+    }
+
+    // Sum check with floating-point tolerance
+    const ratioSum = trainRatio + valRatio + testRatio;
+    if (Math.abs(ratioSum - 1.0) > 1e-9) {
+      swalError("Train + Validation + Test ratios must sum to 1.0.");
+      return;
+    }
+
+    // Seed integer check
+    if (!Number.isInteger(seed)) {
+      swalError("Seed must be an integer.");
+      return;
+    }
+
+    // ML Action validation
+    if (!mlActionDropdown.value) {
+      swalError("Please select an ML Action.");
+      return;
+    }
+
+    switch (mlActionDropdown.value) {
+      case endpoint.mlActions.TRAIN:
+        endpoint.mlJobSubmit(mlActionDropdown.value, experiment, runName, model, config, task, trainRatio, valRatio, testRatio, seed, (err, data) => {
+          if (!err) {
+            showExperimentInfo(experiment);
+          }
+        });
+        break;
+
+      default:
+        swalError("Unsupported ML Action: " + mlActionDropdown.value);
+        break;
+    }
+  });
+});
+
+function makeMLActionDropdown(){
+  let mlActionDropdown = document.createElement('select');
+  let mlActionOption = new Option("ML Actions", "", true, true);
+  mlActionOption.disabled = true;
+  mlActionDropdown.appendChild(mlActionOption);
+
+  for(let key in endpoint.mlActions){
+    mlActionDropdown.appendChild(new Option(endpoint.mlActions[key]));
+  }
+  
+  return mlActionDropdown;
+}
+
+function makeModelDropdown(){
+  let modelDropdown = document.createElement('select');
+  modelDropdown.setAttribute("id", "model-dropdown");
+  modelDropdown.appendChild(new Option("Model", "", true, true));
+  modelDropdown.appendChild(new Option("Graph Neural Network", "gnn"));
+  modelDropdown.appendChild(new Option("Transformer", "transformer"));
+  modelDropdown.appendChild(new Option("Multilayer Perceptron", "mlp"));
+  modelDropdown.appendChild(new Option("Random Forest", "random_forest"));
+  modelDropdown.appendChild(new Option("XGBoost", "xgboost"));
+  modelDropdown.appendChild(new Option("Explainable Boosting Machine", "ebm"));
+  return modelDropdown;
+}
+
+function getDefaultConfigForModel(model) {
+  return modelConfigs[model] || {};
+}
+
 // $('#delete-branch-tooltip').click(() => {
 //   // create DOM object to add to alert
 //   let dropdown = document.createElement("select");
@@ -1891,6 +2625,16 @@ $('#delete-group-tooltip').click(() => {
 //     }
 //   });
 // });
+
+function setRowVisible(rowDiv, show) {
+  rowDiv.style.display = show ? "" : "none";
+
+  // Also hide/show the spacer <br> inserted right after the row
+  const spacer = rowDiv.nextElementSibling;
+  if (spacer && spacer.tagName === "BR") {
+    spacer.style.display = show ? "" : "none";
+  }
+}
 
 export function swalError(errorMsg){
   swal({
@@ -2280,9 +3024,11 @@ function chooseVisualizeFunction() {
     visualizeFunction = visualizeDesignAndHistory;
   } else if (searchType === "group") {
     visualizeFunction = showGroupInfo;
+  } else if (searchType === "experiment") {
+    visualizeFunction = showExperimentInfo;
   }
 
-  return visualizeFunction
+  return visualizeFunction;
 }
 
 function updateAutocompleteVisibility(id) {
@@ -2345,6 +3091,8 @@ function populateAutocompleteList(callback) {
       fetchFunction = endpoint.listDesignSpaces;
     } else if (searchType === "group") {
       fetchFunction = endpoint.listGroups;
+    } else if (searchType === "experiment") {
+      fetchFunction = endpoint.listExperiments;
     }
 
     fetchFunction((err, data) => {
