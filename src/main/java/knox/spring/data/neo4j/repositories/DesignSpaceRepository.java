@@ -45,6 +45,7 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
     void deleteDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 
     @Query(
+        "MATCH (dg:DesignGroup {groupID: $groupID})-[r:CONTAINS]->(target:DesignSpace) " +
         "OPTIONAL MATCH (target)-[:CONTAINS]->(n:Node) " +
         "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) " +
         "OPTIONAL MATCH (s)-[:CONTAINS]->(sn:Node) " +
@@ -67,6 +68,7 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
         "e.componentIDs as componentIDs, e.weight as weight, e.orientation as orientation, n.nodeID as headID, n.nodeTypes as headTypes")
     List<DesignSpaceEdgeDTO> mapDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 
+    @Query("MATCH (n:DesignSpace) RETURN n.spaceID ORDER BY n.spaceID")
     List<String> listDesignSpaces();
 
     @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID SET n.spaceID = $newSpaceID")
