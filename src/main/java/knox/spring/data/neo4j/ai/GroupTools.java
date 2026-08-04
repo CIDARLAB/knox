@@ -25,7 +25,7 @@ public class GroupTools {
     String getUniqueGroupIDs() {
         System.out.println("\nAI: getUniqueGroupIDs\n");
 
-        List<String> groupIDs = designSpaceService.getUniqueGroupIDs();
+        List<String> groupIDs = designSpaceService.listDesignGroupIDs();
 
         System.out.println("Unique Group IDs: " + groupIDs);
         return "Design Space Groups in Neo4j:<br><br>" + String.join("<br>", groupIDs);
@@ -35,7 +35,7 @@ public class GroupTools {
     String getGroupSpaceIDs(@ToolParam(description = "Group ID") String groupID) {
         System.out.println("\nAI: getGroupSpaceIDs\n");
 
-        List<String> designSpaces = designSpaceService.getGroupSpaceIDs(groupID);
+        List<String> designSpaces = designSpaceService.getSpaceIDsInDesignGroup(groupID);
 
         System.out.println("Number of Design Spaces for Group ID " + groupID + ": " + designSpaces.size());
         return designSpaces.subList(0, 50).toString() + " Number of Design Spaces: " + designSpaces.size() + (designSpaces.size() > 50 ? " ... (truncated - First 50 shown)" : "");

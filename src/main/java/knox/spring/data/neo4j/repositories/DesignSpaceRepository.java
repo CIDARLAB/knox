@@ -45,12 +45,12 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
     void deleteDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 
     @Query(
-        "MATCH (target:DesignSpace {groupID: $groupID}) " +
         "OPTIONAL MATCH (target)-[:CONTAINS]->(n:Node) " +
         "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) " +
         "OPTIONAL MATCH (s)-[:CONTAINS]->(sn:Node) " +
-        "DETACH DELETE target, n, b, c, s, sn")
-    void deleteDesignSpacesByGroupID(@Param("groupID") String groupID);
+        "DETACH DELETE dg, target, n, b, c, s, sn"
+    )
+    void deleteSpacesInGroup(@Param("groupID") String groupID);
 
     DesignSpace findBySpaceID(@Param("spaceID") String spaceID);
 
@@ -67,7 +67,6 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
         "e.componentIDs as componentIDs, e.weight as weight, e.orientation as orientation, n.nodeID as headID, n.nodeTypes as headTypes")
     List<DesignSpaceEdgeDTO> mapDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 
-    @Query("MATCH (n:DesignSpace) RETURN n.spaceID")
     List<String> listDesignSpaces();
 
     @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID SET n.spaceID = $newSpaceID")
@@ -76,31 +75,14 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
     @Query("MATCH (n:DesignSpace) RETURN count(n)")
     Integer getNumberOfDesignSpaces();
 
-    @Query("MATCH (n:DesignSpace) WHERE n.groupID = $group RETURN n.spaceID")
-    List<String> listDesignSpaces(@Param("group") String group);
-
-    @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID SET n.groupID = $group")
-    void setGroupID(@Param("targetSpaceID") String targetSpaceID, @Param("group") String group);
     @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID RETURN n.goldbar")
     String getGoldbarBySpaceID(@Param("targetSpaceID") String targetSpaceID);
 
-    @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID SET n.groupID = 'none'")
-    void removeGroupID(@Param("targetSpaceID") String targetSpaceID);
 
-    @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID RETURN n.groupID")
-    String getGroupID(@Param("targetSpaceID") String targetSpaceID);
 
-    @Query("MATCH (n:DesignSpace) WHERE n.groupID = $group RETURN count(n)")
-    Integer getGroupIDSize(@Param("group") String group);
 
-    @Query("MATCH (n:DesignSpace) WHERE n.groupID IS NOT NULL RETURN DISTINCT n.groupID")
-    List<String> getUniqueGroupIDs();
 
-    @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID SET n.designGroupIndex = $designGroupIndex")
-    void setDesignGroupIndex(@Param("targetSpaceID") String targetSpaceID, @Param("designGroupIndex") int designGroupIndex);
 
-    @Query("MATCH (n:DesignSpace) WHERE n.groupID = $group RETURN n.spaceID, n.designGroupIndex ORDER BY n.designGroupIndex")
-    List<Map<String, Object>> getDesignsFromGroup(@Param("group") String group);
     @Query(
         "MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID " +
         "MATCH (n)-[:CONTAINS]->(c:ContextSpace) " +

@@ -18,9 +18,6 @@ public class DesignSpace extends NodeSpace {
     @Property 
 	private String spaceID;
 
-	@Property 
-	private String groupID;
-
     @Relationship(type = "ARCHIVES") 
 	Set<Branch> branches;
 
@@ -43,21 +40,16 @@ public class DesignSpace extends NodeSpace {
         super(0);
 
         this.spaceID = spaceID;
-
-		this.groupID = "none";
         
         branches = new HashSet<Branch>();
     }
 
-	public DesignSpace(String spaceID, String groupID) {
+	public DesignSpace(String spaceID, String goldbar) {
         super(0);
 
         this.spaceID = spaceID;
 
-		this.groupID = groupID;
-		if (this.groupID.equals("")) {
-			this.groupID = "none";
-		}
+		this.goldbar = goldbar;
         
         branches = new HashSet<Branch>();
     }
@@ -252,15 +244,8 @@ public class DesignSpace extends NodeSpace {
     	return commits;
     }
 
-	public void setGroupID(String groupID) {
-		this.groupID = groupID;
-		if (this.groupID == null || this.groupID.equals("")) {
-			this.groupID = "none";
-		}
 	}
 
-	public String getGroupID() {
-		return this.groupID;
 	}
 	public void setContextSpace(ContextSpace contextSpace) {
 		this.contextSpace = contextSpace;
