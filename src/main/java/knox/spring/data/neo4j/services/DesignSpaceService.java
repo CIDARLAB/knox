@@ -449,6 +449,8 @@ public class DesignSpaceService {
 	
 	private DesignSpace loadIOSpaces(List<String> inputSpaceIDs, String outputSpaceID,
     		List<NodeSpace> inputSpaces) {
+
+		// TODO: load each space's goldbar
     	for (String inputSpaceID : inputSpaceIDs) {
     		inputSpaces.add(loadDesignSpace(inputSpaceID));
     	}
@@ -673,11 +675,15 @@ public class DesignSpaceService {
     		
     		if (isMerge) {
     			MergeOperator.apply(csvNodeSpaces, outputSpace, 1, weightTolerance, new HashSet<String>(), new ArrayList<String>());
+				ArrayList<String> goldbars = getGOLDBAR(csvSpaces);
+				outputSpace.setGoldbar(combineGoldbar("merge", goldbars));
 
     			saveDesignSpace(outputSpace);
 
     		} else if (isOr) {
     			OROperator.apply(csvNodeSpaces, outputSpace);
+				ArrayList<String> goldbars = getGOLDBAR(csvSpaces);
+				outputSpace.setGoldbar(combineGoldbar("or", goldbars));
     			
     			saveDesignSpace(outputSpace);
 
@@ -732,6 +738,9 @@ public class DesignSpaceService {
 						if (compID.endsWith("_REVERSE")) {
 							compID = compID.replace("_REVERSE", "");
 							orientation = Edge.Orientation.REVERSE_COMPLEMENT;
+							compIDsInDesign.add("reverse-comp(" + compID + ")");
+						} else {
+							compIDsInDesign.add(compID);
 						}
 
 						compIDs.add(compID);
@@ -762,6 +771,7 @@ public class DesignSpaceService {
 					}
 				}
 
+				outputSpace.setGoldbar(String.join(" then ", compIDsInDesign));
 				csvSpaces.add(outputSpace);
 			}
 			
@@ -970,7 +980,7 @@ public class DesignSpaceService {
 
 		NodeSpace outSpace = goldbarConversion.getSpace();
 
-		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix, groupID);
+		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix, goldbar);
 
 		outputSpace.shallowCopyNodeSpace(outSpace);
 
@@ -1101,6 +1111,39 @@ public class DesignSpaceService {
 		long elapsed = System.currentTimeMillis() - startTime;
 		System.out.printf("Imported %d goldbars in %.1f seconds (%.1f goldbars/sec), %d failed%n",
 			completed.get(), elapsed / 1000.0, completed.get() / (elapsed / 1000.0), failed.get());
+	}
+
+	public Map<String, Object> parseGoldbar(String goldbarString) {
+		return Parse.parse(goldbarString);
+	}
+
+	public String getGoldbarBySpaceID(String targetSpaceID) throws DesignSpaceNotFoundException {
+		String goldbar = designSpaceRepository.getGoldbarBySpaceID(targetSpaceID);
+		if (goldbar != null) {
+			return goldbar;
+		} else {
+			throw new DesignSpaceNotFoundException("Design space with ID " + targetSpaceID + " not found or does not have a goldbar.");
+		}
+	}
+
+	private ArrayList<String> getGOLDBAR(List<DesignSpace> designSpaces) {
+		ArrayList<String> goldbars = new ArrayList<>();
+		for (DesignSpace designSpace : designSpaces) {
+			goldbars.add(designSpace.getGoldbar());
+		}
+		return goldbars;
+	}
+
+	private String combineGoldbar(String operation, String goldbar1, String goldbar2) {
+		return "(" + goldbar1 + ") " + operation + " (" + goldbar2 + ")";
+	}
+
+	private String combineGoldbar(String operation, ArrayList<String> goldbar) {
+		ArrayList<String> wrappedGoldbars = new ArrayList<>();
+		for (String gb : goldbar) {
+			wrappedGoldbars.add("(" + gb + ")");
+		}
+		return String.join(" " + operation + " ", wrappedGoldbars);
 	}
 
 	public void runRuleEvaluation(String evaluationName, String designsGroupID, String ruleGroupID, String labelingMethod) throws RuntimeException {
@@ -1988,6 +2031,8 @@ public class DesignSpaceService {
 		System.out.println("\nSaving Rule Evaluation: " + evaluation.getEvaluationName());
 		ruleEvaluationRepository.save(evaluation);
 	}
+
+	// TODO: Check GOLDBAR syntax
 
 	public void deleteRuleEvaluation(String targetEvaluationName) {
 		System.out.println("\nDeleting Rule Evaluation: " + targetEvaluationName + "\n");

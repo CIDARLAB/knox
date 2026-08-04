@@ -47,6 +47,7 @@ const exploreBtnIDs = {
   group: "#group-btn",
   rename: "#rename-btn",
   show: "#show-btn",
+  goldbar: "#goldbar-btn",
   // save: "#save-btn",
 };
 
@@ -759,6 +760,14 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
+
+  let goldbarBtn = $('#goldbar-btn');
+  goldbarBtn.tooltipster({
+    content: $('#goldbar-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
 }
 
 $('#table-tooltip').click(() => {
@@ -1442,6 +1451,41 @@ $('#graph-score-tooltip').click(() => {
 
 });
 
+$('#goldbar-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.height = "inherit";
+  
+  // loading div
+  let loadingDiv = document.createElement('div');
+  loadingDiv.appendChild(document.createTextNode("Loading..."));
+
+  //append all
+  div.appendChild(loadingDiv);
+
+  swal({
+    title: "GOLDBAR",
+    content: div,
+    className: "goldbar-swal"
+  }); 
+
+  endpoint.getGoldbar(currentSpace, (err, data) => {
+    if (err) {
+      swalError("GOLDBAR error: " + JSON.stringify(err));
+    } else {
+      div.removeChild(loadingDiv);
+
+      let para = document.createElement("p");
+      para.appendChild(document.createTextNode("Current Space: " + currentSpace));
+      para.appendChild(document.createElement('br'));
+      para.appendChild(document.createElement('br'));
+      para.appendChild(document.createTextNode(data.goldbar));
+      para.appendChild(document.createElement('br'));
+      
+      div.appendChild(para);
+    }
+  });
+
+});
 
 $('#apply-operators-tooltip').click(() => {
   let div = document.createElement('div');

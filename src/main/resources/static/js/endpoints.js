@@ -44,7 +44,8 @@ const endpoints = {
 
   SBOL: "/sbol/exportCombinatorial",
   GOLDBARSBOL: "/goldbarSBOL/import",
-  GOLDBAR: "/goldbar/import"
+  GOLDBAR: "/goldbar/import",
+  GETGOLDBAR: "/goldbar",
 };
 
 export const operators = {
@@ -168,6 +169,14 @@ export function renameDesignSpace(id, newSpaceID, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);
   query += "&newSpaceID=" + encodeURIComponent(newSpaceID);
   d3.json(endpoints.RENAME + query, callback);
+}
+
+/**
+ * Gets GOLDBAR for a Design Space
+ */
+export function getGoldbar(id, callback){
+  let query = "?targetSpaceID=" + encodeURIComponent(id);
+  d3.json(endpoints.GETGOLDBAR + query, callback);
 }
 
 /***************************

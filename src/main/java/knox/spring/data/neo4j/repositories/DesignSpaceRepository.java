@@ -81,6 +81,8 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
 
     @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID SET n.groupID = $group")
     void setGroupID(@Param("targetSpaceID") String targetSpaceID, @Param("group") String group);
+    @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID RETURN n.goldbar")
+    String getGoldbarBySpaceID(@Param("targetSpaceID") String targetSpaceID);
 
     @Query("MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID SET n.groupID = 'none'")
     void removeGroupID(@Param("targetSpaceID") String targetSpaceID);
