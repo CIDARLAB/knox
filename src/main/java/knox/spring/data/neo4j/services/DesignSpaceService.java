@@ -1785,6 +1785,7 @@ public class DesignSpaceService {
             targetSpace = designSpaceRepository.findById(graphId).orElse(null);
         }
 
+		//checkProperties(targetSpace);
 
 //      No version history
 //		for (Commit commit : targetSpace.getCommits()) {
@@ -1803,6 +1804,39 @@ public class DesignSpaceService {
         }
 		return targetEvaluation;
 	}
+
+	private void checkProperties(DesignSpace designSpace) {
+		for (Node node: designSpace.getNodes()) {
+			if (node.getNodeID() == null) {
+				System.out.println("Node ID is missing for node: " + node);
+			}
+			if (node.getNodeTypes() == null) {
+				System.out.println("Node Types is missing for node: " + node);
+			}
+		}
+
+		for (Edge edge: designSpace.getEdges()) {
+			if (edge.getComponentIDs() == null && !edge.isBlank()) {
+				System.out.println("Component IDs is missing for edge: " + edge);
+			}
+			if (edge.getComponentRoles() == null && !edge.isBlank()) {
+				System.out.println("Component Roles is missing for edge: " + edge);
+			}
+			if (edge.getWeight() == null && !edge.isBlank()) {
+				System.out.println("Weight is missing for edge: " + edge);
+			}
+			if (edge.getOrientation() == null && !edge.isBlank()) {
+				System.out.println("Orientation is missing for edge: " + edge);
+			}
+			if (edge.getTail() == null) {
+				System.out.println("Tail Node is missing for edge: " + edge);
+			}
+			if (edge.getHead() == null) {
+				System.out.println("Head Node is missing for edge: " + edge);
+			}
+		}
+	}
+
 	private Snapshot reloadSnapshot(Snapshot snap) {
 		Long graphId = snap.getGraphID();
         if (graphId != null) {
