@@ -3,14 +3,12 @@ package knox.spring.data.neo4j.domain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 import knox.spring.data.neo4j.domain.Node.NodeType;
 
@@ -24,11 +22,7 @@ import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-
 import knox.spring.data.neo4j.domain.Edge.Orientation;
-import knox.spring.data.neo4j.domain.Node.NodeType;
 import org.springframework.data.neo4j.core.schema.Property;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")

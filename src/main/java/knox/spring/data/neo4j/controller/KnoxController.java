@@ -2,65 +2,55 @@ package knox.spring.data.neo4j.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.FileWriter;
-import java.io.ByteArrayInputStream;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.sql.rowset.serial.SerialBlob;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import java.sql.Blob;
-
-import knox.spring.data.neo4j.domain.DesignSpace;
-import knox.spring.data.neo4j.exception.*;
-import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
-import knox.spring.data.neo4j.sbol.SBOLConversion;
-import knox.spring.data.neo4j.sbol.SBOLGeneration;
-import knox.spring.data.neo4j.services.DesignSpaceService;
-import knox.spring.data.neo4j.repositories.BranchRepository;
-import knox.spring.data.neo4j.repositories.CommitRepository;
-import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
-import knox.spring.data.neo4j.repositories.EdgeRepository;
-import knox.spring.data.neo4j.repositories.NodeRepository;
-import knox.spring.data.neo4j.repositories.SnapshotRepository;
-import knox.spring.data.neo4j.repositories.ContextSpaceRepository;
-import knox.spring.data.neo4j.repositories.ComponentRepository;
-import knox.spring.data.neo4j.repositories.RuleEvaluationRepository;
-
-import org.jdom.Document;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLDocument;
 import org.sbolstandard.core2.SBOLReader;
 import org.sbolstandard.core2.SBOLValidationException;
-import org.sbolstandard.core2.SBOLWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import org.json.JSONObject;
-import org.json.JSONException;
-
-import javassist.bytecode.ByteArray;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
+import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
+import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
+import knox.spring.data.neo4j.exception.ParameterEmptyException;
+import knox.spring.data.neo4j.exception.SBOLException;
+import knox.spring.data.neo4j.repositories.BranchRepository;
+import knox.spring.data.neo4j.repositories.CommitRepository;
+import knox.spring.data.neo4j.repositories.ComponentRepository;
+import knox.spring.data.neo4j.repositories.ContextSpaceRepository;
+import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
+import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.ExperimentRepository;
 import knox.spring.data.neo4j.repositories.PartLibraryRepository;
+import knox.spring.data.neo4j.repositories.NodeRepository;
+import knox.spring.data.neo4j.repositories.RuleEvaluationRepository;
+import knox.spring.data.neo4j.repositories.SnapshotRepository;
+import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
+import knox.spring.data.neo4j.services.DesignSpaceService;
 import knox.spring.data.neo4j.services.ExperimentService;
 
 

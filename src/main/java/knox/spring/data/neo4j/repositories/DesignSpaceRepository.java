@@ -1,18 +1,18 @@
 package knox.spring.data.neo4j.repositories;
 
-import knox.spring.data.neo4j.domain.Branch;
-import knox.spring.data.neo4j.domain.DesignSpace;
-import knox.spring.data.neo4j.domain.dto.DesignSpaceEdgeDTO;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import knox.spring.data.neo4j.domain.DesignSpace;
+import knox.spring.data.neo4j.domain.dto.DesignSpaceEdgeDTO;
+import knox.spring.data.neo4j.domain.dto.DesignSpaceLinearDAGRepresentation;
 
 /**
  * @author james roberts
