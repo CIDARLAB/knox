@@ -24,6 +24,9 @@ const endpoints = {
   CREATESAMPLESPACE: "/designSpace/createSampleSpace",
   PARTANALYTICS: "/designSpace/partAnalytics",
 
+  RULEEVAL: "/rule/evaluate",
+  LISTEVALUATION: "/rule/listEvaluations",
+
   RENAME: "/designSpace/rename",
   SETGROUPID: "/designSpace/setGroupID",
   GETGROUPID: "/designSpace/getGroupID",
@@ -78,6 +81,10 @@ export function getGraph (id, callback){
 
 export function listDesignSpaces (callback){
   d3.json(endpoints.LIST, callback);
+}
+
+export function listEvaluations (callback){
+  d3.json(endpoints.LISTEVALUATION, callback);
 }
 
 export function listGroups (callback){
@@ -539,6 +546,32 @@ export function importGoldbar(goldbar, categories, outputSpace, groupID, weight)
 
 }
 
+export function evaluateRules(evaluationName, designGroupID, rulesGroupID, labelingMethod, callback) {
+  let query = "?";
+  query += encodeQueryParameter("evaluationName", evaluationName, query);
+  query += encodeQueryParameter("designGroupID", designGroupID, query);
+  query += encodeQueryParameter("rulesGroupID", rulesGroupID, query);
+  query += encodeQueryParameter("labelingMethod", labelingMethod, query);
+
+  fetch(endpoints.RULEEVAL + query, { method: "POST" })
+  
+  .then(async (response) => {
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+    return response.json();
+  })
+  
+  .then((data) => {
+    swalSuccess("Rule evaluation submitted: " + data.evaluationName);
+    if (callback) callback(null, data);
+  })
+  
+  .catch((err) => {
+    swalError("Failed to run rule evaluation: " + err.message);
+    if (callback) callback(err);
+  });
+}
 
 export function enumerateCSV(id, numDesigns, minLength, maxLength, maxCycles, bfs, isWeighted, isSampleSpace, allowDuplicates, callback){
   let query = "?targetSpaceID=" + encodeURIComponent(id);

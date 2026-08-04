@@ -751,6 +751,14 @@ function addTooltips(){
     interactive: true,
     theme: 'tooltipster-noir'
   });
+
+  let ruleEvalBtn = $('#rule-eval-btn');
+  ruleEvalBtn.tooltipster({
+    content: $('#rule-eval-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
 }
 
 $('#table-tooltip').click(() => {
@@ -1690,6 +1698,64 @@ function makeReverseOrientationDropdown(){
 function makeDiv(div, input, title){
   div.appendChild(document.createTextNode(title));
   div.appendChild(input);
+}
+
+$('#rule-eval-tooltip').click(() => {
+  let div = document.createElement('div');
+
+  // Evaluation Name div
+  let evaluationNameDiv = document.createElement('div');
+  let evaluationNameInput = document.createElement('input');
+  makeDiv(evaluationNameDiv, evaluationNameInput, 'Evaluation Name: ');
+
+  // designGroupID div
+  let designGroupIDDiv = document.createElement('div');
+  let designGroupIDInput = document.createElement('input');
+  makeDiv(designGroupIDDiv, designGroupIDInput, 'Design Group ID: ');
+
+  // rulesGroupID div
+  let rulesGroupIDDiv = document.createElement('div');
+  let rulesGroupIDInput = document.createElement('input');
+  makeDiv(rulesGroupIDDiv, rulesGroupIDInput, 'Rules Group ID: ');
+
+  // Labeling Method div
+  let labelingMethodDiv = document.createElement('div');
+  let labelingMethodDropdown = makeLabelingMethodDropdown();
+  makeDiv(labelingMethodDiv, labelingMethodDropdown, 'Labeling Method: ');
+
+  //append all created divs to the main div
+  div.appendChild(evaluationNameDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(designGroupIDDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(rulesGroupIDDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(labelingMethodDiv);
+  div.appendChild(document.createElement('br'));
+
+  swal({
+    title: "Rule Evaluation",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (!confirm) return;
+    
+    let evaluationName = evaluationNameInput.value;
+    let designGroupID = designGroupIDInput.value;
+    let rulesGroupID = rulesGroupIDInput.value;
+    let labelingMethod = labelingMethodDropdown.value;
+
+    endpoint.evaluateRules(evaluationName, designGroupID, rulesGroupID, labelingMethod);
+  });
+});
+
+function makeLabelingMethodDropdown(){
+  let modelDropdown = document.createElement('select');
+  modelDropdown.setAttribute("id", "model-dropdown");
+  modelDropdown.appendChild(new Option("Median", "median", true, true));
+  modelDropdown.appendChild(new Option("Mean", "mean"));
+  modelDropdown.appendChild(new Option("Sign", "sign"));
+  return modelDropdown;
 }
 
 $('#delete-design-tooltip').click(() => {

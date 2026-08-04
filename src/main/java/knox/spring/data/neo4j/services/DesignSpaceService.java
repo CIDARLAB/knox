@@ -1013,7 +1013,7 @@ public class DesignSpaceService {
 		return goldbarAndCategories;
 	}
 
-	public Map<String, Map<String, Object>> ruleEvaluation(String evaluationName, ArrayList<String> designSpaceIDs, String ruleGroupID,
+	/*public Map<String, Map<String, Object>> ruleEvaluation(String evaluationName, ArrayList<String> designSpaceIDs, String ruleGroupID,
 			ArrayList<Integer> designLabels, ArrayList<Double> designScores, String labelingMethod) throws RuntimeException {
 		
 		ArrayList<String> ruleSpaceIDs = new ArrayList<>(getGroupSpaceIDs(ruleGroupID));
@@ -1039,7 +1039,7 @@ public class DesignSpaceService {
 		System.out.println("Rule Evaluation Saved.\n");
 
 		return evaluationResults;
-	}
+	}*/
 
 	private void importGoldbarsParallel(
 			Map<String, String> goldbar, 
@@ -1103,10 +1103,10 @@ public class DesignSpaceService {
 			completed.get(), elapsed / 1000.0, completed.get() / (elapsed / 1000.0), failed.get());
 	}
 
-	public void runRuleEvaluation(String evaluationName, ArrayList<String> designSpaceIDs, String ruleGroupID,
-			ArrayList<Integer> designLabels, ArrayList<Double> designScores, String labelingMethod) throws RuntimeException {
+	public void runRuleEvaluation(String evaluationName, String designsGroupID, String ruleGroupID, String labelingMethod) throws RuntimeException {
 		
-		ArrayList<String> ruleSpaceIDs = new ArrayList<>(getGroupSpaceIDs(ruleGroupID));
+		ArrayList<String> designSpaceIDs = new ArrayList<>(getSpaceIDsInDesignGroup(designsGroupID));
+		ArrayList<String> ruleSpaceIDs = new ArrayList<>(getSpaceIDsInDesignGroup(ruleGroupID));
 		
 		System.out.println("Loading Spaces...");
 		ArrayList<NodeSpace> designSpaces = loadSpacesParallel(designSpaceIDs);
@@ -1114,14 +1114,23 @@ public class DesignSpaceService {
 		System.out.println("Spaces Loaded.");
 
 		// Populate design scores if not provided
-		if (designScores.isEmpty()) {
-			System.out.println("Populating design scores...");
-			for (int i = 0; i < designSpaces.size(); i++) {
-				designScores.add(designSpaces.get(i).getAvgScoreofAllNonBlankEdges());
-			}
+		System.out.println("Populating design scores...");
+		ArrayList<Double> designScores = new ArrayList<>();
+		for (int i = 0; i < designSpaces.size(); i++) {
+			designScores.add(designSpaces.get(i).getAvgScoreofAllNonBlankEdges());
 		}
+		
 
-		RuleEvaluation ruleEvaluation = new RuleEvaluation(evaluationName, ruleSpaceIDs, designSpaceIDs, designLabels, designScores, ruleSpaces, designSpaces, labelingMethod);
+		RuleEvaluation ruleEvaluation = new RuleEvaluation(
+			evaluationName, 
+			ruleSpaceIDs, 
+			designSpaceIDs, 
+			designScores, 
+			ruleSpaces, 
+			designSpaces, 
+			labelingMethod
+		);
+
 		ruleEvaluation.runEvaluationParallel();
 		System.out.println("Rule Evaluation Completed.");
 

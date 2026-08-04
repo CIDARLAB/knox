@@ -10,6 +10,9 @@ import java.io.ByteArrayInputStream;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.sql.rowset.serial.SerialBlob;
 import javax.xml.parsers.DocumentBuilder;
@@ -64,6 +67,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 public class KnoxController {
 	final DesignSpaceService designSpaceService;
+
+	// Bounded worker pool for general requests.
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
 
 	@Autowired BranchRepository branchRepository;
 	
@@ -955,49 +961,37 @@ public class KnoxController {
 	}
 	
 	@PostMapping("/rule/evaluate")
-	public Map<String, Map<String, Object>> evaluateGoldbar(@RequestParam(value = "evaluationName", required = true) String evaluationName,
-		    @RequestParam(value = "poorSpaceIDs", required = false) ArrayList<String> poorSpaceIDs,
-			@RequestParam(value = "goodSpaceIDs", required = false) ArrayList<String> goodSpaceIDs,
-			@RequestParam(value = "designSpaceIDs", required = false) ArrayList<String> designSpaceIDs,
-			@RequestParam(value = "goodGroupID", required = false) String goodGroupID,
-			@RequestParam(value = "poorGroupID", required = false) String poorGroupID,
+	public ResponseEntity<Map<String, Object>> evaluateGoldbar(@RequestParam(value = "evaluationName", required = true) String evaluationName,
+		    //@RequestParam(value = "poorSpaceIDs", required = false) ArrayList<String> poorSpaceIDs,
+			//@RequestParam(value = "goodSpaceIDs", required = false) ArrayList<String> goodSpaceIDs,
+			//@RequestParam(value = "designSpaceIDs", required = false) ArrayList<String> designSpaceIDs,
+			//@RequestParam(value = "goodGroupID", required = false) String goodGroupID,
+			//@RequestParam(value = "poorGroupID", required = false) String poorGroupID,
 			@RequestParam(value = "designGroupID", required = false) String designGroupID,
-			@RequestParam(value = "designLabels", required = false) ArrayList<Integer> designLabels,
-			@RequestParam(value = "designScores", required = false) ArrayList<Double> designScores,
+			//@RequestParam(value = "designLabels", required = false) ArrayList<Integer> designLabels,
+			//@RequestParam(value = "designScores", required = false) ArrayList<Double> designScores,
 		    @RequestParam(value = "rulesGroupID", required = true) String rulesGroupID,
 		    @RequestParam(value = "labelingMethod", required = false, defaultValue = "median") String labelingMethod) {
 
+		// TODO: return response entity with error handling
 		System.out.println("\nStarting GOLDBAR Evaluation");
-		if (designLabels == null) {
-			designLabels = new ArrayList<Integer>();
+
+		// TODO: Validate input parameters
+		if (evaluationName.isEmpty()) {
+			throw new IllegalArgumentException("Evaluation name is required");
 		}
 
-		if (designScores == null) {
-			designScores = new ArrayList<Double>();
-		}
+		CompletableFuture.runAsync(() -> designSpaceService.runRuleEvaluation(
+			evaluationName, 
+			designGroupID, 
+			rulesGroupID, 
+			labelingMethod), executor
+		);
 
-		if (goodSpaceIDs != null && poorSpaceIDs != null) {
-			designSpaceIDs = new ArrayList<String>();
-			designSpaceIDs.addAll(goodSpaceIDs);
-			designSpaceIDs.addAll(poorSpaceIDs);
-			return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
-		
-		} else if (designSpaceIDs != null) {
-			return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
-		
-		} else if (goodGroupID != null && poorGroupID != null) {
-			designSpaceIDs = new ArrayList<String>();
-			designSpaceIDs.addAll(designSpaceService.getGroupSpaceIDs(goodGroupID));
-			designSpaceIDs.addAll(designSpaceService.getGroupSpaceIDs(poorGroupID));
-			return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
+		Map<String, Object> response = new HashMap<>();
+        response.put("evaluationName", evaluationName);
 
-		} else if (designGroupID != null) {
-			designSpaceIDs = new ArrayList<String>();
-			designSpaceIDs.addAll(designSpaceService.getGroupSpaceIDs(designGroupID));
-			return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
-		}
-
-		return designSpaceService.ruleEvaluation(evaluationName, designSpaceIDs, rulesGroupID, designLabels, designScores, labelingMethod);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
 	}
 
 	@GetMapping("/rule/listEvaluations")

@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.IntStream;
 
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
@@ -56,7 +54,7 @@ public class RuleEvaluation {
 
     public RuleEvaluation() {}
 
-    public RuleEvaluation(String evaluationName, ArrayList<String> ruleSpaceIDs, ArrayList<String> designSpaceIDs, ArrayList<Integer> designLabels, ArrayList<Double> designScores, 
+    /*public RuleEvaluation(String evaluationName, ArrayList<String> ruleSpaceIDs, ArrayList<String> designSpaceIDs, ArrayList<Integer> designLabels, ArrayList<Double> designScores, 
             ArrayList<Integer> flattenedRuleEvaluations, String labelingMethod) {
         
         this.evaluationName = evaluationName;
@@ -66,9 +64,9 @@ public class RuleEvaluation {
         this.designScores = designScores;
         this.flattenedRuleEvaluations = flattenedRuleEvaluations;
         this.labelingMethod = labelingMethod;
-    }
+    }*/
 
-    public RuleEvaluation(String evaluationName, ArrayList<String> ruleSpaceIDs, ArrayList<String> designSpaceIDs, ArrayList<Integer> designLabels, ArrayList<Double> designScores,
+    public RuleEvaluation(String evaluationName, ArrayList<String> ruleSpaceIDs, ArrayList<String> designSpaceIDs, ArrayList<Double> designScores,
             ArrayList<NodeSpace> ruleSpaces, ArrayList<NodeSpace> designSpaces, String labelingMethod) throws IllegalArgumentException {
 
         this.evaluationName = evaluationName;
@@ -76,12 +74,12 @@ public class RuleEvaluation {
         this.designSpaceIDs = designSpaceIDs;
         this.ruleSpaces = ruleSpaces;
         this.designSpaces = designSpaces;
-        this.designLabels = designLabels;
+        this.designLabels = null;
         this.designScores = designScores;
         this.flattenedRuleEvaluations = new ArrayList<>();
         this.labelingMethod = labelingMethod;
 
-        if (this.designLabels.isEmpty() && !this.designScores.isEmpty()) {
+        if (this.designLabels == null && !this.designScores.isEmpty()) {
             if (this.designScores.size() != this.designSpaces.size()) {
                 throw new IllegalArgumentException("Design scores size must match design spaces size.");
             }
@@ -90,13 +88,27 @@ public class RuleEvaluation {
                 populateLabelsByMedian();
             } else if (labelingMethod.equals("sign")) {
                 populateLabelsBySign();
+            } else if (labelingMethod.equals("mean")) {
+                populateLabelsByMean();
+            } else {
+                throw new IllegalArgumentException("Unsupported labeling method: " + labelingMethod);
             }
         }
 
-        if (!this.designLabels.isEmpty()) {
+        if (this.designLabels != null) {
             sortDesignSpacesByLabels();
         }
     }
+
+    /*public RuleEvaluation(String evaluationName, ArrayList<String> ruleSpaceIDs, ArrayList<String> designSpaceIDs, ArrayList<NodeSpace> ruleSpaces, ArrayList<NodeSpace> designSpaces) {
+        // RuleEvaluation with no labels or scores
+        this.evaluationName = evaluationName;
+        this.ruleSpaceIDs = ruleSpaceIDs;
+        this.designSpaceIDs = designSpaceIDs;
+        this.ruleSpaces = ruleSpaces;
+        this.designSpaces = designSpaces;
+        this.flattenedRuleEvaluations = new ArrayList<>();
+    }*/
 
     public Map<String, Map<String, Object>> getEvaluationResults() {
         System.out.println("Getting Evaluation Results...");
@@ -275,7 +287,7 @@ public class RuleEvaluation {
         int ruleIndex = 0;
         for (String ruleSpaceID : ruleSpaceIDs) {
             Map<String, Object> metrics = new HashMap<String, Object>();
-            if (designLabels.isEmpty()) {
+            if (ruleEvaluationOnly || designLabels.isEmpty()) {
                 // No labels to evaluate against
                 evaluationResults.put(ruleSpaceID, metrics);
                 designToRule.put(ruleSpaceID, ruleEvaluations.get(ruleIndex).stream().map(result -> (Object) result).collect(ArrayList::new, ArrayList::add, ArrayList::addAll));
@@ -463,6 +475,19 @@ public class RuleEvaluation {
         }
     }
 
+    public void populateLabelsByMean() {
+        this.designLabels = new ArrayList<>();
+        double meanScore = mean(designScores);
+
+        for (Double score : designScores) {
+            if (score >= meanScore) {
+                this.designLabels.add(1);
+            } else {
+                this.designLabels.add(0);
+            }
+        }
+    }
+
     public static double median(List<Double> list) {
         if (list == null || list.isEmpty()) {
             throw new IllegalArgumentException("List is empty");
@@ -481,12 +506,32 @@ public class RuleEvaluation {
         }
     }
 
+    public static double mean(List<Double> list) {
+        if (list == null || list.isEmpty()) {
+            throw new IllegalArgumentException("List is empty");
+        }
+
+        double sum = 0.0;
+        for (Double value : list) {
+            sum += value;
+        }
+        return sum / list.size();
+    }
+
     public double[] getLabels() {
         return designLabels.stream().mapToDouble(Integer::doubleValue).toArray();
     }
 
     public double[] getScores() {
         return designScores.stream().mapToDouble(Double::doubleValue).toArray();
+    }
+
+    public ArrayList<Double> getDesignScores() {
+        return designScores;
+    }
+
+    public ArrayList<String> getDesignSpaceIDs() {
+        return designSpaceIDs;
     }
 
     public ArrayList<String> getRuleSpaceIDs() {
