@@ -52,9 +52,9 @@ public class ExperimentService {
             String partLibraryName) {
 
         PartLibrary partLibrary = loadPartLibrary(partLibraryName);
-        DesignGroup designsGroup = (designsGroupID == null) ? null : designSpaceService.loadDesignGroup(designsGroupID);
-        DesignGroup rulesGroup = (rulesGroupID == null) ? null : designSpaceService.loadDesignGroup(rulesGroupID);
-        DesignGroup rulesToEvalGroup = (rulesToEvalGroupID == null) ? null : designSpaceService.loadDesignGroup(rulesToEvalGroupID);
+        DesignGroup designsGroup = (designsGroupID == null || designsGroupID.isEmpty()) ? null : designSpaceService.loadDesignGroup(designsGroupID);
+        DesignGroup rulesGroup = (rulesGroupID == null || rulesGroupID.isEmpty()) ? null : designSpaceService.loadDesignGroup(rulesGroupID);
+        DesignGroup rulesToEvalGroup = (rulesToEvalGroupID == null || rulesToEvalGroupID.isEmpty()) ? null : designSpaceService.loadDesignGroup(rulesToEvalGroupID);
 
         if (isExperimentNameUsed(experimentName)) {
             throw new IllegalArgumentException("Experiment name already used: " + experimentName);
