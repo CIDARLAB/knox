@@ -431,7 +431,7 @@ public class DesignSampler {
 			// If accept node, add all designs that meet minLength
 				if (node.isAcceptNode()) {
 					for (List<Map<String, Object>> design : currentDesigns) {
-						if (design.size() >= minLength) {
+						if (design.size() >= minLength && (maxLength <= 0 || design.size() <= maxLength)) {
 							if (allowDuplicates || !allDesigns.contains(design)) {
 							allDesigns.add(new ArrayList<>(design));
 							if (numDesigns > 0 && allDesigns.size() >= numDesigns) {
@@ -453,16 +453,9 @@ public class DesignSampler {
 							} else {
 								nextDesigns = multiplyDesigns(currentDesigns, edge, numDesigns);
 							}
-							// Prune designs that exceed maxLength
-							List<List<Map<String, Object>>> prunedDesigns = new ArrayList<>();
-							for (List<Map<String, Object>> d : nextDesigns) {
-								if (maxLength <= 0 || d.size() <= maxLength) {
-									prunedDesigns.add(d);
-								}
-							}
 						Map<Node, Integer> nextVisitCounts = new HashMap<>(visitCounts);
 						nextVisitCounts.put(nextNode, visits + 1);
-						queue.add(new BFSState(nextNode, prunedDesigns, nextVisitCounts));
+						queue.add(new BFSState(nextNode, nextDesigns, nextVisitCounts));
 						}
 					}
 				}
@@ -503,7 +496,7 @@ public class DesignSampler {
 		// If accept node, add all designs that meet minLength
 		if (node.isAcceptNode()) {
 			for (List<Map<String, Object>> design : currentDesigns) {
-				if (design.size() >= minLength) {
+				if (design.size() >= minLength && (maxLength <= 0 || design.size() <= maxLength)) {
 					if (allowDuplicates || !allDesigns.contains(design)) {
 						allDesigns.add(new ArrayList<>(design));
 						if (allDesigns.size() >= numDesigns && numDesigns > 0) {
@@ -523,14 +516,8 @@ public class DesignSampler {
 				} else {
 					nextDesigns = multiplyDesigns(currentDesigns, edge, numDesigns);
 				}
-				// Prune designs that exceed maxLength
-				List<List<Map<String, Object>>> prunedDesigns = new ArrayList<>();
-				for (List<Map<String, Object>> d : nextDesigns) {
-					if (maxLength <= 0 || d.size() <= maxLength) {
-						prunedDesigns.add(d);
-					}
-				}
-				dfsHelper(edge.getHead(), prunedDesigns, allDesigns, numDesigns, minLength, maxLength, 
+
+				dfsHelper(edge.getHead(), nextDesigns, allDesigns, numDesigns, minLength, maxLength, 
 						allowDuplicates, isSampleSpace, visitCounts, maxVisitsPerNode);
 			}
 		}
