@@ -198,7 +198,10 @@ public class ExperimentExport {
         List<Integer> tokenIDs = new ArrayList<>();
         for (String componentID : design.getCompIDs()) {
             Integer tokenID = compIDMap.containsKey(componentID) ? (Integer) compIDMap.get(componentID).get("tokenID") : null;
-            tokenIDs.add(tokenID);
+
+            if (tokenID != null) {
+                tokenIDs.add(tokenID);
+            }
         }
 
         return tokenIDs;
