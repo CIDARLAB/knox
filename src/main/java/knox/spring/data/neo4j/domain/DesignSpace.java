@@ -243,9 +243,6 @@ public class DesignSpace extends NodeSpace {
     	return commits;
     }
 
-	}
-
-	}
 	public void setContextSpace(ContextSpace contextSpace) {
 		this.contextSpace = contextSpace;
 	}

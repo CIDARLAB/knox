@@ -54,7 +54,6 @@ import knox.spring.data.neo4j.exception.SBOLException;
 import knox.spring.data.neo4j.goldbar.GoldbarConversion;
 import knox.spring.data.neo4j.goldbar.GoldbarGeneration;
 import knox.spring.data.neo4j.goldbar.Parse;
-import knox.spring.data.neo4j.gta.TrainingAlgo;
 import knox.spring.data.neo4j.operations.ANDOperator;
 import knox.spring.data.neo4j.operations.JoinOperator;
 import knox.spring.data.neo4j.operations.MergeOperator;
