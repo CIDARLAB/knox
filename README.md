@@ -30,6 +30,10 @@
 14) After successful install, Run `mvn spring-boot:run` in the root directory of this repo
 15) Open Knox web interface at http://localhost:8080
 
+### Microservices
+- Install [KnoxAI](https://github.com/CIDARLAB/knoxAI) for Machine Learning
+- Install [SeqCompiler](https://github.com/CIDARLAB/ctRSD-simulator-API) for ctRSD circuits
+
 ## AI Chat / Agent Integration
 
 ### Setup
