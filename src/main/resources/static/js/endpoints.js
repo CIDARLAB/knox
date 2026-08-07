@@ -50,7 +50,9 @@ const endpoints = {
   GETGOLDBAR: "/goldbar",
 
   RUNJOB: "/job/submit",
-  JOB: "/job"  //get vs delete
+  JOB: "/job",  //get vs delete,
+
+  SEQCOMPILER: "/seqcompiler/compile"  //post
 };
 
 export const operators = {
@@ -738,6 +740,70 @@ export function mlJobSubmit(action, experimentName, runName, model, config, task
     swalError("Failed to submit training job: " + err.message);
     if (callback) callback(err);
   });
+}
+
+export function seqCompilerCompile(spaceID, groupID, weight, name, Rz, L, term, hp5, prom, eI, eO, s, invert, invL, agL, AGiloop, otype, rna, us, ds, temp_len, cp, n, c, d, CDS, rflap, downloadGenbank, callback) {
+  let query = "?";
+  query += encodeQueryParameter("spaceID", spaceID, query);
+  query += encodeQueryParameter("groupID", groupID, query);
+  query += encodeQueryParameter("weight", weight, query);
+
+  query += encodeQueryParameter("name", name, query);
+  query += encodeQueryParameter("Rz", Rz, query);
+  query += encodeQueryParameter("L", L, query);
+  query += encodeQueryParameter("term", term, query);
+  query += encodeQueryParameter("hp5", hp5, query);
+  query += encodeQueryParameter("prom", prom, query);
+  query += encodeQueryParameter("eI", eI, query);
+  query += encodeQueryParameter("eO", eO, query);
+  query += encodeQueryParameter("s", s, query);
+  query += encodeQueryParameter("invert", invert, query);
+  query += encodeQueryParameter("invL", invL, query);
+  query += encodeQueryParameter("agL", agL, query);
+  query += encodeQueryParameter("AGiloop", AGiloop, query);
+  query += encodeQueryParameter("otype", otype, query);
+  query += encodeQueryParameter("rna", rna, query);
+  query += encodeQueryParameter("us", us, query);
+  query += encodeQueryParameter("ds", ds, query);
+  query += encodeQueryParameter("temp_len", temp_len, query);
+  query += encodeQueryParameter("cp", cp, query);
+  query += encodeQueryParameter("n", n, query);
+  query += encodeQueryParameter("c", c, query);
+  query += encodeQueryParameter("d", d, query);
+  query += encodeQueryParameter("CDS", CDS, query);
+  query += encodeQueryParameter("rflap", rflap, query);
+
+  fetch(endpoints.SEQCOMPILER + query, { method: "POST" })
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const genbankText =
+        data.genbank_text ??
+        (Number(rna) === 1 ? data.genbank_rna : data.genbank_dna);
+
+      if (downloadGenbank && genbankText && genbankText.trim().length > 0) {
+        const blob = new Blob([genbankText], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = (spaceID || "compiled_sequence") + ".gbk";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      swalSuccess("Sequence compiled successfully.");
+      if (callback) callback(null, data);
+    })
+    .catch((err) => {
+      swalError("Failed to compile sequence: " + err.message);
+      if (callback) callback(err);
+    });
 }
 
 export function enumerateCSV(id, numDesigns, minLength, maxLength, maxCycles, bfs, isWeighted, isSampleSpace, allowDuplicates, callback){

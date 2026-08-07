@@ -65,6 +65,7 @@ const allBtnIDs = {
   deleteGroup: "#deleteGroup-btn",
   ruleEval: "#rule-eval-btn",
   openTable: "#table-btn",
+  seqCompiler: "#seqcompiler-btn"
 };
 
 export const knoxClass = {
@@ -1130,6 +1131,14 @@ function addTooltips(){
   let deleteExperimentBtn = $('#delete-experiment-btn');
   deleteExperimentBtn.tooltipster({
     content: $('#delete-experiment-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let seqCompilerBtn = $('#seqcompiler-btn');
+  seqCompilerBtn.tooltipster({
+    content: $('#seqcompiler-tooltip'),
     side: 'top',
     interactive: true,
     theme: 'tooltipster-noir'
@@ -2585,6 +2594,299 @@ function makeModelDropdown(){
 function getDefaultConfigForModel(model) {
   return modelConfigs[model] || {};
 }
+
+bindTooltipToButton(allBtnIDs.seqCompiler, '#seqcompiler-tooltip');
+$('#seqcompiler-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.maxHeight = "60vh";
+  div.style.overflowY = "auto";
+  div.style.overflowX = "hidden";
+  div.style.paddingRight = "8px";
+
+  // Space ID div
+  let spaceIDDiv = document.createElement('div');
+  let spaceIDInput = document.createElement('input');
+  makeDiv(spaceIDDiv, spaceIDInput, 'Space ID: ');
+
+  // Group ID div
+  let groupIDDiv = document.createElement('div');
+  let groupIDInput = document.createElement('input');
+  makeDiv(groupIDDiv, groupIDInput, 'Group ID: ');
+
+  // Weight div
+  let weightDiv = document.createElement('div');
+  let weightInput = document.createElement('input');
+  weightInput.setAttribute("type", "number");
+  weightInput.setAttribute("step", "0.01");
+  weightInput.setAttribute("value", "0.0");
+  makeDiv(weightDiv, weightInput, 'Weight: ');
+
+  // Name Div
+  let nameDiv = document.createElement('div');
+  let nameInput = document.createElement('input');
+  makeDiv(nameDiv, nameInput, 'Name: ');
+
+  // Rz Div
+  let RzDiv = document.createElement('div');
+  let RzInput = document.createElement('input');
+  RzInput.setAttribute("value", "Ro");
+  makeDiv(RzDiv, RzInput, 'Rz: ');
+
+  // L Div
+  let LDiv = document.createElement('div');
+  let LInput = document.createElement('input');
+  LInput.setAttribute("value", "L");
+  makeDiv(LDiv, LInput, 'L: ');
+
+  // term Div
+  let termDiv = document.createElement('div');
+  let termInput = document.createElement('input');
+  termInput.setAttribute("value", "T7t");
+  makeDiv(termDiv, termInput, 'term: ');
+
+  // hp5 Div
+  let hp5Div = document.createElement('div');
+  let hp5Input = document.createElement('input');
+  hp5Input.setAttribute("value", "5hp");
+  makeDiv(hp5Div, hp5Input, 'hp5: ');
+
+  // prom Div
+  let promDiv = document.createElement('div');
+  let promInput = document.createElement('input');
+  promInput.setAttribute("value", "T7p");
+  makeDiv(promDiv, promInput, 'prom: ');
+
+  // eI Div
+  let eIDiv = document.createElement('div');
+  let eIInput = document.createElement('input');
+  makeDiv(eIDiv, eIInput, 'eI: ');
+
+  // eO Div
+  let eODiv = document.createElement('div');
+  let eOInput = document.createElement('input');
+  makeDiv(eODiv, eOInput, 'eO: ');
+
+  // s Div
+  let sDiv = document.createElement('div');
+  let sInput = document.createElement('input');
+  makeDiv(sDiv, sInput, 's: ');
+
+  // invert Div
+  let invertDiv = document.createElement('div');
+  let invertInput = document.createElement('input');
+  invertInput.setAttribute("type", "number");
+  invertInput.setAttribute("step", "1");
+  invertInput.setAttribute("value", "0");
+  invertInput.setAttribute("min", "0");
+  invertInput.setAttribute("max", "1");
+  makeDiv(invertDiv, invertInput, 'invert: ');
+
+  // invL Div
+  let invLDiv = document.createElement('div');
+  let invLInput = document.createElement('input');
+  invLInput.setAttribute("value", "A");
+  makeDiv(invLDiv, invLInput, 'invL: ');
+
+  // agL Div
+  let agLDiv = document.createElement('div');
+  let agLInput = document.createElement('input');
+  agLInput.setAttribute("value", "TA");
+  makeDiv(agLDiv, agLInput, 'agL: ');
+
+  // AGiloop Div
+  let AGiloopDiv = document.createElement('div');
+  let AGiloopInput = document.createElement('input');
+  AGiloopInput.setAttribute("type", "number");
+  AGiloopInput.setAttribute("step", "1");
+  AGiloopInput.setAttribute("value", "5");
+  makeDiv(AGiloopDiv, AGiloopInput, 'AGiloop: ');
+
+  // otype Div
+  let otypeDiv = document.createElement('div');
+  let otypeInput = document.createElement('input');
+  otypeInput.setAttribute("type", "number");
+  otypeInput.setAttribute("step", "1");
+  otypeInput.setAttribute("value", "1");
+  makeDiv(otypeDiv, otypeInput, 'otype: ');
+
+  // rna Div
+  let rnaDiv = document.createElement('div');
+  let rnaInput = document.createElement('input');
+  rnaInput.setAttribute("type", "number");
+  rnaInput.setAttribute("step", "1");
+  rnaInput.setAttribute("value", "0");
+  rnaInput.setAttribute("min", "0");
+  rnaInput.setAttribute("max", "1");
+  makeDiv(rnaDiv, rnaInput, 'rna: ');
+
+  // us Div
+  let usDiv = document.createElement('div');
+  let usInput = document.createElement('input');
+  makeDiv(usDiv, usInput, 'us (comma-separated): ');
+
+  // ds Div
+  let dsDiv = document.createElement('div');
+  let dsInput = document.createElement('input');
+  makeDiv(dsDiv, dsInput, 'ds (comma-separated): ');
+
+  // temp_len Div
+  let temp_lenDiv = document.createElement('div');
+  let temp_lenInput = document.createElement('input');
+  temp_lenInput.setAttribute("type", "number");
+  temp_lenInput.setAttribute("step", "1");
+  temp_lenInput.setAttribute("value", "0");
+  makeDiv(temp_lenDiv, temp_lenInput, 'temp_len: ');
+
+  // cp Div
+  let cpDiv = document.createElement('div'); 
+  let cpInput = document.createElement('input');
+  makeDiv(cpDiv, cpInput, 'cp: ');
+
+  // n Div
+  let nDiv = document.createElement('div');
+  let nInput = document.createElement('input');
+  makeDiv(nDiv, nInput, 'n: ');
+
+  // c Div
+  let cDiv = document.createElement('div');
+  let cInput = document.createElement('input');
+  cInput.setAttribute("type", "number");
+  cInput.setAttribute("step", "1");
+  cInput.setAttribute("value", "0");
+  cInput.setAttribute("min", "0");
+  makeDiv(cDiv, cInput, 'c: ');
+
+  // d Div
+  let dDiv = document.createElement('div');
+  let dInput = document.createElement('input');
+  makeDiv(dDiv, dInput, 'd: ');
+
+  // CDS Div
+  let CDSDiv = document.createElement('div');
+  let CDSInput = document.createElement('input');
+  makeDiv(CDSDiv, CDSInput, 'CDS: ');
+
+  // rflap Div
+  let rflapDiv = document.createElement('div');
+  let rflapInput = document.createElement('input');
+  makeDiv(rflapDiv, rflapInput, 'rflap: ');
+
+  // download GenBank file div
+  let downloadGenbankDiv = document.createElement('div');
+  let downloadGenbankCheckbox = document.createElement('input');
+  downloadGenbankCheckbox.setAttribute("type", "checkbox");
+  downloadGenbankCheckbox.checked = true;
+  downloadGenbankDiv.appendChild(downloadGenbankCheckbox);
+  downloadGenbankDiv.appendChild(document.createTextNode(' Download GenBank file after compilation'));
+
+  // Append all divs to the main div
+  div.appendChild(spaceIDDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(groupIDDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(weightDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(nameDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(RzDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(LDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(termDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(hp5Div);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(promDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(eIDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(eODiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(sDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(invertDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(invLDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(agLDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(AGiloopDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(otypeDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(rnaDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(usDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(dsDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(temp_lenDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(cpDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(nDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(cDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(dDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(CDSDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(rflapDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(downloadGenbankDiv);
+
+  swal({
+    title: "Machine Learning",
+    text: "Current Experiment: " + currentExperimentID,
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (!confirm) return;
+
+    const spaceID = spaceIDInput.value;
+    const groupID = groupIDInput.value;
+    const weight = Number(weightInput.value);
+
+    const name = nameInput.value;
+    const Rz = RzInput.value;
+    const L = LInput.value;
+    const term = termInput.value;
+    const hp5 = hp5Input.value;
+    const prom = promInput.value;
+    const eI = eIInput.value.trim();
+    const eO = eOInput.value.trim();
+    const s = sInput.value.trim();
+    const invert = Number(invertInput.value);
+    const invL = invLInput.value;
+    const agL = agLInput.value;
+    const AGiloop = Number(AGiloopInput.value);
+    const otype = Number(otypeInput.value);
+    const rna = Number(rnaInput.value);
+    const us = (usInput.value.trim() !== "") ? usInput.value.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+    const ds = (dsInput.value.trim() !== "") ? dsInput.value.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+    const temp_len = Number(temp_lenInput.value);
+    const cp = cpInput.value.trim();
+    const n = nInput.value.trim();
+    const c = Number(cInput.value);
+    const d = dInput.value.trim();
+    const CDS = CDSInput.value.trim();
+    const rflap = rflapInput.value.trim();
+
+    const downloadGenbank = downloadGenbankCheckbox.checked;
+
+    endpoint.seqCompilerCompile(
+      spaceID, 
+      groupID, 
+      weight, 
+      name, 
+      Rz, L, term, hp5, prom, eI, eO, s, invert, invL, agL, AGiloop, otype, rna, us, ds, temp_len, cp, n, c, d, CDS, rflap,
+      downloadGenbank
+    );
+
+  });
+
+});
 
 // $('#delete-branch-tooltip').click(() => {
 //   // create DOM object to add to alert

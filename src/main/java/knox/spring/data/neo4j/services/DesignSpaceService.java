@@ -1456,6 +1456,39 @@ public class DesignSpaceService {
 	}
 	// DesignGroup Functions End
 
+	public void createDesignSpace(String outputSpaceID, String groupID, Double weight, List<String> compIDs, List<String> compRoles) {
+		DesignSpace outputSpace = new DesignSpace(outputSpaceID);
+
+		// Linear DAG
+		Node startNode = outputSpace.createStartNode();
+		for (int i = 0; i < compIDs.size(); i++) {
+			String compID = compIDs.get(i);
+			String compRole = compRoles.get(i);
+
+			Node nextNode = null;
+			if (i < compIDs.size() - 1) {
+				nextNode = outputSpace.createNode();
+			} else {
+				nextNode = outputSpace.createAcceptNode();
+			}
+
+			ArrayList<String> compIDList = new ArrayList<>();
+			compIDList.add(compID);
+
+			ArrayList<String> compRoleList = new ArrayList<>();
+			compRoleList.add(compRole);
+
+			ArrayList<Double> weights = new ArrayList<>();
+			weights.add(weight);
+
+			startNode.createEdge(nextNode, compIDList, compRoleList, Edge.Orientation.INLINE, weights);
+			startNode = nextNode;
+		}
+
+		outputSpace.setGoldbar(String.join(" then ", compIDs));
+		saveAndAssignDesignSpace(groupID, outputSpace);
+	}
+
     public void createDesignSpace(String outputSpaceID) {
         validateGenerativeDesignSpaceOperator(outputSpaceID);
 
