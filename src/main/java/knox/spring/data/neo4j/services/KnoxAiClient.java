@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,7 +31,8 @@ public class KnoxAiClient {
     final ExperimentService experimentService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final String apiUrl = "http://localhost:8000"; // KnoxAI API base URL
+    @Value("${knox.ai.url}")
+    private String knoxAiUrl; // KnoxAI API URL
 
     // Predict request and response records
     public record PredictResponse(List<Object> predictions) {}
@@ -117,7 +119,7 @@ public class KnoxAiClient {
             HttpEntity<PredictRequest> entity = new HttpEntity<>(req, headers);
 
             ResponseEntity<PredictResponse> response = restTemplate.exchange(
-                    apiUrl +  "/" + model + "/predict",
+                    knoxAiUrl +  "/" + model + "/predict",
                     HttpMethod.POST,
                     entity,
                     PredictResponse.class
@@ -151,7 +153,7 @@ public class KnoxAiClient {
             HttpEntity<TrainRequestTree> entity = new HttpEntity<>(req, headers);
 
             ResponseEntity<TrainResponse> response = restTemplate.exchange(
-                    apiUrl +  "/" + model + "/train",
+                    knoxAiUrl +  "/" + model + "/train",
                     HttpMethod.POST,
                     entity,
                     TrainResponse.class
@@ -185,7 +187,7 @@ public class KnoxAiClient {
             HttpEntity<TrainRequestNN> entity = new HttpEntity<>(req, headers);
 
             ResponseEntity<TrainResponse> response = restTemplate.exchange(
-                    apiUrl +  "/" + model + "/train",
+                    knoxAiUrl +  "/" + model + "/train",
                     HttpMethod.POST,
                     entity,
                     TrainResponse.class
@@ -214,7 +216,7 @@ public class KnoxAiClient {
             HttpEntity<EvaluateRequest> entity = new HttpEntity<>(req, headers);
 
             ResponseEntity<EvaluateResponse> response = restTemplate.exchange(
-                    apiUrl +  "/" + model + "/evaluate",
+                    knoxAiUrl +  "/" + model + "/evaluate",
                     HttpMethod.POST,
                     entity,
                     EvaluateResponse.class
@@ -235,7 +237,7 @@ public class KnoxAiClient {
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             restTemplate.exchange(
-                    apiUrl +  "/runs/" + run_id,
+                    knoxAiUrl +  "/runs/" + run_id,
                     HttpMethod.DELETE,
                     entity,
                     Void.class
@@ -254,7 +256,7 @@ public class KnoxAiClient {
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             restTemplate.exchange(
-                    apiUrl +  "/experiments/" + experiment_id,
+                    knoxAiUrl +  "/experiments/" + experiment_id,
                     HttpMethod.DELETE,
                     entity,
                     Void.class
@@ -273,7 +275,7 @@ public class KnoxAiClient {
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             ResponseEntity<ConfigResponse> response = restTemplate.exchange(
-                    apiUrl +  "/" + model + "/config",
+                    knoxAiUrl +  "/" + model + "/config",
                     HttpMethod.GET,
                     entity,
                     ConfigResponse.class
@@ -294,7 +296,7 @@ public class KnoxAiClient {
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             restTemplate.exchange(
-                    apiUrl +  "/" + model + "/tune/stop",
+                    knoxAiUrl +  "/" + model + "/tune/stop",
                     HttpMethod.POST,
                     entity,
                     Void.class

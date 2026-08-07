@@ -3,6 +3,7 @@ package knox.spring.data.neo4j.controller;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,8 @@ public class SeqCompilerController {
     private final RestTemplate restTemplate;
     final DesignSpaceService designSpaceService;
 
-    private final String apiUrl = "http://localhost:8010"; // SeqCompiler API URL
+    @Value("${seq.compiler.url}")
+    private String seqCompilerUrl; // SeqCompiler API URL
 
     public SeqCompilerController(RestTemplate restTemplate, DesignSpaceService designSpaceService) {
         this.restTemplate = restTemplate;
@@ -108,7 +110,7 @@ public class SeqCompilerController {
             HttpEntity<CompileRequest> entity = new HttpEntity<>(request, headers);
 
             ResponseEntity<CompileResponse> response = restTemplate.exchange(
-                    apiUrl + "/compile",
+                    seqCompilerUrl + "/compile",
                     HttpMethod.POST,
                     entity,
                     CompileResponse.class
