@@ -6,6 +6,9 @@
 
 ## Quickstart
 
+### KnoxApp (Knox + Microservices) Instructions
+1) Go to https://github.com/CIDARLAB/KnoxApp
+
 ### Docker Instructions
 1) Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 2) Clone this repository 
