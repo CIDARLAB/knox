@@ -2839,8 +2839,7 @@ $('#seqcompiler-tooltip').click(() => {
   div.appendChild(downloadGenbankDiv);
 
   swal({
-    title: "Machine Learning",
-    text: "Current Experiment: " + currentExperimentID,
+    title: "ctRSD Sequence Compiler",
     buttons: true,
     content: div
   }).then((confirm) => {
