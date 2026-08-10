@@ -1244,14 +1244,14 @@ $('#graph-group-tooltip').click(() => {
   div.appendChild(groupDiv);
   div.appendChild(document.createElement('br'));
 
-  groupDiv.style.visibility = 'hidden';
+  setRowVisible(groupDiv, false);
 
   $(groupInfoDivDropdown).change(function() {
     if(this.value === endpoint.groupInfo.GETGROUPSIZE){
-      groupDiv.style.visibility = 'hidden';
+      setRowVisible(groupDiv, false);
     }
     if(this.value === endpoint.groupInfo.SETGROUPID){
-      groupDiv.style.visibility = 'visible';
+      setRowVisible(groupDiv, true);
     }
   });
 
@@ -1402,60 +1402,60 @@ $('#enumerate-designs-tooltip').click(() => {
   div.appendChild(groupDiv);
   div.appendChild(document.createElement('br'));
 
-  numDesignsDiv.style.visibility = 'hidden';
-  isWeightedDiv.style.visibility = 'hidden';
-  maxLengthDiv.style.visibility = 'hidden';
-  minLengthDiv.style.visibility = 'hidden';
-  maxCyclesDiv.style.visibility = 'hidden';
-  isSampleSpaceDiv.style.visibility='hidden';
-  allowDuplicatesDiv.style.visibility='hidden';
-  BFSDiv.style.visibility='hidden';
-  groupDiv.style.visibility='hidden';
+  setRowVisible(numDesignsDiv, false);
+  setRowVisible(isWeightedDiv, false);
+  setRowVisible(maxLengthDiv, false);
+  setRowVisible(minLengthDiv, false);
+  setRowVisible(maxCyclesDiv, false);
+  setRowVisible(isSampleSpaceDiv, false);
+  setRowVisible(allowDuplicatesDiv, false);
+  setRowVisible(BFSDiv, false);
+  setRowVisible(groupDiv, false);
 
   $(enumerateDropdown).change(function() {
     if(this.value === endpoint.enumerate.ENUMERATE){
-      numDesignsDiv.style.visibility = 'visible';
-      isWeightedDiv.style.visibility = 'visible';
-      maxLengthDiv.style.visibility = 'visible';
-      minLengthDiv.style.visibility = 'visible';
-      maxCyclesDiv.style.visibility = 'visible';
-      isSampleSpaceDiv.style.visibility='visible';
-      allowDuplicatesDiv.style.visibility='visible';
-      BFSDiv.style.visibility='visible';
-      groupDiv.style.visibility='hidden';
+      setRowVisible(numDesignsDiv, true);
+      setRowVisible(isWeightedDiv, true);
+      setRowVisible(maxLengthDiv, true);
+      setRowVisible(minLengthDiv, true);
+      setRowVisible(maxCyclesDiv, true);
+      setRowVisible(isSampleSpaceDiv, true);
+      setRowVisible(allowDuplicatesDiv, true);
+      setRowVisible(BFSDiv, true);
+      setRowVisible(groupDiv, false);
     }
     if(this.value === endpoint.enumerate.SAMPLE){
-      numDesignsDiv.style.visibility = 'visible';
-      isWeightedDiv.style.visibility = 'visible';
-      maxLengthDiv.style.visibility = 'visible';
-      minLengthDiv.style.visibility = 'visible';
-      maxCyclesDiv.style.visibility = 'hidden';
-      isSampleSpaceDiv.style.visibility='visible';
-      allowDuplicatesDiv.style.visibility='hidden';
-      BFSDiv.style.visibility='hidden';
-      groupDiv.style.visibility='hidden';
+      setRowVisible(numDesignsDiv, true);
+      setRowVisible(isWeightedDiv, true);
+      setRowVisible(maxLengthDiv, true);
+      setRowVisible(minLengthDiv, true);
+      setRowVisible(maxCyclesDiv, false);
+      setRowVisible(isSampleSpaceDiv, true);
+      setRowVisible(allowDuplicatesDiv, false);
+      setRowVisible(BFSDiv, false);
+      setRowVisible(groupDiv, false);
     }
     if(this.value === endpoint.enumerate.CREATESAMPLESPACE){
-      numDesignsDiv.style.visibility = 'hidden';
-      isWeightedDiv.style.visibility = 'hidden';
-      maxLengthDiv.style.visibility = 'hidden';
-      minLengthDiv.style.visibility = 'hidden';
-      maxCyclesDiv.style.visibility = 'hidden';
-      isSampleSpaceDiv.style.visibility='hidden';
-      allowDuplicatesDiv.style.visibility='hidden';
-      BFSDiv.style.visibility='hidden';
-      groupDiv.style.visibility='visible';
+      setRowVisible(numDesignsDiv, false);
+      setRowVisible(isWeightedDiv, false);
+      setRowVisible(maxLengthDiv, false);
+      setRowVisible(minLengthDiv, false);
+      setRowVisible(maxCyclesDiv, false);
+      setRowVisible(isSampleSpaceDiv, false);
+      setRowVisible(allowDuplicatesDiv, false);
+      setRowVisible(BFSDiv, false);
+      setRowVisible(groupDiv, true);
     }
     if(this.value === endpoint.enumerate.PARTANALYTICS){
-      numDesignsDiv.style.visibility = 'hidden';
-      isWeightedDiv.style.visibility = 'hidden';
-      maxLengthDiv.style.visibility = 'hidden';
-      minLengthDiv.style.visibility = 'hidden';
-      maxCyclesDiv.style.visibility = 'hidden';
-      isSampleSpaceDiv.style.visibility='hidden';
-      allowDuplicatesDiv.style.visibility='hidden';
-      BFSDiv.style.visibility='hidden';
-      groupDiv.style.visibility='hidden';
+      setRowVisible(numDesignsDiv, false);
+      setRowVisible(isWeightedDiv, false);
+      setRowVisible(maxLengthDiv, false);
+      setRowVisible(minLengthDiv, false);
+      setRowVisible(maxCyclesDiv, false);
+      setRowVisible(isSampleSpaceDiv, false);
+      setRowVisible(allowDuplicatesDiv, false);
+      setRowVisible(BFSDiv, false);
+      setRowVisible(groupDiv, false);
     }
   });
 
@@ -1950,64 +1950,64 @@ $('#apply-operators-tooltip').click(() => {
   div.appendChild(reverseOrientationDiv);
   div.appendChild(document.createElement('br'));
 
-  tolDiv.style.visibility = 'hidden';
-  weightTolDiv.style.visibility = 'hidden';
-  optDiv.style.visibility = 'hidden';
-  reverseOrientationDiv.style.visibility = 'hidden';
+  setRowVisible(tolDiv, false);
+  setRowVisible(weightTolDiv, false);
+  setRowVisible(optDiv, false);
+  setRowVisible(reverseOrientationDiv, false);
 
   $(operatorDropdown).change(function() {
     if(this.value === endpoint.operators.JOIN){
-      inputDiv.style.visibility = 'visible';
-      tolDiv.style.visibility = 'hidden';
-      weightTolDiv.style.visibility = 'hidden';
-      optDiv.style.visibility = 'hidden';
-      reverseOrientationDiv.style.visibility = 'hidden';
+      setRowVisible(inputDiv, true);
+      setRowVisible(tolDiv, false);
+      setRowVisible(weightTolDiv, false);
+      setRowVisible(optDiv, false);
+      setRowVisible(reverseOrientationDiv, false);
     }
     if(this.value === endpoint.operators.OR){
-      inputDiv.style.visibility = 'visible';
-      tolDiv.style.visibility = 'hidden';
-      weightTolDiv.style.visibility = 'hidden';
-      optDiv.style.visibility = 'hidden';
-      reverseOrientationDiv.style.visibility = 'hidden';
+      setRowVisible(inputDiv, true);
+      setRowVisible(tolDiv, false);
+      setRowVisible(weightTolDiv, false);
+      setRowVisible(optDiv, false);
+      setRowVisible(reverseOrientationDiv, false);
     }
     if(this.value === endpoint.operators.REPEAT){
-      inputDiv.style.visibility = 'visible';
-      tolDiv.style.visibility = 'hidden';
-      weightTolDiv.style.visibility = 'hidden';
-      optDiv.style.visibility = 'visible';
-      reverseOrientationDiv.style.visibility = 'hidden';
+      setRowVisible(inputDiv, true);
+      setRowVisible(tolDiv, false);
+      setRowVisible(weightTolDiv, false);
+      setRowVisible(optDiv, true);
+      setRowVisible(reverseOrientationDiv, false);
     }
     if(this.value === endpoint.operators.AND){
-      inputDiv.style.visibility = 'visible';
-      tolDiv.style.visibility = 'visible';
-      weightTolDiv.style.visibility = 'hidden';
-      optDiv.style.visibility = 'hidden';
+      setRowVisible(inputDiv, true);
+      setRowVisible(tolDiv, true);
+      setRowVisible(weightTolDiv, false);
+      setRowVisible(optDiv, false);
       toleranceDropdown.value = 1;
-      reverseOrientationDiv.style.visibility = 'hidden';
+      setRowVisible(reverseOrientationDiv, false);
     }
     if(this.value === endpoint.operators.MERGE){
-      inputDiv.style.visibility = 'visible';
-      tolDiv.style.visibility = 'visible';
-      weightTolDiv.style.visibility = 'visible';
-      optDiv.style.visibility = 'hidden';
+      setRowVisible(inputDiv, true);
+      setRowVisible(tolDiv, true);
+      setRowVisible(weightTolDiv, true);
+      setRowVisible(optDiv, false);
       toleranceDropdown.value = 0;
-      reverseOrientationDiv.style.visibility = 'hidden';
+      setRowVisible(reverseOrientationDiv, false);
     }
     if(this.value === endpoint.operators.WEIGHT){
-      inputDiv.style.visibility = 'visible';
-      tolDiv.style.visibility = 'visible';
-      weightTolDiv.style.visibility = 'visible';
-      optDiv.style.visibility = 'hidden';
+      setRowVisible(inputDiv, true);
+      setRowVisible(tolDiv, true);
+      setRowVisible(weightTolDiv, true);
+      setRowVisible(optDiv, false);
       toleranceDropdown.value = 0;
-      reverseOrientationDiv.style.visibility = 'hidden';
+      setRowVisible(reverseOrientationDiv, false);
     }
     if(this.value === endpoint.operators.REVERSE){
-      inputDiv.style.visibility = 'hidden';
-      tolDiv.style.visibility = 'hidden';
-      weightTolDiv.style.visibility = 'hidden';
-      optDiv.style.visibility = 'hidden';
+      setRowVisible(inputDiv, false);
+      setRowVisible(tolDiv, false);
+      setRowVisible(weightTolDiv, false);
+      setRowVisible(optDiv, false);
       toleranceDropdown.value = 0;
-      reverseOrientationDiv.style.visibility = 'visible';
+      setRowVisible(reverseOrientationDiv, true);
     }
   });
 
