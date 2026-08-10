@@ -1415,6 +1415,7 @@ $('#enumerate-designs-tooltip').click(() => {
   $(enumerateDropdown).change(function() {
     if(this.value === endpoint.enumerate.ENUMERATE){
       setRowVisible(numDesignsDiv, true);
+      numDesignsInput.value = "0";
       setRowVisible(isWeightedDiv, true);
       setRowVisible(maxLengthDiv, true);
       setRowVisible(minLengthDiv, true);
@@ -1426,6 +1427,7 @@ $('#enumerate-designs-tooltip').click(() => {
     }
     if(this.value === endpoint.enumerate.SAMPLE){
       setRowVisible(numDesignsDiv, true);
+      numDesignsInput.value = "1";
       setRowVisible(isWeightedDiv, true);
       setRowVisible(maxLengthDiv, true);
       setRowVisible(minLengthDiv, true);
