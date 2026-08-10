@@ -1176,7 +1176,7 @@ $('#rename-design-space-tooltip').click(() => {
 
   // current spaceID
   let currentSpaceIDDiv = document.createElement('div');
-  makeDiv(currentSpaceIDDiv, document.createTextNode(currentSpace), "Current Space ID: ");
+  makeDiv(currentSpaceIDDiv, document.createTextNode(currentSpace), "Current Space ID: ", "Space that is currently loaded");
 
   // rename spaceID div
   let renameDiv = document.createElement('div');
@@ -1324,7 +1324,7 @@ $('#enumerate-designs-tooltip').click(() => {
   numDesignsInput.setAttribute("type", "number");
   numDesignsInput.setAttribute("value", "0");
   numDesignsInput.setAttribute("min", "0");
-  makeDiv(numDesignsDiv, numDesignsInput, 'Number of Designs (0 means all possible for Enumerate): ');
+  makeDiv(numDesignsDiv, numDesignsInput, 'Number of Designs: ', "0 means all designs will be enumerated");
 
   // min length div
   let minLengthDiv = document.createElement('div');
@@ -1340,7 +1340,7 @@ $('#enumerate-designs-tooltip').click(() => {
   maxLengthInput.setAttribute("type", "number");
   maxLengthInput.setAttribute("value", "0");
   maxLengthInput.setAttribute("min", "0");
-  makeDiv(maxLengthDiv, maxLengthInput, 'Maximum Length of Designs (0 means no Max): ');
+  makeDiv(maxLengthDiv, maxLengthInput, 'Maximum Length of Designs: ', "0 means no maximum length will be enforced");
 
   // max cycles div
   let maxCyclesDiv = document.createElement('div');
@@ -1367,13 +1367,13 @@ $('#enumerate-designs-tooltip').click(() => {
   let allowDuplicatesDiv = document.createElement('div');
   let allowDuplicatesInput = document.createElement('input');
   allowDuplicatesInput.setAttribute("type", "checkbox");
-  makeDiv(allowDuplicatesDiv, allowDuplicatesInput, 'Allow Duplicates?: ');
+  makeDiv(allowDuplicatesDiv, allowDuplicatesInput, 'Allow Duplicates?: ', "If checked, identical designs will be allowed in the enumeration. If unchecked, only unique designs will be enumerated.");
 
   // allow bfs or dfs div
   let BFSDiv = document.createElement('div');
   let BFSInput = document.createElement('input');
   BFSInput.setAttribute("type", "checkbox");
-  makeDiv(BFSDiv, BFSInput, 'BFS? (otherwise DFS): ');
+  makeDiv(BFSDiv, BFSInput, 'BFS? (otherwise DFS): ', "If checked, designs will be enumerated using a breadth-first search. If unchecked, designs will be enumerated using a depth-first search.");
 
   // group ID div
   let groupDiv = document.createElement('div');
@@ -1889,7 +1889,7 @@ $('#apply-operators-tooltip').click(() => {
   let inputDiv = document.createElement('div');
   let inputSpaceInput = document.createElement('input');
   inputSpaceInput.setAttribute("placeholder", "delimit with comma");
-  makeDiv(inputDiv, inputSpaceInput, 'Combine with: ');
+  makeDiv(inputDiv, inputSpaceInput, 'Combine with: ', 'e.g. spaceID1,spaceID2,spaceID3');
 
   //output space
   let outputDiv = document.createElement('div');
@@ -1922,12 +1922,16 @@ $('#apply-operators-tooltip').click(() => {
   //tolerance div
   let tolDiv = document.createElement('div');
   let toleranceDropdown = makeToleranceDropdown();
-  makeDiv(tolDiv, toleranceDropdown, 'Tolerance: ');
+  makeDiv(tolDiv, toleranceDropdown, 'Tolerance: ',
+     "Tolerance defines how edges are matched between design spaces based on component IDs and roles."
+  );
 
   //weight tolerance div
   let weightTolDiv = document.createElement('div');
   let weightToleranceDropdown = makeWeightToleranceDropdown();
-  makeDiv(weightTolDiv, weightToleranceDropdown, 'Weight Tolerance: ');
+  makeDiv(weightTolDiv, weightToleranceDropdown, 'Weight Tolerance: ', 
+    "Weight Tolerance defines how edges are matched and weighted based on adjacency and placement of components."
+  );
 
   //reverse orientation div
   let reverseOrientationDiv = document.createElement('div');
@@ -2134,11 +2138,6 @@ function makeReverseOrientationDropdown(){
   return reverseOrientation;
 }
 
-function makeDiv(div, input, title){
-  div.appendChild(document.createTextNode(title));
-  div.appendChild(input);
-}
-
 bindTooltipToButton(allBtnIDs.ruleEval, '#rule-eval-tooltip');
 $('#rule-eval-tooltip').click(() => {
   let div = document.createElement('div');
@@ -2151,17 +2150,17 @@ $('#rule-eval-tooltip').click(() => {
   // designGroupID div
   let designGroupIDDiv = document.createElement('div');
   let designGroupIDInput = document.createElement('input');
-  makeDiv(designGroupIDDiv, designGroupIDInput, 'Design Group ID: ');
+  makeDiv(designGroupIDDiv, designGroupIDInput, 'Design Group ID: ', "Design Group of interest. Design Group should only contain Linear DAGs.");
 
   // rulesGroupID div
   let rulesGroupIDDiv = document.createElement('div');
   let rulesGroupIDInput = document.createElement('input');
-  makeDiv(rulesGroupIDDiv, rulesGroupIDInput, 'Rules Group ID: ');
+  makeDiv(rulesGroupIDDiv, rulesGroupIDInput, 'Rules Group ID: ', "Rules Group of interest.");
 
   // Labeling Method div
   let labelingMethodDiv = document.createElement('div');
   let labelingMethodDropdown = makeLabelingMethodDropdown();
-  makeDiv(labelingMethodDiv, labelingMethodDropdown, 'Labeling Method: ');
+  makeDiv(labelingMethodDiv, labelingMethodDropdown, 'Labeling Method: ', "Method used to label designs based on their design score.");
 
   //append all created divs to the main div
   div.appendChild(evaluationNameDiv);
@@ -2243,27 +2242,27 @@ $('#create-experiment-tooltip').click(() => {
   // Designs Group ID div
   let designsGroupIDDiv = document.createElement('div');
   let designsGroupIDInput = document.createElement('input');
-  makeDiv(designsGroupIDDiv, designsGroupIDInput, 'Designs Group ID: ');
+  makeDiv(designsGroupIDDiv, designsGroupIDInput, 'Designs Group ID: ', "Design Group should only contain Linear DAGs.");
 
   // Rules Group ID div
   let rulesGroupIDDiv = document.createElement('div');
   let rulesGroupIDInput = document.createElement('input');
-  makeDiv(rulesGroupIDDiv, rulesGroupIDInput, 'Rules Group ID: ');
+  makeDiv(rulesGroupIDDiv, rulesGroupIDInput, 'Rules Group ID: ', "Identified rules that every design should follow.");
 
   // Rules To Eval Group ID div
   let rulesToEvalGroupIDDiv = document.createElement('div');
   let rulesToEvalGroupIDInput = document.createElement('input');
-  makeDiv(rulesToEvalGroupIDDiv, rulesToEvalGroupIDInput, 'Rules To Eval Group ID: ');
+  makeDiv(rulesToEvalGroupIDDiv, rulesToEvalGroupIDInput, 'Rules To Eval Group ID: ', "Rules to evaluate for the experiment.");
 
   // Rule Evaluation Name Div
   let ruleEvaluationNameDiv = document.createElement('div');
   let ruleEvaluationNameInput = document.createElement('input');
-  makeDiv(ruleEvaluationNameDiv, ruleEvaluationNameInput, 'Rule Evaluation: ');
+  makeDiv(ruleEvaluationNameDiv, ruleEvaluationNameInput, 'Rule Evaluation: ', "Name of the rule evaluation applied between Designs Group and Rules To Eval Group");
 
-  // Part Library File div
+  // Part Library Name div
   let partLibraryNameDiv = document.createElement('div');
   let partLibraryNameInput = document.createElement('input');
-  makeDiv(partLibraryNameDiv, partLibraryNameInput, 'Part Library: ');
+  makeDiv(partLibraryNameDiv, partLibraryNameInput, 'Part Library: ', "Part library used in the experiment.");
 
 
   // Append all divs to the main div
@@ -2373,7 +2372,9 @@ $('#ml-experiment-tooltip').click(() => {
   trainRatioInput.setAttribute("min", "0");
   trainRatioInput.setAttribute("max", "1");
   trainRatioInput.setAttribute("step", "0.05");
-  makeDiv(trainRatioDiv, trainRatioInput, 'Train Ratio: ');
+  makeDiv(trainRatioDiv, trainRatioInput, 'Train Ratio: ', 
+    "Proportion of dataset used for training. Train Ratio + Validation Ratio + Test Ratio must equal 1.0"
+  );
 
   // val ratio div
   let valRatioDiv = document.createElement('div');
@@ -2383,7 +2384,9 @@ $('#ml-experiment-tooltip').click(() => {
   valRatioInput.setAttribute("min", "0");
   valRatioInput.setAttribute("max", "0.2");
   valRatioInput.setAttribute("step", "0.05");
-  makeDiv(valRatioDiv, valRatioInput, 'Validation Ratio: ');
+  makeDiv(valRatioDiv, valRatioInput, 'Validation Ratio: ', 
+    "Proportion of dataset used for validation. Train Ratio + Validation Ratio + Test Ratio must equal 1.0"
+  );
 
   // test ratio div
   let testRatioDiv = document.createElement('div');
@@ -2393,7 +2396,9 @@ $('#ml-experiment-tooltip').click(() => {
   testRatioInput.setAttribute("min", "0");
   testRatioInput.setAttribute("max", "0.2");
   testRatioInput.setAttribute("step", "0.05");
-  makeDiv(testRatioDiv, testRatioInput, 'Test Ratio: ');
+  makeDiv(testRatioDiv, testRatioInput, 'Test Ratio: ', 
+    "Proportion of dataset used for testing. Train Ratio + Validation Ratio + Test Ratio must equal 1.0"
+  );
 
   // Seed div
   let seedDiv = document.createElement('div');
@@ -2401,7 +2406,7 @@ $('#ml-experiment-tooltip').click(() => {
   seedInput.setAttribute("type", "number");
   seedInput.setAttribute("value", "42");
   seedInput.setAttribute("step", "1");
-  makeDiv(seedDiv, seedInput, 'Seed: ');
+  makeDiv(seedDiv, seedInput, 'Seed: ', "Random seed for reproducibility.");
 
   let configDiv = document.createElement('div');
   let configTextarea = document.createElement("textarea");
@@ -2608,7 +2613,7 @@ $('#seqcompiler-tooltip').click(() => {
   // Space ID div
   let spaceIDDiv = document.createElement('div');
   let spaceIDInput = document.createElement('input');
-  makeDiv(spaceIDDiv, spaceIDInput, 'Space ID: ');
+  makeDiv(spaceIDDiv, spaceIDInput, 'Space ID: ', "Unique identifier for the space.");
 
   // Group ID div
   let groupIDDiv = document.createElement('div');
@@ -2621,7 +2626,7 @@ $('#seqcompiler-tooltip').click(() => {
   weightInput.setAttribute("type", "number");
   weightInput.setAttribute("step", "0.01");
   weightInput.setAttribute("value", "0.0");
-  makeDiv(weightDiv, weightInput, 'Weight: ');
+  makeDiv(weightDiv, weightInput, 'Weight: ', "Associated weight applied to the space for scoring or optimization purposes.");
 
   // Name Div
   let nameDiv = document.createElement('div');
@@ -2952,6 +2957,32 @@ $('#seqcompiler-tooltip').click(() => {
 //     }
 //   });
 // });
+
+function makeDiv(div, input, title, infoText = ""){
+  div.appendChild(document.createTextNode(title));
+  div.appendChild(input);
+
+  if (infoText) {
+    const infoBtn = document.createElement("button");
+    infoBtn.type = "button";
+    infoBtn.className = "btn btn-link btn-xs";
+    infoBtn.innerHTML = '<i class="fa fa-info-circle" aria-hidden="true"></i>';
+    infoBtn.setAttribute("aria-label", "More info");
+    infoBtn.style.padding = "0 6px";
+    infoBtn.style.verticalAlign = "middle";
+
+    div.appendChild(infoBtn);
+
+    $(infoBtn).tooltipster({
+      content: infoText,
+      side: "right",
+      theme: "tooltipster-noir",
+      trigger: "hover",
+      interactive: true,
+      delay: 100
+    });
+  }
+}
 
 function setRowVisible(rowDiv, show) {
   rowDiv.style.display = show ? "" : "none";
