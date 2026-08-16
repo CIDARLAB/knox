@@ -18,6 +18,16 @@ public interface DesignGroupRepository extends Neo4jRepository<DesignGroup, Long
     @Query("MATCH (dg:DesignGroup {groupID: $groupID}) DETACH DELETE dg")
     void deleteDesignGroup(@Param("groupID") String groupID);
 
+    @Query(
+        "MATCH (dg:DesignGroup {groupID: $groupID}) " +
+        "OPTIONAL MATCH (dg)-[r:CONTAINS]->(target:DesignSpace) " +
+        "OPTIONAL MATCH (target)-[:CONTAINS]->(n:Node) " +
+        "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) " +
+        "OPTIONAL MATCH (s)-[:CONTAINS]->(sn:Node) " +
+        "DETACH DELETE dg, target, n, b, c, s, sn"
+    )
+    void deleteSpacesInGroup(@Param("groupID") String groupID);
+
     @Query("MATCH (dg:DesignGroup) RETURN dg.groupID ORDER BY dg.groupID")
     List<String> listGroupIDs();
 
