@@ -1136,6 +1136,13 @@ public class KnoxController {
         return groupIDs;
     }
 
+	@GetMapping("/partLibrary/list")
+    public List<String> listPartLibraries() {
+		System.out.println("\nLIST Part Libraries:\n");
+		System.out.println(experimentService.listPartLibraries());
+        return experimentService.listPartLibraries();
+    }
+
     @GetMapping("/designSpace/enumerate")
     public Object enumerate(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
             @RequestParam(value = "numDesigns", required = false, defaultValue = "0") int numDesigns,
@@ -1320,6 +1327,11 @@ public class KnoxController {
 		}
 		
 		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+	}
+
+	@GetMapping("/partLibrary/categories")
+	public Map<String, Map<String, List<String>>> listPartLibraryCategories(@RequestParam(value = "partLibraryName", required = true) String partLibraryName) {
+		return experimentService.listPartLibraryCategories(partLibraryName);
 	}
 
 	@PostMapping("/experiment")

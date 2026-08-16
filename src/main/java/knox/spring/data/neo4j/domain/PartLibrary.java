@@ -166,4 +166,48 @@ public class PartLibrary {
         partLibraryInfo.put("componentDescriptions", componentDescriptions);
         return partLibraryInfo;
     }
+
+    public Map<String, Map<String, List<String>>> partLibraryToCategories() {
+        Map<String, Map<String, List<String>>> categories = new HashMap<>();
+
+        // Individual components
+        for (int i = 0; i < this.componentIDs.size(); i++) {
+            String compID = this.componentIDs.get(i);
+            String compRole = this.componentRoles.get(i);
+
+            Map<String, List<String>> compData = new HashMap<>();
+            compData.put(compRole, Arrays.asList(compID));
+
+            categories.put(compID, compData);
+        }
+
+        // components belonging to the same role can be grouped together
+        List<String> uniqueRoles = getUniqueComponentRoles();
+        Map<String, List<String>> roleToCompIDsMap = new HashMap<>();
+        for (String role : uniqueRoles) {
+            List<String> compIDsForRole = new ArrayList<>();
+
+            for (int i = 0; i < this.componentIDs.size(); i++) {
+                if (this.componentRoles.get(i).equals(role)) {
+                    compIDsForRole.add(this.componentIDs.get(i));
+                }
+            }
+
+            if (!compIDsForRole.isEmpty()) {
+                roleToCompIDsMap.put(role, compIDsForRole);
+
+                Map<String, List<String>> compData = new HashMap<>();
+                compData.put(role, compIDsForRole);
+
+                categories.put(role, compData);
+            }
+        }
+
+        // Any Part Concrete
+        if (!roleToCompIDsMap.isEmpty()) {
+            categories.put("any_part_concrete", roleToCompIDsMap);
+        }
+
+        return categories;
+    }
 }

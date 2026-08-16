@@ -132,8 +132,17 @@ public class ExperimentService {
         }
     }
 
+    public Map<String, Map<String, List<String>>> listPartLibraryCategories(String partLibraryName) {
+        PartLibrary partLibrary = loadPartLibrary(partLibraryName);
+        return partLibrary.partLibraryToCategories();
+    }
+
     public List<String> listExperiments() {
 		return experimentRepository.listExperiments();
+	}
+
+    public List<String> listPartLibraries() {
+		return partLibraryRepository.listPartLibraries();
 	}
 
 	public Map<String, Object> getExperimentInfo(String experimentName) {

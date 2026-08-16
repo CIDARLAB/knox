@@ -3344,6 +3344,64 @@ export function verifyRules(inputSpaces, outputSpace, groupID) {
   endpoint.designSpaceAnd(inputSpaces, outputSpace, groupID, tolerance, isComplete)
 }
 
+$("#categoriesImportBtn").click(async function() {
+  let div = document.createElement('div');
+  div.style.maxHeight = "60vh";
+  div.style.overflowY = "auto";
+  div.style.overflowX = "hidden";
+  div.style.paddingRight = "8px";
+
+  // partLibraries Dropdown
+  let partLibrariesDiv = document.createElement('div');
+  let partLibrariesDropdown = await makePartLibrariesDropdown();
+  makeDiv(partLibrariesDiv, partLibrariesDropdown, 'Part Libraries: ');
+
+  // Append to Div
+  div.appendChild(partLibrariesDiv);
+  div.appendChild(document.createElement('br'));
+
+  swal({
+    title: "Import Categories from Part Library",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (confirm) {
+      let partLibraryName = partLibrariesDropdown.value;
+      if (partLibraryName) {
+        endpoint.partLibraryCategories(partLibraryName, (err, data) => {
+          if (!err) {
+            editors.catEditor.setValue(
+              formatCategoriesForUI(data)
+            );
+          }
+        });
+      }
+    }
+  });
+});
+
+function makePartLibrariesDropdown() {
+  let partLibrariesDropdown = document.createElement('select');
+  let partLibrariesOption = new Option("Select a Part Library", "", true, true);
+  partLibrariesOption.disabled = true;
+  partLibrariesDropdown.appendChild(partLibrariesOption);
+
+  return new Promise((resolve, reject) => {
+    endpoint.listPartLibraries((err, libraries) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      for (const library of libraries) {
+        partLibrariesDropdown.appendChild(new Option(library, library));
+      }
+
+      resolve(partLibrariesDropdown);
+    });
+  });
+}
+
 /************************
  * SEARCH BAR FUNCTIONS
  ************************/

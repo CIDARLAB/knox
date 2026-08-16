@@ -17,6 +17,8 @@ const endpoints = {
   LISTGROUPIDS: "/designGroup/list",
   LISTGROUPSPACEIDS: "/designGroup/listSpaces",
   LISTEXPERIMENTS: "/experiment/list",
+  LISTPARTLIBRARIES: "/partLibrary/list",
+  PARTLIBRARYCATEGORIES: "/partLibrary/categories",
   EXPERIMENT: "/experiment",  //post vs get vs delete
   ENUMERATE: "/designSpace/enumerate",
   ENUMERATECSV: "/designSpace/enumerateCSV",
@@ -128,6 +130,15 @@ export function listGroupSpaceIDs (groupID, callback){
 
 export function listExperiments (callback){
   d3.json(endpoints.LISTEXPERIMENTS, callback);
+}
+
+export function listPartLibraries (callback){
+  d3.json(endpoints.LISTPARTLIBRARIES, callback);
+}
+
+export function partLibraryCategories (partLibraryName, callback){
+  let query = "?partLibraryName=" + encodeURIComponent(partLibraryName);
+  d3.json(endpoints.PARTLIBRARYCATEGORIES + query, callback);
 }
 
 export function getHistory (id, callback){
