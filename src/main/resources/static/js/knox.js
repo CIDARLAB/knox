@@ -2232,7 +2232,7 @@ $('#delete-group-tooltip').click(() => {
 });
 
 bindTooltipToButton(allBtnIDs.createExperiment, '#create-experiment-tooltip');
-$('#create-experiment-tooltip').click(() => {
+$('#create-experiment-tooltip').click(async () => {
   let div = document.createElement('div');
 
   // Experiment Name div
@@ -2245,30 +2245,30 @@ $('#create-experiment-tooltip').click(() => {
   let experimentDescriptionInput = document.createElement('input');
   makeDiv(experimentDescriptionDiv, experimentDescriptionInput, 'Experiment Description: ');
 
-  // Designs Group ID div
+  // Designs Group ID Dropdown div
   let designsGroupIDDiv = document.createElement('div');
-  let designsGroupIDInput = document.createElement('input');
-  makeDiv(designsGroupIDDiv, designsGroupIDInput, 'Designs Group ID: ', "Design Group should only contain Linear DAGs.");
+  let designsGroupIDDropdown = await makeGroupIDDropdown();
+  makeDiv(designsGroupIDDiv, designsGroupIDDropdown, 'Designs Group ID: ', "Design Group should only contain Linear DAGs.");
 
   // Rules Group ID div
   let rulesGroupIDDiv = document.createElement('div');
-  let rulesGroupIDInput = document.createElement('input');
-  makeDiv(rulesGroupIDDiv, rulesGroupIDInput, 'Rules Group ID: ', "Identified rules that every design should follow.");
+  let rulesGroupIDDropdown = await makeGroupIDDropdown();
+  makeDiv(rulesGroupIDDiv, rulesGroupIDDropdown, 'Rules Group ID: ', "Identified rules that every design should follow.");
 
   // Rules To Eval Group ID div
   let rulesToEvalGroupIDDiv = document.createElement('div');
-  let rulesToEvalGroupIDInput = document.createElement('input');
-  makeDiv(rulesToEvalGroupIDDiv, rulesToEvalGroupIDInput, 'Rules To Eval Group ID: ', "Rules to evaluate for the experiment.");
+  let rulesToEvalGroupIDDropdown = await makeGroupIDDropdown();
+  makeDiv(rulesToEvalGroupIDDiv, rulesToEvalGroupIDDropdown, 'Rules To Eval Group ID: ', "Rules to evaluate for the experiment.");
 
   // Rule Evaluation Name Div
   let ruleEvaluationNameDiv = document.createElement('div');
-  let ruleEvaluationNameInput = document.createElement('input');
-  makeDiv(ruleEvaluationNameDiv, ruleEvaluationNameInput, 'Rule Evaluation: ', "Name of the rule evaluation applied between Designs Group and Rules To Eval Group");
+  let ruleEvaluationNameDropdown = await makeRuleEvaluationDropdown();
+  makeDiv(ruleEvaluationNameDiv, ruleEvaluationNameDropdown, 'Rule Evaluation: ', "Name of the rule evaluation applied between Designs Group and Rules To Eval Group");
 
   // Part Library Name div
   let partLibraryNameDiv = document.createElement('div');
-  let partLibraryNameInput = document.createElement('input');
-  makeDiv(partLibraryNameDiv, partLibraryNameInput, 'Part Library: ', "Part library used in the experiment.");
+  let partLibraryNameDropdown = await makePartLibrariesDropdown();
+  makeDiv(partLibraryNameDiv, partLibraryNameDropdown, 'Part Library: ', "Part library used in the experiment.");
 
 
   // Append all divs to the main div
@@ -2297,11 +2297,11 @@ $('#create-experiment-tooltip').click(() => {
     if (confirm) {
       let experimentName = experimentNameInput.value;
       let experimentDescription = experimentDescriptionInput.value;
-      let designsGroupID = designsGroupIDInput.value;
-      let rulesGroupID = rulesGroupIDInput.value;
-      let rulesToEvalGroupID = rulesToEvalGroupIDInput.value;
-      let ruleEvaluationName = ruleEvaluationNameInput.value;
-      let partLibraryName = partLibraryNameInput.value;
+      let designsGroupID = designsGroupIDDropdown.value;
+      let rulesGroupID = rulesGroupIDDropdown.value;
+      let rulesToEvalGroupID = rulesToEvalGroupIDDropdown.value;
+      let ruleEvaluationName = ruleEvaluationNameDropdown.value;
+      let partLibraryName = partLibraryNameDropdown.value;
       if (experimentName) {
         endpoint.createExperiment(experimentName, experimentDescription, designsGroupID, rulesGroupID, rulesToEvalGroupID, ruleEvaluationName, partLibraryName, (err, data) => {
           if (!err) {
@@ -2312,6 +2312,50 @@ $('#create-experiment-tooltip').click(() => {
     }
   });
 });
+
+function makeGroupIDDropdown() {
+  let groupIDDropdown = document.createElement('select');
+  let groupIDOption = new Option("Select a GroupID", "", true, true);
+  groupIDOption.disabled = true;
+  groupIDDropdown.appendChild(groupIDOption);
+
+  return new Promise((resolve, reject) => {
+    endpoint.listGroups((err, groups) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      for (const group of groups) {
+        groupIDDropdown.appendChild(new Option(group, group));
+      }
+
+      resolve(groupIDDropdown);
+    });
+  });
+}
+
+function makeRuleEvaluationDropdown() {
+  let ruleEvaluationDropdown = document.createElement('select');
+  let ruleEvaluationOption = new Option("Select a Rule Evaluation", "", true, true);
+  ruleEvaluationOption.disabled = true;
+  ruleEvaluationDropdown.appendChild(ruleEvaluationOption);
+
+  return new Promise((resolve, reject) => {
+    endpoint.listEvaluations((err, evaluations) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      for (const evaluation of evaluations) {
+        ruleEvaluationDropdown.appendChild(new Option(evaluation, evaluation));
+      }
+
+      resolve(ruleEvaluationDropdown);
+    });
+  });
+}
 
 bindTooltipToButton(allBtnIDs.deleteExperiment, '#delete-experiment-tooltip');
 $('#delete-experiment-tooltip').click(() => {
