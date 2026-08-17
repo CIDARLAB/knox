@@ -16,7 +16,11 @@ public interface PartLibraryRepository extends Neo4jRepository<PartLibrary, Long
     @Query("MATCH (p:PartLibrary {partLibraryName: $partLibraryName}) RETURN ID(p) as graphId")
     Set<Integer> getPartLibraryGraphID(@Param("partLibraryName") String partLibraryName);
 
-    @Query("MATCH (n:PartLibrary {partLibraryName: $partLibraryName}) DETACH DELETE n")
+    @Query(
+        "MATCH (n:PartLibrary {partLibraryName: $partLibraryName}) " +
+        "OPTIONAL MATCH (n)-[:HAS_PART]->(p:Part) " +
+        "DETACH DELETE n, p"
+    )
     void deleteByPartLibraryName(@Param("partLibraryName") String partLibraryName);
 
     @Query("MATCH (n:PartLibrary {partLibraryName: $partLibraryName}) WHERE NOT (n)<-[:CONTAINS]-(:SomeOtherNode) DETACH DELETE n")
