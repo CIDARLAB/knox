@@ -21,9 +21,8 @@ import org.sbolstandard.core2.SBOLConversionException;
 import org.sbolstandard.core2.SBOLDocument;
 import org.sbolstandard.core2.SBOLReader;
 import org.sbolstandard.core2.SBOLValidationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -65,34 +64,56 @@ public class KnoxController {
 	// Bounded worker pool for general requests.
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
 
-	@Autowired BranchRepository branchRepository;
+	final BranchRepository branchRepository;
 	
-    @Autowired CommitRepository commitRepository;
+    final CommitRepository commitRepository;
     
-    @Autowired DesignSpaceRepository designSpaceRepository;
+    final DesignSpaceRepository designSpaceRepository;
     
-    @Autowired EdgeRepository edgeRepository;
+    final EdgeRepository edgeRepository;
     
-    @Autowired NodeRepository nodeRepository;
+    final NodeRepository nodeRepository;
     
-    @Autowired SnapshotRepository snapshotRepository;
+    final SnapshotRepository snapshotRepository;
     
-    @Autowired ContextSpaceRepository contextSpaceRepository;
+    final ContextSpaceRepository contextSpaceRepository;
 
-	@Autowired ComponentRepository componentRepository;
+	final ComponentRepository componentRepository;
 
-	@Autowired RuleEvaluationRepository ruleEvaluationRepository;
+	final RuleEvaluationRepository ruleEvaluationRepository;
 
-	@Autowired ExperimentRepository experimentRepository;
+	final ExperimentRepository experimentRepository;
 
-    @Autowired PartLibraryRepository partLibraryRepository;
+    final PartLibraryRepository partLibraryRepository;
 	
-	private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
+	//private static final Logger LOG = LoggerFactory.getLogger(KnoxController.class);
 
-	@Autowired
-	public KnoxController(DesignSpaceService designSpaceService, ExperimentService experimentService) {
+	public KnoxController(DesignSpaceService designSpaceService, ExperimentService experimentService,
+			BranchRepository branchRepository,
+			CommitRepository commitRepository,
+			DesignSpaceRepository designSpaceRepository,
+			EdgeRepository edgeRepository,
+			NodeRepository nodeRepository,
+			SnapshotRepository snapshotRepository,
+			ContextSpaceRepository contextSpaceRepository,
+			ComponentRepository componentRepository,
+			RuleEvaluationRepository ruleEvaluationRepository,
+			ExperimentRepository experimentRepository,
+			PartLibraryRepository partLibraryRepository
+	) {
 		this.designSpaceService = designSpaceService;
 		this.experimentService = experimentService;
+		this.branchRepository = branchRepository;
+		this.commitRepository = commitRepository;
+		this.designSpaceRepository = designSpaceRepository;
+		this.edgeRepository = edgeRepository;
+		this.nodeRepository = nodeRepository;
+		this.snapshotRepository = snapshotRepository;
+		this.contextSpaceRepository = contextSpaceRepository;
+		this.componentRepository = componentRepository;
+		this.ruleEvaluationRepository = ruleEvaluationRepository;
+		this.experimentRepository = experimentRepository;
+		this.partLibraryRepository = partLibraryRepository;
 	}
 	
 	/**

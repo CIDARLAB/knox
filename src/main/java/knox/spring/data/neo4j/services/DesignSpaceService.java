@@ -26,9 +26,8 @@ import org.sbolstandard.core2.SBOLDocument;
 import org.sbolstandard.core2.SBOLReader;
 import org.sbolstandard.core2.SBOLValidationException;
 import org.sbolstandard.core2.SequenceOntology;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.stereotype.Service;
@@ -79,29 +78,53 @@ import knox.spring.data.neo4j.sbol.SBOLGeneration;
 @Service
 //@Transactional
 public class DesignSpaceService {
-	@Autowired BranchRepository branchRepository;
+	final BranchRepository branchRepository;
 	
-    @Autowired CommitRepository commitRepository;
+	final CommitRepository commitRepository;
     
-    @Autowired DesignSpaceRepository designSpaceRepository;
+	final DesignSpaceRepository designSpaceRepository;
 
-	@Autowired DesignGroupRepository designGroupRepository;
+	final DesignGroupRepository designGroupRepository;
     
-    @Autowired EdgeRepository edgeRepository;
+	final EdgeRepository edgeRepository;
     
-    @Autowired NodeRepository nodeRepository;
+	final NodeRepository nodeRepository;
     
-    @Autowired SnapshotRepository snapshotRepository;
+	final SnapshotRepository snapshotRepository;
     
-    @Autowired ContextSpaceRepository contextSpaceRepository;
+	final ContextSpaceRepository contextSpaceRepository;
 
-	@Autowired ComponentRepository componentRepository;
+	final ComponentRepository componentRepository;
 
-	@Autowired RuleEvaluationRepository ruleEvaluationRepository;
+	final RuleEvaluationRepository ruleEvaluationRepository;
 
-    private static final Logger LOG = LoggerFactory.getLogger(DesignSpaceService.class);
+    //private static final Logger LOG = LoggerFactory.getLogger(DesignSpaceService.class);
 
     public static final String RESERVED_ID = "knox";
+
+	public DesignSpaceService(
+			BranchRepository branchRepository,
+			CommitRepository commitRepository,
+			DesignSpaceRepository designSpaceRepository,
+			DesignGroupRepository designGroupRepository,
+			EdgeRepository edgeRepository,
+			NodeRepository nodeRepository,
+			SnapshotRepository snapshotRepository,
+			ContextSpaceRepository contextSpaceRepository,
+			ComponentRepository componentRepository,
+			RuleEvaluationRepository ruleEvaluationRepository
+	) {
+		this.branchRepository = branchRepository;
+		this.commitRepository = commitRepository;
+		this.designSpaceRepository = designSpaceRepository;
+		this.designGroupRepository = designGroupRepository;
+		this.edgeRepository = edgeRepository;
+		this.nodeRepository = nodeRepository;
+		this.snapshotRepository = snapshotRepository;
+		this.contextSpaceRepository = contextSpaceRepository;
+		this.componentRepository = componentRepository;
+		this.ruleEvaluationRepository = ruleEvaluationRepository;
+	}
     
     public void joinDesignSpaces(List<String> inputSpaceIDs, String groupID) 
     		throws ParameterEmptyException, DesignSpaceNotFoundException, 
