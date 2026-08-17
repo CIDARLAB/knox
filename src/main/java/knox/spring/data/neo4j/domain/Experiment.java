@@ -136,11 +136,17 @@ public class Experiment {
 		experimentInfo.put("rulesToEvalGroupID", rulesToEvalGroup != null ? rulesToEvalGroup.getGroupID() : null);
 
         if (partLibrary != null) {
+            List<String> componentIDs = new ArrayList<>();
+            List<String> componentRoles = new ArrayList<>();
+            List<String> sequences = new ArrayList<>();
+            List<String> descriptions = new ArrayList<>();
+            partLibrary.partInformation(componentIDs, componentRoles, sequences, descriptions);
+
             experimentInfo.put("partLibraryName", partLibrary.getPartLibraryName());
-            experimentInfo.put("componentIDs", partLibrary.getComponentIDs());
-            experimentInfo.put("componentRoles", partLibrary.getComponentRoles());
-            experimentInfo.put("componentSequences", partLibrary.getComponentSequences());
-            experimentInfo.put("componentDescriptions", partLibrary.getComponentDescriptions());
+            experimentInfo.put("componentIDs", componentIDs);
+            experimentInfo.put("componentRoles", componentRoles);
+            experimentInfo.put("componentSequences", sequences);
+            experimentInfo.put("componentDescriptions", descriptions);
         } else {
             experimentInfo.put("partLibraryName", null);
             experimentInfo.put("componentIDs", new ArrayList<String>());
@@ -164,7 +170,7 @@ public class Experiment {
         if (partLibrary == null) {
             return 0;
         }
-        return partLibrary.getComponentIDs().size();
+        return partLibrary.getPartIndex();
     }
 
 }

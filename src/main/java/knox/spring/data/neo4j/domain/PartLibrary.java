@@ -1,5 +1,6 @@
 package knox.spring.data.neo4j.domain;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @org.springframework.data.neo4j.core.schema.Node
@@ -19,23 +21,17 @@ public class PartLibrary {
     @Property
     private String partLibraryName;
 
-    @Property 
-    private List<String> componentIDs;
+    @Property
+    private List<String> partFeaturesLabels;
 
     @Property
-    private List<String> componentRoles;
+    private List<String> interactionFeaturesLabels;
 
     @Property
-    private List<String> componentSequences;
+    private int partIndex;
 
-    @Property
-    private List<String> componentDescriptions;
-
-    @Property
-    private List<String> componentData;
-
-    @Property
-    private List<List<Object>> componentInteractionsMatrix;
+    @Relationship(type = "HAS_PART")
+    private Set<Part> parts;
 
     @Transient
     private Map<String, Map<String, Object>> compIDMap;
@@ -43,137 +39,96 @@ public class PartLibrary {
 
     public PartLibrary() {}
 
-    public PartLibrary(String partLibraryName, List<String> componentIDs, List<String> componentRoles, List<String> componentSequences, List<String> componentDescriptions) {
+    public PartLibrary(String partLibraryName, List<String> partFeaturesLabels, List<String> interactionFeaturesLabels) {
         this.partLibraryName = partLibraryName;
-
-        // compIDs, compRoles, compSequences, compDescriptions should all have the same length
-        this.componentIDs = componentIDs;
-        this.componentRoles = componentRoles;
-        this.componentSequences = componentSequences;
-        this.componentDescriptions = componentDescriptions;
+        this.partFeaturesLabels = partFeaturesLabels;
+        this.interactionFeaturesLabels = interactionFeaturesLabels;
+        this.partIndex = 0;
     }
 
-    public String getPartLibraryName() {
-        return partLibraryName;
-    }
-
-    public List<String> getComponentIDs() {
-        return componentIDs;
-    }
-
-    public List<String> getComponentRoles() {
-        return componentRoles;
-    }
-
-    public List<String> getComponentSequences() {
-        return componentSequences;
-    }
-
-    public List<String> getComponentDescriptions() {
-        return componentDescriptions;
-    }
-
-    public void setPartLibraryName(String partLibraryName) {
+    public PartLibrary(
+            String partLibraryName, 
+            List<String> componentIDs,
+            List<String> componentRoles,
+            List<String> sequences,
+            List<String> descriptions,
+            List<String> partFeaturesLabels, 
+            List<String> interactionFeaturesLabels
+    ) {
         this.partLibraryName = partLibraryName;
-    }
+        this.partFeaturesLabels = partFeaturesLabels;
+        this.interactionFeaturesLabels = interactionFeaturesLabels;
+        this.partIndex = 0;
 
-    public void setComponentIDs(List<String> componentIDs) {
-        this.componentIDs = componentIDs;
-    }
-
-    public void setComponentRoles(List<String> componentRoles) {
-        this.componentRoles = componentRoles;
-    }
-
-    public void setComponentSequences(List<String> componentSequences) {
-        this.componentSequences = componentSequences;
-    }
-
-    public void setComponentDescriptions(List<String> componentDescriptions) {
-        this.componentDescriptions = componentDescriptions;
-    }
-
-    public void addPart(String componentID, String componentRole, String componentSequence, String componentDescription) {
-        if (this.componentIDs == null) {
-            this.componentIDs = new ArrayList<>();
-        }
-        if (this.componentRoles == null) {
-            this.componentRoles = new ArrayList<>();
-        }
-        if (this.componentSequences == null) {
-            this.componentSequences = new ArrayList<>();
-        }
-        if (this.componentDescriptions == null) {
-            this.componentDescriptions = new ArrayList<>();
-        }
-        this.componentIDs.add(componentID);
-        this.componentRoles.add(componentRole);
-        this.componentSequences.add(componentSequence);
-        this.componentDescriptions.add(componentDescription);
-    }
-
-    public void removePart(String componentID) {
-        if (this.componentIDs != null) {
-            int index = this.componentIDs.indexOf(componentID);
-            if (index != -1) {
-                this.componentIDs.remove(index);
-                if (this.componentRoles != null && this.componentRoles.size() > index) {
-                    this.componentRoles.remove(index);
-                }
-                if (this.componentSequences != null && this.componentSequences.size() > index) {
-                    this.componentSequences.remove(index);
-                }
-                if (this.componentDescriptions != null && this.componentDescriptions.size() > index) {
-                    this.componentDescriptions.remove(index);
-                }
+        if (componentIDs != null) {
+            for (int i = 0; i < componentIDs.size(); i++) {
+                String componentID = componentIDs.get(i);
+                String componentRole = componentRoles.get(i);
+                String sequence = sequences.get(i);
+                String description = descriptions.get(i);
+                createPart(componentID, componentRole, sequence, description, new ArrayList<>());
             }
         }
     }
 
+    public void createPart(String componentID, String componentRole, String sequence, String description, List<Double> partData) {
+        this.partIndex++;
+        addPart(new Part(componentID, componentRole, sequence, description, this.partIndex, partData));
+    }
+
+    public void addPart(Part part) {
+        if (this.parts == null) {
+            this.parts = new HashSet<>();
+        }
+        this.parts.add(part);
+    }
+
+    public void removePart(String componentID) {
+        if (this.parts != null) {
+            this.parts.removeIf(part -> part.getComponentID().equals(componentID));
+        }
+    }
+
     public List<String> getUniqueComponentRoles() {
-        if (this.componentRoles == null) {
+        if (this.parts == null) {
             return Collections.emptyList();
         }
-        return new ArrayList<>(new HashSet<>(this.componentRoles));
+        return this.parts.stream()
+                .map(Part::getComponentRole)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public Map<String, Map<String, Object>> getCompIDMap() {
+        if (this.compIDMap == null) {
+            buildCompIDMap();
+        }
+        return this.compIDMap;
     }
 
     public void buildCompIDMap() {
         this.compIDMap = new HashMap<>();
-        if (this.componentIDs != null) {
-            for (int i = 0; i < this.componentIDs.size(); i++) {
-                String compID = this.componentIDs.get(i);
+        if (this.parts != null) {
+            for (Part part : this.parts) {
+                String compID = part.getComponentID();
                 
                 Map<String, Object> compData = new HashMap<>();
-                compData.put("componentRole", this.componentRoles != null && this.componentRoles.size() > i ? this.componentRoles.get(i) : null);
-                compData.put("componentSequence", this.componentSequences != null && this.componentSequences.size() > i ? this.componentSequences.get(i) : null);
-                compData.put("tokenID", i+1);
+                compData.put("componentRole", part.getComponentRole());
+                compData.put("componentSequence", part.getSequence());
+                compData.put("tokenID", part.getIndex());
                 
                 this.compIDMap.put(compID, compData);
             }
         }
     }
 
-    public Map<String, Map<String, Object>> getCompIDMap() {
-        return this.compIDMap;
-    }
-
-    public Map<String, Object> getPartLibraryInfo() {
-        Map<String, Object> partLibraryInfo = new HashMap<>();
-        partLibraryInfo.put("partLibraryName", partLibraryName);
-        partLibraryInfo.put("componentIDs", componentIDs);
-        partLibraryInfo.put("componentRoles", componentRoles);
-        partLibraryInfo.put("componentSequences", componentSequences);
-        partLibraryInfo.put("componentDescriptions", componentDescriptions);
-        return partLibraryInfo;
-    }
-
     public Map<String, Map<String, List<String>>> partLibraryToCategories() {
         Map<String, Map<String, List<String>>> categories = new HashMap<>();
 
         // Individual components
-        for (int i = 0; i < this.componentIDs.size(); i++) {
-            String compID = this.componentIDs.get(i);
-            String compRole = this.componentRoles.get(i);
+        for (Part part : this.parts) {
+            String compID = part.getComponentID();
+            String compRole = part.getComponentRole();
 
             Map<String, List<String>> compData = new HashMap<>();
             compData.put(compRole, Arrays.asList(compID));
@@ -187,9 +142,9 @@ public class PartLibrary {
         for (String role : uniqueRoles) {
             List<String> compIDsForRole = new ArrayList<>();
 
-            for (int i = 0; i < this.componentIDs.size(); i++) {
-                if (this.componentRoles.get(i).equals(role)) {
-                    compIDsForRole.add(this.componentIDs.get(i));
+            for (Part part : this.parts) {
+                if (part.getComponentRole().equals(role)) {
+                    compIDsForRole.add(part.getComponentID());
                 }
             }
 
@@ -210,4 +165,78 @@ public class PartLibrary {
 
         return categories;
     }
+
+    public Map<String, Object> getPartLibraryInfo() {
+        Map<String, Object> partLibraryInfo = new HashMap<>();
+        partLibraryInfo.put("partLibraryName", partLibraryName);
+
+        List<String> componentIDs = new ArrayList<>();
+        List<String> componentRoles = new ArrayList<>();
+        List<String> sequences = new ArrayList<>();
+        List<String> descriptions = new ArrayList<>();
+        partInformation(componentIDs, componentRoles, sequences, descriptions);
+
+        partLibraryInfo.put("componentIDs", componentIDs);
+        partLibraryInfo.put("componentRoles", componentRoles);
+        partLibraryInfo.put("componentSequences", sequences);
+        partLibraryInfo.put("componentDescriptions", descriptions);
+        return partLibraryInfo;
+    }
+
+    public void partInformation(List<String> componentIDs, List<String> componentRoles, List<String> sequences, List<String> descriptions) {
+        if (this.parts == null) {
+            return;
+        }
+        
+        for (Part part : this.parts) {
+            componentIDs.add(part.getComponentID());
+            componentRoles.add(part.getComponentRole());
+            sequences.add(part.getSequence());
+            descriptions.add(part.getDescription());
+        }
+    }
+
+    // Getters and setters
+    public String getPartLibraryName() {
+        return partLibraryName;
+    }
+
+    public void setPartLibraryName(String partLibraryName) {
+        this.partLibraryName = partLibraryName;
+    }
+
+    public Set<Part> getParts() {
+        if (this.parts == null) {
+            return Collections.emptySet();
+        }
+        return new HashSet<>(this.parts);
+    }
+
+    public void setParts(Set<Part> parts) {
+        this.parts = parts;
+    }
+
+    public List<String> getPartFeaturesLabels() {
+        return partFeaturesLabels;
+    }
+
+    public void setPartFeaturesLabels(List<String> partFeaturesLabels) {
+        this.partFeaturesLabels = partFeaturesLabels;
+    }
+
+    public List<String> getInteractionFeaturesLabels() {
+        return interactionFeaturesLabels;
+    }
+
+    public void setInteractionFeaturesLabels(List<String> interactionFeaturesLabels) {
+        this.interactionFeaturesLabels = interactionFeaturesLabels;
+    }
+
+    public int getPartIndex() {
+        if (this.parts == null) {
+            return 0;
+        }
+        return this.parts.size();
+    }
+
 }

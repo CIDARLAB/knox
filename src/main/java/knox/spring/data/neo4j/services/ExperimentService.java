@@ -16,30 +16,44 @@ import java.io.InputStreamReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import knox.spring.data.neo4j.repositories.ExperimentRepository;
 import knox.spring.data.neo4j.repositories.PartLibraryRepository;
+import knox.spring.data.neo4j.repositories.PartRepository;
+import knox.spring.data.neo4j.repositories.InteractionRepository;
 import knox.spring.data.neo4j.repositories.JobRepository;
-
-import knox.spring.data.neo4j.services.DesignSpaceService;
 
 @Service
 public class ExperimentService {
     final DesignSpaceService designSpaceService;
 
-    @Autowired ExperimentRepository experimentRepository;
+    final ExperimentRepository experimentRepository;
     
-    @Autowired PartLibraryRepository partLibraryRepository;
+    final PartLibraryRepository partLibraryRepository;
 
-    @Autowired JobRepository jobRepository;
+    final PartRepository partRepository;
+
+    final InteractionRepository interactionRepository;
+
+    final JobRepository jobRepository;
 
     private static final Logger LOG = LoggerFactory.getLogger(ExperimentService.class);
 
-    @Autowired
-    public ExperimentService(DesignSpaceService designSpaceService) {
+    public ExperimentService(
+            DesignSpaceService designSpaceService,
+            ExperimentRepository experimentRepository,
+            PartLibraryRepository partLibraryRepository,
+            PartRepository partRepository,
+            InteractionRepository interactionRepository,
+            JobRepository jobRepository
+    ) {
         this.designSpaceService = designSpaceService;
+        this.experimentRepository = experimentRepository;
+        this.partLibraryRepository = partLibraryRepository;
+        this.partRepository = partRepository;
+        this.interactionRepository = interactionRepository;
+        this.jobRepository = jobRepository;
     }
 
     public void createExperiment(
@@ -122,7 +136,9 @@ public class ExperimentService {
                 componentIDs,
                 componentRoles,
                 componentSequences,
-                componentDescriptions
+                componentDescriptions,
+                new ArrayList<>(),
+                new ArrayList<>()
             );
 
             savePartLibrary(partLibraryObj);
@@ -211,12 +227,29 @@ public class ExperimentService {
     }
 
     public PartLibrary loadPartLibrary(String partLibraryName) {
-        PartLibrary partLibrary = partLibraryRepository.findByPartLibraryName(partLibraryName);
+        Long graphId = getPartLibraryGraphID(partLibraryName);
+        PartLibrary partLibrary = null;
+
+        if (graphId != null) {
+            partLibrary = partLibraryRepository.findById(graphId).orElse(null);
+        }
+
         if (partLibrary == null) {
             throw new IllegalArgumentException("PartLibrary not found: " + partLibraryName);
         }
+
         return partLibrary;
 	}
+
+    private Long getPartLibraryGraphID(String partLibraryName) {
+        Set<Integer> graphIDs = partLibraryRepository.getPartLibraryGraphID(partLibraryName);
+
+        if (graphIDs.size() > 0) {
+			return (graphIDs.iterator().next()).longValue();
+		} else {
+			return null;
+		}
+    }
 
     public void saveExperiment(Experiment experiment) {
 		// TODO: check name uniqueness/alphanumeric
