@@ -435,7 +435,7 @@ export function deleteExperiment(experimentName){
 /**
  * Creates the experiment
  */
-export function createExperiment(experimentName, description, designsGroupID, rulesGroupID, rulesToEvalGroupID, ruleEvaluationName, partLibraryName){
+export function createExperiment(experimentName, description, designsGroupID, rulesGroupID, rulesToEvalGroupID, ruleEvaluationName, partLibraryName, callback){
   let request = new XMLHttpRequest();
   let query = "?experimentName=" + experimentName;
   query += "&description=" + encodeURIComponent(description);
@@ -450,8 +450,11 @@ export function createExperiment(experimentName, description, designsGroupID, ru
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();
     clearAllPages();
+    if (callback) callback(null, { experimentName, description, request: request.response });
   } else {
-    swalError("Failed to create experiment " + experimentName);
+    const err = new Error("Failed to create experiment " + experimentName);
+    swalError(err.message);
+    if (callback) callback(err);
   }
 }
 
