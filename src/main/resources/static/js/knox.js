@@ -2162,7 +2162,7 @@ function makeReverseOrientationDropdown(){
 }
 
 bindTooltipToButton(allBtnIDs.ruleEval, '#rule-eval-tooltip');
-$('#rule-eval-tooltip').click(() => {
+$('#rule-eval-tooltip').click(async () => {
   let div = document.createElement('div');
 
   // Evaluation Name div
@@ -2170,15 +2170,15 @@ $('#rule-eval-tooltip').click(() => {
   let evaluationNameInput = document.createElement('input');
   makeDiv(evaluationNameDiv, evaluationNameInput, 'Evaluation Name: ');
 
-  // designGroupID div
+  // designGroupID Dropdown div
   let designGroupIDDiv = document.createElement('div');
-  let designGroupIDInput = document.createElement('input');
-  makeDiv(designGroupIDDiv, designGroupIDInput, 'Design Group ID: ', "Design Group of interest. Design Group should only contain Linear DAGs.");
+  let designGroupIDDropdown = await makeGroupIDDropdown();
+  makeDiv(designGroupIDDiv, designGroupIDDropdown, 'Design Group ID: ', "Design Group of interest. Design Group should only contain Linear DAGs.");
 
-  // rulesGroupID div
+  // rulesGroupID Dropdown div
   let rulesGroupIDDiv = document.createElement('div');
-  let rulesGroupIDInput = document.createElement('input');
-  makeDiv(rulesGroupIDDiv, rulesGroupIDInput, 'Rules Group ID: ', "Rules Group of interest.");
+  let rulesGroupIDDropdown = await makeGroupIDDropdown();
+  makeDiv(rulesGroupIDDiv, rulesGroupIDDropdown, 'Rules Group ID: ', "Rules Group of interest.");
 
   // Labeling Method div
   let labelingMethodDiv = document.createElement('div');
@@ -2203,8 +2203,8 @@ $('#rule-eval-tooltip').click(() => {
     if (!confirm) return;
     
     let evaluationName = evaluationNameInput.value;
-    let designGroupID = designGroupIDInput.value;
-    let rulesGroupID = rulesGroupIDInput.value;
+    let designGroupID = designGroupIDDropdown.value;
+    let rulesGroupID = rulesGroupIDDropdown.value;
     let labelingMethod = labelingMethodDropdown.value;
 
     endpoint.evaluateRules(evaluationName, designGroupID, rulesGroupID, labelingMethod);
