@@ -196,6 +196,42 @@ public class PartLibrary {
         }
     }
 
+    public Map<String, Object> toD3() {
+        Map<String, Object> d3Graph = new HashMap<>();
+
+        Map<String, Integer> partToIndex = new HashMap<>();
+        List<Map<String, Object>> nodes = new ArrayList<>();
+        List<Map<String, Object>> links = new ArrayList<>();
+
+        int i = 0;
+        for (Part part : this.parts) {
+            Map<String, Object> node = new HashMap<>();
+            node.put("id", "[" + part.getComponentID() + ", " + part.getComponentRole() + "]");
+            node.put("nodeTypes", new ArrayList<>());
+            nodes.add(node);
+            partToIndex.put(part.getComponentID(), i);
+            i++;
+        }
+
+        for (Part part : this.parts) {
+            if (part.hasInteractions()) {
+                for (Interaction interaction : part.getInteractions()) {
+                    Map<String, Object> link = new HashMap<>();
+                    link.put("source", partToIndex.get(part.getComponentID()));
+                    link.put("target", partToIndex.get(interaction.getTargetPart().getComponentID()));
+                    link.put("componentRoles", new ArrayList<>());
+                    link.put("componentIDs", new ArrayList<>());
+                    link.put("weight", new ArrayList<>());
+                    links.add(link);
+                }
+            }
+        }
+
+        d3Graph.put("nodes", nodes);
+        d3Graph.put("links", links);
+        return d3Graph;
+    }
+
     // Getters and setters
     public String getPartLibraryName() {
         return partLibraryName;

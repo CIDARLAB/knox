@@ -19,6 +19,7 @@ const endpoints = {
   LISTEXPERIMENTS: "/experiment/list",
   LISTPARTLIBRARIES: "/partLibrary/list",
   PARTLIBRARYCATEGORIES: "/partLibrary/categories",
+  D3GRAPHPARTLIBRARY: "/partLibrary/graph/d3",
   EXPERIMENT: "/experiment",  //post vs get vs delete
   ENUMERATE: "/designSpace/enumerate",
   ENUMERATECSV: "/designSpace/enumerateCSV",
@@ -139,6 +140,11 @@ export function listPartLibraries (callback){
 export function partLibraryCategories (partLibraryName, callback){
   let query = "?partLibraryName=" + encodeURIComponent(partLibraryName);
   d3.json(endpoints.PARTLIBRARYCATEGORIES + query, callback);
+}
+
+export function d3GraphPartLibrary (partLibraryName, callback){
+  let query = "?partLibraryName=" + encodeURIComponent(partLibraryName);
+  d3.json(endpoints.D3GRAPHPARTLIBRARY + query, callback);
 }
 
 export function getHistory (id, callback){

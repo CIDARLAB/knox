@@ -131,6 +131,7 @@ public class ExperimentService {
                 }
             }
 
+            // TODO: PartData and InteractionData integration
             PartLibrary partLibraryObj = new PartLibrary(
                 partLibraryName,
                 componentIDs,
@@ -146,6 +147,11 @@ public class ExperimentService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public Map<String, Object> d3GraphPartLibrary(String partLibraryName) {
+        PartLibrary partLibrary = loadPartLibrary(partLibraryName);
+        return partLibrary.toD3();
     }
 
     public Map<String, Map<String, List<String>>> listPartLibraryCategories(String partLibraryName) {

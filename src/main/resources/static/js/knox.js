@@ -78,6 +78,7 @@ let historyNodes;
 export let currentSpace;
 export let currentGroupID;
 export let currentExperimentID;
+export let currentPartLibrary;
 export let currentBranch;
 export function setcurrentBranch(branchName){
   currentBranch = branchName;
@@ -258,6 +259,22 @@ export function visualizeDesignAndHistory(spaceid) {
   if(panelNum === 1){
     $('#vh-toggle-button').click();
   }
+}
+
+export function visualizePartLibrary(partLibraryName) {
+  endpoint.d3GraphPartLibrary(partLibraryName, (err, data) => {
+    hideExplorePageBtns();
+
+    if (err) {
+      swalError(JSON.stringify(err));
+    } else {
+      targets.search.clear();
+      targets.search.setGraph(data);
+      $("#search-tb").blur();
+      $("#search-autocomplete").blur();
+      currentPartLibrary = partLibraryName;
+    }
+  });
 }
 
 export function showGroupInfo(groupID) {
@@ -3492,6 +3509,8 @@ function chooseVisualizeFunction() {
     visualizeFunction = showGroupInfo;
   } else if (searchType === "experiment") {
     visualizeFunction = showExperimentInfo;
+  } else if (searchType === "partLibrary") {
+    visualizeFunction = visualizePartLibrary;
   }
 
   return visualizeFunction;
@@ -3559,6 +3578,8 @@ function populateAutocompleteList(callback) {
       fetchFunction = endpoint.listGroups;
     } else if (searchType === "experiment") {
       fetchFunction = endpoint.listExperiments;
+    } else if (searchType === "partLibrary") {
+      fetchFunction = endpoint.listPartLibraries;
     }
 
     fetchFunction((err, data) => {

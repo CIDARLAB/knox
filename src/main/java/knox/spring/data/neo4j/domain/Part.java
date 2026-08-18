@@ -65,6 +65,10 @@ public class Part {
         this.interactions.add(new Interaction(targetPart, interactionType, interactionData));
     }
 
+    public boolean hasInteractions() {
+        return this.interactions != null && !this.interactions.isEmpty();
+    }
+
     // Getters and Setters
     public String getComponentID() {
         return componentID;
