@@ -56,6 +56,7 @@ const experimentBtnIDs = {
   createExperiment: "#create-experiment-btn",
   ml: "#ml-experiment-btn",
   exportExperiment: "#export-experiment-btn",
+  stopTune: "#stop-tune-btn",
   deleteExperiment: "#delete-experiment-btn"
 };
 
@@ -1138,6 +1139,14 @@ function addTooltips(){
   let experimentLearningBtn = $('#ml-experiment-btn');
   experimentLearningBtn.tooltipster({
     content: $('#ml-experiment-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let stopTuningBtn = $('#stop-tune-btn');
+  stopTuningBtn.tooltipster({
+    content: $('#stop-tune-tooltip'),
     side: 'top',
     interactive: true,
     theme: 'tooltipster-noir'
@@ -2668,6 +2677,26 @@ function makeModelDropdown(){
 function getDefaultConfigForModel(model) {
   return modelConfigs[model] || {};
 }
+
+bindTooltipToButton(allBtnIDs.stopTune, '#stop-tune-tooltip');
+$('#stop-tune-tooltip').click(() => {
+  let div = document.createElement('div');
+  
+  swal({
+    title: "Stop Tuning?",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (!confirm) return;
+    endpoint.stopTune((err, data) => {
+      if (!err) {
+        swalSuccess("Tuning stopped successfully.");
+      } else {
+        swalError("Error stopping tuning: " + err);
+      }
+    });
+  });
+});
 
 bindTooltipToButton(allBtnIDs.seqCompiler, '#seqcompiler-tooltip');
 $('#seqcompiler-tooltip').click(() => {

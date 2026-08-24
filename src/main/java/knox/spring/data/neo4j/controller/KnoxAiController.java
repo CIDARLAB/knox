@@ -77,6 +77,14 @@ public class KnoxAiController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
+    @PostMapping("/job/stopTuning")
+    public ResponseEntity<Map<String, Object>> stopTuningJob() {
+        knoxAiClient.stopTune();
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "STOPPED");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @DeleteMapping("/job")
     public ResponseEntity<Map<String, Object>> deleteJob(
             @RequestParam(value = "jobID", required = true) String jobID

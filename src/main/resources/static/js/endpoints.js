@@ -54,6 +54,7 @@ const endpoints = {
 
   RUNJOB: "/job/submit",
   JOB: "/job",  //get vs delete,
+  STOPTUNE: "/job/stopTuning",
 
   SEQCOMPILER: "/seqcompiler/compile"  //post
 };
@@ -760,6 +761,24 @@ export function mlJobSubmit(action, experimentName, runName, model, config, task
     swalError("Failed to submit training job: " + err.message);
     if (callback) callback(err);
   });
+}
+
+export function stopTune(callback) {
+  fetch(endpoints.STOPTUNE, { method: "POST" })
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return response.json();
+    })
+    .then((data) => {
+      swalSuccess("Tuning job stopped");
+      if (callback) callback(null, data);
+    })
+    .catch((err) => {
+      swalError("Failed to stop tuning job: " + err.message);
+      if (callback) callback(err);
+    });
 }
 
 export function seqCompilerCompile(spaceID, groupID, weight, name, Rz, L, term, hp5, prom, eI, eO, s, invert, invL, agL, AGiloop, otype, rna, us, ds, temp_len, cp, n, c, d, CDS, rflap, downloadGenbank, callback) {

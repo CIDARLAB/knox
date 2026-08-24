@@ -287,7 +287,7 @@ public class KnoxAiClient {
         }
     }
 
-    public void stopTune(String model) {
+    public void stopTune() {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -296,7 +296,7 @@ public class KnoxAiClient {
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             restTemplate.exchange(
-                    knoxAiUrl +  "/" + model + "/tune/stop",
+                    knoxAiUrl +  "/stop_tuning",
                     HttpMethod.POST,
                     entity,
                     Void.class
