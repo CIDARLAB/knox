@@ -436,7 +436,7 @@ export function deletePartLibrary(partLibraryName){
     swalSuccess();
     clearAllPages();
   } else {
-    swalError("Failed to delete part library " + partLibraryName);
+    swalError("Failed to delete part library " + partLibraryName + ". It may be in use by an active experiment.");
   }
 }
 

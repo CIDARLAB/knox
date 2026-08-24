@@ -23,12 +23,12 @@ public interface PartLibraryRepository extends Neo4jRepository<PartLibrary, Long
     )
     void deletePartLibrary(@Param("partLibraryName") String partLibraryName);
 
-    @Query("MATCH (n:PartLibrary {partLibraryName: $partLibraryName}) WHERE NOT (n)<-[:CONTAINS]-(:SomeOtherNode) DETACH DELETE n")
-    void deleteIfOrphaned(@Param("partLibraryName") String partLibraryName);
-
     @Query("MATCH (n:PartLibrary {partLibraryName: $partLibraryName}) RETURN n")
     PartLibrary findByPartLibraryName(@Param("partLibraryName") String partLibraryName);
 
     @Query("MATCH (n:PartLibrary) RETURN n.partLibraryName")
     List<String> listPartLibraries();
+
+    @Query("MATCH (n:PartLibrary {partLibraryName: $partLibraryName}) RETURN EXISTS((n)<-[:HAS_PART_LIBRARY]-(:Experiment)) AS usedInExperiment")
+    boolean usedInExperiment(String partLibraryName);
 }

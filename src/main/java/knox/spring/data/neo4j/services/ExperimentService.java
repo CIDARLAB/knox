@@ -276,6 +276,10 @@ public class ExperimentService {
     }
 
     public void deletePartLibrary(String partLibraryName) {
+        if (partLibraryRepository.usedInExperiment(partLibraryName)) {
+            LOG.warn("Cannot delete PartLibrary '{}' as it is used in an active Experiment.", partLibraryName);
+            throw new IllegalArgumentException("Cannot delete PartLibrary '" + partLibraryName + "' as it is used in an active Experiment.");
+        }
         partLibraryRepository.deletePartLibrary(partLibraryName);
     }
 
