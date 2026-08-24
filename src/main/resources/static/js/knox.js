@@ -524,6 +524,7 @@ function renderJobsTable(container, jobs, experimentData = null) {
           </button>
         </td>
         <td>${escapeHtml(String(job.runName || ""))}</td>
+        <td>${escapeHtml(String(job.action || ""))}</td>
         <td>${escapeHtml(String(job.model || ""))}</td>
         <td>${escapeHtml(String(job.status || ""))}</td>
         <td>${escapeHtml(String(job.mlflowRunID || ""))}</td>
@@ -539,6 +540,7 @@ function renderJobsTable(container, jobs, experimentData = null) {
           <tr>
             <th style="width: 40px;"></th>
             <th>Run Name</th>
+            <th>Action</th>
             <th>Model</th>
             <th>Status</th>
             <th>MLflow Run ID</th>

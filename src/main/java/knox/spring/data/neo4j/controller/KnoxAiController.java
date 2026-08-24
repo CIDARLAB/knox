@@ -52,7 +52,7 @@ public class KnoxAiController {
             @RequestParam(value = "interpretShap", required = false, defaultValue = "true") Boolean interpretShap
     ) {
         String jobID = UUID.randomUUID().toString();
-        Job job = new Job(jobID, experimentName, runName, model, "PENDING", null);
+        Job job = new Job(jobID, experimentName, action, runName, model, "PENDING", runID);
         experimentService.addJobToExperiment(experimentName, job);
 
         CompletableFuture.runAsync(() -> knoxAiClient.runTrainJob(

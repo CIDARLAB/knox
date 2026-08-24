@@ -23,6 +23,9 @@ public class Job {
     private String experimentName;
 
     @Property
+    private String action;
+
+    @Property
     private String runName;
 
     @Property
@@ -39,9 +42,10 @@ public class Job {
 
     public Job() {}
 
-    public Job(String jobID, String experimentName, String runName, String model, String status, String mlflowRunID) {
+    public Job(String jobID, String experimentName, String action, String runName, String model, String status, String mlflowRunID) {
         this.jobID = jobID;
         this.experimentName = experimentName;
+        this.action = action;
         this.runName = runName;
         this.model = model;
         this.status = status;
@@ -77,6 +81,14 @@ public class Job {
         return model;
     }
 
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
+
     public void setModel(String model) {
         this.model = model;
     }
@@ -109,6 +121,7 @@ public class Job {
         Map<String, String> jobInfo = new HashMap<>();
         jobInfo.put("jobID", jobID);
         jobInfo.put("experimentName", experimentName);
+        jobInfo.put("action", action);
         jobInfo.put("runName", runName);
         jobInfo.put("model", model);
         jobInfo.put("status", status);
