@@ -38,7 +38,7 @@ editors.specEditor.setOption("theme", THEME);
 editors.catEditor.setOption("theme", THEME);
 //const GRAMMAR_DEF = [{'Seq':[{'Then':[['Exp'],'.',['Seq']]},{'Then':[['Exp'],'then',['Seq']]},{'':[['Exp']]}]},{'Exp':[{'Or':[['Term'],'or',['Exp']]},{'And0':[['Term'],'and0',['Exp']]}, {'And1':[['Term'],'and1',['Exp']]}, {'And2':[['Term'],'and2',['Exp']]},{'Merge':[['Term'],'merge',['Exp']]},{'':[['Term']]}]},{'Term':[{'OneOrMore':['one-or-more',['Term']]},{'ZeroOrMore':['zero-or-more',['Term']]},{'ZeroOrOne':['zero-or-one',['Term']]}, {'ReverseComp':['reverse-comp',['Term']]}, {'ForwardOrReverse':['forward-or-reverse',['Term']]},{'ZeroOrOneSBOL':['zero-or-one-sbol',['Term']]},{'ZeroOrMoreSBOL':['zero-or-more-sbol',['Term']]},{'':['{',['Seq'],'}']},{'':['(',['Seq'],')']},{'Atom':[{'RegExp':'([A-Za-z0-9]|-|_)+'}]}]}];
 
-const exploreBtnIDs = {
+const designBtnIDs = {
   delete: "#delete-btn",
   combine: "#combine-btn",
   list: "#list-btn",
@@ -60,13 +60,28 @@ const experimentBtnIDs = {
   deleteExperiment: "#delete-experiment-btn"
 };
 
-const allBtnIDs = {
-  ...exploreBtnIDs,
-  ...experimentBtnIDs,
+const groupBtnIDs = {
   deleteGroup: "#deleteGroup-btn",
   ruleEval: "#rule-eval-btn",
   openTable: "#table-btn",
   seqCompiler: "#seqcompiler-btn"
+};
+
+const partLibraryBtnIDs = {
+  deletePartLibrary: "#delete-part-library-btn"
+};
+
+const exploreBtnIDs = {
+  ...designBtnIDs,
+  ...groupBtnIDs,
+  ...partLibraryBtnIDs
+}
+
+const allBtnIDs = {
+  ...designBtnIDs,
+  ...experimentBtnIDs,
+  ...groupBtnIDs,
+  ...partLibraryBtnIDs
 };
 
 export const knoxClass = {
@@ -222,9 +237,9 @@ export function hideExplorePageBtns() {
   });
 }
 
-function showExplorePageBtns() {
-  Object.keys(exploreBtnIDs).map((id, _) => {
-    $(exploreBtnIDs[id]).show();
+function showExplorePageBtns(BtnIDs) {
+  Object.keys(BtnIDs).map((id, _) => {
+    $(BtnIDs[id]).show();
   });
 }
 
@@ -241,6 +256,7 @@ export function clearAllPages() {
 }
 
 export function visualizeDesignAndHistory(spaceid) {
+  hideExplorePageBtns();
   endpoint.getGraph(spaceid, (err, data) => {
     if (err) {
       swalError(JSON.stringify(err));
@@ -249,7 +265,7 @@ export function visualizeDesignAndHistory(spaceid) {
       targets.search.setGraph(data);
       $("#search-tb").blur();
       $("#search-autocomplete").blur();
-      showExplorePageBtns();
+      showExplorePageBtns(designBtnIDs);
       currentSpace = spaceid;
       getGroupID(currentSpace);
     }
@@ -265,6 +281,7 @@ export function visualizeDesignAndHistory(spaceid) {
 export function visualizePartLibrary(partLibraryName) {
   endpoint.d3GraphPartLibrary(partLibraryName, (err, data) => {
     hideExplorePageBtns();
+    showExplorePageBtns(partLibraryBtnIDs);
 
     if (err) {
       swalError(JSON.stringify(err));
@@ -283,6 +300,7 @@ export function showGroupInfo(groupID) {
   currentGroupID = groupID
 
   hideExplorePageBtns();
+  showExplorePageBtns(groupBtnIDs);
 
   endpoint.listGroupSpaceIDs(currentGroupID, (err, spaceids) => {
     if (err) {
@@ -323,6 +341,8 @@ export function showExperimentInfo(experimentID) {
   targets.search.clear();
   $("#search-tb").blur();
   $("#search-autocomplete").blur();
+
+  hideExplorePageBtns();
 
   // Set currentExperimentID
   currentExperimentID = experimentID
