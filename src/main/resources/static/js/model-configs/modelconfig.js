@@ -7,10 +7,10 @@ let gnnConfig = {
     "num_layers": 3,
     "aggr": "mean",      // "sum", "mean", "max", "min"
     "dropout": 0.1,
-    "node_features_dim": 0,
-    "edge_dim": 0,
+    //"node_features_dim": 0, // Determined in Backend
+    //"edge_dim": 0,         // Determined in Backend
     //"vocab_size": 19,  // Determined in Backend
-    "features_dim": 0,
+    //"features_dim": 0, // Determined in Backend
     //"out_dim": 1,      // Determined in Backend
     "lr": 1e-3,
     "batch_size": 32,
@@ -27,7 +27,7 @@ let mlpConfig = {
     "dropout": 0.1,
     //"sequence_length": 0, // Determined in Backend
     //"vocab_size": 19,  // Determined in Backend
-    "features_dim": 0,
+    //"features_dim": 0, // Determined in Backend
     //"out_dim": 1,      // Determined in Backend
     "lr": 1e-4,
     "batch_size": 32,
@@ -43,7 +43,7 @@ let transformerConfig = {
     "num_layers": 3,
     "dropout": 0.1,
     //"vocab_size": 19,  // Determined in Backend
-    "features_dim": 0,
+    //"features_dim": 0, // Determined in Backend
     //"out_dim": 1,      // Determined in Backend
     "lr": 1e-4,
     "batch_size": 32,

@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.services;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,12 +71,12 @@ public class KnoxAiClient {
 
 
     // Tune request and response records
-    public record TuneResponse(
+    /*public record TuneResponse(
         Map<String, Object> best_params,
         Double best_value,
-        String metric,
         Integer trials
-    ) {}
+    ) {}*/
+    public record TuneResponse(){}
     public record TuneRequestTree(  // EBM, RF, XGBOOST
         Map<String, Object> data,
         List<String> feature_names,
@@ -85,7 +86,7 @@ public class KnoxAiClient {
         String experiment_name
     ) {}
     public record TuneRequestNN(   // MLP, GNN, Transformer
-        Map<String, List<Map<String, Object>>> data,
+        Map<String, Object> data,
         Integer vocab_size,
         Map<String, Object> config,
         String task,
@@ -196,6 +197,72 @@ public class KnoxAiClient {
             return response.getBody();
         } catch (Exception e) {
             throw new RuntimeException("Failed to call KnoxAI train endpoint", e);
+        }
+    }
+
+    public void tuneTree(
+            String model,
+            Map<String, Object> data,
+            List<String> feature_names,
+            Map<String, Object> config,
+            String task,
+            String experiment_name,
+            Integer nTrials
+    ) {
+        TuneRequestTree req = new TuneRequestTree(
+                data, feature_names, task, config, nTrials, experiment_name
+        );
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            HttpEntity<TuneRequestTree> entity = new HttpEntity<>(req, headers);
+
+            ResponseEntity<TuneResponse> response = restTemplate.exchange(
+                    knoxAiUrl +  "/" + model + "/tune",
+                    HttpMethod.POST,
+                    entity,
+                    TuneResponse.class
+            );
+
+            //return response.getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call KnoxAI tune endpoint", e);
+        }
+    }
+
+    public void tuneNN(
+            String model,
+            Map<String, Object> data,
+            Integer vocabSize,
+            Map<String, Object> config,
+            String task,
+            String experiment_name,
+            Integer nTrials
+    ) {
+        TuneRequestNN req = new TuneRequestNN(
+                data, vocabSize, config, task, nTrials, experiment_name
+        );
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            HttpEntity<TuneRequestNN> entity = new HttpEntity<>(req, headers);
+
+            ResponseEntity<TuneResponse> response = restTemplate.exchange(
+                    knoxAiUrl +  "/" + model + "/tune",
+                    HttpMethod.POST,
+                    entity,
+                    TuneResponse.class
+            );
+
+            //return response.getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call KnoxAI tune endpoint", e);
         }
     }
 
@@ -353,6 +420,48 @@ public class KnoxAiClient {
         }
     }
 
+    public void runTuneJob(
+            String jobID,
+            Job job,
+            String model,
+            String configJSON,
+            String task,
+            double trainRatio,
+            double valRatio,
+            double testRatio,
+            long seed,
+            Integer nTrials
+    ) {
+        try {
+            experimentService.updateJobStatusByID(jobID, "COMPILING");
+
+            TrainPayload payload = buildTrainPayload(
+                model, 
+                job.getExperimentName(), 
+                configJSON, 
+                trainRatio, 
+                valRatio, 
+                testRatio, 
+                seed
+            );
+
+            //TuneResponse result = null;
+            if (isNeuralNetworkModel(model)) {
+                tuneNN(model, payload.data, payload.vocabSize, payload.config, task, job.getExperimentName(), nTrials);
+            } else if (isTreeBasedModel(model)) {
+                tuneTree(model, payload.data, payload.featureNames, payload.config, task, job.getExperimentName(), nTrials);
+            } else {
+                throw new IllegalArgumentException("Unsupported model type: " + model);
+            }
+
+            experimentService.updateJobStatusByID(jobID, "SUBMITTED");
+            //experimentService.updateJobMlflowRunIDByID(jobID, (result == null) ? null : result.run_id());
+        } catch (Exception e) {
+            experimentService.updateJobStatusByID(jobID, "FAILED");
+            experimentService.updateJobErrorMessageByID(jobID, e.getMessage());
+        }
+    }
+
     private TrainPayload buildTrainPayload(
             String model,
             String experimentName,
@@ -384,13 +493,13 @@ public class KnoxAiClient {
                 throw new IllegalArgumentException("Invalid config JSON: " + e.getMessage(), e);
             }
         }
-        config.put("seed", seed);
-        config.put("out_dim", 1);
 
         Map<String, List<Object>> data = new HashMap<>();
         Map<String, List<Object>> ruleMatrix = new HashMap<>();
 
         if ("transformer".equals(model) || "mlp".equals(model)) {
+            config.put("seed", seed);
+            config.put("out_dim", 1);
             List<DesignSpaceLinearDAGRepresentation> linearDAGRepresentations = designSpaceService.getLinearDAGRepresentationsParallel(
                 new ArrayList<>(designSpaceService.getSpaceIDsInDesignGroup(experiment.getDesignsGroup().getGroupID()))
             );
@@ -406,7 +515,24 @@ public class KnoxAiClient {
                 trainRatio, valRatio, testRatio, seed, padding
             );
 
+            config.put("features_dim", experimentExport.getFeatureDim());
+
+        } else if ("gnn".equals(model)) {
+            config.put("seed", seed);
+            config.put("out_dim", 1);
+            List<DesignSpaceLinearDAGRepresentation> linearDAGRepresentations = designSpaceService.getLinearDAGRepresentationsParallel(
+                new ArrayList<>(designSpaceService.getSpaceIDsInDesignGroup(experiment.getDesignsGroup().getGroupID()))
+            );
+            data = experimentExport.getGNNDatapoints(
+                linearDAGRepresentations, trainRatio, valRatio, testRatio, seed
+            );
+
+            config.put("node_features_dim", experimentExport.getNodeDim());
+            config.put("edge_dim", experimentExport.getEdgeDim());
+            config.put("features_dim", experimentExport.getFeatureDim());
+        
         } else if (isTreeBasedModel(model)) {
+            config.put("random_state", seed);
             experimentExport.setRuleEvaluation(ruleEvaluation);
             data = experimentExport.getRuleEvaluationDatapoints(trainRatio, valRatio, testRatio, seed);
         }
@@ -419,6 +545,93 @@ public class KnoxAiClient {
             experiment.getVocabSize(), 
             experimentExport.getRuleEvalFeatureNames().size() > 0 ? experimentExport.getRuleEvalFeatureNames() : null
         );
+    }
+
+    public void runPredictJob(
+            String jobID,
+            Job job,
+            String model,
+            String runID,
+            List<String> spaceIDs
+    ) {
+        try {
+            experimentService.updateJobStatusByID(jobID, "COMPILING");
+
+            PredictPayload payload = buildPredictPayload(
+                model, 
+                job.getExperimentName(), 
+                runID,
+                spaceIDs
+            );
+
+            PredictResponse result = predict(model, runID, Collections.singletonList(payload.data));
+
+            // TODO: Handle the prediction result as needed
+
+            experimentService.updateJobStatusByID(jobID, "SUBMITTED");
+            experimentService.updateJobMlflowRunIDByID(jobID, runID);
+        } catch (Exception e) {
+            experimentService.updateJobStatusByID(jobID, "FAILED");
+            experimentService.updateJobErrorMessageByID(jobID, e.getMessage());
+        }
+    }
+
+    private PredictPayload buildPredictPayload(
+            String model,
+            String experimentName,
+            String runID,
+            List<String> spaceIDs
+    ) {
+        long startTime = System.nanoTime();
+
+        Experiment experiment = experimentService.loadExperiment(experimentName);
+        if (experiment == null) {
+            throw new IllegalArgumentException("Experiment not found: " + experimentName);
+        }
+
+        RuleEvaluation ruleEvaluation = null;
+        if (!(experiment.getRuleEvaluationName() == null) && !experiment.getRuleEvaluationName().isBlank()) {
+            ruleEvaluation = designSpaceService.loadRuleEvaluation(experiment.getRuleEvaluationName());
+        }
+
+        ExperimentExport experimentExport = new ExperimentExport(experiment);
+
+        List<Map<String, Object>> data = new ArrayList<>();
+
+        if ("transformer".equals(model) || "mlp".equals(model)) {
+            List<DesignSpaceLinearDAGRepresentation> linearDAGRepresentations = designSpaceService.getLinearDAGRepresentationsParallel(
+                new ArrayList<>(spaceIDs)
+            );
+            
+            boolean padding = true;
+            if ("transformer".equals(model)) {
+                padding = false;
+            }
+            for (DesignSpaceLinearDAGRepresentation design : linearDAGRepresentations) {
+                data.add(experimentExport.sequenceDatapoint(design, padding, false));
+            }
+        } else if ("gnn".equals(model)) {
+            List<DesignSpaceLinearDAGRepresentation> linearDAGRepresentations = designSpaceService.getLinearDAGRepresentationsParallel(
+                new ArrayList<>(spaceIDs)
+            );
+            for (DesignSpaceLinearDAGRepresentation design : linearDAGRepresentations) {
+                data.add(experimentExport.gnnDatapoint(design, false));
+            }
+        } 
+
+        DesignSpaceService.printTime(startTime, model + "_BUILD_PREDICT_PAYLOAD");
+
+        return new PredictPayload(
+            new ArrayList<>(data)
+        );
+    }
+
+    private boolean isNeuralNetworkModel(String model) {
+        return "gnn".equals(model) || "transformer".equals(model) || "mlp".equals(model);
+    }
+
+    private boolean isTreeBasedModel(String model) {
+        return "random_forest".equals(model) || "xgboost".equals(model) || "ebm".equals(model);
     }
 
     private static class TrainPayload {
@@ -435,13 +648,12 @@ public class KnoxAiClient {
         }
     }
 
-    private boolean isNeuralNetworkModel(String model) {
-        return "gnn".equals(model) || "transformer".equals(model) || "mlp".equals(model);
-    }
+    private static class PredictPayload {
+        final List<Map<String, Object>> data;
 
-    private boolean isTreeBasedModel(String model) {
-        return "random_forest".equals(model) || "xgboost".equals(model) || "ebm".equals(model);
+        PredictPayload(List<Map<String, Object>> data) {
+            this.data = data;
+        }
     }
-
 }
 

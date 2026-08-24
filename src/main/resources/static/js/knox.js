@@ -2440,6 +2440,8 @@ $('#ml-experiment-tooltip').click(() => {
     return;
   }
 
+  // TODO: Check Designs Present, Check Rules Present, Check Evaluation Present
+
   let div = document.createElement('div');
   div.style.maxHeight = "60vh";
   div.style.overflowY = "auto";
@@ -2456,6 +2458,11 @@ $('#ml-experiment-tooltip').click(() => {
   let modelDropdown = makeModelDropdown();
   makeDiv(modelDiv, modelDropdown, 'Model: ');
 
+  // Task Dropdown
+  let taskDiv = document.createElement('div');
+  let taskDropdown = makeTaskDropdown();
+  makeDiv(taskDiv, taskDropdown, 'Task: ');
+
   // Run Name div
   let runNameDiv = document.createElement('div');
   let runNameInput = document.createElement('input');
@@ -2465,10 +2472,19 @@ $('#ml-experiment-tooltip').click(() => {
   let numClassesDiv = document.createElement('div');
   let numClassesInput = document.createElement('input');
   numClassesInput.setAttribute("type", "number");
-  numClassesInput.setAttribute("value", "2");
+  numClassesInput.setAttribute("value", "3");
   numClassesInput.setAttribute("min", "2");
   numClassesInput.setAttribute("step", "1");
-  makeDiv(numClassesDiv, numClassesInput, 'Num Classes (Classification): ');
+  makeDiv(numClassesDiv, numClassesInput, 'Num Classes (Classification): ', "Number of classes for multiclassification. Do regular classification if only 2 classes.");
+
+  // num trials div
+  let numTrialsDiv = document.createElement('div');
+  let numTrialsInput = document.createElement('input');
+  numTrialsInput.setAttribute("type", "number");
+  numTrialsInput.setAttribute("value", "30");
+  numTrialsInput.setAttribute("min", "2");
+  numTrialsInput.setAttribute("step", "1");
+  makeDiv(numTrialsDiv, numTrialsInput, 'Num Trials: ', "Number of trials for hyperparameter search.");
 
   // train ratio div
   let trainRatioDiv = document.createElement('div');
@@ -2514,6 +2530,28 @@ $('#ml-experiment-tooltip').click(() => {
   seedInput.setAttribute("step", "1");
   makeDiv(seedDiv, seedInput, 'Seed: ', "Random seed for reproducibility.");
 
+  // buildSurrogateModel? div
+  let buildSurrogateDiv = document.createElement('div');
+  let buildSurrogateInput = document.createElement('input');
+  buildSurrogateInput.setAttribute("type", "checkbox");
+  makeDiv(buildSurrogateDiv, buildSurrogateInput, 'Build Surrogate Model: ', "If checked, a surrogate Rule-based model will be built.");
+
+  // interpretShap? div
+  let interpretShapDiv = document.createElement('div');
+  let interpretShapInput = document.createElement('input');
+  interpretShapInput.setAttribute("type", "checkbox");
+  makeDiv(interpretShapDiv, interpretShapInput, 'Interpret SHAP: ', "If checked, SHAP values will be used to interpret the model.");
+
+  // spaceIDs Div
+  let spaceIDsDiv = document.createElement('div');
+  let spaceIDsInput = document.createElement('input');
+  makeDiv(spaceIDsDiv, spaceIDsInput, 'Space IDs (comma-separated): ', "i.e. spaceID1, spaceID2, spaceID3");
+
+  // TODO: RunID Div div
+  //
+  //
+  //
+
   let configDiv = document.createElement('div');
   let configTextarea = document.createElement("textarea");
   configTextarea.rows = 8;
@@ -2539,7 +2577,11 @@ $('#ml-experiment-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(modelDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(taskDiv);
+  div.appendChild(document.createElement('br'));
   div.appendChild(runNameDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(numTrialsDiv);
   div.appendChild(document.createElement('br'));
   div.appendChild(numClassesDiv);
   div.appendChild(document.createElement('br'));
@@ -2551,35 +2593,117 @@ $('#ml-experiment-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(seedDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(buildSurrogateDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(interpretShapDiv);
+  div.appendChild(document.createElement('br'));
+  div.appendChild(spaceIDsDiv);
+  div.appendChild(document.createElement('br'));
   div.appendChild(configDiv);
   div.appendChild(document.createElement('br'));
 
+  setRowVisible(taskDiv, false);
   setRowVisible(runNameDiv, false);
+  setRowVisible(numTrialsDiv, false);
   setRowVisible(numClassesDiv, false);
   setRowVisible(seedDiv, false);
   setRowVisible(trainRatioDiv, false);
   setRowVisible(valRatioDiv, false);
   setRowVisible(testRatioDiv, false);
+  setRowVisible(buildSurrogateDiv, false);
+  setRowVisible(interpretShapDiv, false);
+  setRowVisible(spaceIDsDiv, false);
   setRowVisible(configDiv, false);
 
   $(mlActionDropdown).change(function() {
     if (this.value === endpoint.mlActions.TRAIN){
+      setRowVisible(taskDiv, true);
       setRowVisible(runNameDiv, true);
+      setRowVisible(numTrialsDiv, false);
       setRowVisible(seedDiv, true);
-      setRowVisible(numClassesDiv, true);
+      setRowVisible(numClassesDiv, false);
       setRowVisible(trainRatioDiv, true);
       setRowVisible(valRatioDiv, true);
       setRowVisible(testRatioDiv, true);
+      setRowVisible(buildSurrogateDiv, false);
+      setRowVisible(interpretShapDiv, true);
+      setRowVisible(spaceIDsDiv, false);
       setRowVisible(configDiv, true);
+      taskDropdown.value = "regression";
+      modelDropdown.value = "";
     }
     if (this.value === endpoint.mlActions.PREDICT){
+      setRowVisible(taskDiv, false);
       setRowVisible(runNameDiv, false);
+      setRowVisible(numTrialsDiv, false);
       setRowVisible(numClassesDiv, false);
       setRowVisible(seedDiv, false);
       setRowVisible(trainRatioDiv, false);
       setRowVisible(valRatioDiv, false);
       setRowVisible(testRatioDiv, false);
+      setRowVisible(buildSurrogateDiv, false);
+      setRowVisible(interpretShapDiv, false);
+      setRowVisible(spaceIDsDiv, true);
       setRowVisible(configDiv, false);
+      modelDropdown.value = "";
+    }
+    if (this.value === endpoint.mlActions.TUNE){
+      setRowVisible(taskDiv, true);
+      setRowVisible(runNameDiv, true);
+      setRowVisible(numTrialsDiv, true);
+      setRowVisible(seedDiv, true);
+      setRowVisible(numClassesDiv, false);
+      setRowVisible(trainRatioDiv, true);
+      setRowVisible(valRatioDiv, true);
+      setRowVisible(testRatioDiv, true);
+      setRowVisible(buildSurrogateDiv, false);
+      setRowVisible(interpretShapDiv, false);
+      setRowVisible(spaceIDsDiv, false);
+      setRowVisible(configDiv, false);
+      taskDropdown.value = "regression";
+      modelDropdown.value = "";
+    }
+    if (this.value === endpoint.mlActions.INTERPRET){
+      setRowVisible(taskDiv, false);
+      setRowVisible(runNameDiv, false);
+      setRowVisible(numTrialsDiv, false);
+      setRowVisible(seedDiv, false);
+      setRowVisible(numClassesDiv, false);
+      setRowVisible(trainRatioDiv, false);
+      setRowVisible(valRatioDiv, false);
+      setRowVisible(testRatioDiv, false);
+      setRowVisible(buildSurrogateDiv, false);
+      setRowVisible(interpretShapDiv, false);
+      setRowVisible(spaceIDsDiv, true);
+      setRowVisible(configDiv, false);
+      taskDropdown.value = "regression";
+      modelDropdown.value = "";
+    }
+    if (this.value === endpoint.mlActions.GENERATE){
+      setRowVisible(taskDiv, false);
+      setRowVisible(runNameDiv, false);
+      setRowVisible(numTrialsDiv, false);
+      setRowVisible(seedDiv, false);
+      setRowVisible(numClassesDiv, false);
+      setRowVisible(trainRatioDiv, false);
+      setRowVisible(valRatioDiv, false);
+      setRowVisible(testRatioDiv, false);
+      setRowVisible(buildSurrogateDiv, false);
+      setRowVisible(interpretShapDiv, false);
+      setRowVisible(spaceIDsDiv, true);
+      setRowVisible(configDiv, false);
+      taskDropdown.value = "regression";
+      modelDropdown.value = "";
+    }
+  });
+
+  $(taskDropdown).change(function() {
+    if (this.value === "regression") {
+      setRowVisible(numClassesDiv, false);
+    } else if (this.value === "classification") {
+      setRowVisible(numClassesDiv, false);
+    } else if (this.value === "multiclass_classification") {
+      setRowVisible(numClassesDiv, true);
     }
   });
 
@@ -2587,17 +2711,34 @@ $('#ml-experiment-tooltip').click(() => {
     configTextarea.value = JSON.stringify(getDefaultConfigForModel(modelDropdown.value), null, 2);
 
     if (this.value === endpoint.mlModels.EBM || this.value === endpoint.mlModels.RANDOM_FOREST || this.value === endpoint.mlModels.XGBOOST){
-      setRowVisible(valRatioDiv, false);
       trainRatioInput.value = 0.8;
       valRatioInput.value = 0;
       testRatioInput.value = 0.2;
+
+      if (mlActionDropdown.value == endpoint.mlActions.TRAIN || mlActionDropdown.value == endpoint.mlActions.TUNE) {
+        setRowVisible(valRatioDiv, false);
+        setRowVisible(testRatioDiv, true);
+      }
+
+      if (mlActionDropdown.value == endpoint.mlActions.TRAIN) {
+        setRowVisible(buildSurrogateDiv, false);
+      }
+
     }
 
     if (this.value === endpoint.mlModels.TRANSFORMER || this.value === endpoint.mlModels.GNN || this.value === endpoint.mlModels.MLP){
-      setRowVisible(valRatioDiv, true);
       trainRatioInput.value = 0.8;
       valRatioInput.value = 0.1;
       testRatioInput.value = 0.1;
+
+      if (mlActionDropdown.value == endpoint.mlActions.TRAIN || mlActionDropdown.value == endpoint.mlActions.TUNE) {
+        setRowVisible(valRatioDiv, true);
+        setRowVisible(testRatioDiv, true);
+      } 
+
+      if (mlActionDropdown.value == endpoint.mlActions.TRAIN) {
+        setRowVisible(buildSurrogateDiv, true);
+      }
     }
 
   });
@@ -2610,13 +2751,16 @@ $('#ml-experiment-tooltip').click(() => {
   }).then((confirm) => {
     if (!confirm) return;
 
-    const experiment = currentExperimentID;
-    
-    const runName = runNameInput.value;
-    if (!runName) {
-      swalError("Run Name is required.");
+    // ML Action validation
+    const mlAction = mlActionDropdown.value
+    if (!mlAction) {
+      swalError("Please select an ML Action.");
       return;
     }
+
+    const experiment = currentExperimentID;
+    
+    const runName = runNameInput.value.trim();
 
     const model = modelDropdown.value;
     if (!model) {
@@ -2624,13 +2768,17 @@ $('#ml-experiment-tooltip').click(() => {
       return;
     }
 
-    const config = buildConfigFromUI();
-    const task = "regression"; // default task is regression, can be changed later if needed
+    const config = JSON.stringify(buildConfigFromUI());
+    const task = taskDropdown.value;
     
     const trainRatio = Number(trainRatioInput.value);
     const valRatio = Number(valRatioInput.value);
     const testRatio = Number(testRatioInput.value);
     const seed = Number(seedInput.value);
+    const nTrials = Number(numTrialsInput.value);
+    const buildSurrogate = buildSurrogateInput.checked;
+    const interpretShap = interpretShapInput.checked;
+    const spaceIDs = (spaceIDsInput.value.trim() !== "") ? spaceIDsInput.value.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
     // Numeric validation
     if (![trainRatio, valRatio, testRatio, seed].every(Number.isFinite)) {
       swalError("Train/Validation/Test ratios and Seed must be valid numbers.");
@@ -2656,25 +2804,34 @@ $('#ml-experiment-tooltip').click(() => {
       return;
     }
 
-    // ML Action validation
-    if (!mlActionDropdown.value) {
-      swalError("Please select an ML Action.");
+    if (!Number.isInteger(nTrials)) {
+      swalError("Number of trials must be an integer.");
       return;
     }
 
-    switch (mlActionDropdown.value) {
-      case endpoint.mlActions.TRAIN:
-        endpoint.mlJobSubmit(mlActionDropdown.value, experiment, runName, model, config, task, trainRatio, valRatio, testRatio, seed, (err, data) => {
-          if (!err) {
-            showExperimentInfo(experiment);
-          }
-        });
-        break;
+    endpoint.mlJobSubmit(
+        mlAction, 
+        experiment, 
+        model, 
+        runName, 
+        config, 
+        task, 
+        trainRatio, 
+        valRatio, 
+        testRatio, 
+        seed,
+        buildSurrogate,
+        interpretShap,
+        nTrials,
+        spaceIDs,
+        (err, data) => {
 
-      default:
-        swalError("Unsupported ML Action: " + mlActionDropdown.value);
-        break;
-    }
+      if (!err) {
+        showExperimentInfo(experiment);
+      }
+
+    });
+
   });
 });
 
@@ -2689,6 +2846,15 @@ function makeMLActionDropdown(){
   }
   
   return mlActionDropdown;
+}
+
+function makeTaskDropdown(){
+  let taskDropdown = document.createElement('select');
+  taskDropdown.setAttribute("id", "task-dropdown");
+  taskDropdown.appendChild(new Option("Regression", "regression", true, true));
+  taskDropdown.appendChild(new Option("Classification", "classification"));
+  taskDropdown.appendChild(new Option("Multiclass Classification", "multiclass_classification"));
+  return taskDropdown;
 }
 
 function makeModelDropdown(){

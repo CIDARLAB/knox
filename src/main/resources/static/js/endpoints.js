@@ -74,6 +74,8 @@ export const mlActions = {
   TRAIN: 'train',
   PREDICT: 'predict',
   TUNE: 'tune',
+  INTERPRET: 'interpret',
+  GENERATE: 'generate',
   // EVALUATE: 'evaluate'
 };
 
@@ -716,50 +718,40 @@ export function evaluateRules(evaluationName, designGroupID, rulesGroupID, label
   });
 }
 
-export function trainModelSubmit(experimentName, runName, model, config, task, trainRatio, valRatio, testRatio, seed, callback) {
-  let query = "?";
-  query += encodeQueryParameter("experimentName", experimentName, query);
-  query += encodeQueryParameter("runName", runName, query);
-  query += encodeQueryParameter("model", model, query);
-  query += encodeQueryParameter("config", JSON.stringify(config), query);
-  query += encodeQueryParameter("task", task, query);
-  query += encodeQueryParameter("trainRatio", trainRatio, query);
-  query += encodeQueryParameter("valRatio", valRatio, query);
-  query += encodeQueryParameter("testRatio", testRatio, query);
-  query += encodeQueryParameter("seed", seed, query);
+export function mlJobSubmit(
+    action, 
+    experimentName, 
+    model, 
+    runName, 
+    config, 
+    task, 
+    trainRatio, 
+    valRatio, 
+    testRatio, 
+    seed, 
+    buildSurrogate,
+    interpretShap,
+    nTrials,
+    spaceIDs,
+    callback) {
 
-  fetch(endpoints.TRAIN + "/" + model + "/submit" + query, { method: "POST" })
-  
-  .then(async (response) => {
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    return response.json();
-  })
-  
-  .then((data) => {
-    swalSuccess("Training job submitted: " + data.jobId);
-    if (callback) callback(null, data);
-  })
-  
-  .catch((err) => {
-    swalError("Failed to submit training job: " + err.message);
-    if (callback) callback(err);
-  });
-}
-
-export function mlJobSubmit(action, experimentName, runName, model, config, task, trainRatio, valRatio, testRatio, seed, callback) {
   let query = "?";
   query += encodeQueryParameter("action", action, query);
   query += encodeQueryParameter("experimentName", experimentName, query);
-  query += encodeQueryParameter("runName", runName, query);
   query += encodeQueryParameter("model", model, query);
-  query += encodeQueryParameter("config", JSON.stringify(config), query);
+  query += encodeQueryParameter("runName", runName, query);
+  query += encodeQueryParameter("config", config, query);
   query += encodeQueryParameter("task", task, query);
   query += encodeQueryParameter("trainRatio", trainRatio, query);
   query += encodeQueryParameter("valRatio", valRatio, query);
   query += encodeQueryParameter("testRatio", testRatio, query);
   query += encodeQueryParameter("seed", seed, query);
+  query += encodeQueryParameter("buildSurrogateModel", buildSurrogate, query);
+  query += encodeQueryParameter("interpretShap", interpretShap, query);
+  query += encodeQueryParameter("nTrials", nTrials, query);
+  query += encodeQueryParameter("spaceIDs", spaceIDs, query);
+  query += encodeQueryParameter("runID", null, query);
+
 
   fetch(endpoints.RUNJOB + query, { method: "POST" })
   

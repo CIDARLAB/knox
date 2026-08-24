@@ -11,10 +11,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import knox.spring.data.neo4j.domain.Experiment;
+import knox.spring.data.neo4j.domain.PartLibrary;
+import knox.spring.data.neo4j.domain.Part;
+import knox.spring.data.neo4j.domain.Interaction;
 import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.RuleEvaluation;
 import knox.spring.data.neo4j.domain.dto.DesignSpaceLinearDAGRepresentation;
-import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 
 public class ExperimentExport {
 
@@ -24,7 +26,15 @@ public class ExperimentExport {
 
     private List<String> ruleEvalFeatureNames;
 
-    private Map<String, Map<String, Object>> compIDMap;
+    private Map<String, Part> compIDMap;
+
+    private PartLibrary partLibrary;
+
+    private int featureDim;
+
+    private int nodeDim;
+
+    private int edgeDim;
 
     public ExperimentExport() {}
 
@@ -32,14 +42,22 @@ public class ExperimentExport {
         this.experiment = experiment;
         this.ruleEvaluation = null;
         this.ruleEvalFeatureNames = new ArrayList<>();
-        this.compIDMap = null;
+        this.compIDMap = experiment.getPartLibrary().getCompIDMap();
+        this.partLibrary = experiment.getPartLibrary();
+        this.featureDim = 0;
+        this.nodeDim = 0;
+        this.edgeDim = 0;
     }
 
     public ExperimentExport(Experiment experiment, RuleEvaluation ruleEvaluation) {
         this.experiment = experiment;
         this.ruleEvaluation = ruleEvaluation;
         this.ruleEvalFeatureNames = new ArrayList<>();
-        this.compIDMap = null;
+        this.compIDMap = experiment.getPartLibrary().getCompIDMap();
+        this.partLibrary = experiment.getPartLibrary();
+        this.featureDim = 0;
+        this.nodeDim = 0;
+        this.edgeDim = 0;
     }
 
     // Used for Tree Based Models
@@ -106,9 +124,6 @@ public class ExperimentExport {
             long seed,
             boolean padding) {
 
-        this.experiment.getPartLibrary().buildCompIDMap();
-        this.compIDMap = experiment.getPartLibrary().getCompIDMap();
-
         // Use fixed thread pool to limit concurrent DB connections
         int size = designRepresentations.size();
 		int numThreads = Math.min(size, Runtime.getRuntime().availableProcessors() * 2);
@@ -120,16 +135,7 @@ public class ExperimentExport {
 			
 			for (DesignSpaceLinearDAGRepresentation designRepresentation : designRepresentations) {
 				CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
-					Map<String, Object> datapoint = new HashMap<>();
-                    datapoint.put("token_ids", getTokenIDs(designRepresentation, padding));
-
-                    // TODO Change output to Map<String, Object>
-                    //datapoint.put("sequence", Collections.singletonList(getDesignSequence(design)));
-
-                    //datapoint.put("features", new ArrayList<>());
-                    datapoint.put("y", Collections.singletonList(designRepresentation.getWeights().get(0)));
-
-					return datapoint;
+					return sequenceDatapoint(designRepresentation, padding, true);
 				}, executor);
 				futures.add(future);
 			}
@@ -148,38 +154,83 @@ public class ExperimentExport {
 
     }
 
+    public Map<String, Object> sequenceDatapoint(DesignSpaceLinearDAGRepresentation design, boolean padding, boolean includeTarget) {
+        Map<String, Object> datapoint = new HashMap<>();
+        datapoint.put("token_ids", getTokenIDs(design, padding));
+
+        //datapoint.put("sequence", getDesignSequence(design));
+
+        //datapoint.put("features", new ArrayList<>()); // Design-level features
+
+        if (includeTarget) {
+            datapoint.put("y", getTargetMetricValue(design));
+        }
+
+        return datapoint;
+    }
+
     // Used for GNN models
-    public Map<String, List<Object>> getGNNDatapoints(List<NodeSpace> nodeSpaces,
+    public Map<String, List<Object>> getGNNDatapoints(
+            List<DesignSpaceLinearDAGRepresentation> designRepresentations,
             double trainRatio,
             double valRatio,
             double testRatio, 
             long seed) {
 
-        this.experiment.getPartLibrary().buildCompIDMap();
-        this.compIDMap = experiment.getPartLibrary().getCompIDMap();
+        // Use fixed thread pool to limit concurrent DB connections
+        int size = designRepresentations.size();
+		int numThreads = Math.min(size, Runtime.getRuntime().availableProcessors() * 2);
+		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+		
+		try {
+			// Create futures for all load operations
+			List<CompletableFuture<Object>> futures = new ArrayList<>(size);
+			
+			for (DesignSpaceLinearDAGRepresentation designRepresentation : designRepresentations) {
+				CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
+					return gnnDatapoint(designRepresentation, true);
+				}, executor);
+				futures.add(future);
+			}
+			
+			// Wait for all to complete and collect results
+			List<Object> datapoints = new ArrayList<>(size);
+			for (CompletableFuture<Object> future : futures) {
+				datapoints.add(future.join()); // Throws exception if any failed
+			}
 
-        List<Object> datapoints = new ArrayList<>();
-        for (NodeSpace space : nodeSpaces) {
-            Map<String, List<String>> design = getDesignRepresentation(space);
+            return getTrainValTestSplit(datapoints, trainRatio, valRatio, testRatio, seed);
+			
+		} finally {
+			executor.shutdown();
+		}
+    }
 
-            Map<String, Object> datapoint = new HashMap<>();
-            //datapoint.put("node_labels", getTokenIDs(design, false).get(0));
-            datapoint.put("node_features", buildNodeFeatures(design));
-            //datapoint.put("node_sequence", getNodeSequences(design));
-            datapoint.put("edge_index", buildEdgeIndex(design));
-            //datapoint.put("edge_attr", new ArrayList<>());
-            //datapoint.put("edge_labels", new ArrayList<>());
-            //datapoint.put("features", new ArrayList<>());
-            
-            // TODO Change output to Map<String, Object>
-            //datapoint.put("sequence", Collections.singletonList(getDesignSequence(design)));
+    public Map<String, Object> gnnDatapoint(DesignSpaceLinearDAGRepresentation design, boolean includeTarget) {
+        Map<String, Object> datapoint = new HashMap<>();
+        datapoint.put("node_labels", getTokenIDs(design, false).get(0));
+        datapoint.put("node_features", buildNodeFeatures(design));
+        //datapoint.put("node_sequence", getNodeSequences(design));
 
-            datapoint.put("y", getTargetMetricValue(space));
+        List<List<Double>> edgeAttr = new ArrayList<>();
+        List<Integer> edgeLabels = new ArrayList<>();
+        datapoint.put("edge_index", buildEdgeIndex(design, edgeAttr, edgeLabels));
+        datapoint.put("edge_attr", edgeAttr);
+        datapoint.put("edge_labels", edgeLabels);
+        
+        //datapoint.put("features", new ArrayList<>()); // Design-level features
+        
+        //datapoint.put("sequence", getDesignSequence(design));
 
-            datapoints.add(datapoint);
+        if (includeTarget) {
+            datapoint.put("y", getTargetMetricValue(design));
         }
 
-        return getTrainValTestSplit(datapoints, trainRatio, valRatio, testRatio, seed);
+        return datapoint;
+    }
+
+    private List<Double> getTargetMetricValue(DesignSpaceLinearDAGRepresentation design) {
+        return Collections.singletonList(design.getWeights().get(0));
     }
 
     private List<List<Integer>> getTokenIDs(DesignSpaceLinearDAGRepresentation design, boolean padding) {
@@ -190,17 +241,16 @@ public class ExperimentExport {
         return sequences;
     }
 
-    private List<Double> getTargetMetricValue(NodeSpace nodeSpace) {
-        return Collections.singletonList(nodeSpace.getAvgScoreofAllNonBlankEdges());
-    }
-
     private List<Integer> designPartsToIndexList(DesignSpaceLinearDAGRepresentation design) {
         List<Integer> tokenIDs = new ArrayList<>();
         for (String componentID : design.getCompIDs()) {
-            Integer tokenID = compIDMap.containsKey(componentID) ? (Integer) compIDMap.get(componentID).get("tokenID") : null;
+            Integer tokenID = compIDMap.containsKey(componentID) ? compIDMap.get(componentID).getIndex() : null;
 
             if (tokenID != null) {
                 tokenIDs.add(tokenID);
+
+            } else {
+                throw new IllegalArgumentException("Component ID not found in PartLibrary: " + componentID);
             }
         }
 
@@ -218,19 +268,20 @@ public class ExperimentExport {
         }
     }
 
-    private List<List<Number>> buildNodeFeatures(Map<String, List<String>> design) {
+    private List<List<Number>> buildNodeFeatures(DesignSpaceLinearDAGRepresentation design) {
         List<List<Number>> nodeFeatures = new ArrayList<>();
-        List<String> uniqueRoles = experiment.getPartLibrary().getUniqueComponentRoles();
+        List<String> uniqueRoles = partLibrary.getUniqueComponentRoles();
         Map<String, Integer> roleIndex = new HashMap<>();
 
         for (int i = 0; i < uniqueRoles.size(); i++) {
             roleIndex.put(uniqueRoles.get(i), i);
         }
 
-        for (int i = 0; i < design.get("compIDs").size(); i++) {
+        for (int i = 0; i < design.getCompIDs().size(); i++) {
+            Part part = compIDMap.get(design.getCompIDs().get(i));
 
             // node role
-            String role = design.get("compRoles").get(i);
+            String role = part.getComponentRole();
             Integer rolePos = roleIndex.get(role);
             if (rolePos == null) {
                 throw new IllegalArgumentException("Unknown component role: " + role);
@@ -240,42 +291,107 @@ public class ExperimentExport {
             features.set(rolePos, 1);
 
             // orientation
-            String orientation = design.get("compOrientations").get(i);
-            if ("inline".equals(orientation)) {
+            String orientation = design.getOrientation().get(i);
+            if ("INLINE".equals(orientation)) {
                 features.add(1);
-            } else if ("reverseComplement".equals(orientation)) {
+            } else if ("REVERSE_COMPLEMENT".equals(orientation)) {
                 features.add(-1);
             } else {
                 features.add(0);
             }
 
-            // TODO: Individual part Data (from part library)
+            // Individual part Data (from part library)
+            List<Double> partData = part.getPartData();
+            if (partData != null) {
+                features.addAll(partData);
+            }
 
             nodeFeatures.add(features);
         }
+
+        this.nodeDim = nodeFeatures.isEmpty() ? 0 : nodeFeatures.get(0).size();
+
         return nodeFeatures;
     }
 
-    private List<List<Integer>> buildEdgeIndex(Map<String, List<String>> design) {
+    private List<List<Integer>> buildEdgeIndex(DesignSpaceLinearDAGRepresentation design, List<List<Double>> edgeAttr, List<Integer> edgeLabels) {
         List<Integer> src = new ArrayList<>();
         List<Integer> dst = new ArrayList<>();
 
-        // Build edge index for a linear chain of components (bidirectional) - Structure
-        for (int i = 0; i < design.get("compIDs").size() - 1; i++) {
+        Integer edgeFeatureSize = null;
+
+        // Build edges for Interactions
+        for (int i = 0; i < design.getCompIDs().size() - 1; i++) {
+            
+            for (Interaction interaction : partLibrary.getPartByComponentID(design.getCompIDs().get(i)).getInteractions()) {
+                String targetCompID = interaction.getTargetPart().getComponentID();
+                int targetIndex = design.getCompIDs().indexOf(targetCompID);
+
+                if (targetIndex != -1) {
+                    // Update Edge Index
+                    src.add(i);
+                    dst.add(targetIndex);
+
+                    // Update Edge Labels
+                    edgeLabels.add(1); // 1 for interaction
+
+                    // Update Edge Attributes
+                    if (interaction.getInteractionData() != null) {
+                        List<Double> interactionData = interaction.getInteractionData();
+                        if (edgeFeatureSize == null) {
+                            edgeFeatureSize = interactionData.size();
+                        } else if (interactionData.size() != edgeFeatureSize) {
+                            throw new IllegalArgumentException("Inconsistent edge feature sizes: expected " + edgeFeatureSize + ", got " + interactionData.size());
+                        }
+                        edgeAttr.add(interactionData);
+                    } else {
+                        // If no interaction data, add a zero vector of the same size as other edges
+                        if (edgeFeatureSize == null) {
+                            throw new IllegalArgumentException("Edge feature size is not defined yet.");
+                        }
+                        List<Double> zeroVector = new ArrayList<>(Collections.nCopies(edgeFeatureSize, 0.0));
+                        edgeAttr.add(zeroVector);
+                    }
+                }
+            }
+        }
+
+        // Build edges for Structure
+        for (int i = 0; i < design.getCompIDs().size() - 1; i++) {
+
+            // Update Edge Index - bidirectional edges for structure
             src.add(i);
             dst.add(i + 1);
             src.add(i + 1);
             dst.add(i);
+
+            // Update Edge Labels
+            edgeLabels.add(0); // 0 for structure
+            edgeLabels.add(0); // 0 for structure
+
+            // Update Edge Attributes
+            if (edgeFeatureSize != null) {
+                List<Double> zeroVector = new ArrayList<>(Collections.nCopies(edgeFeatureSize, 0.0));
+                edgeAttr.add(zeroVector);
+                edgeAttr.add(zeroVector);
+            }
+
         }
 
         List<List<Integer>> edgeIndex = new ArrayList<>();
         edgeIndex.add(src);
         edgeIndex.add(dst);
 
+        this.edgeDim = edgeAttr.isEmpty() ? 0 : edgeAttr.get(0).size();
+
+        if (edgeAttr.size() != edgeIndex.get(0).size() || edgeLabels.size() != edgeIndex.get(0).size()) {
+            throw new IllegalStateException("Edge attributes, labels, and index sizes do not match.");
+        }
+
         return edgeIndex;
     }
 
-    private String getDesignSequence(Map<String, List<String>> design) {
+    private String getDesignSequence(DesignSpaceLinearDAGRepresentation design) {
         String sequence = "";
         List<String> nodeSequences = getNodeSequences(design);
 
@@ -289,18 +405,18 @@ public class ExperimentExport {
         return sequence;
     }
 
-    private List<String> getNodeSequences(Map<String, List<String>> design) {
+    private List<String> getNodeSequences(DesignSpaceLinearDAGRepresentation design) {
         List<String> nodeSequences = new ArrayList<>();
 
-        for (String compID : design.get("compIDs")) {
+        for (String compID : design.getCompIDs()) {
             if (compIDMap.containsKey(compID)) {
-                String seq = (String) compIDMap.get(compID).get("componentSequence");
+                String seq = compIDMap.get(compID).getSequence();
                 
                 if (seq == null || seq.equals("missing")) {
                     return null;
                 }
 
-                nodeSequences.add((String) compIDMap.get(compID).get("componentSequence"));
+                nodeSequences.add(seq);
 
             } else {
                 return null;
@@ -310,14 +426,14 @@ public class ExperimentExport {
         return nodeSequences;
     }
 
-    private Map<String, List<String>> getDesignRepresentation(NodeSpace nodeSpace) {
-        // NOTE: The design space should be linear (i.e., each design can be represented as a single sequence of components)
-        // Linear Directed Acyclic Graph (DAG) assumption for the design space
-        Map<String, List<String>> representation = nodeSpace.getLinearDAGRepresentation();
-        if (representation.isEmpty()) {
-            throw new IllegalArgumentException("NodeSpace is not a linear DAG");
-        }
-        return representation;
+    private List<Double> getDesignFeatures(DesignSpaceLinearDAGRepresentation design) {
+        List<Double> features = new ArrayList<>();
+
+        // TODO: Add design-level features here, if any. For now, we will just return an empty list.
+
+        this.featureDim = features.size();
+
+        return features;
     }
 
     private Map<String, List<Object>> getTrainValTestSplit(
@@ -347,7 +463,7 @@ public class ExperimentExport {
         Map<String, List<Object>> split = new HashMap<>();
         split.put("train", train);
         if (val.size() > 0) split.put("val", val);
-        split.put("test", test);
+        if (test.size() > 0) split.put("test", test);
 
         /*for (String key : split.keySet()) {
             System.out.println("Split " + key + " size: " + split.get(key).size());
@@ -363,6 +479,21 @@ public class ExperimentExport {
 
     public List<String> getRuleEvalFeatureNames() {
         return ruleEvalFeatureNames;
+    }
+
+    public int getFeatureDim() {
+        System.out.println("Feature Dim: " + featureDim);
+        return featureDim;
+    }
+
+    public int getNodeDim() {
+        System.out.println("Node Dim: " + nodeDim);
+        return nodeDim;
+    }
+
+    public int getEdgeDim() {
+        System.out.println("Edge Dim: " + edgeDim);
+        return edgeDim;
     }
 
 }

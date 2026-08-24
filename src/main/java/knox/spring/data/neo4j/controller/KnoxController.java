@@ -1335,17 +1335,22 @@ public class KnoxController {
 	}*/
 
 	@PostMapping("/partLibrary/csv")
-	public ResponseEntity<String> importPartLibraryCSV(@RequestParam(value = "inputCSVFile[]", required = true) MultipartFile inputCSVFile,
+	public ResponseEntity<String> importPartLibraryCSV(@RequestParam(value = "inputCSVFile[]", required = true) List<MultipartFile> inputCSVFile,
 			@RequestParam(value = "partLibraryName", required = true) String partLibraryName) {
-		
-		try {
-			experimentService.buildPartLibraryFromCSV(partLibraryName, inputCSVFile.getInputStream());
-		} catch (IOException e) {
-			e.printStackTrace();
-			return new ResponseEntity<String>(
-	                "{\"message\": \"" + e.getMessage() + "\"}",
-	                HttpStatus.BAD_REQUEST);
+
+		List<InputStream> inputCSVStreams = new ArrayList<>();
+		for (MultipartFile file : inputCSVFile) {
+			try {
+				inputCSVStreams.add(file.getInputStream());
+			} catch (IOException e) {
+				e.printStackTrace();
+				return new ResponseEntity<String>(
+		                "{\"message\": \"" + e.getMessage() + "\"}",
+		                HttpStatus.BAD_REQUEST);
+			}
 		}
+
+		experimentService.buildPartLibraryFromCSV(partLibraryName, inputCSVStreams);
 		
 		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
 	}
