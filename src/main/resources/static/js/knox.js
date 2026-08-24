@@ -2728,6 +2728,20 @@ $('#stop-tune-tooltip').click(() => {
   });
 });
 
+bindTooltipToButton(allBtnIDs.deletePartLibrary, '#delete-part-library-tooltip');
+$('#delete-part-library-tooltip').click(() => {
+  swal({
+    title: "Really delete?",
+    text: "You will not be able to recover the data!\nPart Library: " + currentPartLibraryName,
+    icon: "warning",
+    buttons: true
+  }).then((confirm) => {
+    if (confirm) {
+      endpoint.deletePartLibrary(currentPartLibraryName);
+    }
+  });
+});
+
 bindTooltipToButton(allBtnIDs.seqCompiler, '#seqcompiler-tooltip');
 $('#seqcompiler-tooltip').click(() => {
   let div = document.createElement('div');
