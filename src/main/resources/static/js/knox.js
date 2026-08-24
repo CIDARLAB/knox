@@ -79,7 +79,7 @@ let historyNodes;
 export let currentSpace;
 export let currentGroupID;
 export let currentExperimentID;
-export let currentPartLibrary;
+export let currentPartLibraryName;
 export let currentBranch;
 export function setcurrentBranch(branchName){
   currentBranch = branchName;
@@ -273,7 +273,7 @@ export function visualizePartLibrary(partLibraryName) {
       targets.search.setGraph(data);
       $("#search-tb").blur();
       $("#search-autocomplete").blur();
-      currentPartLibrary = partLibraryName;
+      currentPartLibraryName = partLibraryName;
     }
   });
 }
@@ -1165,6 +1165,14 @@ function addTooltips(){
   let deleteExperimentBtn = $('#delete-experiment-btn');
   deleteExperimentBtn.tooltipster({
     content: $('#delete-experiment-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let deletePartLibraryBtn = $('#delete-part-library-btn');
+  deletePartLibraryBtn.tooltipster({
+    content: $('#delete-part-library-tooltip'),
     side: 'top',
     interactive: true,
     theme: 'tooltipster-noir'

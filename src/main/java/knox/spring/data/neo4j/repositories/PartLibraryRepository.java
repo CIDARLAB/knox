@@ -21,7 +21,7 @@ public interface PartLibraryRepository extends Neo4jRepository<PartLibrary, Long
         "OPTIONAL MATCH (n)-[:HAS_PART]->(p:Part) " +
         "DETACH DELETE n, p"
     )
-    void deleteByPartLibraryName(@Param("partLibraryName") String partLibraryName);
+    void deletePartLibrary(@Param("partLibraryName") String partLibraryName);
 
     @Query("MATCH (n:PartLibrary {partLibraryName: $partLibraryName}) WHERE NOT (n)<-[:CONTAINS]-(:SomeOtherNode) DETACH DELETE n")
     void deleteIfOrphaned(@Param("partLibraryName") String partLibraryName);

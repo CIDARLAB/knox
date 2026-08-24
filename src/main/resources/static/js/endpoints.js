@@ -20,6 +20,7 @@ const endpoints = {
   LISTPARTLIBRARIES: "/partLibrary/list",
   PARTLIBRARYCATEGORIES: "/partLibrary/categories",
   D3GRAPHPARTLIBRARY: "/partLibrary/graph/d3",
+  PARTLIBRARY: "/partLibrary",  //delete
   EXPERIMENT: "/experiment",  //post vs get vs delete
   ENUMERATE: "/designSpace/enumerate",
   ENUMERATECSV: "/designSpace/enumerateCSV",
@@ -419,6 +420,23 @@ export function deleteDesignGroup(groupID){
     clearAllPages();
   } else {
     swalError("Failed to delete design space group " + groupID);
+  }
+}
+
+/**
+ * Deletes the part library
+ */
+export function deletePartLibrary(partLibraryName){
+  let request = new XMLHttpRequest();
+  let query = "?partLibraryName=" + partLibraryName;
+  request.open("DELETE", endpoints.PARTLIBRARY + query, false);
+  request.send(null);
+
+  if (request.status >= 200 && request.status < 300) {
+    swalSuccess();
+    clearAllPages();
+  } else {
+    swalError("Failed to delete part library " + partLibraryName);
   }
 }
 

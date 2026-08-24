@@ -275,6 +275,10 @@ public class ExperimentService {
         experimentRepository.deleteExperiment(experimentName);
     }
 
+    public void deletePartLibrary(String partLibraryName) {
+        partLibraryRepository.deletePartLibrary(partLibraryName);
+    }
+
     public void deleteJob(String jobID) {
         jobRepository.deleteByJobID(jobID);
     }

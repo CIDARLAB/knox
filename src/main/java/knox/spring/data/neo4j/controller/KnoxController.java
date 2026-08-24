@@ -1396,4 +1396,20 @@ public class KnoxController {
 	    }
 	}
 
+	@DeleteMapping("/partLibrary")
+	public ResponseEntity<String> deletePartLibrary(@RequestParam(value = "partLibraryName", required = true) String partLibraryName) {
+		try {
+	    	long startTime = System.nanoTime();
+	    	
+	        experimentService.deletePartLibrary(partLibraryName);
+	        
+	        return new ResponseEntity<String>("{\"message\": \"Part library was deleted successfully after " +
+					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
+	    } catch (Exception ex) {
+	        return new ResponseEntity<String>(
+	                "{\"message\": \"" + ex.getMessage() + "\"}",
+	                HttpStatus.BAD_REQUEST);
+	    }
+	}
+
 }
