@@ -206,20 +206,36 @@ public class PartLibrary {
         Map<String, Object> partLibraryInfo = new HashMap<>();
         partLibraryInfo.put("partLibraryName", partLibraryName);
 
+        // Part Information
         List<String> componentIDs = new ArrayList<>();
         List<String> componentRoles = new ArrayList<>();
         List<String> sequences = new ArrayList<>();
         List<String> descriptions = new ArrayList<>();
-        partInformation(componentIDs, componentRoles, sequences, descriptions);
+        List<List<Double>> partData = new ArrayList<>();
+        partInformation(componentIDs, componentRoles, sequences, descriptions, partData);
 
         partLibraryInfo.put("componentIDs", componentIDs);
         partLibraryInfo.put("componentRoles", componentRoles);
         partLibraryInfo.put("componentSequences", sequences);
         partLibraryInfo.put("componentDescriptions", descriptions);
+        partLibraryInfo.put("partData", partData);
+        partLibraryInfo.put("partDataLabels", partDataLabels);
+
+        // Interaction Information
+        List<String> sourceComponentIDs = new ArrayList<>();
+        List<String> targetComponentIDs = new ArrayList<>();
+        List<List<Double>> interactionData = new ArrayList<>();
+        interactionInformation(sourceComponentIDs, targetComponentIDs, interactionData);
+
+        partLibraryInfo.put("sourceComponentIDs", sourceComponentIDs);
+        partLibraryInfo.put("targetComponentIDs", targetComponentIDs);
+        partLibraryInfo.put("interactionData", interactionData);
+        partLibraryInfo.put("interactionDataLabels", interactionDataLabels);
+
         return partLibraryInfo;
     }
 
-    public void partInformation(List<String> componentIDs, List<String> componentRoles, List<String> sequences, List<String> descriptions) {
+    public void partInformation(List<String> componentIDs, List<String> componentRoles, List<String> sequences, List<String> descriptions, List<List<Double>> partData) {
         if (this.parts == null) {
             return;
         }
@@ -230,6 +246,23 @@ public class PartLibrary {
             componentRoles.add(part.getComponentRole());
             sequences.add(part.getSequence());
             descriptions.add(part.getDescription());
+            partData.add(part.getPartData());
+        }
+    }
+
+    public void interactionInformation(List<String> sourceComponentIDs, List<String> targetComponentIDs, List<List<Double>> interactionData) {
+        if (this.parts == null) {
+            return;
+        }
+
+        for (Part part : this.parts) {
+            if (part.hasInteractions()) {
+                for (Interaction interaction : part.getInteractions()) {
+                    sourceComponentIDs.add(part.getComponentID());
+                    targetComponentIDs.add(interaction.getTargetPart().getComponentID());
+                    interactionData.add(interaction.getInteractionData());
+                }
+            }
         }
     }
 

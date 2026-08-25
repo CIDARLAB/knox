@@ -382,6 +382,7 @@ function renderExperimentTabs(panel, experiment) {
       <li><a href="#" data-tab="rules">Rules</a></li>
       <li><a href="#" data-tab="rulesToEval">RulesToEval</a></li>
       <li><a href="#" data-tab="parts">Parts</a></li>
+      <li><a href="#" data-tab="interactions">Part Interactions</a></li>
       <li><a href="#" data-tab="jobs">Jobs</a></li>
     </ul>
 
@@ -470,28 +471,54 @@ function loadExperimentTab(panel, tabName, experiment) {
     const componentIDs = experiment.componentIDs || [];
     const componentRoles = experiment.componentRoles || [];
     const componentSequences = experiment.componentSequences || [];
+    const data = experiment.partData || [];
     const componentDescriptions = experiment.componentDescriptions || [];
+    const partDataLabels = experiment.partDataLabels || ["None"];
 
     const count = componentIDs.length;
-    const groupID = experiment.partLibraryName || "N/A";
+    const partLibraryName = experiment.partLibraryName || "N/A";
     
     // Build rows pairing IDs and Roles
     const rows = componentIDs.map((id, index) => ({
       id: id,
       role: componentRoles[index] || "",
       sequence: componentSequences[index] || "",
+      data: data[index] || [],
       description: componentDescriptions[index] || "",
       index: index + 1
     }));
 
     // Add summary info
     let summary = `<div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
-      <strong>Name:</strong> ${escapeHtml(groupID)} | <strong>Total Parts:</strong> ${count}
+      <strong>Name:</strong> ${escapeHtml(partLibraryName)} | <strong>Total Parts:</strong> ${count} | <strong>Data Labels:</strong> ${escapeHtml(partDataLabels.join(", "))}
     </div>`;
     
     container.innerHTML = summary;
     
-    renderPartsTable(container, rows);
+    renderPartsTable(container, rows, partDataLabels);
+    return;
+  }
+
+  if (tabName === "interactions") {
+    const sourceComponentIDs = experiment.sourceComponentIDs || [];
+    const targetComponentIDs = experiment.targetComponentIDs || [];
+    const interactionData = experiment.interactionData || [];
+    const interactionDataLabels = experiment.interactionDataLabels || ["None"];
+
+    const rows = interactionData.map((interaction, index) => ({
+      source: sourceComponentIDs[index] || "",
+      target: targetComponentIDs[index] || "",
+      interaction: interaction || ""
+    }));
+
+
+    // Add summary info
+    let summary = `<div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+      <strong>Total Interactions:</strong> ${interactionData.length} | <strong>Data Labels:</strong> ${escapeHtml(interactionDataLabels.join(", "))}
+    </div>`;
+    
+    container.innerHTML = summary;
+    renderPartInteractionsTable(container, rows, interactionDataLabels);
     return;
   }
 
@@ -619,19 +646,29 @@ function renderSimpleTable(container, header, rows, emptyMessage = "No records f
   `;
 }
 
-function renderPartsTable(container, rows, emptyMessage = "No parts data.") {
+function renderPartsTable(container, rows, partDataLabels, emptyMessage = "No parts data.") {
   if (!rows || rows.length === 0) {
     container.innerHTML += `<p>${escapeHtml(emptyMessage)}</p>`;
     return;
   }
 
+  // Make a column for each part data label
+  rows.forEach(row => {
+    if (Array.isArray(row.data)) {
+      for (let i = 0; i < partDataLabels.length; i++) {
+        row[partDataLabels[i]] = row.data[i] || "";
+      }
+    }
+  });
+
   const body = rows.map(row => `
     <tr>
+      <td>${escapeHtml(String(row.index))}</td>
       <td>${escapeHtml(String(row.id))}</td>
       <td>${escapeHtml(String(row.role))}</td>
       <td><div class="sequence-cell">${escapeHtml(String(row.sequence))}</div></td>
       <td>${escapeHtml(String(row.description))}</td>
-      <td>${escapeHtml(String(row.index))}</td>
+      ${partDataLabels.map(label => `<td>${escapeHtml(String(row[label]))}</td>`).join("")}
     </tr>
   `).join("");
 
@@ -639,12 +676,67 @@ function renderPartsTable(container, rows, emptyMessage = "No parts data.") {
     <div class="table-wrap">
       <table class="table table-striped">
         <thead>
-          <tr><th>Component ID</th><th>Component Role</th><th>Sequence</th><th>Description</th><th>Index</th></tr>
+          <tr>
+            <th>Index</th>
+            <th>Component ID</th>
+            <th>Component Role</th>
+            <th>Sequence</th>
+            <th>Description</th>
+            ${partDataLabels.map(label => `<th>${escapeHtml(String(label))}</th>`).join("")}
+          </tr>
         </thead>
         <tbody>${body}</tbody>
       </table>
     </div>
   `;
+}
+
+function renderPartInteractionsTable(container, rows, interactionDataLabels) {
+  if (!rows || rows.length === 0) {
+    container.innerHTML += `<p>No part interactions data.</p>`;
+    return;
+  }
+
+  // Make a column for each interaction data label
+  rows.forEach(row => {
+    if (Array.isArray(row.interaction)) {
+      for (let i = 0; i < interactionDataLabels.length; i++) {
+        row[interactionDataLabels[i]] = row.interaction[i] || "";
+      }
+    }
+  });
+
+  const body = rows.map(row => `
+    <tr>
+      <td>${escapeHtml(String(row.source))}</td>
+      <td>${escapeHtml(String(row.target))}</td>
+      ${interactionDataLabels.map(label => `<td>${escapeHtml(String(row[label]))}</td>`).join("")}
+    </tr>
+  `).join("");
+
+  container.innerHTML += `
+    <div class="table-wrap">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Source Component ID</th>
+            <th>Target Component ID</th>
+            ${interactionDataLabels.map(label => `<th>${escapeHtml(String(label))}</th>`).join("")}
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// Clear Experiment Dashboard
+export function clearExperimentDashboard() {
+  const panel = document.getElementById("experiment-info-panel");
+  if (panel) {
+    panel.innerHTML = "<p>No experiment selected.</p>";
+  }
+  currentExperimentID = "";
 }
 
 function escapeHtml(value) {

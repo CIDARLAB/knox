@@ -136,23 +136,39 @@ public class Experiment {
 		experimentInfo.put("rulesToEvalGroupID", rulesToEvalGroup != null ? rulesToEvalGroup.getGroupID() : null);
 
         if (partLibrary != null) {
+            // Part Information
             List<String> componentIDs = new ArrayList<>();
             List<String> componentRoles = new ArrayList<>();
             List<String> sequences = new ArrayList<>();
             List<String> descriptions = new ArrayList<>();
-            partLibrary.partInformation(componentIDs, componentRoles, sequences, descriptions);
+            List<List<Double>> partData = new ArrayList<>();
+            partLibrary.partInformation(componentIDs, componentRoles, sequences, descriptions, partData);
 
             experimentInfo.put("partLibraryName", partLibrary.getPartLibraryName());
             experimentInfo.put("componentIDs", componentIDs);
             experimentInfo.put("componentRoles", componentRoles);
             experimentInfo.put("componentSequences", sequences);
             experimentInfo.put("componentDescriptions", descriptions);
+            experimentInfo.put("partData", partData);
+            experimentInfo.put("partDataLabels", partLibrary.getPartDataLabels());
+
+            // Interaction Information
+            List<String> sourceComponentIDs = new ArrayList<>();
+            List<String> targetComponentIDs = new ArrayList<>();
+            List<List<Double>> interactionData = new ArrayList<>();
+            partLibrary.interactionInformation(sourceComponentIDs, targetComponentIDs, interactionData);
+
+            experimentInfo.put("sourceComponentIDs", sourceComponentIDs);
+            experimentInfo.put("targetComponentIDs", targetComponentIDs);
+            experimentInfo.put("interactionData", interactionData);
+            experimentInfo.put("interactionDataLabels", partLibrary.getInteractionDataLabels());
         } else {
             experimentInfo.put("partLibraryName", null);
             experimentInfo.put("componentIDs", new ArrayList<String>());
             experimentInfo.put("componentRoles", new ArrayList<String>());
             experimentInfo.put("componentSequences", new ArrayList<String>());
             experimentInfo.put("componentDescriptions", new ArrayList<String>());
+            experimentInfo.put("partData", new ArrayList<List<Double>>());
         }
         
         List<Map<String, String>> jobsInfo = new ArrayList<>();

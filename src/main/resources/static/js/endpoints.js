@@ -5,6 +5,7 @@ import {currentSpace,
   setcurrentBranch,
   encodeQueryParameter,
   clearAllPages,
+  clearExperimentDashboard,
   visualizeDesignAndHistory,
   visualizeHistory,
   swalSuccess,
@@ -454,6 +455,7 @@ export function deleteExperiment(experimentName){
   if (request.status >= 200 && request.status < 300) {
     swalSuccess();
     clearAllPages();
+    clearExperimentDashboard();
   } else {
     swalError("Failed to delete experiment " + experimentName);
   }
