@@ -2968,6 +2968,10 @@ function getDefaultConfigForModel(model) {
 
 bindTooltipToButton(allBtnIDs.stopTune, '#stop-tune-tooltip');
 $('#stop-tune-tooltip').click(() => {
+  if (!currentExperimentID) {
+    swalError("No experiment is currently open. Please open an experiment first.");
+    return;
+  }
   let div = document.createElement('div');
   
   swal({
