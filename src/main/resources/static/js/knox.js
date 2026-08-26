@@ -423,7 +423,7 @@ function loadExperimentTab(panel, tabName, experiment) {
       </div>`;
       
       container.innerHTML = summary;
-      renderSimpleTable(container, "Design Space ID", data || []);
+      renderSpaceTable(container, "Design Space ID", data || []);
     });
     return;
   }
@@ -443,7 +443,7 @@ function loadExperimentTab(panel, tabName, experiment) {
       </div>`;
       
       container.innerHTML = summary;
-      renderSimpleTable(container, "Rule Space ID", data || []);
+      renderSpaceTable(container, "Rule Space ID", data || []);
     });
     return;
   }
@@ -463,7 +463,7 @@ function loadExperimentTab(panel, tabName, experiment) {
       </div>`;
       
       container.innerHTML = summary;
-      renderSimpleTable(container, "RulesToEval Space ID", data || []);
+      renderSpaceTable(container, "RulesToEval Space ID", data || []);
     });
     return;
   }
@@ -491,7 +491,7 @@ function loadExperimentTab(panel, tabName, experiment) {
 
     // Add summary info
     let summary = `<div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
-      <strong>Name:</strong> ${escapeHtml(partLibraryName)} | <strong>Total Parts:</strong> ${count} | <strong>Data Labels:</strong> ${escapeHtml(partDataLabels.join(", "))}
+      <strong>Part Library Name:</strong> ${escapeHtml(partLibraryName)} | <strong>Total Parts:</strong> ${count} | <strong>Data Labels:</strong> ${escapeHtml(partDataLabels.join(", "))}
     </div>`;
     
     container.innerHTML = summary;
@@ -506,6 +506,9 @@ function loadExperimentTab(panel, tabName, experiment) {
     const interactionData = experiment.interactionData || [];
     const interactionDataLabels = experiment.interactionDataLabels || ["None"];
 
+    const count = interactionData.length;
+    const partLibraryName = experiment.partLibraryName || "N/A";
+
     const rows = interactionData.map((interaction, index) => ({
       source: sourceComponentIDs[index] || "",
       target: targetComponentIDs[index] || "",
@@ -515,7 +518,7 @@ function loadExperimentTab(panel, tabName, experiment) {
 
     // Add summary info
     let summary = `<div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
-      <strong>Total Interactions:</strong> ${interactionData.length} | <strong>Data Labels:</strong> ${escapeHtml(interactionDataLabels.join(", "))}
+      <strong>Part Library Name:</strong> ${escapeHtml(partLibraryName)} | <strong>Total Interactions:</strong> ${count} | <strong>Data Labels:</strong> ${escapeHtml(interactionDataLabels.join(", "))}
     </div>`;
     
     container.innerHTML = summary;
@@ -623,7 +626,7 @@ function renderJobsTable(container, jobs, experimentData = null) {
   });
 }
 
-function renderSimpleTable(container, header, rows, emptyMessage = "No records found.") {
+function renderSpaceTable(container, header, rows, emptyMessage = "No records found.") {
   if (!rows || rows.length === 0) {
     container.innerHTML += `<p>${escapeHtml(emptyMessage)}</p>`;
     return;
@@ -632,6 +635,24 @@ function renderSimpleTable(container, header, rows, emptyMessage = "No records f
   const body = rows.map(row => `
     <tr>
       <td>${escapeHtml(String(row))}</td>
+      <td>
+        <button
+          type="button"
+          class="btn btn-default btn-xs show-goldbar-btn"
+          data-space-id="${escapeHtml(String(row))}"
+        >
+          Show GOLDBAR
+        </button>
+      </td>
+      <td>
+        <button
+          type="button"
+          class="btn btn-default btn-xs open-in-explore-btn"
+          data-space-id="${escapeHtml(String(row))}"
+        >
+          Open In Explore
+        </button>
+      </td>
     </tr>
   `).join("");
 
@@ -639,12 +660,28 @@ function renderSimpleTable(container, header, rows, emptyMessage = "No records f
     <div class="table-wrap">
       <table class="table table-striped">
         <thead>
-          <tr><th>${escapeHtml(header)}</th></tr>
+          <tr>
+            <th>${escapeHtml(header)}</th>
+            <th>GOLDBAR</th>
+            <th>Open In Explore</th>
+          </tr>
         </thead>
         <tbody>${body}</tbody>
       </table>
     </div>
   `;
+
+  container.querySelectorAll(".show-goldbar-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      showGoldbarForSpace(button.dataset.spaceId);
+    });
+  });
+
+  container.querySelectorAll(".open-in-explore-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      openSpaceInExplore(button.dataset.spaceId);
+    });
+  });
 }
 
 function renderPartsTable(container, rows, partDataLabels, emptyMessage = "No parts data.") {
@@ -729,6 +766,44 @@ function renderPartInteractionsTable(container, rows, interactionDataLabels) {
       </table>
     </div>
   `;
+}
+
+function showGoldbarForSpace(spaceID) {
+  if (!spaceID) return;
+
+  const div = document.createElement("div");
+  div.style.height = "inherit";
+  div.style.whiteSpace = "pre-wrap";
+  div.style.wordBreak = "break-word";
+  div.textContent = "Loading...";
+
+  swal({
+    title: "GOLDBAR",
+    content: div,
+    className: "goldbar-swal"
+  });
+
+  endpoint.getGoldbar(spaceID, (err, data) => {
+    if (err) {
+      swalError("GOLDBAR error: " + JSON.stringify(err));
+      return;
+    }
+
+    div.textContent = `${spaceID}\n\n${data.goldbar || ""}`;
+  });
+}
+
+function openSpaceInExplore(spaceID) {
+  if (!spaceID) return;
+  visualizeDesignAndHistory(spaceID);
+
+  // Set the search textbox and search type to the spaceID
+  $("#search-tb").val(spaceID);
+  $("#search-type").val("space");
+  
+  // Navigate to Explore tab
+  $('a[href="#explore"]').click();
+  window.scrollTo(0, document.getElementById('explore').offsetTop);
 }
 
 // Clear Experiment Dashboard
