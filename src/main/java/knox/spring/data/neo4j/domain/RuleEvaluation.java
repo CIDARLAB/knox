@@ -100,6 +100,12 @@ public class RuleEvaluation {
         }
     }
 
+    public RuleEvaluation(ArrayList<NodeSpace> ruleSpaces, ArrayList<NodeSpace> designSpaces) throws IllegalArgumentException {
+        this.ruleSpaces = ruleSpaces;
+        this.designSpaces = designSpaces;
+        this.flattenedRuleEvaluations = new ArrayList<>();
+    }
+
     /*public RuleEvaluation(String evaluationName, ArrayList<String> ruleSpaceIDs, ArrayList<String> designSpaceIDs, ArrayList<NodeSpace> ruleSpaces, ArrayList<NodeSpace> designSpaces) {
         // RuleEvaluation with no labels or scores
         this.evaluationName = evaluationName;
@@ -236,33 +242,33 @@ public class RuleEvaluation {
     }
 
     private Thread startProgressThread(AtomicInteger completed, int totalSize, long startTime) {
-    Thread progressThread = new Thread(() -> {
-        int lastCompleted = 0;
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                Thread.sleep(5000);
-                int done = completed.get();
-                double percent = (done * 100.0) / totalSize;
-                long elapsed = System.currentTimeMillis() - startTime;
-                double rate = done / (elapsed / 1000.0);
-                int remaining = totalSize - done;
-                double etaSeconds = rate > 0 ? remaining / rate : 0;
-                
-                // Instantaneous rate
-                double instantRate = (done - lastCompleted) / 5.0;
-                lastCompleted = done;
-                
-                System.out.printf("Progress: %.1f%% (%d/%d) - %.0f eval/sec (inst: %.0f) - ETA: %.0f sec%n",
-                    percent, done, totalSize, rate, instantRate, etaSeconds);
-            } catch (InterruptedException e) {
-                break;
+        Thread progressThread = new Thread(() -> {
+            int lastCompleted = 0;
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(5000);
+                    int done = completed.get();
+                    double percent = (done * 100.0) / totalSize;
+                    long elapsed = System.currentTimeMillis() - startTime;
+                    double rate = done / (elapsed / 1000.0);
+                    int remaining = totalSize - done;
+                    double etaSeconds = rate > 0 ? remaining / rate : 0;
+                    
+                    // Instantaneous rate
+                    double instantRate = (done - lastCompleted) / 5.0;
+                    lastCompleted = done;
+                    
+                    System.out.printf("Progress: %.1f%% (%d/%d) - %.0f eval/sec (inst: %.0f) - ETA: %.0f sec%n",
+                        percent, done, totalSize, rate, instantRate, etaSeconds);
+                } catch (InterruptedException e) {
+                    break;
+                }
             }
-        }
-    });
-    progressThread.setDaemon(true);
-    progressThread.start();
-    return progressThread;
-}
+        });
+        progressThread.setDaemon(true);
+        progressThread.start();
+        return progressThread;
+    }
 
     private Map<String, Map<String, Object>> evaluateRuleSpace(boolean ruleEvaluationOnly) {
         Map<String, Map<String, Object>> ruleResults = new HashMap<>();
@@ -381,10 +387,16 @@ public class RuleEvaluation {
     private ArrayList<ArrayList<Integer>> chunkRuleEvaluations() {
         ArrayList<ArrayList<Integer>> chunks = new ArrayList<>();
         int totalSize = flattenedRuleEvaluations.size();
-        int chunkSize = designSpaceIDs.size();
-        if (chunkSize == 0) {
-            throw new IllegalArgumentException("Design space IDs cannot be empty when chunking rule evaluations.");
+        int chunkSize;
+
+        if (designSpaceIDs != null && designSpaceIDs.size() > 0) {
+            chunkSize = designSpaceIDs.size();
+        } else if (designSpaces != null && designSpaces.size() > 0) {
+            chunkSize = designSpaces.size();
+        } else {
+            throw new IllegalArgumentException("Design space IDs or design spaces must be provided for chunking.");
         }
+        
         for (int i = 0; i < totalSize; i += chunkSize) {
             ArrayList<Integer> chunk = new ArrayList<>(flattenedRuleEvaluations.subList(i, Math.min(totalSize, i + chunkSize)));
             chunks.add(chunk);

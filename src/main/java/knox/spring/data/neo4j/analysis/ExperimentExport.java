@@ -113,6 +113,24 @@ public class ExperimentExport {
 
         return datapoints;
     }
+
+    public Map<String, Object> getRuleEvaluationDatapoints(List<NodeSpace> nodeSpaces, List<NodeSpace> ruleSpaces, boolean includeTarget) {
+        Map<String, Object> datapoint = new HashMap<>();
+
+        RuleEvaluation tempRuleEval = new RuleEvaluation(new ArrayList<>(ruleSpaces), new ArrayList<>(nodeSpaces));
+        tempRuleEval.runEvaluationParallel();
+
+        double[][] xDatapoints = tempRuleEval.getFeatures();
+
+        datapoint.put("samples", new ArrayList<>(List.of(xDatapoints)));
+
+        if (includeTarget) {
+            List<Double> yDatapoints = tempRuleEval.getDesignScores();
+            datapoint.put("targets", new ArrayList<>(yDatapoints));
+        }
+        
+        return datapoint;
+    }
     
     // Used for Transformer and MLP models
     public Map<String, List<Object>> getSequenceDatapoints(

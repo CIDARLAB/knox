@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import knox.spring.data.neo4j.analysis.ExperimentExport;
 import knox.spring.data.neo4j.domain.Job;
+import knox.spring.data.neo4j.domain.NodeSpace;
 import knox.spring.data.neo4j.domain.Experiment;
 import knox.spring.data.neo4j.domain.RuleEvaluation;
 import knox.spring.data.neo4j.domain.dto.DesignSpaceLinearDAGRepresentation;
@@ -595,7 +596,7 @@ public class KnoxAiClient {
 
         ExperimentExport experimentExport = new ExperimentExport(experiment);
 
-        List<Map<String, Object>> data = new ArrayList<>();
+        List<Object> data = new ArrayList<>();
 
         if ("transformer".equals(model) || "mlp".equals(model)) {
             List<DesignSpaceLinearDAGRepresentation> linearDAGRepresentations = designSpaceService.getLinearDAGRepresentationsParallel(
@@ -616,7 +617,11 @@ public class KnoxAiClient {
             for (DesignSpaceLinearDAGRepresentation design : linearDAGRepresentations) {
                 data.add(experimentExport.gnnDatapoint(design, false));
             }
-        } 
+        } else if (isTreeBasedModel(model)) {
+            List<NodeSpace> nodeSpaces = designSpaceService.loadSpacesParallel(new ArrayList<>(spaceIDs));
+            List<NodeSpace> ruleSpaces = designSpaceService.loadSpacesParallel(ruleEvaluation.getRuleSpaceIDs());
+            data = (List<Object>) experimentExport.getRuleEvaluationDatapoints(nodeSpaces, ruleSpaces, false).get("samples");
+        }
 
         DesignSpaceService.printTime(startTime, model + "_BUILD_PREDICT_PAYLOAD");
 
@@ -648,9 +653,9 @@ public class KnoxAiClient {
     }
 
     private static class PredictPayload {
-        final List<Map<String, Object>> data;
+        final List<Object> data;
 
-        PredictPayload(List<Map<String, Object>> data) {
+        PredictPayload(List<Object> data) {
             this.data = data;
         }
     }

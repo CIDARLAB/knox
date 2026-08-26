@@ -115,8 +115,6 @@ public class KnoxAiController {
             throw new IllegalArgumentException("Invalid action: " + action);
         }
 
-        // TODO: Implement Interpret, Tune, and other AI-related endpoints
-
         Map<String, Object> response = new HashMap<>();
         response.put("jobId", jobID);
         response.put("status", "PENDING");
