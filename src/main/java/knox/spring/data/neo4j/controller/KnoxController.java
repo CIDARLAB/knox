@@ -1355,6 +1355,11 @@ public class KnoxController {
 		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
 	}
 
+	@GetMapping("/partLibrary")
+	public Map<String, Object> getPartLibraryInfo(@RequestParam(value = "partLibraryName", required = true) String partLibraryName) {
+		return experimentService.getPartLibraryInfo(partLibraryName);
+	}
+
 	@GetMapping("/partLibrary/graph/d3")
     public Map<String, Object> d3GraphPartLibrary(@RequestParam(value = "partLibraryName", required = true) String partLibraryName) {
         return experimentService.d3GraphPartLibrary(partLibraryName);

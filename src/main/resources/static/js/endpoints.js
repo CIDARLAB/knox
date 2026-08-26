@@ -21,7 +21,7 @@ const endpoints = {
   LISTPARTLIBRARIES: "/partLibrary/list",
   PARTLIBRARYCATEGORIES: "/partLibrary/categories",
   D3GRAPHPARTLIBRARY: "/partLibrary/graph/d3",
-  PARTLIBRARY: "/partLibrary",  //delete
+  PARTLIBRARY: "/partLibrary",  //get vs delete
   EXPERIMENT: "/experiment",  //post vs get vs delete
   ENUMERATE: "/designSpace/enumerate",
   ENUMERATECSV: "/designSpace/enumerateCSV",
@@ -237,6 +237,11 @@ export function getGoldbar(id, callback){
 export function getExperiment(experimentName, callback) {
   const query = "?experimentName=" + encodeURIComponent(experimentName);
   d3.json(endpoints.EXPERIMENT + query, callback);
+}
+
+export function getPartLibraryInfo(partLibraryName, callback) {
+  const query = "?partLibraryName=" + encodeURIComponent(partLibraryName);
+  d3.json(endpoints.PARTLIBRARY + query, callback);
 }
 
 /***************************

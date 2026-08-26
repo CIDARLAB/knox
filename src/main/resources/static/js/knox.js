@@ -68,6 +68,7 @@ const groupBtnIDs = {
 };
 
 const partLibraryBtnIDs = {
+  partLibraryInfo: "#part-library-info-btn",
   deletePartLibrary: "#delete-part-library-btn"
 };
 
@@ -740,7 +741,7 @@ export function clearExperimentDashboard() {
 }
 
 function escapeHtml(value) {
-  return value
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -1277,6 +1278,14 @@ function addTooltips(){
   let deleteExperimentBtn = $('#delete-experiment-btn');
   deleteExperimentBtn.tooltipster({
     content: $('#delete-experiment-tooltip'),
+    side: 'top',
+    interactive: true,
+    theme: 'tooltipster-noir'
+  });
+
+  let partLibraryInfoBtn = $('#part-library-info-btn');
+  partLibraryInfoBtn.tooltipster({
+    content: $('#part-library-info-tooltip'),
     side: 'top',
     interactive: true,
     theme: 'tooltipster-noir'
@@ -2988,6 +2997,66 @@ $('#stop-tune-tooltip').click(() => {
       }
     });
   });
+});
+
+bindTooltipToButton(allBtnIDs.partLibraryInfo, '#part-library-info-tooltip');
+$('#part-library-info-tooltip').click(() => {
+  let div = document.createElement('div');
+  div.style.maxHeight = "60vh";
+  div.style.overflowY = "auto";
+  div.style.overflowX = "auto";
+  div.style.paddingRight = "8px";
+
+  endpoint.getPartLibraryInfo(currentPartLibraryName, (err, data) => {
+    if (err) {
+      swalError("Error fetching part library info: " + err);
+    } else {
+      const compIDs = data.componentIDs || [];
+      const compRoles = data.componentRoles || [];
+      const compSeq = data.componentSequences || [];
+      const compDescriptions = data.componentDescriptions || [];
+      const partData = data.partData || [];
+      const partDataLabels = data.partDataLabels || [];
+      const srcCompIDs = data.sourceComponentIDs || [];
+      const targetCompIDs = data.targetComponentIDs || [];
+      const interactionData = data.interactionData || [];
+      const interactionDataLabels = data.interactionDataLabels || [];
+
+      // display the information in a formatted way
+      div.appendChild(document.createTextNode(`Part Library: ${currentPartLibraryName}`));
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createTextNode(`Components (${compIDs.length}):`));
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createTextNode(`Part Data Labels: ${partDataLabels.join(', ')}`));
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createElement('br'));
+      for (let i = 0; i < compIDs.length; i++) {
+        div.appendChild(document.createTextNode(`[${i+1}], ID: ${compIDs[i]}, Role: ${compRoles[i]}, Sequence: ${compSeq[i] || ''}, Description: ${compDescriptions[i] || ''}, Part Data: [${partData[i] || ''}]`));
+        div.appendChild(document.createElement('br'));
+        div.appendChild(document.createElement('br'));
+      }
+
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createTextNode(`\nInteractions (${srcCompIDs.length}):\n`));
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createTextNode(`Interaction Data Labels: ${interactionDataLabels.join(', ')}\n`));
+      div.appendChild(document.createElement('br'));
+      div.appendChild(document.createElement('br'));
+      for (let i = 0; i < srcCompIDs.length; i++) {
+        div.appendChild(document.createTextNode(`[${i+1}], Source: ${srcCompIDs[i]}, Target: ${targetCompIDs[i]}, Interaction Data: [${interactionData[i] || ''}]`));
+        div.appendChild(document.createElement('br'));
+        div.appendChild(document.createElement('br'));
+      }
+    
+    }
+  });
+
+  swal({
+    title: "Part Library Info",
+    content: div
+  })
 });
 
 bindTooltipToButton(allBtnIDs.deletePartLibrary, '#delete-part-library-tooltip');

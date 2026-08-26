@@ -244,6 +244,13 @@ public class ExperimentService {
         savePartLibrary(partLibraryObj);
     }
 
+    public Map<String, Object> getPartLibraryInfo(String partLibraryName) {
+        LOG.info("Loading part library info for: {}", partLibraryName);
+		PartLibrary partLibrary = loadPartLibrary(partLibraryName);
+		Map<String, Object> partLibraryInfo = partLibrary.getPartLibraryInfo();
+		return partLibraryInfo;
+	}
+
     public Map<String, Object> d3GraphPartLibrary(String partLibraryName) {
         PartLibrary partLibrary = loadPartLibrary(partLibraryName);
         return partLibrary.toD3();
