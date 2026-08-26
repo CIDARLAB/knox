@@ -154,6 +154,7 @@ public class KnoxAiController {
         response.put("status", job.getStatus());
         response.put("experimentName", job.getExperimentName());
         response.put("runName", job.getRunName());
+        response.put("mlflowRunID", job.getMlflowRunID());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

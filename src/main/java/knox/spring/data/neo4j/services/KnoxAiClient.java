@@ -105,7 +105,7 @@ public class KnoxAiClient {
         this.experimentService = experimentService;
     }
 
-    public PredictResponse predict(
+    public void predict(
             String model,
             String run_id,
             List<Object> samples
@@ -126,7 +126,6 @@ public class KnoxAiClient {
                     PredictResponse.class
             );
 
-            return response.getBody();
         } catch (Exception e) {
             throw new RuntimeException("Failed to call KnoxAI predict endpoint", e);
         }
@@ -564,7 +563,7 @@ public class KnoxAiClient {
                 spaceIDs
             );
 
-            PredictResponse result = predict(model, runID, Collections.singletonList(payload.data));
+            predict(model, runID, new ArrayList<>(payload.data));
 
             // TODO: Handle the prediction result as needed
 

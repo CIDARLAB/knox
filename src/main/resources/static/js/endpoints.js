@@ -740,6 +740,7 @@ export function mlJobSubmit(
     interpretShap,
     nTrials,
     spaceIDs,
+    runID,
     callback) {
 
   let query = "?";
@@ -757,7 +758,7 @@ export function mlJobSubmit(
   query += encodeQueryParameter("interpretShap", interpretShap, query);
   query += encodeQueryParameter("nTrials", nTrials, query);
   query += encodeQueryParameter("spaceIDs", spaceIDs, query);
-  query += encodeQueryParameter("runID", null, query);
+  query += encodeQueryParameter("runID", runID, query);
 
 
   fetch(endpoints.RUNJOB + query, { method: "POST" })

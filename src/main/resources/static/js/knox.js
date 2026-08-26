@@ -2534,7 +2534,7 @@ $('#delete-experiment-tooltip').click(() => {
 });
 
 bindTooltipToButton(allBtnIDs.ml, '#ml-experiment-tooltip');
-$('#ml-experiment-tooltip').click(() => {
+$('#ml-experiment-tooltip').click(async () => {
   // if currentExperimentID is null or undefined, then swal error
   if (!currentExperimentID) {
     swalError("No experiment is currently open. Please open an experiment first.");
@@ -2648,10 +2648,13 @@ $('#ml-experiment-tooltip').click(() => {
   let spaceIDsInput = document.createElement('input');
   makeDiv(spaceIDsDiv, spaceIDsInput, 'Space IDs (comma-separated): ', "i.e. spaceID1, spaceID2, spaceID3");
 
-  // TODO: RunID Div div
-  //
-  //
-  //
+  // RunIDDropdown div
+  let runIDDiv = document.createElement('div');
+  let result = await makeRunIDDropdown();
+  let jobs = result.jobs;
+  let runIDDropdown = result.runIDDropdown;
+  makeDiv(runIDDiv, runIDDropdown, 'Run ID: ', "Select a run ID to view its details.");
+  let runDetailsDiv = document.createElement('div');
 
   let configDiv = document.createElement('div');
   let configTextarea = document.createElement("textarea");
@@ -2680,6 +2683,8 @@ $('#ml-experiment-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(taskDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(runIDDiv);
+  div.appendChild(document.createElement('br'));
   div.appendChild(runNameDiv);
   div.appendChild(document.createElement('br'));
   div.appendChild(numTrialsDiv);
@@ -2702,7 +2707,10 @@ $('#ml-experiment-tooltip').click(() => {
   div.appendChild(document.createElement('br'));
   div.appendChild(configDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(runDetailsDiv);
+  div.appendChild(document.createElement('br'));
 
+  setRowVisible(modelDiv, false);
   setRowVisible(taskDiv, false);
   setRowVisible(runNameDiv, false);
   setRowVisible(numTrialsDiv, false);
@@ -2714,10 +2722,14 @@ $('#ml-experiment-tooltip').click(() => {
   setRowVisible(buildSurrogateDiv, false);
   setRowVisible(interpretShapDiv, false);
   setRowVisible(spaceIDsDiv, false);
+  setRowVisible(runIDDiv, false);
   setRowVisible(configDiv, false);
+  setRowVisible(runDetailsDiv, false);
 
   $(mlActionDropdown).change(function() {
     if (this.value === endpoint.mlActions.TRAIN){
+      setRowVisible(modelDiv, true);
+      setRowVisible(runIDDiv, false);
       setRowVisible(taskDiv, true);
       setRowVisible(runNameDiv, true);
       setRowVisible(numTrialsDiv, false);
@@ -2730,10 +2742,13 @@ $('#ml-experiment-tooltip').click(() => {
       setRowVisible(interpretShapDiv, true);
       setRowVisible(spaceIDsDiv, false);
       setRowVisible(configDiv, true);
+      setRowVisible(runDetailsDiv, false);
       taskDropdown.value = "regression";
       modelDropdown.value = "";
     }
     if (this.value === endpoint.mlActions.PREDICT){
+      setRowVisible(modelDiv, false);
+      setRowVisible(runIDDiv, true);
       setRowVisible(taskDiv, false);
       setRowVisible(runNameDiv, false);
       setRowVisible(numTrialsDiv, false);
@@ -2746,9 +2761,12 @@ $('#ml-experiment-tooltip').click(() => {
       setRowVisible(interpretShapDiv, false);
       setRowVisible(spaceIDsDiv, true);
       setRowVisible(configDiv, false);
+      setRowVisible(runDetailsDiv, true);
       modelDropdown.value = "";
     }
     if (this.value === endpoint.mlActions.TUNE){
+      setRowVisible(modelDiv, true);
+      setRowVisible(runIDDiv, false);
       setRowVisible(taskDiv, true);
       setRowVisible(runNameDiv, true);
       setRowVisible(numTrialsDiv, true);
@@ -2761,10 +2779,13 @@ $('#ml-experiment-tooltip').click(() => {
       setRowVisible(interpretShapDiv, false);
       setRowVisible(spaceIDsDiv, false);
       setRowVisible(configDiv, false);
+      setRowVisible(runDetailsDiv, false);
       taskDropdown.value = "regression";
       modelDropdown.value = "";
     }
     if (this.value === endpoint.mlActions.INTERPRET){
+      setRowVisible(modelDiv, false);
+      setRowVisible(runIDDiv, true);
       setRowVisible(taskDiv, false);
       setRowVisible(runNameDiv, false);
       setRowVisible(numTrialsDiv, false);
@@ -2777,10 +2798,13 @@ $('#ml-experiment-tooltip').click(() => {
       setRowVisible(interpretShapDiv, false);
       setRowVisible(spaceIDsDiv, true);
       setRowVisible(configDiv, false);
+      setRowVisible(runDetailsDiv, true);
       taskDropdown.value = "regression";
       modelDropdown.value = "";
     }
     if (this.value === endpoint.mlActions.GENERATE){
+      setRowVisible(modelDiv, false);
+      setRowVisible(runIDDiv, true);
       setRowVisible(taskDiv, false);
       setRowVisible(runNameDiv, false);
       setRowVisible(numTrialsDiv, false);
@@ -2793,6 +2817,7 @@ $('#ml-experiment-tooltip').click(() => {
       setRowVisible(interpretShapDiv, false);
       setRowVisible(spaceIDsDiv, true);
       setRowVisible(configDiv, false);
+      setRowVisible(runDetailsDiv, true);
       taskDropdown.value = "regression";
       modelDropdown.value = "";
     }
@@ -2844,6 +2869,19 @@ $('#ml-experiment-tooltip').click(() => {
 
   });
 
+  $(runIDDropdown).change(function() {
+    const job = jobs.find(j => j.mlflowRunID === runIDDropdown.value);
+    modelDropdown.value = job.model;
+    runNameInput.value = job.runName;
+
+    // Display the run data 
+    runDetailsDiv.innerHTML = `
+      <p>Model: ${escapeHtml(job.model)}</p>
+      <p>Run Name: ${escapeHtml(job.runName)}</p>
+      <p>Run ID: ${escapeHtml(job.mlflowRunID)}</p>
+    `;
+  });
+
   swal({
     title: "Machine Learning",
     text: "Current Experiment: " + currentExperimentID,
@@ -2879,6 +2917,8 @@ $('#ml-experiment-tooltip').click(() => {
     const nTrials = Number(numTrialsInput.value);
     const buildSurrogate = buildSurrogateInput.checked;
     const interpretShap = interpretShapInput.checked;
+
+    const runID = runIDDropdown.value;
     const spaceIDs = (spaceIDsInput.value.trim() !== "") ? spaceIDsInput.value.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
     // Numeric validation
     if (![trainRatio, valRatio, testRatio, seed].every(Number.isFinite)) {
@@ -2925,6 +2965,7 @@ $('#ml-experiment-tooltip').click(() => {
         interpretShap,
         nTrials,
         spaceIDs,
+        runID,
         (err, data) => {
 
       if (!err) {
@@ -2969,6 +3010,42 @@ function makeModelDropdown(){
   modelDropdown.appendChild(new Option("XGBoost", "xgboost"));
   modelDropdown.appendChild(new Option("Explainable Boosting Machine", "ebm"));
   return modelDropdown;
+}
+
+async function makeRunIDDropdown() {
+  let runIDDropdown = document.createElement('select');
+  let runIDOption = new Option("Select a RunID", "", true, true);
+  runIDOption.disabled = true;
+  runIDDropdown.appendChild(runIDOption);
+
+  try {
+    const experiment = await getExperimentPromise(currentExperimentID);
+    const jobs = experiment.jobs || [];
+
+    for (const job of jobs) {
+      if (job.mlflowRunID && job.action === endpoint.mlActions.TRAIN && !job.errorMessage) {
+        const label = `${job.runName}: ${job.mlflowRunID}`;
+        runIDDropdown.appendChild(new Option(label, job.mlflowRunID || ""));
+      }
+    }
+
+    return { jobs, runIDDropdown };
+  } catch (err) {
+    swalError("Error fetching experiment data: " + err);
+    return { jobs: [], runIDDropdown };
+  }
+}
+
+function getExperimentPromise(experimentID) {
+  return new Promise((resolve, reject) => {
+    endpoint.getExperiment(experimentID, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
 }
 
 function getDefaultConfigForModel(model) {
