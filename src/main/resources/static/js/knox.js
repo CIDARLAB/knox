@@ -64,12 +64,15 @@ const groupBtnIDs = {
   deleteGroup: "#deleteGroup-btn",
   ruleEval: "#rule-eval-btn",
   openTable: "#table-btn",
-  seqCompiler: "#seqcompiler-btn"
 };
 
 const partLibraryBtnIDs = {
   partLibraryInfo: "#part-library-info-btn",
   deletePartLibrary: "#delete-part-library-btn"
+};
+
+const seqCompilerBtnIDs = {
+  seqCompiler: "#seqcompiler-btn"
 };
 
 const exploreBtnIDs = {
@@ -82,7 +85,9 @@ const allBtnIDs = {
   ...designBtnIDs,
   ...experimentBtnIDs,
   ...groupBtnIDs,
-  ...partLibraryBtnIDs
+  ...partLibraryBtnIDs,
+  ...seqCompilerBtnIDs
+  
 };
 
 export const knoxClass = {
@@ -3409,7 +3414,45 @@ $('#seqcompiler-tooltip').click(() => {
   downloadGenbankDiv.appendChild(downloadGenbankCheckbox);
   downloadGenbankDiv.appendChild(document.createTextNode(' Download GenBank file after compilation'));
 
+  const exampleButton = document.createElement("button");
+  exampleButton.type = "button";
+  exampleButton.className = "btn btn-default";
+  exampleButton.textContent = "Fill Example";
+
+  exampleButton.addEventListener("click", () => {
+    spaceIDInput.value = "example-space-seqcompiler";
+    groupIDInput.value = "example-group-seqcompiler";
+    weightInput.value = "0.0";
+    nameInput.value = "G{u1,rbs1-2r}";
+    RzInput.value = "R3";
+    LInput.value = "L";
+    termInput.value = "T7t0";
+    hp5Input.value = "5hp";
+    promInput.value = "T7p";
+    eIInput.value = "";
+    eOInput.value = "";
+    sInput.value = "s4";
+    invertInput.value = "0";
+    invLInput.value = "A";
+    agLInput.value = "TA";
+    AGiloopInput.value = "5";
+    otypeInput.value = "1";
+    rnaInput.value = "1";
+    usInput.value = "";
+    dsInput.value = "";
+    temp_lenInput.value = "0";
+    cpInput.value = "c06";
+    nInput.value = "THE_L";
+    cInput.value = "0";
+    dInput.value = "";
+    CDSInput.value = "sCFP3A_tta";
+    rflapInput.value = "";
+    downloadGenbankCheckbox.checked = true;
+  });
+
   // Append all divs to the main div
+  div.appendChild(exampleButton);
+  div.appendChild(document.createElement('br'));
   div.appendChild(spaceIDDiv);
   div.appendChild(document.createElement('br'));
   div.appendChild(groupIDDiv);
