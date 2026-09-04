@@ -402,6 +402,22 @@
       <br>
       <a href="https://ctrsd-simulator.readthedocs.io/en/latest/SeqCompiler.html" target="_blank">SeqCompiler Documentation</a>
       <br>
+      <br>
+      <form method="POST" enctype="multipart/form-data"
+            action="seqcompiler/compile/excel" class="navbar-form navbar-left" ng-show="isCSVMode">
+        <div class="import-csv-description-PartLibrary">
+          <p>Import Seq Compiler Excel</p>
+        </div>
+        <input type="file" name="inputCSVFile[]">
+        <br>
+        <label id="outputSpacePrefix" for="outputSpacePrefix"><h5>Output Space Prefix:</h5></label>
+        <input id="outputSpacePrefix" type="text" name="outputSpacePrefix" placeholder="Output Space Prefix">
+        <br>
+        <label id="groupID" for="groupID"><h5>Group ID:</h5></label>
+        <input id="groupID" type="text" name="groupID" placeholder="Group ID">
+        <br>
+        <input type="submit" value="Import (Seq Compiler Excel)">
+      </form>
       <div id="btn-holder">
         <span class="circle-float-btn" id="seqcompiler-btn">
           <i class="fa fa-cogs btn-img" style="font-size: 50px; line-height: 50px;"></i>

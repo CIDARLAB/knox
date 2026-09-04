@@ -77,6 +77,13 @@
             <version>20240303</version>
         </dependency>
 
+        <!-- EasyExcel library -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+
         <!-- SBOL library -->
         <dependency>
             <groupId>org.sbolstandard</groupId>
