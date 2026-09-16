@@ -1,6 +1,7 @@
 package knox.spring.data.neo4j.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -25,20 +26,23 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.annotation.ExcelProperty;
 
 import knox.spring.data.neo4j.services.DesignSpaceService;
+import knox.spring.data.neo4j.services.ExperimentService;
 
 @RestController
 public class SeqCompilerController {
     private final RestTemplate restTemplate;
     final DesignSpaceService designSpaceService;
+    final ExperimentService experimentService;
 
     private static final Logger LOG = LoggerFactory.getLogger(SeqCompilerController.class);
 
     @Value("${seq.compiler.url}")
     private String seqCompilerUrl; // SeqCompiler API URL
 
-    public SeqCompilerController(RestTemplate restTemplate, DesignSpaceService designSpaceService) {
+    public SeqCompilerController(RestTemplate restTemplate, DesignSpaceService designSpaceService, ExperimentService experimentService) {
         this.restTemplate = restTemplate;
         this.designSpaceService = designSpaceService;
+        this.experimentService = experimentService;
     }
 
     public record CompileResponse(
@@ -48,6 +52,8 @@ public class SeqCompilerController {
         List<String> rna_part_IDs,
         List<String> dna_part_types,
         List<String> rna_part_types,
+        List<String> dna_part_orientations,
+        List<String> rna_part_orientations,
         String genbank_dna,
         String genbank_rna) {}
         
@@ -85,10 +91,15 @@ public class SeqCompilerController {
         List<List<List<String>>> rna_part_IDs,
         List<List<List<String>>> dna_part_types,
         List<List<List<String>>> rna_part_types,
+        List<List<List<String>>> dna_part_orientations,
+        List<List<List<String>>> rna_part_orientations,
         List<List<String>> genbank_dna,
-        List<List<String>> genbank_rna) {}
+        List<List<String>> genbank_rna,
+        List<Map<String, String>> unique_parts) {}
 
-    public record CompileExcelRequest(MultipartFile workbook) {}
+    public record CompileExcelRequest(
+        MultipartFile workbook,
+        int get_genbank) {}
 
 
     @PostMapping("/seqcompiler/compile")
@@ -137,10 +148,11 @@ public class SeqCompilerController {
                 groupID, 
                 weight, 
                 response.rna_part_IDs(), 
-                response.rna_part_types()
+                response.rna_part_types(),
+                response.rna_part_orientations()
             );
         } else {
-            designSpaceService.createDesignSpace(spaceID, groupID, weight, response.dna_part_IDs(), response.dna_part_types());
+            designSpaceService.createDesignSpace(spaceID, groupID, weight, response.dna_part_IDs(), response.dna_part_types(), response.dna_part_orientations());
         }
 
         return response;
@@ -156,7 +168,7 @@ public class SeqCompilerController {
         LOG.info("Received seqcompile EXCEL request:");
 
         try {
-            CompileExcelRequest request = new CompileExcelRequest(file);
+            CompileExcelRequest request = new CompileExcelRequest(file, 0);
             CompileExcelResponse response = callSeqCompilerExcel(request);
 
             List<Double> weights = readWeightsFromExcel(file);
@@ -178,11 +190,37 @@ public class SeqCompilerController {
                     response.rna_part_types().get(i).stream()
                         .filter(innerList -> innerList != null) // avoid NullPointerException
                         .flatMap(List::stream)
+                        .collect(Collectors.toList()),
+                    response.rna_part_orientations().get(i).stream()
+                        .filter(innerList -> innerList != null) // avoid NullPointerException
+                        .flatMap(List::stream)
                         .collect(Collectors.toList())
                 );
             }
 
-            
+            List<String> componentIDs = response.unique_parts().stream()
+                .map(part -> part.get("part_id"))
+                .collect(Collectors.toList());
+
+            List<String> componentRoles = response.unique_parts().stream()
+                .map(part -> part.get("part_type"))
+                .collect(Collectors.toList());
+
+            List<String> componentSequences = response.unique_parts().stream()
+                .map(part -> part.get("part_sequence"))
+                .collect(Collectors.toList());
+
+            experimentService.createPartLibrary(
+                groupID, 
+                componentIDs, 
+                componentRoles, 
+                componentSequences,
+                null, 
+                null, 
+                null, 
+                null
+            );
+
         } catch (Exception e) {
             LOG.error("Error processing Excel file: {}", e.getMessage(), e);
             return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);

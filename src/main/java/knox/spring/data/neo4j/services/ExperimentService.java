@@ -244,6 +244,49 @@ public class ExperimentService {
         savePartLibrary(partLibraryObj);
     }
 
+    public void createPartLibrary(
+            String partLibraryName, 
+            List<String> componentIDs, 
+            List<String> componentRoles, 
+            List<String> componentSequences, 
+            List<String> componentDescriptions, 
+            List<List<Double>> componentPartData, 
+            List<String> partDataLabels, 
+            List<String> interactionDataLabels) {
+
+        if (listPartLibraries().contains(partLibraryName)) {
+            throw new IllegalArgumentException("PartLibrary name already used: " + partLibraryName);
+        }
+
+        int numComponents = componentIDs.size();
+        if (componentSequences == null || componentSequences.isEmpty()) {
+            componentSequences = new ArrayList<>();
+            for (int i = 0; i < numComponents; i++) {
+                componentSequences.add("missing");
+            }
+        }
+
+        if (componentDescriptions == null || componentDescriptions.isEmpty()) {
+            componentDescriptions = new ArrayList<>();
+            for (int i = 0; i < numComponents; i++) {
+                componentDescriptions.add("missing");
+            }
+        }
+        
+        PartLibrary partLibrary = new PartLibrary(
+            partLibraryName,
+            componentIDs,
+            componentRoles,
+            componentSequences,
+            componentDescriptions,
+            componentPartData,
+            partDataLabels,
+            interactionDataLabels
+        );
+
+        savePartLibrary(partLibrary);
+    }
+
     public Map<String, Object> getPartLibraryInfo(String partLibraryName) {
         LOG.info("Loading part library info for: {}", partLibraryName);
 		PartLibrary partLibrary = loadPartLibrary(partLibraryName);

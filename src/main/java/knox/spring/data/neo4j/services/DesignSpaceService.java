@@ -1479,14 +1479,16 @@ public class DesignSpaceService {
 	}
 	// DesignGroup Functions End
 
-	public void createDesignSpace(String outputSpaceID, String groupID, Double weight, List<String> compIDs, List<String> compRoles) {
+	public void createDesignSpace(String outputSpaceID, String groupID, Double weight, List<String> compIDs, List<String> compRoles, List<String> orientations) {
 		DesignSpace outputSpace = new DesignSpace(outputSpaceID);
 
 		// Linear DAG
 		Node startNode = outputSpace.createStartNode();
+		List<String> goldbarList = new ArrayList<>();
 		for (int i = 0; i < compIDs.size(); i++) {
 			String compID = compIDs.get(i);
 			String compRole = compRoles.get(i);
+			String orientationString = orientations.get(i);
 
 			Node nextNode = null;
 			if (i < compIDs.size() - 1) {
@@ -1504,11 +1506,20 @@ public class DesignSpaceService {
 			ArrayList<Double> weights = new ArrayList<>();
 			weights.add(weight);
 
-			startNode.createEdge(nextNode, compIDList, compRoleList, Edge.Orientation.INLINE, weights);
+			Edge.Orientation orientation;
+			if (orientationString.equalsIgnoreCase("REVERSE_COMPLEMENT")) {
+				orientation = Edge.Orientation.REVERSE_COMPLEMENT;
+				goldbarList.add("reverse-comp(" + compID + ")");
+			} else {
+				orientation = Edge.Orientation.INLINE;
+				goldbarList.add(compID);
+			}
+
+			startNode.createEdge(nextNode, compIDList, compRoleList, orientation, weights);
 			startNode = nextNode;
 		}
 
-		outputSpace.setGoldbar(String.join(" then ", compIDs));
+		outputSpace.setGoldbar(String.join(" then ", goldbarList));
 		saveAndAssignDesignSpace(groupID, outputSpace);
 	}
 
