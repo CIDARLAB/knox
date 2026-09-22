@@ -740,6 +740,7 @@ export function mlJobSubmit(
     interpretShap,
     nTrials,
     spaceIDs,
+    groupID,
     runID,
     callback) {
 
@@ -758,6 +759,7 @@ export function mlJobSubmit(
   query += encodeQueryParameter("interpretShap", interpretShap, query);
   query += encodeQueryParameter("nTrials", nTrials, query);
   query += encodeQueryParameter("spaceIDs", spaceIDs, query);
+  query += encodeQueryParameter("groupID", groupID, query);
   query += encodeQueryParameter("runID", runID, query);
 
 
