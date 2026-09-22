@@ -2165,9 +2165,9 @@ public class DesignSpaceService {
 		//System.out.println("Number of Nodes: " + space.getNodes().size());
 		//System.out.println("Number of Edges: " + space.getEdges().size());
 
-		HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
+		//HashMap<String, Set<Edge>> nodeIDToEdges = space.mapNodeIDsToEdges();
 
-		space.clearEdges();
+		//space.clearEdges();
 		
 //      No version history
 //		Set<Commit> commits = space.getCommits();
@@ -2181,9 +2181,9 @@ public class DesignSpaceService {
 //			commit.getSnapshot().clearEdges();
 //		}
 		
-		designSpaceRepository.save(space);
+		//designSpaceRepository.save(space);
 
-		space.loadEdges(nodeIDToEdges);
+		//space.loadEdges(nodeIDToEdges);
 		
 //      No version history
 //		for (Commit commit : commits) {
