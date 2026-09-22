@@ -38,7 +38,7 @@ public class KnoxAiClient {
 
     // Predict request and response records
     public record PredictResponse(List<Object> predictions) {}
-    public record PredictRequest(String run_id, List<Object> samples) {}
+    public record PredictRequest(String run_id, List<Object> samples, String job_id) {}
 
 
     // Train request and response records
@@ -50,7 +50,8 @@ public class KnoxAiClient {
         String task,
         String experiment_name,
         String run_name,
-        Boolean interpret_shap) {}
+        Boolean interpret_shap,
+        String job_id) {}
     public record TrainRequestNN(   // MLP, GNN, Transformer
         Map<String, Object> data, 
         Map<String, Object> rule_matrix, 
@@ -58,7 +59,8 @@ public class KnoxAiClient {
         Map<String, Object> config,
         String task,
         String experiment_name,
-        String run_name) {}
+        String run_name,
+        String job_id) {}
 
 
     // Evaluate requrest and response records
@@ -67,7 +69,8 @@ public class KnoxAiClient {
         String run_id, 
         List<Object> x_test, 
         List<Object> y_test, 
-        List<String> feature_names
+        List<String> feature_names,
+        String job_id
     ) {}
 
 
@@ -84,7 +87,8 @@ public class KnoxAiClient {
         String task,
         Map<String, Object> config,
         Integer n_trials,
-        String experiment_name
+        String experiment_name,
+        String job_id
     ) {}
     public record TuneRequestNN(   // MLP, GNN, Transformer
         Map<String, Object> data,
@@ -92,7 +96,8 @@ public class KnoxAiClient {
         Map<String, Object> config,
         String task,
         Integer n_trials,
-        String experiment_name
+        String experiment_name,
+        String job_id
     ) {}
 
 
@@ -107,11 +112,12 @@ public class KnoxAiClient {
     }
 
     public void predict(
+            String jobID,
             String model,
             String run_id,
             List<Object> samples
     ) {
-        PredictRequest req = new PredictRequest(run_id, samples);
+        PredictRequest req = new PredictRequest(run_id, samples, jobID);
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -133,6 +139,7 @@ public class KnoxAiClient {
     }
 
     public TrainResponse trainTree(
+            String jobID,
             String model,
             Map<String, Object> data,
             List<String> feature_names,
@@ -143,7 +150,7 @@ public class KnoxAiClient {
             Boolean interpret_shap
     ) {
         TrainRequestTree req = new TrainRequestTree(
-                data, feature_names, config, task, experiment_name, run_name, interpret_shap
+                data, feature_names, config, task, experiment_name, run_name, interpret_shap, jobID
         );
 
         try {
@@ -167,6 +174,7 @@ public class KnoxAiClient {
     }
 
     public TrainResponse trainNN(
+            String jobID,
             String model,
             Map<String, Object> data,
             Map<String, Object> rule_matrix,
@@ -177,7 +185,7 @@ public class KnoxAiClient {
             String run_name
     ) {
         TrainRequestNN req = new TrainRequestNN(
-                data, rule_matrix, vocab_size, config, task, experiment_name, run_name
+                data, rule_matrix, vocab_size, config, task, experiment_name, run_name, jobID
         );
 
         try {
@@ -201,6 +209,7 @@ public class KnoxAiClient {
     }
 
     public void tuneTree(
+            String jobID,
             String model,
             Map<String, Object> data,
             List<String> feature_names,
@@ -210,7 +219,7 @@ public class KnoxAiClient {
             Integer nTrials
     ) {
         TuneRequestTree req = new TuneRequestTree(
-                data, feature_names, task, config, nTrials, experiment_name
+                data, feature_names, task, config, nTrials, experiment_name, jobID
         );
 
         try {
@@ -234,6 +243,7 @@ public class KnoxAiClient {
     }
 
     public void tuneNN(
+            String jobID,
             String model,
             Map<String, Object> data,
             Integer vocabSize,
@@ -243,7 +253,7 @@ public class KnoxAiClient {
             Integer nTrials
     ) {
         TuneRequestNN req = new TuneRequestNN(
-                data, vocabSize, config, task, nTrials, experiment_name
+                data, vocabSize, config, task, nTrials, experiment_name, jobID
         );
 
         try {
@@ -267,13 +277,14 @@ public class KnoxAiClient {
     }
 
     public EvaluateResponse evaluate(
+            String jobID,
             String model,
             String run_id,
             List<Object> x_test,
             List<Object> y_test,
             List<String> feature_names
     ) {
-        EvaluateRequest req = new EvaluateRequest(run_id, x_test, y_test, feature_names);
+        EvaluateRequest req = new EvaluateRequest(run_id, x_test, y_test, feature_names, jobID);
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -402,11 +413,11 @@ public class KnoxAiClient {
             TrainResponse result = null;
             if (isNeuralNetworkModel(model)) {
                 result = trainNN(
-                        model, payload.data, null, payload.vocabSize, payload.config, task, job.getExperimentName(), job.getRunName()
+                        jobID, model, payload.data, null, payload.vocabSize, payload.config, task, job.getExperimentName(), job.getRunName()
                 );
             } else if (isTreeBasedModel(model)) {
                 result = trainTree(
-                        model, payload.data, payload.featureNames, payload.config, task, job.getExperimentName(), job.getRunName(), interpretShap
+                        jobID, model, payload.data, payload.featureNames, payload.config, task, job.getExperimentName(), job.getRunName(), interpretShap
                 );
             } else {
                 throw new IllegalArgumentException("Unsupported model type: " + model);
@@ -447,9 +458,9 @@ public class KnoxAiClient {
 
             //TuneResponse result = null;
             if (isNeuralNetworkModel(model)) {
-                tuneNN(model, payload.data, payload.vocabSize, payload.config, task, job.getExperimentName(), nTrials);
+                tuneNN(jobID, model, payload.data, payload.vocabSize, payload.config, task, job.getExperimentName(), nTrials);
             } else if (isTreeBasedModel(model)) {
-                tuneTree(model, payload.data, payload.featureNames, payload.config, task, job.getExperimentName(), nTrials);
+                tuneTree(jobID, model, payload.data, payload.featureNames, payload.config, task, job.getExperimentName(), nTrials);
             } else {
                 throw new IllegalArgumentException("Unsupported model type: " + model);
             }
@@ -552,6 +563,17 @@ public class KnoxAiClient {
             Job job,
             String model,
             String runID,
+            String groupID
+    ) {
+        List<String> spaceIDs = new ArrayList<>(designSpaceService.getSpaceIDsInDesignGroup(groupID));
+        runPredictJob(jobID, job, model, runID, spaceIDs);
+    }
+
+    public void runPredictJob(
+            String jobID,
+            Job job,
+            String model,
+            String runID,
             List<String> spaceIDs
     ) {
         try {
@@ -564,7 +586,7 @@ public class KnoxAiClient {
                 spaceIDs
             );
 
-            predict(model, runID, new ArrayList<>(payload.data));
+            predict(jobID, model, runID, new ArrayList<>(payload.data));
 
             // TODO: Handle the prediction result as needed
 

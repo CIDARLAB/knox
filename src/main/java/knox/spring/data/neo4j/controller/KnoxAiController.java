@@ -18,6 +18,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 public class KnoxAiController {
@@ -55,6 +57,7 @@ public class KnoxAiController {
             @RequestParam(value = "nTrials", required = false, defaultValue = "50") int nTrials,
 
             @RequestParam(value = "spaceIDs", required = false) List<String> spaceIDs,
+            @RequestParam(value = "groupID", required = false) String groupID,
 
             @RequestParam(value = "runID", required = false) String runID
     ) {
@@ -80,13 +83,23 @@ public class KnoxAiController {
 
         } else if ("predict".equals(action)) {
             System.out.println("Submitting Predict Job");
-            CompletableFuture.runAsync(() -> knoxAiClient.runPredictJob(
-                jobID, 
-                job, 
-                model, 
-                runID, 
-                spaceIDs), trainExecutor
-            );
+            if (groupID != null && !groupID.isEmpty()) {
+                CompletableFuture.runAsync(() -> knoxAiClient.runPredictJob(
+                    jobID, 
+                    job, 
+                    model, 
+                    runID, 
+                    groupID), trainExecutor
+                );
+            } else {
+                CompletableFuture.runAsync(() -> knoxAiClient.runPredictJob(
+                    jobID, 
+                    job, 
+                    model, 
+                    runID, 
+                    spaceIDs), trainExecutor
+                );
+            }
 
         } else if ("interpret".equals(action)) {
             System.out.println("Submitting Interpret Job");
@@ -155,4 +168,17 @@ public class KnoxAiController {
         response.put("mlflowRunID", job.getMlflowRunID());
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @PostMapping("/job/status")
+    public ResponseEntity<Map<String, Object>> updateJobStatus(
+            @RequestParam(value = "jobID", required = true) String jobID,
+            @RequestParam(value = "status", required = true) String status
+    ) {
+        experimentService.updateJobStatusByID(jobID, status);
+        Map<String, Object> response = new HashMap<>();
+        response.put("jobID", jobID);
+        response.put("status", status);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+    
 }

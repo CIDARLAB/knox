@@ -2728,6 +2728,11 @@ $('#ml-experiment-tooltip').click(async () => {
   let spaceIDsInput = document.createElement('input');
   makeDiv(spaceIDsDiv, spaceIDsInput, 'Space IDs (comma-separated): ', "i.e. spaceID1, spaceID2, spaceID3");
 
+  // GroupIDDropdown div
+  let groupIDDiv = document.createElement('div');
+  let groupIDDropdown = await makeGroupIDDropdown();
+  makeDiv(groupIDDiv, groupIDDropdown, 'Group ID: ', "Select a group ID to view its details.");
+
   // RunIDDropdown div
   let runIDDiv = document.createElement('div');
   let result = await makeRunIDDropdown();
@@ -2785,6 +2790,8 @@ $('#ml-experiment-tooltip').click(async () => {
   div.appendChild(document.createElement('br'));
   div.appendChild(spaceIDsDiv);
   div.appendChild(document.createElement('br'));
+  div.appendChild(groupIDDiv);
+  div.appendChild(document.createElement('br'));
   div.appendChild(configDiv);
   div.appendChild(document.createElement('br'));
   div.appendChild(runDetailsDiv);
@@ -2802,6 +2809,7 @@ $('#ml-experiment-tooltip').click(async () => {
   setRowVisible(buildSurrogateDiv, false);
   setRowVisible(interpretShapDiv, false);
   setRowVisible(spaceIDsDiv, false);
+  setRowVisible(groupIDDiv, false);
   setRowVisible(runIDDiv, false);
   setRowVisible(configDiv, false);
   setRowVisible(runDetailsDiv, false);
@@ -2821,6 +2829,7 @@ $('#ml-experiment-tooltip').click(async () => {
       setRowVisible(buildSurrogateDiv, false);
       setRowVisible(interpretShapDiv, true);
       setRowVisible(spaceIDsDiv, false);
+      setRowVisible(groupIDDiv, false);
       setRowVisible(configDiv, true);
       setRowVisible(runDetailsDiv, false);
       taskDropdown.value = "regression";
@@ -2840,6 +2849,7 @@ $('#ml-experiment-tooltip').click(async () => {
       setRowVisible(buildSurrogateDiv, false);
       setRowVisible(interpretShapDiv, false);
       setRowVisible(spaceIDsDiv, true);
+      setRowVisible(groupIDDiv, true);
       setRowVisible(configDiv, false);
       setRowVisible(runDetailsDiv, true);
       modelDropdown.value = "";
@@ -2858,6 +2868,7 @@ $('#ml-experiment-tooltip').click(async () => {
       setRowVisible(buildSurrogateDiv, false);
       setRowVisible(interpretShapDiv, false);
       setRowVisible(spaceIDsDiv, false);
+      setRowVisible(groupIDDiv, false);
       setRowVisible(configDiv, false);
       setRowVisible(runDetailsDiv, false);
       taskDropdown.value = "regression";
@@ -2877,6 +2888,7 @@ $('#ml-experiment-tooltip').click(async () => {
       setRowVisible(buildSurrogateDiv, false);
       setRowVisible(interpretShapDiv, false);
       setRowVisible(spaceIDsDiv, true);
+      setRowVisible(groupIDDiv, true);
       setRowVisible(configDiv, false);
       setRowVisible(runDetailsDiv, true);
       taskDropdown.value = "regression";
@@ -2896,6 +2908,7 @@ $('#ml-experiment-tooltip').click(async () => {
       setRowVisible(buildSurrogateDiv, false);
       setRowVisible(interpretShapDiv, false);
       setRowVisible(spaceIDsDiv, true);
+      setRowVisible(groupIDDiv, true);
       setRowVisible(configDiv, false);
       setRowVisible(runDetailsDiv, true);
       taskDropdown.value = "regression";
@@ -3000,6 +3013,7 @@ $('#ml-experiment-tooltip').click(async () => {
 
     const runID = runIDDropdown.value;
     const spaceIDs = (spaceIDsInput.value.trim() !== "") ? spaceIDsInput.value.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+    const groupID = groupIDDropdown.value;
     // Numeric validation
     if (![trainRatio, valRatio, testRatio, seed].every(Number.isFinite)) {
       swalError("Train/Validation/Test ratios and Seed must be valid numbers.");
@@ -3045,6 +3059,7 @@ $('#ml-experiment-tooltip').click(async () => {
         interpretShap,
         nTrials,
         spaceIDs,
+        groupID,
         runID,
         (err, data) => {
 
