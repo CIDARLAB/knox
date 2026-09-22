@@ -146,6 +146,13 @@ public class ExperimentExport {
         int size = designRepresentations.size();
 		int numThreads = Math.min(size, Runtime.getRuntime().availableProcessors() * 2);
 		ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+
+        int maxLength = designRepresentations.stream()
+            .mapToInt(dr -> dr.getCompIDs().size())
+            .max()
+            .orElse(0);
+
+        System.out.println("Max sequence length for model " + model + ": " + maxLength);
 		
 		try {
 			// Create futures for all load operations
@@ -153,7 +160,7 @@ public class ExperimentExport {
 			
 			for (DesignSpaceLinearDAGRepresentation designRepresentation : designRepresentations) {
 				CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
-					return sequenceDatapoint(designRepresentation, padding, true);
+					return sequenceDatapoint(designRepresentation, padding, maxLength, true);
 				}, executor);
 				futures.add(future);
 			}
@@ -172,9 +179,9 @@ public class ExperimentExport {
 
     }
 
-    public Map<String, Object> sequenceDatapoint(DesignSpaceLinearDAGRepresentation design, boolean padding, boolean includeTarget) {
+    public Map<String, Object> sequenceDatapoint(DesignSpaceLinearDAGRepresentation design, boolean padding, Integer maxLength, boolean includeTarget) {
         Map<String, Object> datapoint = new HashMap<>();
-        datapoint.put("token_ids", getTokenIDs(design, padding));
+        datapoint.put("token_ids", getTokenIDs(design, padding, maxLength));
 
         //datapoint.put("sequence", getDesignSequence(design));
 
@@ -226,7 +233,7 @@ public class ExperimentExport {
 
     public Map<String, Object> gnnDatapoint(DesignSpaceLinearDAGRepresentation design, boolean includeTarget) {
         Map<String, Object> datapoint = new HashMap<>();
-        datapoint.put("node_labels", getTokenIDs(design, false).get(0));
+        datapoint.put("node_labels", getTokenIDs(design, false, null).get(0));
         datapoint.put("node_features", buildNodeFeatures(design));
         //datapoint.put("node_sequence", getNodeSequences(design));
 
@@ -251,10 +258,10 @@ public class ExperimentExport {
         return Collections.singletonList(design.getWeights().get(0));
     }
 
-    private List<List<Integer>> getTokenIDs(DesignSpaceLinearDAGRepresentation design, boolean padding) {
+    private List<List<Integer>> getTokenIDs(DesignSpaceLinearDAGRepresentation design, boolean padding, Integer maxLength) {
         List<List<Integer>> sequences = Collections.singletonList(designPartsToIndexList(design));
         if (padding) {
-            padSequences(sequences);
+            return padSequences(sequences, maxLength);
         }
         return sequences;
     }
@@ -275,15 +282,17 @@ public class ExperimentExport {
         return tokenIDs;
     }
 
-    private void padSequences(List<List<Integer>> sequences) {
+    private List<List<Integer>> padSequences(List<List<Integer>> sequences, int maxLength) {
         int paddingValue = 0;
-        int maxLength = sequences.stream().mapToInt(List::size).max().orElse(0);
 
+        List<List<Integer>> paddedSequences = new ArrayList<>();
         for (List<Integer> sequence : sequences) {
             while (sequence.size() < maxLength) {
                 sequence.add(paddingValue);
             }
+            paddedSequences.add(sequence);
         }
+        return paddedSequences;
     }
 
     private List<List<Number>> buildNodeFeatures(DesignSpaceLinearDAGRepresentation design) {

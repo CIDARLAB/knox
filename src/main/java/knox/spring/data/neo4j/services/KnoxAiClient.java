@@ -520,6 +520,11 @@ public class KnoxAiClient {
                 padding = false;
             }
 
+            int maxLength = linearDAGRepresentations.stream()
+                .mapToInt(dr -> dr.getCompIDs().size())
+                .max()
+                .orElse(0);
+
             data = experimentExport.getSequenceDatapoints(
                 model,
                 linearDAGRepresentations,
@@ -527,6 +532,7 @@ public class KnoxAiClient {
             );
 
             config.put("features_dim", experimentExport.getFeatureDim());
+            config.put("sequence_length", maxLength);
 
         } else if ("gnn".equals(model)) {
             config.put("seed", seed);
@@ -629,8 +635,14 @@ public class KnoxAiClient {
             if ("transformer".equals(model)) {
                 padding = false;
             }
+
+            int maxLength = linearDAGRepresentations.stream()
+                .mapToInt(dr -> dr.getCompIDs().size())
+                .max()
+                .orElse(0);
+
             for (DesignSpaceLinearDAGRepresentation design : linearDAGRepresentations) {
-                data.add(experimentExport.sequenceDatapoint(design, padding, false));
+                data.add(experimentExport.sequenceDatapoint(design, padding, maxLength, false));
             }
         } else if ("gnn".equals(model)) {
             List<DesignSpaceLinearDAGRepresentation> linearDAGRepresentations = designSpaceService.getLinearDAGRepresentationsParallel(
