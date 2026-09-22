@@ -3819,9 +3819,11 @@ $("#testRulesBtn").click(async function () {
     let outputFail = designName + rule + "_and1_Fail";
 
     // Create new designs
-    submitGoldbar(exampleRules[rule], JSON.stringify(ruleCategories), ruleSpaceName, groupID, weight);
-    submitGoldbar(ruleTests[rule][0].join(" or "), JSON.stringify(ruleCategories), passSpaceName, groupID, weight);
-    submitGoldbar(ruleTests[rule][1].join(" or "), JSON.stringify(ruleCategories), failSpaceName, groupID, weight);
+    await Promise.all([
+      submitGoldbarAsync(exampleRules[rule], JSON.stringify(ruleCategories), ruleSpaceName, groupID, weight),
+      submitGoldbarAsync(ruleTests[rule][0].join(" or "), JSON.stringify(ruleCategories), passSpaceName, groupID, weight),
+      submitGoldbarAsync(ruleTests[rule][1].join(" or "), JSON.stringify(ruleCategories), failSpaceName, groupID, weight)
+    ]);
 
     // AND operations
     endpoint.designSpaceAnd([ruleSpaceName, passSpaceName], outputPass, groupID, tolerance, isComplete);
@@ -3841,6 +3843,12 @@ $("#testRulesBtn").click(async function () {
   editors.specEditor.setValue(results);
   editors.catEditor.setValue(formatCategoriesForUI(ruleCategories));
 });
+
+function submitGoldbarAsync(specification, categories, designName, groupID, weight) {
+  return new Promise((resolve) => {
+    submitGoldbar(specification, categories, designName, groupID, weight, resolve);
+  });
+}
 
 async function processRuleAsync(rule, passOutput, failOutput, passSpace) {
   try {
@@ -3950,8 +3958,8 @@ function getUniqueElements(arr1, arr2) {
 }
 
 $("#goldbarImportBtn").click(function() {
-
-  $('#spinner').removeClass('hidden'); // show spinner
+  let div = document.createElement('div');
+  let loadingDiv = document.createElement('div');
 
   // Inputs
   let specification = editors.specEditor.getValue();
@@ -3963,14 +3971,38 @@ $("#goldbarImportBtn").click(function() {
   //replace all spaces and special characters for SBOL
   designName = designName.replace(/[^A-Z0-9]/ig, "_");
 
-  submitGoldbar(specification, categories, designName, groupID, weight);
-  $('#spinner').addClass('hidden'); // remove spinner
+  swal({
+    title: "Import GOLDBAR",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (!confirm) return;
+
+    // loading div shown while the import request is in flight
+    let progressDiv = document.createElement('div');
+    let loadingDiv = document.createElement('div');
+    loadingDiv.appendChild(document.createTextNode("Loading..."));
+    progressDiv.appendChild(loadingDiv);
+
+    swal({
+      title: "Importing GOLDBAR",
+      content: progressDiv,
+      buttons: false,
+      closeOnClickOutside: false,
+      closeOnEsc: false
+    });
+
+    submitGoldbar(specification, categories, designName, groupID, weight, () => {
+      swal.close();
+    });
+
+  });
 });
 
-export function submitGoldbar(specification, categories, designName, groupID, weight) {
+export function submitGoldbar(specification, categories, designName, groupID, weight, callback) {
   let parsed, pcategories
   [parsed, pcategories] = getParsedGOLDBARAndCategories(specification, categories);
-  endpoint.importGoldbar(parsed, JSON.stringify(pcategories), designName, groupID, weight)
+  endpoint.importGoldbar(parsed, JSON.stringify(pcategories), designName, groupID, weight, callback);
 }
 
 export function getParsedGOLDBARAndCategories(specification, categories) {

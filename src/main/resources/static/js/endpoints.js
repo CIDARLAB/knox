@@ -679,7 +679,7 @@ export function importGoldbarSBOL(sbolDoc, groupID, weight){
 }
 
 
-export function importGoldbar(goldbar, categories, outputSpace, groupID, weight){
+export function importGoldbar(goldbar, categories, outputSpace, groupID, weight, callback){
   let query = "?"
   query += encodeQueryParameter("goldbar", goldbar, query)
   query += encodeQueryParameter("categories", categories, query)
@@ -688,13 +688,16 @@ export function importGoldbar(goldbar, categories, outputSpace, groupID, weight)
   query += encodeQueryParameter("weight", weight, query)
 
   let request = new XMLHttpRequest();
-  request.open("POST", endpoints.GOLDBAR + query, false);
+  request.open("POST", endpoints.GOLDBAR + query, true);
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 300) {
+      swalSuccess();
+    } else {
+      swalError(request.response);
+    }
+    if (callback) callback();
+  };
   request.send(null);
-  if (request.status >= 200 && request.status < 300) {
-    swalSuccess();
-  } else {
-    swalError(request.response);
-  }
 
 }
 
