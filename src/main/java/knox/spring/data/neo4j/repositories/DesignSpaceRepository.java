@@ -41,7 +41,9 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
         "OPTIONAL MATCH (target)-[:CONTAINS]->(n:Node) " +
         "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) " +
         "OPTIONAL MATCH (s)-[:CONTAINS]->(sn:Node) " +
-        "DETACH DELETE target, n, b, c, s, sn")
+        "OPTIONAL MATCH (target)-[:HAS_CATEGORIES]->(cat:Categories) " +
+        "OPTIONAL MATCH (cat)-[:HAS_SUBCATEGORY]->(subcat:SubCategory) " +
+        "DETACH DELETE target, n, b, c, s, sn, cat, subcat")
     void deleteDesignSpace(@Param("targetSpaceID") String targetSpaceID);
 
     DesignSpace findBySpaceID(@Param("spaceID") String spaceID);

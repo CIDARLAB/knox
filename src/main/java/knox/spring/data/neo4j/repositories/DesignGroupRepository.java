@@ -24,7 +24,9 @@ public interface DesignGroupRepository extends Neo4jRepository<DesignGroup, Long
         "OPTIONAL MATCH (target)-[:CONTAINS]->(n:Node) " +
         "OPTIONAL MATCH (target)-[:ARCHIVES]->(b:Branch)-[:CONTAINS]->(c:Commit)-[:CONTAINS]->(s:Snapshot) " +
         "OPTIONAL MATCH (s)-[:CONTAINS]->(sn:Node) " +
-        "DETACH DELETE dg, target, n, b, c, s, sn"
+        "OPTIONAL MATCH (target)-[:HAS_CATEGORIES]->(cat:Categories) " +
+        "OPTIONAL MATCH (cat)-[:HAS_SUBCATEGORY]->(subcat:SubCategory) " +
+        "DETACH DELETE dg, target, n, b, c, s, sn, cat, subcat"
     )
     void deleteSpacesInGroup(@Param("groupID") String groupID);
 

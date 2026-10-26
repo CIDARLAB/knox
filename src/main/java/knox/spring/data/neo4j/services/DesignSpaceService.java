@@ -36,6 +36,7 @@ import knox.spring.data.neo4j.analysis.DesignAnalysis;
 import knox.spring.data.neo4j.domain.Branch;
 import knox.spring.data.neo4j.domain.Commit;
 import knox.spring.data.neo4j.domain.ContextSpace;
+import knox.spring.data.neo4j.domain.Categories;
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.DesignGroup;
 import knox.spring.data.neo4j.domain.Edge;
@@ -737,6 +738,7 @@ public class DesignSpaceService {
     			MergeOperator.apply(csvNodeSpaces, outputSpace, 1, weightTolerance, new HashSet<String>(), new ArrayList<String>());
 				ArrayList<String> goldbars = getGOLDBAR(csvSpaces);
 				outputSpace.setGoldbar(combineGoldbar("merge", goldbars));
+				outputSpace.setCategories(mergeCategories(csvSpaces.stream().map(DesignSpace::getCategories).toList()));
 
     			saveAndAssignDesignSpace(groupID, outputSpace);
 
@@ -744,6 +746,7 @@ public class DesignSpaceService {
     			OROperator.apply(csvNodeSpaces, outputSpace);
 				ArrayList<String> goldbars = getGOLDBAR(csvSpaces);
 				outputSpace.setGoldbar(combineGoldbar("or", goldbars));
+				outputSpace.setCategories(mergeCategories(csvSpaces.stream().map(DesignSpace::getCategories).toList()));
     			
     			saveAndAssignDesignSpace(groupID, outputSpace);
 
@@ -791,6 +794,8 @@ public class DesignSpaceService {
 
 				Node outputPredecessor = outputStart;
 
+				Map<String, Map<String, List<String>>> categories = new HashMap<String, Map<String, List<String>>>();
+
 				for (int i = 0; i < csvArray.size(); i++) {
 					if (csvArray.get(i).length() > 0) {
 						ArrayList<String> compIDs = new ArrayList<String>(1);
@@ -826,6 +831,11 @@ public class DesignSpaceService {
 						if (multipleWeightsCSV) {
 							weight = new ArrayList<Double>(Arrays.asList(Double.parseDouble(multipleWeights.get(j).get(i))));
 						}
+
+						// Add Part to Categories {compID : {role : [compID]}}
+						Map<String, List<String>> roleToComp = new HashMap<String, List<String>>();
+						roleToComp.put(compRoles.get(0), compIDs);
+						categories.put(compIDs.get(0), roleToComp);
 						
 						outputPredecessor.createEdge(outputNode, compIDs, compRoles, orientation, weight);
 
@@ -834,6 +844,7 @@ public class DesignSpaceService {
 				}
 
 				outputSpace.setGoldbar(String.join(" then ", compIDsInDesign));
+				outputSpace.setCategories(new Categories(categories));
 				csvSpaces.add(outputSpace);
 			}
 			
@@ -890,6 +901,16 @@ public class DesignSpaceService {
 		}
 
 		return MultipleWeights;
+	}
+
+	public Categories mergeCategories(List<Categories> categoriesList) {
+		if (categoriesList == null || categoriesList.isEmpty()) {
+			return new Categories();
+		}
+
+		Categories mergedCategories = new Categories();
+		mergedCategories.mergeCategories(categoriesList);
+		return mergedCategories;
 	}
 
 	private void saveDesignSpacesParallel(List<DesignSpace> spaces, String groupID) {
@@ -1043,12 +1064,8 @@ public class DesignSpaceService {
 
 		NodeSpace outSpace = goldbarConversion.getSpace();
 
-		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix, goldbar);
 
 		outputSpace.shallowCopyNodeSpace(outSpace);
-
-		//ContextSpace contextSpace = new ContextSpace(outputSpace.getSpaceID() + "_ContextSpace", categories);
-		//outputSpace.setContextSpace(contextSpace);
 
 		saveAndAssignDesignSpace(groupID, outputSpace);
 	}
@@ -1193,6 +1210,7 @@ public class DesignSpaceService {
 	}
 
 	private ArrayList<String> getGOLDBAR(List<DesignSpace> designSpaces) {
+		// TODO: Get Categories as well
 		ArrayList<String> goldbars = new ArrayList<>();
 		for (DesignSpace designSpace : designSpaces) {
 			goldbars.add(designSpace.getGoldbar());
@@ -1485,6 +1503,7 @@ public class DesignSpaceService {
 		// Linear DAG
 		Node startNode = outputSpace.createStartNode();
 		List<String> goldbarList = new ArrayList<>();
+		Map<String, Map<String, List<String>>> categories = new HashMap<>();
 		for (int i = 0; i < compIDs.size(); i++) {
 			String compID = compIDs.get(i);
 			String compRole = compRoles.get(i);
@@ -1515,11 +1534,16 @@ public class DesignSpaceService {
 				goldbarList.add(compID);
 			}
 
+			// Add component to categories {compID : {role : [compID]}}
+			categories.put(compID, new HashMap<>());
+			categories.get(compID).put(compRole, compIDList);
+
 			startNode.createEdge(nextNode, compIDList, compRoleList, orientation, weights);
 			startNode = nextNode;
 		}
 
 		outputSpace.setGoldbar(String.join(" then ", goldbarList));
+		outputSpace.setCategories(new Categories(categories));
 		saveAndAssignDesignSpace(groupID, outputSpace);
 	}
 
@@ -1725,7 +1749,7 @@ public class DesignSpaceService {
 			return false;
 		
 		} else {
-			DesignSpace outputSpace = new DesignSpace(targetSpaceID + "_sampleSpace");
+			DesignSpace outputSpace = new DesignSpace(targetSpaceID + "_sampleSpace", inputSpace.getGoldbar(), inputSpace.getCategories());
 
 			inputSpace.weightBlankEdges();
 

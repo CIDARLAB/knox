@@ -26,6 +26,9 @@ public class DesignSpace extends NodeSpace {
 	@Relationship(type = "CONTAINS")
 	private ContextSpace contextSpace;
 
+	@Relationship(type = "HAS_CATEGORIES")
+	private Categories categories;
+
 	@Property
 	private String goldbar;
 
@@ -49,6 +52,18 @@ public class DesignSpace extends NodeSpace {
         this.spaceID = spaceID;
 
 		this.goldbar = goldbar;
+        
+        branches = new HashSet<Branch>();
+    }
+
+	public DesignSpace(String spaceID, String goldbar, Categories categories) {
+        super(0);
+
+        this.spaceID = spaceID;
+
+		this.goldbar = goldbar;
+		
+		this.categories = categories;
         
         branches = new HashSet<Branch>();
     }
@@ -249,6 +264,14 @@ public class DesignSpace extends NodeSpace {
 
 	public ContextSpace getContextSpace() {
 		return contextSpace;
+	}
+
+	public void setCategories(Categories categories) {
+		this.categories = categories;
+	}
+
+	public Categories getCategories() {
+		return categories;
 	}
 
 	public String getGoldbar() {

@@ -22,6 +22,8 @@ public class GoldbarConversion {
 
     private JSONObject categories;
 
+    private Map<String, Map<String, List<String>>> usedCategories;
+
     private Double weight;
 
     private Boolean verbose;
@@ -33,6 +35,8 @@ public class GoldbarConversion {
         this.goldbarTree = parseGoldbar(goldbar);
 
         this.categories = categories;
+
+        this.usedCategories = new HashMap<>();
 
         this.weight = weight;
 
@@ -151,10 +155,12 @@ public class GoldbarConversion {
         ArrayList<String> componentRoles = new ArrayList<>();
         ArrayList<Double> weights = new ArrayList<>();
         Map<String, JSONArray> rolesToCompIds = new HashMap<>();
+        usedCategories.put(variable, new HashMap<>());
 
         // Map Roles to CompIds
         try {
             rolesToCompIds = jsonObjectToMap(categories.getJSONObject(variable));
+            rolesToCompIds.keySet().forEach(role -> usedCategories.get(variable).put(role, new ArrayList<>()));
         } catch (JSONException e) {
             System.out.println("ERROR: Missing context for: " + variable);
 			throw new IllegalArgumentException("Missing Category for: " + variable);
@@ -169,6 +175,7 @@ public class GoldbarConversion {
                 JSONArray compIDs = rolesToCompIds.get(role);
                 for(int i = 0; i < compIDs.length(); i++) {
                     componentIDs.add(compIDs.getString(i));
+                    usedCategories.get(variable).get(role).add(compIDs.getString(i));
                     componentRoles.add(convertRole(role));
                     weights.add(weight);
                     roleIsAbstract.put(role, false);
@@ -427,6 +434,10 @@ public class GoldbarConversion {
 
     public NodeSpace getSpace() {
         return outputSpace;
+    }
+
+    public Map<String, Map<String, List<String>>> getUsedCategories() {
+        return usedCategories;
     }
 
 }
