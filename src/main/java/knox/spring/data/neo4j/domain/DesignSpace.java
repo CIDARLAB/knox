@@ -23,9 +23,6 @@ public class DesignSpace extends NodeSpace {
     @Relationship(type = "SELECTS") 
 	private Branch headBranch;
 
-	@Relationship(type = "CONTAINS")
-	private ContextSpace contextSpace;
-
 	@Relationship(type = "HAS_CATEGORIES")
 	private Categories categories;
 
@@ -257,14 +254,6 @@ public class DesignSpace extends NodeSpace {
     	
     	return commits;
     }
-
-	public void setContextSpace(ContextSpace contextSpace) {
-		this.contextSpace = contextSpace;
-	}
-
-	public ContextSpace getContextSpace() {
-		return contextSpace;
-	}
 
 	public void setCategories(Categories categories) {
 		this.categories = categories;

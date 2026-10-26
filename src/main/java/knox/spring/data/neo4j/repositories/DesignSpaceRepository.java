@@ -78,11 +78,6 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
 
 
 
-    @Query(
-        "MATCH (n:DesignSpace) WHERE n.spaceID = $targetSpaceID " +
-        "MATCH (n)-[:CONTAINS]->(c:ContextSpace) " +
-        "RETURN c.spaceID")
-    String getContextSpaceID(@Param("targetSpaceID") String targetSpaceID);
 
     @Query(
         "MATCH (space:DesignSpace {spaceID: $spaceID})-[:CONTAINS]->(start:Node) " +

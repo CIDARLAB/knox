@@ -39,8 +39,6 @@ import knox.spring.data.neo4j.exception.ParameterEmptyException;
 import knox.spring.data.neo4j.exception.SBOLException;
 import knox.spring.data.neo4j.repositories.BranchRepository;
 import knox.spring.data.neo4j.repositories.CommitRepository;
-import knox.spring.data.neo4j.repositories.ComponentRepository;
-import knox.spring.data.neo4j.repositories.ContextSpaceRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 import knox.spring.data.neo4j.repositories.EdgeRepository;
 import knox.spring.data.neo4j.repositories.ExperimentRepository;
@@ -75,10 +73,6 @@ public class KnoxController {
     final NodeRepository nodeRepository;
     
     final SnapshotRepository snapshotRepository;
-    
-    final ContextSpaceRepository contextSpaceRepository;
-
-	final ComponentRepository componentRepository;
 
 	final RuleEvaluationRepository ruleEvaluationRepository;
 
@@ -95,8 +89,6 @@ public class KnoxController {
 			EdgeRepository edgeRepository,
 			NodeRepository nodeRepository,
 			SnapshotRepository snapshotRepository,
-			ContextSpaceRepository contextSpaceRepository,
-			ComponentRepository componentRepository,
 			RuleEvaluationRepository ruleEvaluationRepository,
 			ExperimentRepository experimentRepository,
 			PartLibraryRepository partLibraryRepository
@@ -109,8 +101,6 @@ public class KnoxController {
 		this.edgeRepository = edgeRepository;
 		this.nodeRepository = nodeRepository;
 		this.snapshotRepository = snapshotRepository;
-		this.contextSpaceRepository = contextSpaceRepository;
-		this.componentRepository = componentRepository;
 		this.ruleEvaluationRepository = ruleEvaluationRepository;
 		this.experimentRepository = experimentRepository;
 		this.partLibraryRepository = partLibraryRepository;
