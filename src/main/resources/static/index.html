@@ -109,9 +109,9 @@
       <!-- <span class="circle-float-btn" id="save-btn">
         <img id="save-img" class="btn-img" src="img/save.png"/>
       </span> -->
-      <!--span class="circle-float-btn" id="sbol-btn">
+      <span class="circle-float-btn" id="sbol-btn">
         <img id="sbol-img" class="btn-img" src="img/export.png"/>
-      </span-->
+      </span>
       <span class="circle-float-btn" id="show-btn">
         <img id="show-img" class="btn-img" src="img/ic_iconInfo.png"/>
       </span>
@@ -383,6 +383,12 @@
       </form>
     </div-->
     <div id="SBOL" class="tab-pane fade">
+      <div class="import-sbol-description">
+        <p>
+          Import Design Spaces using Combinatorial SBOL files
+        </p>
+      </div>
+      <br>
       <form method="POST" enctype="multipart/form-data"
             action="sbol/import" class="navbar-form navbar-left" ng-show="isSBOLMode">
         <input type="file" name="inputSBOLFiles[]" multiple>
@@ -390,8 +396,14 @@
         <label id="weightLabelSBOL" for="weightInputSBOL"><h5>Weight:</h5></label>
         <input id="weightInputSBOL" type="number" name="weight" placeholder=0.0>
         <br>
+        <input type="text" name="outputSpaceID" placeholder="Output Space ID"
+               class="form-control" aria-label="..." size="40">
+        <br>
         <input type="text" name="groupID" placeholder="Group ID"
                class="form-control" aria-label="..." size="40">
+        <br>
+        <label id="sbolVersionLabel" for="sbolVersionInput"><h5>Input SBOL Version (sbol2 or sbol3):</h5></label>
+        <input id="sbolVersionInput" type="text" name="sbolVersion" placeholder="sbol2">
         <br>
         <input type="submit" value="Import">
       </form>
@@ -511,6 +523,7 @@
             </div>
             <button id="categoriesImportBtn" class="btn btn-outline-warning mt-2">Import Categories</button>
             <button id="goldbarImportBtn" class="btn btn-outline-warning mt-2">Import Design Space</button>
+            <button id="goldbarToSBOLBtn" class="btn btn-outline-warning mt-2">Export to SBOL</button>
             <!--button id="goldbarSubmitAndDownloadBtn" class="btn btn-outline-warning mt-2">Import Design Space And Download SBOL</button-->
           </div>
         </div>
@@ -574,7 +587,7 @@
   <a id="apply-operators-tooltip">Apply Operators</a>
   <a id="enumerate-designs-tooltip">Enumerate / Sample</a>
 
-  <!--a id="export-sbol-tooltip">Export as SBOL</a-->
+  <a id="export-sbol-tooltip">Export as SBOL</a>
 
   <a id="graph-score-tooltip">Graph Score</a> 
   <!--a id="best-path-tooltip">Best Path</a-->

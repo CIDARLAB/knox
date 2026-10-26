@@ -21,21 +21,16 @@ import java.util.concurrent.Executors;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.sbolstandard.core2.SBOLConversionException;
-import org.sbolstandard.core2.SBOLDocument;
-import org.sbolstandard.core2.SBOLReader;
-import org.sbolstandard.core2.SBOLValidationException;
 import org.sbolstandard.core2.SequenceOntology;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.stereotype.Service;
 
 import knox.spring.data.neo4j.analysis.DesignAnalysis;
 import knox.spring.data.neo4j.domain.Branch;
 import knox.spring.data.neo4j.domain.Commit;
-import knox.spring.data.neo4j.domain.ContextSpace;
 import knox.spring.data.neo4j.domain.Categories;
 import knox.spring.data.neo4j.domain.DesignSpace;
 import knox.spring.data.neo4j.domain.DesignGroup;
@@ -50,7 +45,6 @@ import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
-import knox.spring.data.neo4j.exception.SBOLException;
 import knox.spring.data.neo4j.goldbar.GoldbarConversion;
 import knox.spring.data.neo4j.goldbar.GoldbarGeneration;
 import knox.spring.data.neo4j.goldbar.Parse;
@@ -63,8 +57,6 @@ import knox.spring.data.neo4j.operations.ReverseOperator;
 import knox.spring.data.neo4j.operations.WeightOperator;
 import knox.spring.data.neo4j.repositories.BranchRepository;
 import knox.spring.data.neo4j.repositories.CommitRepository;
-import knox.spring.data.neo4j.repositories.ComponentRepository;
-import knox.spring.data.neo4j.repositories.ContextSpaceRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
 import knox.spring.data.neo4j.repositories.DesignGroupRepository;
 import knox.spring.data.neo4j.repositories.EdgeRepository;
@@ -73,12 +65,14 @@ import knox.spring.data.neo4j.repositories.RuleEvaluationRepository;
 import knox.spring.data.neo4j.repositories.SnapshotRepository;
 import knox.spring.data.neo4j.sample.DesignSampler;
 import knox.spring.data.neo4j.sample.DesignSampler.EnumerateType;
-import knox.spring.data.neo4j.sbol.SBOLConversion;
-import knox.spring.data.neo4j.sbol.SBOLGeneration;
+import knox.spring.data.neo4j.services.SBOLClient.SBOLToGOLDBARResponse;
+import knox.spring.data.neo4j.services.SBOLClient.GOLDBARToSBOLResponse;
 
 @Service
 //@Transactional
 public class DesignSpaceService {
+	final SBOLClient sbolClient;
+
 	final BranchRepository branchRepository;
 	
 	final CommitRepository commitRepository;
@@ -92,10 +86,6 @@ public class DesignSpaceService {
 	final NodeRepository nodeRepository;
     
 	final SnapshotRepository snapshotRepository;
-    
-	final ContextSpaceRepository contextSpaceRepository;
-
-	final ComponentRepository componentRepository;
 
 	final RuleEvaluationRepository ruleEvaluationRepository;
 
@@ -104,6 +94,7 @@ public class DesignSpaceService {
     public static final String RESERVED_ID = "knox";
 
 	public DesignSpaceService(
+			SBOLClient sbolClient,
 			BranchRepository branchRepository,
 			CommitRepository commitRepository,
 			DesignSpaceRepository designSpaceRepository,
@@ -111,10 +102,9 @@ public class DesignSpaceService {
 			EdgeRepository edgeRepository,
 			NodeRepository nodeRepository,
 			SnapshotRepository snapshotRepository,
-			ContextSpaceRepository contextSpaceRepository,
-			ComponentRepository componentRepository,
 			RuleEvaluationRepository ruleEvaluationRepository
 	) {
+		this.sbolClient = sbolClient;
 		this.branchRepository = branchRepository;
 		this.commitRepository = commitRepository;
 		this.designSpaceRepository = designSpaceRepository;
@@ -122,8 +112,6 @@ public class DesignSpaceService {
 		this.edgeRepository = edgeRepository;
 		this.nodeRepository = nodeRepository;
 		this.snapshotRepository = snapshotRepository;
-		this.contextSpaceRepository = contextSpaceRepository;
-		this.componentRepository = componentRepository;
 		this.ruleEvaluationRepository = ruleEvaluationRepository;
 	}
     
@@ -967,88 +955,39 @@ public class DesignSpaceService {
 			completed.get(), elapsed / 1000.0, completed.get() / (elapsed / 1000.0), failed.get());
 	}
 
-	public void importSBOL(List<SBOLDocument> sbolDocs, String outputSpaceID, String groupID, Double weight)
-			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
-		SBOLConversion sbolConv = new SBOLConversion();
+	public void importSBOL(MultipartFile sbolDoc, String outputSpaceID, String groupID, Double weight, String sbolVersion) {
+		SBOLToGOLDBARResponse response = sbolClient.convertSBOLToGOLDBAR(sbolDoc, sbolVersion);
+		outputSpaceID = outputSpaceID != null && !outputSpaceID.isEmpty() ? outputSpaceID : response.name();
 
-		sbolConv.setSbolDoc(sbolDocs, weight);
-
-		List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
-		for (DesignSpace outputSpace: outputSpaces){
-			correctComponentIds(outputSpace);
-			//outputSpace.splitEdges();
-			saveAndAssignDesignSpace(groupID, outputSpace);
-		}
-
+		importGoldbar(
+			response.goldbar(), 
+			new JSONObject(response.categories()), 
+			outputSpaceID, 
+			groupID, 
+			weight, 
+			false
+		);
 	}
 
-	public DesignSpace importSBOL(String sbolString, String groupID, Boolean save)
-			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException {
-		
-		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
-		SBOLDocument sbolDocument = new SBOLDocument();
-		Double weight = 0.0;
-
-		InputStream sbolStream = org.apache.commons.io.IOUtils.toInputStream(sbolString, "UTF-8");
-		
-		try {
-			sbolDocument = SBOLReader.read(sbolStream);
-			sbolDocs.add(sbolDocument);
-
-		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-			e.printStackTrace();
-		}
-
-		SBOLConversion sbolConv = new SBOLConversion();
-
-		sbolConv.setSbolDoc(sbolDocs, weight);
-
-		List<DesignSpace> outputSpaces = sbolConv.convertSBOLsToSpaces();
-
-		DesignSpace output = new DesignSpace();
-		for (DesignSpace outputSpace: outputSpaces){
-			correctComponentIds(outputSpace);
-			//outputSpace.splitEdges();
-
-			if (save) {
-				saveAndAssignDesignSpace(groupID, outputSpace);
-			}
-
-			output = outputSpace;
-		}
-		
-		return output;
-
+	public String convertGOLDBARToSBOL(String goldbar, Map<String, Object> categories, String name, String types, String sbolVersion) {
+		Map<String, Object> goldbarTree = Parse.parse(goldbar);
+		GOLDBARToSBOLResponse response = sbolClient.convertGOLDBARToSBOL(goldbarTree, categories, name, types, sbolVersion);
+		return response.sbol();
 	}
-  
-	public List<String> exportCombinatorial(String targetSpaceID, String namespace)
-			throws SBOLValidationException, IOException, SBOLConversionException, SBOLException, URISyntaxException {
 
-		DesignSpace targetSpace = loadDesignSpace(targetSpaceID);
-		SBOLGeneration sbolGenerator = new SBOLGeneration(targetSpace, namespace);
-		return sbolGenerator.createSBOLDocument();
-  }
+	public String exportDesignSpaceToSBOL(String targetSpaceID, String sbolVersion) {
+		DesignSpace space = loadDesignSpace(targetSpaceID);
 
-	private void correctComponentIds(DesignSpace designSpace) {
-		// Keeps only the part name in the Components Ids
-		
-		Set<Edge> edges = designSpace.getEdges();
-
-		for (Edge edge : edges) {
-
-			ArrayList<String> IDs = edge.getComponentIDs();
-
-			for (int i = 0; i < IDs.size(); i++) {
-				if (IDs.get(i).contains("constellationcad.org/")){
-					String newID = IDs.get(i).substring(28, IDs.get(i).lastIndexOf('/'));
-					IDs.set(i, newID);
-				}
-			}
-
-			edge.setComponentIDs(IDs);			
+		if (space.getGoldbar() == null) {
+			throw new IllegalArgumentException("Design space does not have a GOLDBAR Representation: " + targetSpaceID);
 		}
 
-		//designSpace.printAllEdges();
+		if (space.getCategories() == null) {
+			throw new IllegalArgumentException("Design space does not have categories: " + targetSpaceID);
+		}
+
+		String goldbar = space.getGoldbar();
+		return convertGOLDBARToSBOL(goldbar, new HashMap<>(space.getCategories().toMap()), targetSpaceID, "dna", sbolVersion);
 	}
 
 	public void importGoldbar(String goldbar, JSONObject categories, String outputSpacePrefix, 
@@ -1064,6 +1003,7 @@ public class DesignSpaceService {
 
 		NodeSpace outSpace = goldbarConversion.getSpace();
 
+		DesignSpace outputSpace = new DesignSpace(outputSpacePrefix, goldbar, new Categories(goldbarConversion.getUsedCategories()));
 
 		outputSpace.shallowCopyNodeSpace(outSpace);
 
@@ -1433,10 +1373,7 @@ public class DesignSpaceService {
     public void deleteDesignSpace(String targetSpaceID) {
 		System.out.println("\nDeleting Design Space: " + targetSpaceID + "\n");
         validateDesignSpaceOperator(targetSpaceID);
-
-		String contextSpaceID = designSpaceRepository.getContextSpaceID(targetSpaceID);
         designSpaceRepository.deleteDesignSpace(targetSpaceID);
-		contextSpaceRepository.deleteContextSpaceIfOrphan(contextSpaceID);
     }
 
 	public void deleteDesignSpaceGroup(String groupID) {
@@ -2217,14 +2154,6 @@ public class DesignSpaceService {
 		//System.out.println("\nSaving DesignSpace!\n");
 		
 		designSpaceRepository.save(space);
-	}
-
-	public void saveContextSpace(ContextSpace space) {
-		// TODO: check name uniqueness
-		
-		space.setSpaceID(checkAlphanumeric(space.getSpaceID()));
-		System.out.println("\nSaving Context SpaceID: " + space.getSpaceID());
-		contextSpaceRepository.save(space);
 	}
 
 	public void saveRuleEvaluation(RuleEvaluation evaluation) {

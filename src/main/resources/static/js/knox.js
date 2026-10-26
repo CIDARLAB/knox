@@ -1408,9 +1408,51 @@ $('#show-sbol-tooltips').click(() => {
   targets.search.showTooltips();
 });
 
-//bindTooltipToButton(allBtnIDs.export, '#export-sbol-tooltip');
+bindTooltipToButton(allBtnIDs.sbol, '#export-sbol-tooltip');
 $('#export-sbol-tooltip').click(() => {
-  endpoint.exportDesign();
+  let div = document.createElement('div');
+  let loadingDiv = document.createElement('div');
+
+  // SBOLVersion Dropdown
+   let SBOLVersionDiv = document.createElement('div');
+   let SBOLVersionDropdown = makeSBOLVersionDropdown();
+   makeDiv(SBOLVersionDiv, SBOLVersionDropdown, 'SBOL Version: ', "Select the SBOL version for export.");
+
+  div.appendChild(SBOLVersionDiv);
+
+  swal({
+    title: "Export Space to SBOL",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (!confirm) return;
+
+    let sbolVersion = SBOLVersionDropdown.value;
+
+    // loading div shown while the import request is in flight
+    let progressDiv = document.createElement('div');
+    let loadingDiv = document.createElement('div');
+    loadingDiv.appendChild(document.createTextNode("Loading..."));
+    progressDiv.appendChild(loadingDiv);
+
+    swal({
+      title: "Exporting Space to SBOL",
+      content: progressDiv,
+      buttons: false,
+      closeOnClickOutside: false,
+      closeOnEsc: false
+    });
+
+    endpoint.exportDesignSpaceToSBOL(currentSpace, sbolVersion, (err, sbolString) => {
+      swal.close();
+      if (err) {
+        swalError("Failed to export design space to SBOL. Space could be missing GOLDBAR and/or categories.\n");
+      } else {
+        endpoint.downloadSBOL(sbolString, currentSpace + ".xml"); 
+      }
+    });
+
+  });
 });
 
 bindTooltipToButton(allBtnIDs.rename, '#rename-design-space-tooltip');
@@ -3998,6 +4040,76 @@ $("#goldbarImportBtn").click(function() {
 
   });
 });
+
+$("#goldbarToSBOLBtn").click(function() {
+  let div = document.createElement('div');
+  let loadingDiv = document.createElement('div');
+
+  // Inputs
+  let specification = editors.specEditor.getValue();
+  let categories = editors.catEditor.getValue();
+  let designName = document.getElementById('designNameInput').value;
+
+  //replace all spaces and special characters for SBOL
+  designName = designName.replace(/[^A-Z0-9]/ig, "_");
+
+  // SBOLVersion Dropdown
+   let SBOLVersionDiv = document.createElement('div');
+   let SBOLVersionDropdown = makeSBOLVersionDropdown();
+   makeDiv(SBOLVersionDiv, SBOLVersionDropdown, 'SBOL Version: ', "Select the SBOL version for export.");
+
+  div.appendChild(SBOLVersionDiv);
+
+  swal({
+    title: "Export GOLDBAR to SBOL",
+    buttons: true,
+    content: div
+  }).then((confirm) => {
+    if (!confirm) return;
+
+    let sbolVersion = SBOLVersionDropdown.value;
+
+    // loading div shown while the import request is in flight
+    let progressDiv = document.createElement('div');
+    let loadingDiv = document.createElement('div');
+    loadingDiv.appendChild(document.createTextNode("Loading..."));
+    progressDiv.appendChild(loadingDiv);
+
+    swal({
+      title: "Exporting GOLDBAR to SBOL",
+      content: progressDiv,
+      buttons: false,
+      closeOnClickOutside: false,
+      closeOnEsc: false
+    });
+
+    let parsed, pcategories
+    [parsed, pcategories] = getParsedGOLDBARAndCategories(specification, categories);
+
+    endpoint.convertGoldbarToSBOL(parsed, JSON.stringify(pcategories), designName, sbolVersion, (err, sbolString) => {
+      swal.close();
+      if (err) {
+        swalError(err.message);
+      } else {
+        endpoint.downloadSBOL(sbolString, designName + ".xml"); 
+      }
+    });
+
+  });
+});
+
+function makeSBOLVersionDropdown() {
+  let dropdown = document.createElement('select');
+  let option1 = document.createElement('option');
+  option1.value = "sbol2";
+  option1.text = "SBOL 2";
+  dropdown.appendChild(option1);
+  let option2 = document.createElement('option');
+  option2.value = "sbol3";
+  option2.text = "SBOL 3";
+  dropdown.appendChild(option2);
+  return dropdown;
+}
 
 export function submitGoldbar(specification, categories, designName, groupID, weight, callback) {
   let parsed, pcategories

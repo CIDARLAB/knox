@@ -49,10 +49,10 @@ const endpoints = {
   DESIGN: "/designSpace", //post vs delete
   DELETEGROUP: "/designSpace/deleteGroup",
 
-  SBOL: "/sbol/exportCombinatorial",
-  GOLDBARSBOL: "/goldbarSBOL/import",
+  SBOL: "/designSpace/SBOL",
   GOLDBAR: "/goldbar/import",
   GETGOLDBAR: "/goldbar",
+  GOLDBARTOSBOL: "/goldbar/toSBOL",
 
   RUNJOB: "/job/submit",
   JOB: "/job",  //get vs delete,
@@ -699,6 +699,53 @@ export function importGoldbar(goldbar, categories, outputSpace, groupID, weight,
   };
   request.send(null);
 
+}
+
+export function convertGoldbarToSBOL(goldbar, categories, outputSpace, sbolVersion, callback){
+  let query = "?"
+  query += encodeQueryParameter("goldbar", goldbar, query)
+  query += encodeQueryParameter("categories", categories, query)
+  query += encodeQueryParameter("outputSpaceID", outputSpace, query)
+  query += encodeQueryParameter("types", "dna", query);
+  query += encodeQueryParameter("sbolVersion", sbolVersion, query)
+
+  let request = new XMLHttpRequest();
+  request.open("POST", endpoints.GOLDBARTOSBOL + query, true);
+  // Request returns sbol document, handle it accordingly in the callback
+
+  request.responseType = "text"; // Expecting SBOL document as plain text
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 300) {
+      swalSuccess();
+      if (callback) callback(null, request.response);
+    } else {
+      swalError(request.response);
+      if (callback) callback(new Error(request.response));
+    }
+  };
+  request.send(null);
+}
+
+export function exportDesignSpaceToSBOL(targetSpaceID, sbolVersion, callback){
+  let query = "?"
+  query += encodeQueryParameter("targetSpaceID", targetSpaceID, query)
+  query += encodeQueryParameter("sbolVersion", sbolVersion, query)
+
+  let request = new XMLHttpRequest();
+  request.open("POST", endpoints.SBOL + query, true);
+  // Request returns sbol document, handle it accordingly in the callback
+
+  request.responseType = "text"; // Expecting SBOL document as plain text
+  request.onload = function() {
+    if (request.status >= 200 && request.status < 300) {
+      swalSuccess();
+      if (callback) callback(null, request.response);
+    } else {
+      swalError("Failed to export design space to SBOL. Space could be missing GOLDBAR and/or categories.\n" + request.response);
+      if (callback) callback(new Error(request.response));
+    }
+  };
+  request.send(null);
 }
 
 export function evaluateRules(evaluationName, designGroupID, rulesGroupID, labelingMethod, callback) {

@@ -17,10 +17,6 @@ import java.util.concurrent.Executors;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.sbolstandard.core2.SBOLConversionException;
-import org.sbolstandard.core2.SBOLDocument;
-import org.sbolstandard.core2.SBOLReader;
-import org.sbolstandard.core2.SBOLValidationException;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -36,7 +32,6 @@ import knox.spring.data.neo4j.exception.DesignSpaceBranchesConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceConflictException;
 import knox.spring.data.neo4j.exception.DesignSpaceNotFoundException;
 import knox.spring.data.neo4j.exception.ParameterEmptyException;
-import knox.spring.data.neo4j.exception.SBOLException;
 import knox.spring.data.neo4j.repositories.BranchRepository;
 import knox.spring.data.neo4j.repositories.CommitRepository;
 import knox.spring.data.neo4j.repositories.DesignSpaceRepository;
@@ -750,31 +745,6 @@ public class KnoxController {
 	    }
 	}
 
-
-//	@RequestMapping(value = "/designSpace/export", method = RequestMethod.POST)
-//	public ResponseEntity<String> exportDesignSpaces(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
-//													 @RequestParam(value = "targetBranchID", required = false) String targetBranchID) {
-//		try {
-//			long startTime = System.nanoTime();
-//
-//			DesignSpace target = designSpaceRepository.findBySpaceID(targetSpaceID);
-//			SBOLGeneration sbolGen = new SBOLGeneration(target, "http://knox.org");
-//
-//			SBOLDocument document = sbolGen.createSBOLDocument();
-//
-//
-//			return new ResponseEntity<String>("{\"message\": \"Design space successfully exported as SBOL" +
-//					(System.nanoTime() - startTime) + " ns.\"}", HttpStatus.NO_CONTENT);
-//		} catch (ParameterEmptyException | DesignSpaceNotFoundException |
-//				DesignSpaceConflictException | DesignSpaceBranchesConflictException ex) {
-//			return new ResponseEntity<String>("{\"message\": \"" + ex.getMessage() + "\"}",
-//					HttpStatus.BAD_REQUEST);
-//		}
-//	}
-
-
-
-
 	@PostMapping("/import/csv")
     public ResponseEntity<String> importCSV(@RequestParam("inputCSVFiles[]") List<MultipartFile> inputCSVFiles,
     		@RequestParam(value = "outputSpacePrefix", required = true) String outputSpacePrefix, 
@@ -849,61 +819,37 @@ public class KnoxController {
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
+	@PostMapping("/designSpace/SBOL")
+	public String exportDesignSpaceToSBOL(@RequestParam(value = "targetSpaceID", required = true) String targetSpaceID,
+			@RequestParam(value = "sbolVersion", required = false, defaultValue = "sbol2") String sbolVersion) {
+		return designSpaceService.exportDesignSpaceToSBOL(targetSpaceID, sbolVersion);
+	}
+
     @PostMapping("/sbol/import")
     public ResponseEntity<String> importSBOL(@RequestParam("inputSBOLFiles[]") List<MultipartFile> inputSBOLFiles,
     		@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-			@RequestParam(value = "groupID", required = false) String groupID,
-			@RequestParam(value = "weight", required = false, defaultValue = "0.0") Double weight) {
-    	List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
+			@RequestParam(value = "groupID", required = false, defaultValue = "sbol_import") String groupID,
+			@RequestParam(value = "weight", required = false, defaultValue = "0.0") Double weight,
+			@RequestParam(value = "sbolVersion", required = false, defaultValue = "sbol2") String sbolVersion) {
     	
     	for (MultipartFile inputSBOLFile : inputSBOLFiles) {
-    		if (!inputSBOLFile.isEmpty()) {
-    			try {
-    				sbolDocs.add(SBOLReader.read(inputSBOLFile.getInputStream()));
-				} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-    		}
+    		designSpaceService.importSBOL(inputSBOLFile, outputSpaceID, groupID, weight, sbolVersion);
     	}
-    	
-    	try {
-			designSpaceService.importSBOL(sbolDocs, outputSpaceID, groupID, weight);
-		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
  
         return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
     }
 
-	@PostMapping("/goldbarSBOL/import")
-	public ResponseEntity<String> importGoldbarSBOL(@RequestParam(value = "sbolDoc", required = true) String sbolDoc,
+	@PostMapping("/goldbar/toSBOL")
+	public String convertGoldbarToSBOL(@RequestParam(value = "goldbar", required = true) String goldbar,
+			@RequestParam(value = "categories", required = true) String categories,
 			@RequestParam(value = "outputSpaceID", required = false) String outputSpaceID,
-			@RequestParam(value = "groupID", required = false) String groupID,
-			@RequestParam(value = "weight", required = false) Double weight) throws IOException {
-		List<SBOLDocument> sbolDocs = new ArrayList<SBOLDocument>();
-		SBOLDocument sbolDocument = new SBOLDocument();
-
-		InputStream sbolStream = org.apache.commons.io.IOUtils.toInputStream(sbolDoc, "UTF-8");
+			@RequestParam(value = "types", required = false, defaultValue = "dna") String types,
+			@RequestParam(value = "sbolVersion", required = false, defaultValue = "sbol2") String sbolVersion) {
 		
-		try {
-			sbolDocument = SBOLReader.read(sbolStream);
-			sbolDocs.add(sbolDocument);
+		System.out.println("Converting GOLDBAR to SBOL with SBOL version: " + sbolVersion);
 
-		} catch (IOException | SBOLValidationException | SBOLConversionException e) {
-			e.printStackTrace();
-		}
-
-
-		try {
-			designSpaceService.importSBOL(sbolDocs, outputSpaceID, groupID, weight);
-		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return new ResponseEntity<String>("No content", HttpStatus.NO_CONTENT);
+		JSONObject categoriesObj = new JSONObject(categories);
+		return designSpaceService.convertGOLDBARToSBOL(goldbar, categoriesObj.toMap(), outputSpaceID, types, sbolVersion);
 	}
 
 	@PostMapping("/goldbar/import")
@@ -1044,29 +990,6 @@ public class KnoxController {
                 "{\"message\": \"" + ex.getMessage() + "\"}",
                 HttpStatus.BAD_REQUEST);
 	    }
-	}
-
-	// LIST VER
-	@GetMapping("/sbol/exportCombinatorial")
-	public ResponseEntity<List<String>> exportCombinatorial(@RequestParam(value = "targetSpaceID") String targetSpaceID,
-											 @RequestParam(value = "namespace", required = false) String namespace) {
-
-		List<String> res;
-		try {
-			res = designSpaceService.exportCombinatorial(targetSpaceID, namespace);
-//			return new ResponseEntity<String>(goldbar, HttpStatus.NO_CONTENT);
-			System.out.println("end of try");
-
-		} catch (IOException | SBOLValidationException | SBOLConversionException | SBOLException | URISyntaxException e) {
-			e.printStackTrace();
-			res = Arrays.asList("{\"message\": \"" + e.getMessage() + "\"}");
-			System.out.println("before returning bad request");
-			return new ResponseEntity<List<String>>(res, HttpStatus.BAD_REQUEST);
-		}
-
-		//TODO should download SBOL document or throw error on the UI
-		System.out.println("before returning data");
-		return new ResponseEntity<List<String>>(res, HttpStatus.OK);
 	}
     
     @GetMapping("/branch/graph/d3")
