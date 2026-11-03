@@ -3580,6 +3580,19 @@ $('#seqcompiler-tooltip').click(() => {
     content: div
   }).then((confirm) => {
     if (!confirm) return;
+    
+    // loading div shown while the import request is in flight
+    let progressDiv = document.createElement('div');
+    let loadingDiv = document.createElement('div');
+    loadingDiv.appendChild(document.createTextNode("Loading..."));
+    progressDiv.appendChild(loadingDiv);
+    swal({
+      title: "Importing ctRSD Circuit Component",
+      content: progressDiv,
+      buttons: false,
+      closeOnClickOutside: false,
+      closeOnEsc: false
+    });
 
     const spaceID = spaceIDInput.value;
     const groupID = groupIDInput.value;
@@ -3619,7 +3632,9 @@ $('#seqcompiler-tooltip').click(() => {
       name, 
       Rz, L, term, hp5, prom, eI, eO, s, invert, invL, agL, AGiloop, otype, rna, us, ds, temp_len, cp, n, c, d, CDS, rflap,
       downloadGenbank
-    );
+    ).finally(() => {
+      swal.close();
+    });
 
   });
 
