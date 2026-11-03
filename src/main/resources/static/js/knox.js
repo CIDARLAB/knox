@@ -904,6 +904,14 @@ export function splitElementID(elementID){
 
 export function getSBOLImage(role){
   const sbolpath = "./img/sbol/";
+
+  if (role.startsWith("http://identifiers.org/so/SO:0001263")) {
+    return sbolpath + "ncrna.svg";
+  
+  } else if (role.startsWith("http://identifiers.org/so/SO:0000804")) {
+    return sbolpath + "engineered-region.svg";
+  }
+  
   switch (role) {
     case "http://identifiers.org/so/SO:0000031":
       return sbolpath + "aptamer.svg";
