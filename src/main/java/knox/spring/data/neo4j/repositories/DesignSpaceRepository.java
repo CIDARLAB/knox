@@ -77,7 +77,15 @@ public interface DesignSpaceRepository extends Neo4jRepository<DesignSpace, Long
 
 
 
+    @Query(
+        "MATCH (space:DesignSpace {spaceID: $spaceID})-[:CONTAINS]->(n:Node) " +
+        "RETURN count(n)")
+    Integer getNumNodes(@Param("spaceID") String spaceID);
 
+    @Query(
+        "MATCH (space:DesignSpace {spaceID: $spaceID})-[:CONTAINS]->(n:Node)-[edge:PRECEDES]->(m:Node) " +
+        "RETURN count(edge)")
+    Integer getNumEdges(@Param("spaceID") String spaceID);
 
     @Query(
         "MATCH (space:DesignSpace {spaceID: $spaceID})-[:CONTAINS]->(start:Node) " +

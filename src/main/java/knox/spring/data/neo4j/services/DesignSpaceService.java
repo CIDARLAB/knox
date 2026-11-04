@@ -1500,49 +1500,48 @@ public class DesignSpaceService {
     }
 
     public Map<String, Object> d3GraphDesignSpace(String targetSpaceID) {
-		List<DesignSpaceEdgeDTO> designSpaceData = designSpaceRepository.mapDesignSpace(targetSpaceID);
-		Map<String, Object> d3 = mapDesignSpaceToD3Format(designSpaceData);
-        return reformatD3Graph(targetSpaceID, d3);
+		Integer numNodes = designSpaceRepository.getNumNodes(targetSpaceID);
+		if (numNodes < 101) {
+			List<DesignSpaceEdgeDTO> designSpaceData = designSpaceRepository.mapDesignSpace(targetSpaceID);
+			return mapDesignSpaceToD3Format(designSpaceData);
+		}
+
+		Integer numEdges = designSpaceRepository.getNumEdges(targetSpaceID);
+        return reformatD3Graph(targetSpaceID, numNodes, numEdges);
     }
 
-	public Map<String, Object> reformatD3Graph(String targetSpaceID, Map<String, Object> d3) {
-		List<Map<String, Object>> nodes = (List<Map<String, Object>>) d3.get("nodes");
-		if (nodes.size() > 100) {
-			Map<String, Object> d3_reformatted = new HashMap<String, Object>();
-			List<Map<String, Object>> newNodes = new ArrayList<Map<String, Object>>();
-			List<Map<String, Object>> newLinks = new ArrayList<Map<String, Object>>();
-			List<Map<String, Object>> links = (List<Map<String, Object>>) d3.get("links");
+	public Map<String, Object> reformatD3Graph(String targetSpaceID, Integer numNodes, Integer numEdges) {
+		Map<String, Object> d3_reformatted = new HashMap<String, Object>();
+		List<Map<String, Object>> newNodes = new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> newLinks = new ArrayList<Map<String, Object>>();
 
-			ArrayList<String> startNodeTypes = new ArrayList<String>();
-			startNodeTypes.add("start");
+		ArrayList<String> startNodeTypes = new ArrayList<String>();
+		startNodeTypes.add("start");
 
-			ArrayList<String> acceptNodeTypes = new ArrayList<String>();
-			acceptNodeTypes.add("accept");
+		ArrayList<String> acceptNodeTypes = new ArrayList<String>();
+		acceptNodeTypes.add("accept");
 
-			newNodes.add(makeD3("id", targetSpaceID, "nodeTypes", startNodeTypes));
-			newNodes.add(makeD3("id", "Total Nodes: " + nodes.size(), "nodeTypes", acceptNodeTypes));
-			newNodes.add(makeD3("id", "Total Edges: " + links.size(), "nodeTypes", acceptNodeTypes));
+		newNodes.add(makeD3("id", targetSpaceID, "nodeTypes", startNodeTypes));
+		newNodes.add(makeD3("id", "Total Nodes: " + numNodes, "nodeTypes", acceptNodeTypes));
+		newNodes.add(makeD3("id", "Total Edges: " + numEdges, "nodeTypes", acceptNodeTypes));
 
-			Map<String, Object> link1 = makeD3("source", 0, "target", 1);
-			link1.put("componentRoles", new ArrayList<String>());
-			link1.put("componentIDs", new ArrayList<String>());
-			link1.put("weight", new ArrayList<Double>());
+		Map<String, Object> link1 = makeD3("source", 0, "target", 1);
+		link1.put("componentRoles", new ArrayList<String>());
+		link1.put("componentIDs", new ArrayList<String>());
+		link1.put("weight", new ArrayList<Double>());
 
-			Map<String, Object> link2 = makeD3("source", 0, "target", 2);
-			link2.put("componentRoles", new ArrayList<String>());
-			link2.put("componentIDs", new ArrayList<String>());
-			link2.put("weight", new ArrayList<Double>());
+		Map<String, Object> link2 = makeD3("source", 0, "target", 2);
+		link2.put("componentRoles", new ArrayList<String>());
+		link2.put("componentIDs", new ArrayList<String>());
+		link2.put("weight", new ArrayList<Double>());
 
-			newLinks.add(link1);
-			newLinks.add(link2);
+		newLinks.add(link1);
+		newLinks.add(link2);
 
-			d3_reformatted.put("nodes", newNodes);
-			d3_reformatted.put("links", newLinks);
+		d3_reformatted.put("nodes", newNodes);
+		d3_reformatted.put("links", newLinks);
 
-			return d3_reformatted;
-		}
-		
-		return d3;
+		return d3_reformatted;
 	}
     
     public Collection<List<Map<String, Object>>> enumerateDesignSpace(String targetSpaceID, 
