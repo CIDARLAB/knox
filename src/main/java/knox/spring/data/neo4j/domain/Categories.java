@@ -87,7 +87,7 @@ public class Categories {
 
     public Map<String, Map<String, List<String>>> toMap() {
         if (subCategories == null || subCategories.isEmpty()) {
-            return Map.of();
+            return new HashMap<>();
         }
 
         return subCategories.stream().collect(Collectors.toMap(
